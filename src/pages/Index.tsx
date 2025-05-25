@@ -62,7 +62,6 @@ const Index = () => {
         gamesPlayed: 0,
         wins: 0,
         losses: 0,
-        draws: 0,
         goalsFor: 0,
         goalsAgainst: 0,
         averageOpponentSkill: 0
@@ -74,7 +73,6 @@ const Index = () => {
       gamesPlayed: currentWeek.games.length,
       wins: currentWeek.totalWins,
       losses: currentWeek.totalLosses,
-      draws: currentWeek.totalDraws,
       goalsFor: currentWeek.totalGoals,
       goalsAgainst: currentWeek.totalConceded,
       averageOpponentSkill: currentWeek.averageOpponentSkill
@@ -147,10 +145,10 @@ const Index = () => {
                     <div key={game.id} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
                       <div className="flex items-center space-x-3">
                         <Badge 
-                          variant={game.result === 'win' ? 'default' : game.result === 'loss' ? 'destructive' : 'secondary'}
+                          variant={game.result === 'win' ? 'default' : 'destructive'}
                           className="w-12 text-center"
                         >
-                          {game.result === 'win' ? 'W' : game.result === 'loss' ? 'L' : 'D'}
+                          {game.result === 'win' ? 'W' : 'L'}
                         </Badge>
                         <div>
                           <p className="text-sm font-medium text-white">{game.scoreLine}</p>

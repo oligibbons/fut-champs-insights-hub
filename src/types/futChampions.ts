@@ -30,7 +30,7 @@ export interface GameResult {
   id: string;
   weekId: string;
   gameNumber: number;
-  result: 'win' | 'loss' | 'draw';
+  result: 'win' | 'loss';
   scoreLine: string;
   opponentSkill: number; // 1-10
   gameContext: 'normal' | 'rage_quit' | 'extra_time' | 'penalties' | 'disconnect' | 'hacker' | 'free_win';
@@ -58,7 +58,6 @@ export interface WeeklyPerformance {
   games: GameResult[];
   totalWins: number;
   totalLosses: number;
-  totalDraws: number;
   totalGoals: number;
   totalConceded: number;
   averageOpponentSkill: number;

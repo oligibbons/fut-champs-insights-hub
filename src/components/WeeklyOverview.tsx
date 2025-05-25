@@ -11,7 +11,6 @@ interface WeeklyOverviewProps {
     gamesPlayed: number;
     wins: number;
     losses: number;
-    draws: number;
     goalsFor: number;
     goalsAgainst: number;
     averageOpponentSkill: number;
@@ -19,7 +18,7 @@ interface WeeklyOverviewProps {
 }
 
 const WeeklyOverview = ({ weekData }: WeeklyOverviewProps) => {
-  const { weekNumber, gamesPlayed, wins, losses, draws, goalsFor, goalsAgainst, averageOpponentSkill } = weekData;
+  const { weekNumber, gamesPlayed, wins, losses, goalsFor, goalsAgainst, averageOpponentSkill } = weekData;
   const winRate = gamesPlayed > 0 ? (wins / gamesPlayed) * 100 : 0;
   const progress = (gamesPlayed / 15) * 100;
 
@@ -71,14 +70,10 @@ const WeeklyOverview = ({ weekData }: WeeklyOverviewProps) => {
           
           <Progress value={progress} className="h-2" />
           
-          <div className="grid grid-cols-3 gap-4 text-center">
+          <div className="grid grid-cols-2 gap-4 text-center">
             <div className="p-3 bg-fifa-green/20 rounded-lg">
               <p className="text-2xl font-bold text-fifa-green">{wins}</p>
               <p className="text-xs text-gray-400">Wins</p>
-            </div>
-            <div className="p-3 bg-gray-500/20 rounded-lg">
-              <p className="text-2xl font-bold text-gray-300">{draws}</p>
-              <p className="text-xs text-gray-400">Draws</p>
             </div>
             <div className="p-3 bg-fifa-red/20 rounded-lg">
               <p className="text-2xl font-bold text-fifa-red">{losses}</p>
