@@ -57,10 +57,10 @@
 
 @layer components {
   .glass-card {
-    @apply bg-white/5 backdrop-blur-lg border border-white/10;
+    @apply bg-white/5 backdrop-blur-lg border border-white/10 rounded-3xl;
     box-shadow: 
-      0 20px 25px -5px rgba(0, 0, 0, 0.3),
-      0 10px 10px -5px rgba(0, 0, 0, 0.1),
+      0 25px 50px -12px rgba(0, 0, 0, 0.4),
+      0 15px 30px -5px rgba(59, 130, 246, 0.1),
       inset 0 1px 0 rgba(255, 255, 255, 0.1);
   }
   
@@ -73,25 +73,31 @@
   }
   
   .stat-card {
-    @apply glass-card p-6 hover-scale transition-all duration-300;
+    @apply glass-card p-6 hover-scale transition-all duration-300 rounded-3xl;
     box-shadow: 
       0 25px 50px -12px rgba(0, 0, 0, 0.4),
-      0 10px 20px -5px rgba(59, 130, 246, 0.1),
+      0 15px 30px -5px rgba(59, 130, 246, 0.1),
       inset 0 1px 0 rgba(255, 255, 255, 0.1);
   }
 
   .stat-card:hover {
     box-shadow: 
       0 35px 60px -12px rgba(0, 0, 0, 0.5),
-      0 15px 30px -5px rgba(59, 130, 246, 0.2),
+      0 20px 40px -5px rgba(59, 130, 246, 0.2),
       inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    transform: translateY(-4px) scale(1.02);
   }
 
   .card-depth {
+    @apply rounded-2xl;
     box-shadow: 
       0 20px 25px -5px rgba(0, 0, 0, 0.3),
       0 10px 10px -5px rgba(0, 0, 0, 0.1),
       inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+
+  .card-depth-hover {
+    @apply transition-all duration-300 hover:shadow-3xl hover:-translate-y-1;
   }
 
   .card-depth-hover:hover {
@@ -111,6 +117,7 @@
   }
 
   .glow-effect {
+    @apply rounded-2xl;
     box-shadow: 
       0 0 20px rgba(59, 130, 246, 0.3),
       0 0 40px rgba(59, 130, 246, 0.1);
@@ -120,6 +127,74 @@
     box-shadow: 
       0 0 30px rgba(59, 130, 246, 0.5),
       0 0 60px rgba(59, 130, 246, 0.2);
+  }
+
+  .modern-input {
+    @apply bg-white/5 border border-white/10 backdrop-blur-lg rounded-2xl px-4 py-3 text-white placeholder:text-gray-400 focus:border-fifa-blue/50 focus:ring-2 focus:ring-fifa-blue/20 transition-all duration-300;
+    box-shadow: 
+      0 8px 16px -4px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+
+  .modern-button {
+    @apply px-6 py-3 rounded-2xl font-medium transition-all duration-300 transform hover:scale-105 hover:shadow-lg;
+  }
+
+  .modern-button-primary {
+    @apply modern-button bg-fifa-gradient text-white shadow-lg glow-effect;
+  }
+
+  .modern-button-secondary {
+    @apply modern-button bg-white/10 text-white border border-white/20 hover:bg-white/20;
+  }
+
+  .nav-item {
+    @apply flex items-center gap-3 p-3 rounded-2xl text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-300 group;
+  }
+
+  .nav-item.active {
+    @apply bg-fifa-blue/20 text-fifa-blue border border-fifa-blue/30;
+    box-shadow: 
+      0 8px 16px -4px rgba(30, 64, 175, 0.3),
+      inset 0 1px 0 rgba(30, 64, 175, 0.2);
+  }
+
+  .section-card {
+    @apply glass-card p-8 hover:shadow-3xl transition-all duration-500 hover:-translate-y-2;
+  }
+
+  .metric-card {
+    @apply bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg border border-white/20 rounded-2xl p-6 hover:scale-105 transition-all duration-300;
+    box-shadow: 
+      0 20px 25px -5px rgba(0, 0, 0, 0.3),
+      0 10px 10px -5px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+
+  .stagger-animation > * {
+    animation: slide-up 0.6s ease-out forwards;
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  .stagger-animation > *:nth-child(1) { animation-delay: 0.1s; }
+  .stagger-animation > *:nth-child(2) { animation-delay: 0.2s; }
+  .stagger-animation > *:nth-child(3) { animation-delay: 0.3s; }
+  .stagger-animation > *:nth-child(4) { animation-delay: 0.4s; }
+  .stagger-animation > *:nth-child(5) { animation-delay: 0.5s; }
+
+  @keyframes slide-up {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .parallax-bg {
+    background-attachment: fixed;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
   }
 }
 
@@ -135,5 +210,19 @@
   
   .shadow-glow-lg {
     box-shadow: 0 0 40px rgba(59, 130, 246, 0.4);
+  }
+
+  .shadow-depth {
+    box-shadow: 
+      0 20px 25px -5px rgba(0, 0, 0, 0.3),
+      0 10px 10px -5px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+
+  .shadow-depth-lg {
+    box-shadow: 
+      0 25px 50px -12px rgba(0, 0, 0, 0.4),
+      0 15px 30px -5px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
   }
 }
