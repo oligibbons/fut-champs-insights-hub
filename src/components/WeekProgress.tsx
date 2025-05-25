@@ -4,7 +4,8 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { WeeklyPerformance } from '@/types/futChampions';
-import { Calendar, Trophy, Target, TrendingDown } from 'lucide-react';
+import { Calendar, Trophy, Target, TrendingDown, User } from 'lucide-react';
+import { useAccountData } from '@/hooks/useAccountData';
 
 interface WeekProgressProps {
   weekData: WeeklyPerformance | null;
@@ -12,18 +13,26 @@ interface WeekProgressProps {
 }
 
 const WeekProgress = ({ weekData, onNewWeek }: WeekProgressProps) => {
+  const { activeAccount } = useAccountData();
+
   if (!weekData) {
     return (
       <Card className="glass-card">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-white">
-            <Calendar className="h-5 w-5 text-fifa-blue" />
-            Start Your First Week
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-white">
+              <Calendar className="h-5 w-5 text-fifa-blue" />
+              Start Your First Week
+            </CardTitle>
+            <Badge variant="outline" className="text-fifa-blue border-fifa-blue">
+              <User className="h-3 w-3 mr-1" />
+              {activeAccount}
+            </Badge>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8">
-            <p className="text-gray-400 mb-4">No weeks tracked yet. Start your FUT Champions journey!</p>
+            <p className="text-gray-400 mb-4">No weeks tracked yet for {activeAccount}. Start your FUT Champions journey!</p>
             <Button onClick={onNewWeek} className="bg-fifa-gradient">
               Start Week 1
             </Button>
@@ -47,9 +56,15 @@ const WeekProgress = ({ weekData, onNewWeek }: WeekProgressProps) => {
             <Calendar className="h-5 w-5 text-fifa-blue" />
             Week {weekData.weekNumber} Progress
           </CardTitle>
-          <Badge variant="outline" className="text-fifa-gold border-fifa-gold">
-            {gamesPlayed}/15 Games
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-fifa-gold border-fifa-gold">
+              {gamesPlayed}/15 Games
+            </Badge>
+            <Badge variant="outline" className="text-fifa-blue border-fifa-blue">
+              <User className="h-3 w-3 mr-1" />
+              {activeAccount}
+            </Badge>
+          </div>
         </div>
       </CardHeader>
       
