@@ -19,7 +19,28 @@ const Settings = () => {
     preferredFormation: '4-3-3',
     trackingStartDate: new Date().toISOString().split('T')[0],
     gameplayStyle: 'balanced',
-    notifications: true
+    notifications: true,
+    gamesPerWeek: 15,
+    dashboardSettings: {
+      showTopPerformers: true,
+      showXGAnalysis: true,
+      showAIInsights: true,
+      showFormAnalysis: true,
+      showWeaknesses: true,
+      showOpponentAnalysis: true,
+      showPositionalAnalysis: true,
+      showRecentTrends: true,
+    },
+    currentWeekSettings: {
+      showTopPerformers: true,
+      showXGAnalysis: true,
+      showAIInsights: true,
+      showFormAnalysis: true,
+      showWeaknesses: true,
+      showOpponentAnalysis: true,
+      showPositionalAnalysis: true,
+      showRecentTrends: true,
+    }
   });
   
   const [accounts, setAccounts] = useLocalStorage<string[]>('fc25-accounts', ['Main Account']);
@@ -206,6 +227,24 @@ const Settings = () => {
                     <SelectItem value="aggressive">Aggressive</SelectItem>
                     <SelectItem value="balanced">Balanced</SelectItem>
                     <SelectItem value="defensive">Defensive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-white mb-2 block">Games Per Week</Label>
+                <Select 
+                  value={settings.gamesPerWeek.toString()} 
+                  onValueChange={(value) => setSettings({...settings, gamesPerWeek: parseInt(value)})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="15">15 Games (FC25)</SelectItem>
+                    <SelectItem value="20">20 Games (FC24)</SelectItem>
+                    <SelectItem value="25">25 Games (Custom)</SelectItem>
+                    <SelectItem value="30">30 Games (Custom)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

@@ -33,6 +33,8 @@ const GameRecordForm = ({ onSubmit, gameNumber }: GameRecordFormProps) => {
       possession: parseInt(data.possession) || 50,
       expectedGoals: parseFloat(data.expectedGoals) || 0,
       actualGoals: parseInt(data.goalsFor) || 0,
+      expectedGoalsAgainst: parseFloat(data.expectedGoalsAgainst) || 0,
+      actualGoalsAgainst: parseInt(data.goalsAgainst) || 0,
       passes: parseInt(data.passes) || 0,
       passAccuracy: parseInt(data.passAccuracy) || 0,
       corners: parseInt(data.corners) || 0,
@@ -226,6 +228,18 @@ const GameRecordForm = ({ onSubmit, gameNumber }: GameRecordFormProps) => {
                   step="0.1"
                   min="0"
                   {...register('expectedGoals')}
+                  className="bg-white/10 border-white/20 text-white"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="expectedGoalsAgainst" className="text-gray-300">Expected Goals Against</Label>
+                <Input
+                  id="expectedGoalsAgainst"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  {...register('expectedGoalsAgainst')}
                   className="bg-white/10 border-white/20 text-white"
                 />
               </div>
