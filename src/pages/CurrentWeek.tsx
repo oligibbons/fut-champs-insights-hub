@@ -46,6 +46,7 @@ const CurrentWeek = () => {
   });
   const [currentWeek, setCurrentWeek] = useState<WeeklyPerformance | null>(null);
   const [showGameForm, setShowGameForm] = useState(false);
+  const [editingGame, setEditingGame] = useState<GameResult | null>(null);
 
   useEffect(() => {
     // Find current active week or create one
@@ -90,13 +91,25 @@ const CurrentWeek = () => {
   const handleGameSubmit = (gameData: Partial<GameResult>) => {
     if (!currentWeek) return;
 
-    const newGame: GameResult = {
-      id: `game-${Date.now()}`,
-      weekId: currentWeek.id,
-      ...gameData
-    } as GameResult;
+    let updatedGames: GameResult[];
+    
+    if (editingGame) {
+      // Update existing game
+      updatedGames = currentWeek.games.map(game => 
+        game.id === editingGame.id 
+          ? { ...editingGame, ...gameData } as GameResult
+          : game
+      );
+    } else {
+      // Add new game
+      const newGame: GameResult = {
+        id: `game-${Date.now()}`,
+        weekId: currentWeek.id,
+        ...gameData
+      } as GameResult;
+      updatedGames = [...currentWeek.games, newGame];
+    }
 
-    const updatedGames = [...currentWeek.games, newGame];
     const wins = updatedGames.filter(game => game.result === 'win').length;
     const losses = updatedGames.filter(game => game.result === 'loss').length;
     const totalGoals = updatedGames.reduce((sum, game) => {
@@ -130,18 +143,31 @@ const CurrentWeek = () => {
     setWeeklyData(updatedWeeks);
     setCurrentWeek(updatedWeek);
     setShowGameForm(false);
+    setEditingGame(null);
 
     toast({
-      title: "Game Recorded",
-      description: `Game ${newGame.gameNumber} has been saved successfully!`,
+      title: editingGame ? "Game Updated" : "Game Recorded",
+      description: editingGame 
+        ? `Game ${gameData.gameNumber} has been updated successfully!`
+        : `Game ${gameData.gameNumber} has been saved successfully!`,
     });
 
-    if (updatedWeek.isCompleted) {
+    if (updatedWeek.isCompleted && !editingGame) {
       toast({
         title: "Week Completed!",
         description: `Congratulations! You've finished Week ${updatedWeek.weekNumber} with ${wins} wins.`,
       });
     }
+  };
+
+  const handleEditGame = (game: GameResult) => {
+    setEditingGame(game);
+    setShowGameForm(true);
+  };
+
+  const handleCancelEdit = () => {
+    setShowGameForm(false);
+    setEditingGame(null);
   };
 
   const nextGameNumber = currentWeek ? currentWeek.games.length + 1 : 1;
@@ -206,20 +232,23 @@ const CurrentWeek = () => {
               )}
 
               {/* Game Form or Recent Games */}
-              {showGameForm && canAddGame ? (
+              {showGameForm && (canAddGame || editingGame) ? (
                 <div className="space-y-4">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    <h2 className="text-xl font-semibold text-white">Record New Game</h2>
+                    <h2 className="text-xl font-semibold text-white">
+                      {editingGame ? `Edit Game ${editingGame.gameNumber}` : 'Record New Game'}
+                    </h2>
                     <Button 
                       variant="outline" 
-                      onClick={() => setShowGameForm(false)}
+                      onClick={handleCancelEdit}
                       className="bg-white/10 border-white/20 text-white hover:bg-white/20 w-full sm:w-auto"
                     >
                       Cancel
                     </Button>
                   </div>
                   <GameRecordForm 
-                    gameNumber={nextGameNumber}
+                    gameNumber={editingGame?.gameNumber || nextGameNumber}
+                    existingGame={editingGame || undefined}
                     onSubmit={handleGameSubmit}
                   />
                 </div>
@@ -259,6 +288,7 @@ const CurrentWeek = () => {
                               <Button 
                                 variant="ghost" 
                                 size="sm"
+                                onClick={() => handleEditGame(game)}
                                 className="text-fifa-blue hover:text-fifa-blue hover:bg-fifa-blue/10 mt-1 h-auto p-1"
                               >
                                 <Edit className="h-3 w-3 mr-1" />

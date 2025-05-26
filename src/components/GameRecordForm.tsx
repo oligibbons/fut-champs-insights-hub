@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,23 +10,67 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GameResult, TeamStats, PlayerPerformance } from '@/types/futChampions';
+import { Squad } from '@/types/squads';
+import { useSquadData } from '@/hooks/useSquadData';
 import { Trophy, Target, Clock, MessageSquare, Users } from 'lucide-react';
 import PlayerPerformanceInput from './PlayerPerformanceInput';
 
 interface GameRecordFormProps {
   onSubmit: (gameData: Partial<GameResult>) => void;
   gameNumber: number;
+  existingGame?: GameResult;
 }
 
-const GameRecordForm = ({ onSubmit, gameNumber }: GameRecordFormProps) => {
-  const [result, setResult] = useState<'win' | 'loss' | ''>('');
-  const [gameContext, setGameContext] = useState<string>('normal');
-  const [playerPerformances, setPlayerPerformances] = useState<PlayerPerformance[]>([]);
+const GameRecordForm = ({ onSubmit, gameNumber, existingGame }: GameRecordFormProps) => {
+  const { squads } = useSquadData();
+  const [result, setResult] = useState<'win' | 'loss' | ''>(existingGame?.result || '');
+  const [gameContext, setGameContext] = useState<string>(existingGame?.gameContext || 'normal');
+  const [selectedSquad, setSelectedSquad] = useState<Squad | null>(null);
+  const [playerPerformances, setPlayerPerformances] = useState<PlayerPerformance[]>(existingGame?.playerStats || []);
   
-  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm();
+  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
+    defaultValues: existingGame ? {
+      goalsFor: existingGame.scoreLine.split('-')[0],
+      goalsAgainst: existingGame.scoreLine.split('-')[1],
+      opponentSkill: existingGame.opponentSkill.toString(),
+      duration: existingGame.duration.toString(),
+      comments: existingGame.comments,
+      shots: existingGame.teamStats.shots.toString(),
+      shotsOnTarget: existingGame.teamStats.shotsOnTarget.toString(),
+      possession: existingGame.teamStats.possession.toString(),
+      expectedGoals: existingGame.teamStats.expectedGoals.toString(),
+      expectedGoalsAgainst: existingGame.teamStats.expectedGoalsAgainst.toString(),
+      passes: existingGame.teamStats.passes.toString(),
+      passAccuracy: existingGame.teamStats.passAccuracy.toString(),
+      corners: existingGame.teamStats.corners.toString(),
+      fouls: existingGame.teamStats.fouls.toString(),
+    } : {}
+  });
 
-  const goalsFor = watch('goalsFor', 0);
-  const goalsAgainst = watch('goalsAgainst', 0);
+  const goalsFor = watch('goalsFor', existingGame ? existingGame.scoreLine.split('-')[0] : 0);
+  const goalsAgainst = watch('goalsAgainst', existingGame ? existingGame.scoreLine.split('-')[1] : 0);
+
+  // Auto-populate players when squad is selected
+  useEffect(() => {
+    if (selectedSquad && playerPerformances.length === 0) {
+      const startingPlayers: PlayerPerformance[] = selectedSquad.startingXI
+        .filter(pos => pos.player)
+        .map((pos, index) => ({
+          id: `player-${Date.now()}-${index}`,
+          name: pos.player!.name,
+          position: pos.position,
+          rating: 6.0,
+          goals: 0,
+          assists: 0,
+          yellowCards: 0,
+          redCards: 0,
+          ownGoals: 0,
+          minutesPlayed: 90,
+          wasSubstituted: false
+        }));
+      setPlayerPerformances(startingPlayers);
+    }
+  }, [selectedSquad, playerPerformances.length]);
 
   const onFormSubmit = (data: any) => {
     const teamStats: TeamStats = {
@@ -45,6 +88,7 @@ const GameRecordForm = ({ onSubmit, gameNumber }: GameRecordFormProps) => {
     };
 
     const gameData: Partial<GameResult> = {
+      id: existingGame?.id,
       gameNumber,
       result: result as 'win' | 'loss',
       scoreLine: `${data.goalsFor}-${data.goalsAgainst}`,
@@ -54,7 +98,7 @@ const GameRecordForm = ({ onSubmit, gameNumber }: GameRecordFormProps) => {
       teamStats,
       playerStats: playerPerformances,
       duration: parseInt(data.duration) || 90,
-      date: new Date().toISOString()
+      date: existingGame?.date || new Date().toISOString()
     };
 
     onSubmit(gameData);
@@ -72,13 +116,18 @@ const GameRecordForm = ({ onSubmit, gameNumber }: GameRecordFormProps) => {
     }
   };
 
+  const handleSquadSelect = (squadId: string) => {
+    const squad = squads.find(s => s.id === squadId);
+    setSelectedSquad(squad || null);
+  };
+
   return (
     <div className="space-y-6">
       <Card className="glass-card">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-white">
             <Trophy className="h-5 w-5 text-fifa-gold" />
-            Record Game {gameNumber}
+            {existingGame ? `Edit Game ${gameNumber}` : `Record Game ${gameNumber}`}
           </CardTitle>
         </CardHeader>
         
@@ -93,6 +142,34 @@ const GameRecordForm = ({ onSubmit, gameNumber }: GameRecordFormProps) => {
               </TabsList>
               
               <TabsContent value="match" className="space-y-4 mt-6">
+                {/* Squad Selection */}
+                {!existingGame && (
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      Select Squad
+                    </h3>
+                    <Select onValueChange={handleSquadSelect}>
+                      <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                        <SelectValue placeholder="Choose your squad for this match" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {squads.map(squad => (
+                          <SelectItem key={squad.id} value={squad.id}>
+                            {squad.name} ({squad.formation})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {selectedSquad && (
+                      <Badge className="bg-fifa-blue/20 text-fifa-blue border-fifa-blue/30">
+                        {selectedSquad.startingXI.filter(pos => pos.player).length}/11 players loaded
+                      </Badge>
+                    )}
+                    <Separator className="bg-white/20" />
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-white flex items-center gap-2">
@@ -331,7 +408,7 @@ const GameRecordForm = ({ onSubmit, gameNumber }: GameRecordFormProps) => {
               disabled={!result}
             >
               <Trophy className="h-4 w-4 mr-2" />
-              Save Game
+              {existingGame ? 'Update Game' : 'Save Game'}
             </Button>
           </form>
         </CardContent>
