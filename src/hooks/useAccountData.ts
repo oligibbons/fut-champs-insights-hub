@@ -23,6 +23,8 @@ export function useAccountData() {
       totalLosses: 0,
       totalGoals: 0,
       totalConceded: 0,
+      totalExpectedGoals: 0,
+      totalExpectedGoalsAgainst: 0,
       averageOpponentSkill: 0,
       squadUsed: '',
       weeklyRating: 0,

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
@@ -41,6 +40,8 @@ const CurrentWeek = () => {
       totalLosses: 0,
       totalGoals: 0,
       totalConceded: 0,
+      totalExpectedGoals: 0,
+      totalExpectedGoalsAgainst: 0,
       averageOpponentSkill: 0,
       squadUsed: '',
       weeklyRating: 0,
@@ -86,6 +87,8 @@ const CurrentWeek = () => {
       totalLosses: losses,
       totalGoals,
       totalConceded,
+      totalExpectedGoals: updatedGames.reduce((sum, game) => sum + game.teamStats.expectedGoals, 0),
+      totalExpectedGoalsAgainst: updatedGames.reduce((sum, game) => sum + game.teamStats.expectedGoalsAgainst, 0),
       averageOpponentSkill: avgOpponentSkill,
       isCompleted: updatedGames.length >= 15,
       endDate: updatedGames.length >= 15 ? new Date().toISOString() : currentWeek.endDate

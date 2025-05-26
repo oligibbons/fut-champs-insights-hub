@@ -1,4 +1,3 @@
-
 export interface Player {
   id: string;
   name: string;
@@ -68,6 +67,7 @@ export interface WeeklyPerformance {
   squadUsed: string; // squad ID
   weeklyRating: number;
   isCompleted: boolean;
+  winTarget?: number; // Target wins for the week
 }
 
 export interface AIInsight {
@@ -80,9 +80,23 @@ export interface AIInsight {
   generated: string;
 }
 
+export interface DashboardSettings {
+  showTopPerformers: boolean;
+  showXGAnalysis: boolean;
+  showAIInsights: boolean;
+  showFormAnalysis: boolean;
+  showWeaknesses: boolean;
+  showOpponentAnalysis: boolean;
+  showPositionalAnalysis: boolean;
+  showRecentTrends: boolean;
+}
+
 export interface UserSettings {
   preferredFormation: string;
   trackingStartDate: string;
   gameplayStyle: 'aggressive' | 'balanced' | 'defensive';
   notifications: boolean;
+  gamesPerWeek: number;
+  dashboardSettings: DashboardSettings;
+  currentWeekSettings: DashboardSettings;
 }
