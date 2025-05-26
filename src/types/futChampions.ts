@@ -11,6 +11,11 @@ export interface PlayerPerformance {
   ownGoals: number;
   minutesPlayed: number;
   wasSubstituted: boolean;
+  keyPasses?: number;
+  shotsOnTarget?: number;
+  tackles?: number;
+  interceptions?: number;
+  passAccuracy?: number;
 }
 
 export interface Player {
@@ -26,6 +31,8 @@ export interface Player {
   redCards: number;
   substitutions: number;
   minutesPlayed: number;
+  formRating?: number; // Recent form out of 10
+  consistency?: number; // How consistent their performances are
 }
 
 export interface TeamStats {
@@ -40,6 +47,19 @@ export interface TeamStats {
   passAccuracy: number;
   corners: number;
   fouls: number;
+  offsides?: number;
+  crosses?: number;
+  duelsWon?: number;
+  tacklesSuccessful?: number;
+}
+
+export interface OpponentAnalysis {
+  skillLevel: number;
+  playStyle: 'aggressive' | 'defensive' | 'possession' | 'counter_attack' | 'balanced';
+  formation: string;
+  notes: string;
+  weaknesses: string[];
+  strengths: string[];
 }
 
 export interface GameResult {
@@ -53,8 +73,13 @@ export interface GameResult {
   comments: string;
   playerStats: PlayerPerformance[];
   teamStats: TeamStats;
+  opponentAnalysis?: OpponentAnalysis;
   date: string;
   duration: number; // in minutes
+  actualGameTime?: number; // Time actually playing vs paused
+  rageMoments?: number; // How many times you wanted to rage quit
+  stressLevel?: number; // 1-10 how stressful the game was
+  squadUsed?: string; // Squad ID
 }
 
 export interface Squad {
@@ -64,6 +89,14 @@ export interface Squad {
   players: Player[];
   created: string;
   lastUsed: string;
+}
+
+export interface WeeklyTarget {
+  wins: number;
+  minimumRank?: string;
+  goalsScored?: number;
+  cleanSheets?: number;
+  custom?: string;
 }
 
 export interface WeeklyPerformance {
@@ -82,17 +115,45 @@ export interface WeeklyPerformance {
   squadUsed: string; // squad ID
   weeklyRating: number;
   isCompleted: boolean;
-  winTarget?: number; // Target wins for the week
+  winTarget?: WeeklyTarget;
+  currentRank?: string;
+  startingRank?: string;
+  bestStreak?: number;
+  worstStreak?: number;
+  averageGameDuration?: number;
+  totalPlayTime?: number; // in minutes
+}
+
+export interface Achievement {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  category: 'wins' | 'goals' | 'streaks' | 'performance' | 'consistency' | 'milestone';
+  unlockedAt?: string;
+  progress?: number;
+  target?: number;
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+}
+
+export interface PlayerForm {
+  playerId: string;
+  last5Games: number[]; // ratings from last 5 games
+  trend: 'improving' | 'declining' | 'stable';
+  consistency: number; // 0-100
+  confidence: number; // 0-100 based on recent performances
 }
 
 export interface AIInsight {
   id: string;
-  type: 'tactical' | 'player' | 'formation' | 'general';
+  type: 'tactical' | 'player' | 'formation' | 'general' | 'opponent' | 'prediction';
   title: string;
   description: string;
   confidence: number;
   actionable: boolean;
   generated: string;
+  priority: 'low' | 'medium' | 'high';
+  category: 'strength' | 'weakness' | 'opportunity' | 'threat';
 }
 
 export interface DashboardSettings {
@@ -104,6 +165,10 @@ export interface DashboardSettings {
   showOpponentAnalysis: boolean;
   showPositionalAnalysis: boolean;
   showRecentTrends: boolean;
+  showAchievements: boolean;
+  showTargetProgress: boolean;
+  showTimeAnalysis: boolean;
+  showStressAnalysis: boolean;
 }
 
 export interface UserSettings {
@@ -114,4 +179,25 @@ export interface UserSettings {
   gamesPerWeek: number;
   dashboardSettings: DashboardSettings;
   currentWeekSettings: DashboardSettings;
+  targetSettings: {
+    autoSetTargets: boolean;
+    adaptiveTargets: boolean; // Adjust based on performance
+    notifyOnTarget: boolean;
+  };
+  analyticsPreferences: {
+    detailedPlayerStats: boolean;
+    opponentTracking: boolean;
+    timeTracking: boolean;
+    stressTracking: boolean;
+  };
+}
+
+export interface WeeklyStats {
+  avgRating: number;
+  totalMinutes: number;
+  bestPlayer: string;
+  worstPerformance: number;
+  consistencyScore: number;
+  improvement: number; // vs previous week
+  predictedNextWeekWins: number;
 }
