@@ -20,6 +20,8 @@ export interface TeamStats {
   possession: number;
   expectedGoals: number;
   actualGoals: number;
+  expectedGoalsAgainst: number;
+  actualGoalsAgainst: number;
   passes: number;
   passAccuracy: number;
   corners: number;
@@ -60,6 +62,8 @@ export interface WeeklyPerformance {
   totalLosses: number;
   totalGoals: number;
   totalConceded: number;
+  totalExpectedGoals: number;
+  totalExpectedGoalsAgainst: number;
   averageOpponentSkill: number;
   squadUsed: string; // squad ID
   weeklyRating: number;

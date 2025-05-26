@@ -40,6 +40,13 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* FIFA Color Variables */
+    --fifa-blue: #3b82f6;
+    --fifa-gold: #fbbf24;
+    --fifa-green: #10b981;
+    --fifa-purple: #8b5cf6;
+    --fifa-red: #ef4444;
   }
 }
 
@@ -50,18 +57,20 @@
 
   body {
     @apply bg-background text-foreground font-sans;
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #475569 75%, #64748b 100%);
+    background-attachment: fixed;
     min-height: 100vh;
   }
 }
 
 @layer components {
   .glass-card {
-    @apply bg-white/5 backdrop-blur-lg border border-white/10 rounded-3xl;
+    @apply bg-gradient-to-br from-white/10 via-white/5 to-white/2 backdrop-blur-xl border border-white/20 rounded-3xl;
     box-shadow: 
-      0 25px 50px -12px rgba(0, 0, 0, 0.4),
+      0 25px 50px -12px rgba(0, 0, 0, 0.5),
       0 15px 30px -5px rgba(59, 130, 246, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      inset 0 1px 0 rgba(255, 255, 255, 0.15),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.05);
   }
   
   .gradient-text {
@@ -69,15 +78,26 @@
   }
   
   .hover-scale {
-    @apply transition-all duration-300 hover:scale-105 hover:shadow-2xl;
+    @apply transition-all duration-300 hover:scale-105 hover:shadow-3xl;
   }
   
   .stat-card {
-    @apply glass-card p-6 hover-scale transition-all duration-300 rounded-3xl;
+    @apply glass-card p-8 hover-scale transition-all duration-500 rounded-3xl overflow-hidden relative;
     box-shadow: 
       0 25px 50px -12px rgba(0, 0, 0, 0.4),
       0 15px 30px -5px rgba(59, 130, 246, 0.1),
       inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--fifa-blue), var(--fifa-purple), var(--fifa-gold));
+    opacity: 0.8;
   }
 
   .stat-card:hover {
@@ -85,11 +105,11 @@
       0 35px 60px -12px rgba(0, 0, 0, 0.5),
       0 20px 40px -5px rgba(59, 130, 246, 0.2),
       inset 0 1px 0 rgba(255, 255, 255, 0.15);
-    transform: translateY(-4px) scale(1.02);
+    transform: translateY(-8px) scale(1.02);
   }
 
   .card-depth {
-    @apply rounded-2xl;
+    @apply rounded-3xl overflow-hidden relative;
     box-shadow: 
       0 20px 25px -5px rgba(0, 0, 0, 0.3),
       0 10px 10px -5px rgba(0, 0, 0, 0.1),
@@ -97,7 +117,7 @@
   }
 
   .card-depth-hover {
-    @apply transition-all duration-300 hover:shadow-3xl hover:-translate-y-1;
+    @apply transition-all duration-500 hover:shadow-3xl hover:-translate-y-2;
   }
 
   .card-depth-hover:hover {
@@ -112,69 +132,150 @@
   }
 
   @keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    33% { transform: translateY(-10px) rotate(1deg); }
+    66% { transform: translateY(-5px) rotate(-1deg); }
   }
 
   .glow-effect {
-    @apply rounded-2xl;
+    @apply rounded-3xl;
     box-shadow: 
       0 0 20px rgba(59, 130, 246, 0.3),
-      0 0 40px rgba(59, 130, 246, 0.1);
+      0 0 40px rgba(59, 130, 246, 0.1),
+      0 0 60px rgba(139, 92, 246, 0.05);
   }
 
   .glow-effect:hover {
     box-shadow: 
       0 0 30px rgba(59, 130, 246, 0.5),
-      0 0 60px rgba(59, 130, 246, 0.2);
+      0 0 60px rgba(59, 130, 246, 0.2),
+      0 0 90px rgba(139, 92, 246, 0.1);
   }
 
   .modern-input {
-    @apply bg-white/5 border border-white/10 backdrop-blur-lg rounded-2xl px-4 py-3 text-white placeholder:text-gray-400 focus:border-fifa-blue/50 focus:ring-2 focus:ring-fifa-blue/20 transition-all duration-300;
+    @apply bg-gradient-to-br from-white/10 to-white/5 border border-white/20 backdrop-blur-lg rounded-2xl px-6 py-4 text-white placeholder:text-gray-400 focus:border-fifa-blue/50 focus:ring-2 focus:ring-fifa-blue/20 transition-all duration-300;
     box-shadow: 
       0 8px 16px -4px rgba(0, 0, 0, 0.2),
       inset 0 1px 0 rgba(255, 255, 255, 0.1);
   }
 
+  .modern-input:focus {
+    box-shadow: 
+      0 12px 24px -4px rgba(0, 0, 0, 0.3),
+      0 0 0 3px rgba(59, 130, 246, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  }
+
   .modern-button {
-    @apply px-6 py-3 rounded-2xl font-medium transition-all duration-300 transform hover:scale-105 hover:shadow-lg;
+    @apply px-8 py-4 rounded-2xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg relative overflow-hidden;
   }
 
   .modern-button-primary {
-    @apply modern-button bg-fifa-gradient text-white shadow-lg glow-effect;
+    @apply modern-button text-white shadow-xl relative;
+    background: linear-gradient(135deg, var(--fifa-blue) 0%, var(--fifa-purple) 50%, var(--fifa-blue) 100%);
+    box-shadow: 
+      0 10px 20px -5px rgba(59, 130, 246, 0.4),
+      0 0 30px rgba(139, 92, 246, 0.2);
+  }
+
+  .modern-button-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+  }
+
+  .modern-button-primary:hover::before {
+    left: 100%;
+  }
+
+  .modern-button-primary:hover {
+    box-shadow: 
+      0 15px 30px -5px rgba(59, 130, 246, 0.6),
+      0 0 40px rgba(139, 92, 246, 0.3);
+    transform: translateY(-2px) scale(1.05);
   }
 
   .modern-button-secondary {
-    @apply modern-button bg-white/10 text-white border border-white/20 hover:bg-white/20;
-  }
-
-  .nav-item {
-    @apply flex items-center gap-3 p-3 rounded-2xl text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-300 group;
-  }
-
-  .nav-item.active {
-    @apply bg-fifa-blue/20 text-fifa-blue border border-fifa-blue/30;
+    @apply modern-button bg-gradient-to-br from-white/15 to-white/5 text-white border border-white/30 hover:from-white/25 hover:to-white/10 backdrop-blur-lg;
     box-shadow: 
-      0 8px 16px -4px rgba(30, 64, 175, 0.3),
-      inset 0 1px 0 rgba(30, 64, 175, 0.2);
-  }
-
-  .section-card {
-    @apply glass-card p-8 hover:shadow-3xl transition-all duration-500 hover:-translate-y-2;
-  }
-
-  .metric-card {
-    @apply bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg border border-white/20 rounded-2xl p-6 hover:scale-105 transition-all duration-300;
-    box-shadow: 
-      0 20px 25px -5px rgba(0, 0, 0, 0.3),
-      0 10px 10px -5px rgba(0, 0, 0, 0.1),
+      0 8px 16px -4px rgba(0, 0, 0, 0.2),
       inset 0 1px 0 rgba(255, 255, 255, 0.1);
   }
 
+  .nav-item {
+    @apply flex items-center gap-3 p-4 rounded-2xl text-gray-300 hover:text-white hover:bg-gradient-to-r hover:from-white/15 hover:to-white/5 transition-all duration-300 group relative overflow-hidden;
+  }
+
+  .nav-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(to bottom, var(--fifa-blue), var(--fifa-purple));
+    transform: scaleY(0);
+    transition: transform 0.3s ease;
+  }
+
+  .nav-item:hover::before {
+    transform: scaleY(1);
+  }
+
+  .nav-item.active {
+    @apply bg-gradient-to-r from-fifa-blue/20 to-fifa-purple/10 text-fifa-blue border border-fifa-blue/30;
+    box-shadow: 
+      0 8px 16px -4px rgba(59, 130, 246, 0.3),
+      inset 0 1px 0 rgba(59, 130, 246, 0.2);
+  }
+
+  .nav-item.active::before {
+    transform: scaleY(1);
+  }
+
+  .section-card {
+    @apply glass-card p-8 hover:shadow-3xl transition-all duration-500 hover:-translate-y-2 relative overflow-hidden;
+  }
+
+  .section-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--fifa-blue), var(--fifa-purple), var(--fifa-gold), var(--fifa-green));
+    opacity: 0.7;
+  }
+
+  .metric-card {
+    @apply bg-gradient-to-br from-white/15 via-white/10 to-white/5 backdrop-blur-xl border border-white/20 rounded-3xl p-6 hover:scale-105 transition-all duration-300 relative overflow-hidden;
+    box-shadow: 
+      0 20px 25px -5px rgba(0, 0, 0, 0.3),
+      0 10px 10px -5px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  }
+
+  .metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--fifa-blue), var(--fifa-purple));
+    opacity: 0.8;
+  }
+
   .stagger-animation > * {
-    animation: slide-up 0.6s ease-out forwards;
+    animation: slide-up 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(30px);
   }
 
   .stagger-animation > *:nth-child(1) { animation-delay: 0.1s; }
@@ -182,6 +283,7 @@
   .stagger-animation > *:nth-child(3) { animation-delay: 0.3s; }
   .stagger-animation > *:nth-child(4) { animation-delay: 0.4s; }
   .stagger-animation > *:nth-child(5) { animation-delay: 0.5s; }
+  .stagger-animation > *:nth-child(6) { animation-delay: 0.6s; }
 
   @keyframes slide-up {
     to {
@@ -195,6 +297,58 @@
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(20px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% {
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+    }
+    50% {
+      box-shadow: 0 0 40px rgba(59, 130, 246, 0.6);
+    }
+  }
+
+  /* FIFA Gradient Background */
+  .fifa-gradient {
+    background: linear-gradient(135deg, var(--fifa-blue) 0%, var(--fifa-purple) 100%);
+  }
+
+  /* Scrollbar Styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(to bottom, var(--fifa-blue), var(--fifa-purple));
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(to bottom, var(--fifa-purple), var(--fifa-blue));
   }
 }
 
@@ -225,4 +379,23 @@
       0 15px 30px -5px rgba(0, 0, 0, 0.1),
       inset 0 1px 0 rgba(255, 255, 255, 0.1);
   }
+
+  /* FIFA Color Utilities */
+  .text-fifa-blue { color: var(--fifa-blue); }
+  .text-fifa-gold { color: var(--fifa-gold); }
+  .text-fifa-green { color: var(--fifa-green); }
+  .text-fifa-purple { color: var(--fifa-purple); }
+  .text-fifa-red { color: var(--fifa-red); }
+  
+  .bg-fifa-blue { background-color: var(--fifa-blue); }
+  .bg-fifa-gold { background-color: var(--fifa-gold); }
+  .bg-fifa-green { background-color: var(--fifa-green); }
+  .bg-fifa-purple { background-color: var(--fifa-purple); }
+  .bg-fifa-red { background-color: var(--fifa-red); }
+
+  .border-fifa-blue { border-color: var(--fifa-blue); }
+  .border-fifa-gold { border-color: var(--fifa-gold); }
+  .border-fifa-green { border-color: var(--fifa-green); }
+  .border-fifa-purple { border-color: var(--fifa-purple); }
+  .border-fifa-red { border-color: var(--fifa-red); }
 }
