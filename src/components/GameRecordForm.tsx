@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -44,11 +45,35 @@ const GameRecordForm = ({ onSubmit, gameNumber, existingGame }: GameRecordFormPr
       passAccuracy: existingGame.teamStats.passAccuracy.toString(),
       corners: existingGame.teamStats.corners.toString(),
       fouls: existingGame.teamStats.fouls.toString(),
-    } : {}
+    } : {
+      goalsFor: '0',
+      goalsAgainst: '0',
+      opponentSkill: '5',
+      duration: '90',
+      comments: '',
+      shots: '0',
+      shotsOnTarget: '0',
+      possession: '50',
+      expectedGoals: '0',
+      expectedGoalsAgainst: '0',
+      passes: '0',
+      passAccuracy: '80',
+      corners: '0',
+      fouls: '0',
+    }
   });
 
-  const goalsFor = watch('goalsFor', existingGame ? existingGame.scoreLine.split('-')[0] : 0);
-  const goalsAgainst = watch('goalsAgainst', existingGame ? existingGame.scoreLine.split('-')[1] : 0);
+  const goalsFor = watch('goalsFor');
+  const goalsAgainst = watch('goalsAgainst');
+
+  // Set existing squad if editing
+  useEffect(() => {
+    if (existingGame && squads.length > 0) {
+      // Try to find the squad used for this game
+      const usedSquad = squads[0]; // For now, just use first squad if editing
+      setSelectedSquad(usedSquad);
+    }
+  }, [existingGame, squads]);
 
   // Auto-populate players when squad is selected
   useEffect(() => {
