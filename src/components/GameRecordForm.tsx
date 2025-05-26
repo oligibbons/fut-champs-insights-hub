@@ -9,8 +9,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { GameResult, TeamStats } from '@/types/futChampions';
-import { Trophy, Target, Clock, MessageSquare } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { GameResult, TeamStats, PlayerPerformance } from '@/types/futChampions';
+import { Trophy, Target, Clock, MessageSquare, Users } from 'lucide-react';
+import PlayerPerformanceInput from './PlayerPerformanceInput';
 
 interface GameRecordFormProps {
   onSubmit: (gameData: Partial<GameResult>) => void;
@@ -20,6 +22,7 @@ interface GameRecordFormProps {
 const GameRecordForm = ({ onSubmit, gameNumber }: GameRecordFormProps) => {
   const [result, setResult] = useState<'win' | 'loss' | ''>('');
   const [gameContext, setGameContext] = useState<string>('normal');
+  const [playerPerformances, setPlayerPerformances] = useState<PlayerPerformance[]>([]);
   
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm();
 
@@ -49,9 +52,9 @@ const GameRecordForm = ({ onSubmit, gameNumber }: GameRecordFormProps) => {
       gameContext: gameContext as any,
       comments: data.comments || '',
       teamStats,
+      playerStats: playerPerformances,
       duration: parseInt(data.duration) || 90,
-      date: new Date().toISOString(),
-      playerStats: [] // We'll add player stats later
+      date: new Date().toISOString()
     };
 
     onSubmit(gameData);
@@ -70,236 +73,270 @@ const GameRecordForm = ({ onSubmit, gameNumber }: GameRecordFormProps) => {
   };
 
   return (
-    <Card className="glass-card">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-white">
-          <Trophy className="h-5 w-5 text-fifa-gold" />
-          Record Game {gameNumber}
-        </CardTitle>
-      </CardHeader>
-      
-      <CardContent>
-        <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
-          {/* Game Result Section */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-              <Target className="h-4 w-4" />
-              Match Result
-            </h3>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="goalsFor" className="text-gray-300">Goals For</Label>
-                <Input
-                  id="goalsFor"
-                  type="number"
-                  min="0"
-                  max="20"
-                  {...register('goalsFor', { required: true, onChange: handleScoreChange })}
-                  className="bg-white/10 border-white/20 text-white"
-                />
-              </div>
+    <div className="space-y-6">
+      <Card className="glass-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-white">
+            <Trophy className="h-5 w-5 text-fifa-gold" />
+            Record Game {gameNumber}
+          </CardTitle>
+        </CardHeader>
+        
+        <CardContent>
+          <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
+            <Tabs defaultValue="match" className="w-full">
+              <TabsList className="grid w-full grid-cols-4 bg-white/10">
+                <TabsTrigger value="match" className="text-white">Match Result</TabsTrigger>
+                <TabsTrigger value="stats" className="text-white">Team Stats</TabsTrigger>
+                <TabsTrigger value="players" className="text-white">Players</TabsTrigger>
+                <TabsTrigger value="notes" className="text-white">Notes</TabsTrigger>
+              </TabsList>
               
-              <div>
-                <Label htmlFor="goalsAgainst" className="text-gray-300">Goals Against</Label>
-                <Input
-                  id="goalsAgainst"
-                  type="number"
-                  min="0"
-                  max="20"
-                  {...register('goalsAgainst', { required: true, onChange: handleScoreChange })}
-                  className="bg-white/10 border-white/20 text-white"
+              <TabsContent value="match" className="space-y-4 mt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                      <Target className="h-4 w-4" />
+                      Score
+                    </h3>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="goalsFor" className="text-gray-300">Goals For</Label>
+                        <Input
+                          id="goalsFor"
+                          type="number"
+                          min="0"
+                          max="20"
+                          {...register('goalsFor', { required: true, onChange: handleScoreChange })}
+                          className="bg-white/10 border-white/20 text-white"
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="goalsAgainst" className="text-gray-300">Goals Against</Label>
+                        <Input
+                          id="goalsAgainst"
+                          type="number"
+                          min="0"
+                          max="20"
+                          {...register('goalsAgainst', { required: true, onChange: handleScoreChange })}
+                          className="bg-white/10 border-white/20 text-white"
+                        />
+                      </div>
+                    </div>
+
+                    {result && (
+                      <Badge 
+                        variant={result === 'win' ? 'default' : 'destructive'}
+                        className="text-sm"
+                      >
+                        {result === 'win' ? 'Victory!' : 'Defeat'}
+                      </Badge>
+                    )}
+                  </div>
+
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-white">Game Details</h3>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <Label className="text-gray-300">Opponent Skill (1-10)</Label>
+                        <Select onValueChange={(value) => setValue('opponentSkill', value)}>
+                          <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                            <SelectValue placeholder="Rate opponent skill" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {[1,2,3,4,5,6,7,8,9,10].map(num => (
+                              <SelectItem key={num} value={num.toString()}>
+                                {num} {num <= 3 ? '(Beginner)' : num <= 6 ? '(Average)' : num <= 8 ? '(Good)' : '(Pro)'}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label className="text-gray-300">Game Context</Label>
+                        <Select value={gameContext} onValueChange={setGameContext}>
+                          <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="normal">Normal Game</SelectItem>
+                            <SelectItem value="rage_quit">Rage Quit</SelectItem>
+                            <SelectItem value="extra_time">Extra Time</SelectItem>
+                            <SelectItem value="penalties">Penalties</SelectItem>
+                            <SelectItem value="disconnect">Disconnect</SelectItem>
+                            <SelectItem value="hacker">Hacker</SelectItem>
+                            <SelectItem value="free_win">Free Win</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="duration" className="text-gray-300">Game Duration (minutes)</Label>
+                        <Input
+                          id="duration"
+                          type="number"
+                          min="1"
+                          max="150"
+                          defaultValue="90"
+                          {...register('duration')}
+                          className="bg-white/10 border-white/20 text-white"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="stats" className="space-y-4 mt-6">
+                <h3 className="text-lg font-semibold text-white">Team Statistics</h3>
+                
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="shots" className="text-gray-300">Shots</Label>
+                    <Input
+                      id="shots"
+                      type="number"
+                      min="0"
+                      {...register('shots')}
+                      className="bg-white/10 border-white/20 text-white"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="shotsOnTarget" className="text-gray-300">Shots on Target</Label>
+                    <Input
+                      id="shotsOnTarget"
+                      type="number"
+                      min="0"
+                      {...register('shotsOnTarget')}
+                      className="bg-white/10 border-white/20 text-white"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="possession" className="text-gray-300">Possession %</Label>
+                    <Input
+                      id="possession"
+                      type="number"
+                      min="0"
+                      max="100"
+                      {...register('possession')}
+                      className="bg-white/10 border-white/20 text-white"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="expectedGoals" className="text-gray-300">Expected Goals</Label>
+                    <Input
+                      id="expectedGoals"
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      {...register('expectedGoals')}
+                      className="bg-white/10 border-white/20 text-white"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="expectedGoalsAgainst" className="text-gray-300">Expected Goals Against</Label>
+                    <Input
+                      id="expectedGoalsAgainst"
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      {...register('expectedGoalsAgainst')}
+                      className="bg-white/10 border-white/20 text-white"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="passes" className="text-gray-300">Passes</Label>
+                    <Input
+                      id="passes"
+                      type="number"
+                      min="0"
+                      {...register('passes')}
+                      className="bg-white/10 border-white/20 text-white"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="passAccuracy" className="text-gray-300">Pass Accuracy %</Label>
+                    <Input
+                      id="passAccuracy"
+                      type="number"
+                      min="0"
+                      max="100"
+                      {...register('passAccuracy')}
+                      className="bg-white/10 border-white/20 text-white"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="corners" className="text-gray-300">Corners</Label>
+                    <Input
+                      id="corners"
+                      type="number"
+                      min="0"
+                      {...register('corners')}
+                      className="bg-white/10 border-white/20 text-white"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="fouls" className="text-gray-300">Fouls</Label>
+                    <Input
+                      id="fouls"
+                      type="number"
+                      min="0"
+                      {...register('fouls')}
+                      className="bg-white/10 border-white/20 text-white"
+                    />
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="players" className="mt-6">
+                <PlayerPerformanceInput 
+                  players={playerPerformances}
+                  onChange={setPlayerPerformances}
                 />
-              </div>
-            </div>
+              </TabsContent>
 
-            {result && (
-              <Badge 
-                variant={result === 'win' ? 'default' : 'destructive'}
-                className="text-sm"
-              >
-                {result === 'win' ? 'Victory!' : 'Defeat'}
-              </Badge>
-            )}
-          </div>
+              <TabsContent value="notes" className="space-y-4 mt-6">
+                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4" />
+                  Game Notes
+                </h3>
+                
+                <div>
+                  <Label htmlFor="comments" className="text-gray-300">Comments</Label>
+                  <Textarea
+                    id="comments"
+                    placeholder="How did the game go? What worked well? What needs improvement?"
+                    {...register('comments')}
+                    className="bg-white/10 border-white/20 text-white min-h-[100px]"
+                  />
+                </div>
+              </TabsContent>
+            </Tabs>
 
-          <Separator className="bg-white/20" />
-
-          {/* Game Context & Opponent */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white">Game Details</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label className="text-gray-300">Opponent Skill (1-10)</Label>
-                <Select onValueChange={(value) => setValue('opponentSkill', value)}>
-                  <SelectTrigger className="bg-white/10 border-white/20 text-white">
-                    <SelectValue placeholder="Rate opponent skill" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[1,2,3,4,5,6,7,8,9,10].map(num => (
-                      <SelectItem key={num} value={num.toString()}>
-                        {num} {num <= 3 ? '(Beginner)' : num <= 6 ? '(Average)' : num <= 8 ? '(Good)' : '(Pro)'}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label className="text-gray-300">Game Context</Label>
-                <Select value={gameContext} onValueChange={setGameContext}>
-                  <SelectTrigger className="bg-white/10 border-white/20 text-white">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="normal">Normal Game</SelectItem>
-                    <SelectItem value="rage_quit">Rage Quit</SelectItem>
-                    <SelectItem value="extra_time">Extra Time</SelectItem>
-                    <SelectItem value="penalties">Penalties</SelectItem>
-                    <SelectItem value="disconnect">Disconnect</SelectItem>
-                    <SelectItem value="hacker">Hacker</SelectItem>
-                    <SelectItem value="free_win">Free Win</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="duration" className="text-gray-300">Game Duration (minutes)</Label>
-              <Input
-                id="duration"
-                type="number"
-                min="1"
-                max="150"
-                defaultValue="90"
-                {...register('duration')}
-                className="bg-white/10 border-white/20 text-white"
-              />
-            </div>
-          </div>
-
-          <Separator className="bg-white/20" />
-
-          {/* Team Statistics */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white">Team Statistics</h3>
-            
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="shots" className="text-gray-300">Shots</Label>
-                <Input
-                  id="shots"
-                  type="number"
-                  min="0"
-                  {...register('shots')}
-                  className="bg-white/10 border-white/20 text-white"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="shotsOnTarget" className="text-gray-300">Shots on Target</Label>
-                <Input
-                  id="shotsOnTarget"
-                  type="number"
-                  min="0"
-                  {...register('shotsOnTarget')}
-                  className="bg-white/10 border-white/20 text-white"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="possession" className="text-gray-300">Possession %</Label>
-                <Input
-                  id="possession"
-                  type="number"
-                  min="0"
-                  max="100"
-                  {...register('possession')}
-                  className="bg-white/10 border-white/20 text-white"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="expectedGoals" className="text-gray-300">Expected Goals</Label>
-                <Input
-                  id="expectedGoals"
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  {...register('expectedGoals')}
-                  className="bg-white/10 border-white/20 text-white"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="expectedGoalsAgainst" className="text-gray-300">Expected Goals Against</Label>
-                <Input
-                  id="expectedGoalsAgainst"
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  {...register('expectedGoalsAgainst')}
-                  className="bg-white/10 border-white/20 text-white"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="passes" className="text-gray-300">Passes</Label>
-                <Input
-                  id="passes"
-                  type="number"
-                  min="0"
-                  {...register('passes')}
-                  className="bg-white/10 border-white/20 text-white"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="passAccuracy" className="text-gray-300">Pass Accuracy %</Label>
-                <Input
-                  id="passAccuracy"
-                  type="number"
-                  min="0"
-                  max="100"
-                  {...register('passAccuracy')}
-                  className="bg-white/10 border-white/20 text-white"
-                />
-              </div>
-            </div>
-          </div>
-
-          <Separator className="bg-white/20" />
-
-          {/* Comments */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-              <MessageSquare className="h-4 w-4" />
-              Game Notes
-            </h3>
-            
-            <div>
-              <Label htmlFor="comments" className="text-gray-300">Comments</Label>
-              <Textarea
-                id="comments"
-                placeholder="How did the game go? What worked well? What needs improvement?"
-                {...register('comments')}
-                className="bg-white/10 border-white/20 text-white min-h-[100px]"
-              />
-            </div>
-          </div>
-
-          <Button 
-            type="submit" 
-            className="w-full bg-fifa-gradient hover:shadow-lg transition-all duration-300"
-            disabled={!result}
-          >
-            <Trophy className="h-4 w-4 mr-2" />
-            Save Game
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+            <Button 
+              type="submit" 
+              className="w-full bg-fifa-gradient hover:shadow-lg transition-all duration-300"
+              disabled={!result}
+            >
+              <Trophy className="h-4 w-4 mr-2" />
+              Save Game
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

@@ -1,3 +1,18 @@
+
+export interface PlayerPerformance {
+  id: string;
+  name: string;
+  position: string;
+  rating: number; // out of 10, to 1 decimal place
+  goals: number;
+  assists: number;
+  yellowCards: number;
+  redCards: number;
+  ownGoals: number;
+  minutesPlayed: number;
+  wasSubstituted: boolean;
+}
+
 export interface Player {
   id: string;
   name: string;
@@ -36,7 +51,7 @@ export interface GameResult {
   opponentSkill: number; // 1-10
   gameContext: 'normal' | 'rage_quit' | 'extra_time' | 'penalties' | 'disconnect' | 'hacker' | 'free_win';
   comments: string;
-  playerStats: Player[];
+  playerStats: PlayerPerformance[];
   teamStats: TeamStats;
   date: string;
   duration: number; // in minutes
