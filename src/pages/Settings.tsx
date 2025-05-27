@@ -7,20 +7,24 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { useLocalStorage, exportData, importData } from '@/hooks/useLocalStorage';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { useTheme, themes } from '@/hooks/useTheme';
 import { UserSettings } from '@/types/futChampions';
-import { Plus, Trash2, Upload, Download, Settings2, User } from 'lucide-react';
+import { Settings as SettingsIcon, Palette, Bell, BarChart3, Shield, Zap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const Settings = () => {
   const { toast } = useToast();
-  const [settings, setSettings] = useLocalStorage<UserSettings>('fc25-settings', {
+  const { currentTheme, applyTheme } = useTheme();
+  const [settings, setSettings] = useLocalStorage<UserSettings>('futChampions_settings', {
     preferredFormation: '4-3-3',
     trackingStartDate: new Date().toISOString().split('T')[0],
     gameplayStyle: 'balanced',
     notifications: true,
     gamesPerWeek: 15,
+    theme: 'default',
     dashboardSettings: {
       showTopPerformers: true,
       showXGAnalysis: true,
@@ -30,6 +34,10 @@ const Settings = () => {
       showOpponentAnalysis: true,
       showPositionalAnalysis: true,
       showRecentTrends: true,
+      showAchievements: true,
+      showTargetProgress: true,
+      showTimeAnalysis: true,
+      showStressAnalysis: true,
     },
     currentWeekSettings: {
       showTopPerformers: true,
@@ -40,146 +48,103 @@ const Settings = () => {
       showOpponentAnalysis: true,
       showPositionalAnalysis: true,
       showRecentTrends: true,
+      showAchievements: true,
+      showTargetProgress: true,
+      showTimeAnalysis: true,
+      showStressAnalysis: true,
+    },
+    qualifierSettings: {
+      totalGames: 5,
+      winsRequired: 2,
+    },
+    targetSettings: {
+      autoSetTargets: false,
+      adaptiveTargets: true,
+      notifyOnTarget: true,
+    },
+    analyticsPreferences: {
+      detailedPlayerStats: true,
+      opponentTracking: true,
+      timeTracking: true,
+      stressTracking: true,
+      showAnimations: true,
+      dynamicFeedback: true,
     }
   });
-  
-  const [accounts, setAccounts] = useLocalStorage<string[]>('fc25-accounts', ['Main Account']);
-  const [activeAccount, setActiveAccount] = useLocalStorage<string>('fc25-active-account', 'Main Account');
-  const [newAccountName, setNewAccountName] = useState('');
-  const [allData] = useLocalStorage('fc25-weeks', []);
 
-  const handleAddAccount = () => {
-    if (newAccountName.trim() && !accounts.includes(newAccountName.trim())) {
-      const updatedAccounts = [...accounts, newAccountName.trim()];
-      setAccounts(updatedAccounts);
-      setNewAccountName('');
-      toast({
-        title: "Account Added",
-        description: `${newAccountName.trim()} has been added to your accounts.`,
-      });
-    }
-  };
-
-  const handleDeleteAccount = (accountName: string) => {
-    if (accounts.length > 1) {
-      const updatedAccounts = accounts.filter(acc => acc !== accountName);
-      setAccounts(updatedAccounts);
-      if (activeAccount === accountName) {
-        setActiveAccount(updatedAccounts[0]);
-      }
-      toast({
-        title: "Account Deleted",
-        description: `${accountName} has been removed.`,
-      });
-    }
-  };
-
-  const handleExportData = () => {
-    const exportableData = {
-      settings,
-      accounts,
-      activeAccount,
-      weekData: allData,
-      exportDate: new Date().toISOString()
-    };
-    exportData(exportableData, 'fc25-tracker-data');
+  const updateSettings = (newSettings: Partial<UserSettings>) => {
+    const updated = { ...settings, ...newSettings };
+    setSettings(updated);
     toast({
-      title: "Data Exported",
-      description: "Your FUT Champions data has been exported successfully.",
+      title: "Settings Updated",
+      description: "Your preferences have been saved successfully.",
     });
   };
 
-  const handleImportData = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      try {
-        const data = await importData(file);
-        if (data.settings) setSettings(data.settings);
-        if (data.accounts) setAccounts(data.accounts);
-        if (data.activeAccount) setActiveAccount(data.activeAccount);
-        toast({
-          title: "Data Imported",
-          description: "Your FUT Champions data has been imported successfully.",
-        });
-      } catch (error) {
-        toast({
-          title: "Import Failed",
-          description: "Failed to import data. Please check the file format.",
-          variant: "destructive",
-        });
-      }
-    }
+  const updateDashboardSettings = (key: keyof typeof settings.dashboardSettings, value: boolean) => {
+    updateSettings({
+      dashboardSettings: { ...settings.dashboardSettings, [key]: value }
+    });
+  };
+
+  const updateCurrentWeekSettings = (key: keyof typeof settings.currentWeekSettings, value: boolean) => {
+    updateSettings({
+      currentWeekSettings: { ...settings.currentWeekSettings, [key]: value }
+    });
+  };
+
+  const handleThemeChange = (themeId: string) => {
+    applyTheme(themeId);
+    updateSettings({ theme: themeId });
   };
 
   return (
     <div className="min-h-screen">
       <Navigation />
       
-      <main className="lg:ml-64 p-6">
+      <main className="lg:ml-64 p-4 lg:p-6">
         <div className="max-w-4xl mx-auto space-y-6">
-          <h1 className="text-3xl font-bold gradient-text mb-6">Settings</h1>
-          
-          {/* Account Management */}
+          {/* Header */}
+          <div className="flex items-center gap-4 mb-8">
+            <div className="p-3 bg-fifa-blue/20 rounded-2xl">
+              <SettingsIcon className="h-8 w-8 text-fifa-blue" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold gradient-text">Settings</h1>
+              <p className="text-gray-400 mt-1">Customize your FUT Champions experience</p>
+            </div>
+          </div>
+
+          {/* Theme Settings */}
           <Card className="glass-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-white">
-                <User className="h-5 w-5 text-fifa-blue" />
-                Account Management
+                <Palette className="h-5 w-5 text-fifa-purple" />
+                Appearance
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4">
               <div>
-                <Label className="text-white mb-2 block">Active Account</Label>
-                <Select value={activeAccount} onValueChange={setActiveAccount}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {accounts.map((account) => (
-                      <SelectItem key={account} value={account}>
-                        {account}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-3">
-                <Label className="text-white">Your Accounts</Label>
-                <div className="flex flex-wrap gap-2">
-                  {accounts.map((account) => (
-                    <div key={account} className="flex items-center gap-2">
-                      <Badge 
-                        variant={account === activeAccount ? "default" : "outline"}
-                        className={account === activeAccount ? "bg-fifa-blue" : ""}
-                      >
-                        {account}
-                      </Badge>
-                      {accounts.length > 1 && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleDeleteAccount(account)}
-                          className="h-6 w-6 p-0 text-fifa-red hover:text-fifa-red"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      )}
-                    </div>
+                <Label className="text-gray-300 mb-3 block">Theme</Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {themes.map(theme => (
+                    <Button
+                      key={theme.id}
+                      variant={currentTheme.id === theme.id ? "default" : "outline"}
+                      onClick={() => handleThemeChange(theme.id)}
+                      className="p-4 h-auto flex-col items-start space-y-2 bg-white/5 border-white/20 hover:bg-white/10"
+                    >
+                      <div className="flex items-center gap-2 w-full">
+                        <div 
+                          className="w-4 h-4 rounded-full"
+                          style={{ background: theme.colors.primary }}
+                        />
+                        <span className="font-medium text-white">{theme.name}</span>
+                      </div>
+                      <p className="text-xs text-gray-400 text-left">{theme.description}</p>
+                    </Button>
                   ))}
                 </div>
-              </div>
-
-              <div className="flex gap-2">
-                <Input
-                  placeholder="New account name..."
-                  value={newAccountName}
-                  onChange={(e) => setNewAccountName(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleAddAccount()}
-                />
-                <Button onClick={handleAddAccount} disabled={!newAccountName.trim()}>
-                  <Plus className="h-4 w-4" />
-                </Button>
               </div>
             </CardContent>
           </Card>
@@ -188,122 +153,168 @@ const Settings = () => {
           <Card className="glass-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-white">
-                <Settings2 className="h-5 w-5 text-fifa-purple" />
-                General Settings
+                <SettingsIcon className="h-5 w-5 text-fifa-blue" />
+                General
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <Label className="text-white mb-2 block">Preferred Formation</Label>
-                <Select 
-                  value={settings.preferredFormation} 
-                  onValueChange={(value) => setSettings({...settings, preferredFormation: value})}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="4-3-3">4-3-3</SelectItem>
-                    <SelectItem value="4-4-2">4-4-2</SelectItem>
-                    <SelectItem value="3-5-2">3-5-2</SelectItem>
-                    <SelectItem value="4-2-3-1">4-2-3-1</SelectItem>
-                    <SelectItem value="4-1-2-1-2">4-1-2-1-2</SelectItem>
-                    <SelectItem value="5-3-2">5-3-2</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="formation" className="text-gray-300">Preferred Formation</Label>
+                  <Select 
+                    value={settings.preferredFormation} 
+                    onValueChange={(value) => updateSettings({ preferredFormation: value })}
+                  >
+                    <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="4-3-3">4-3-3</SelectItem>
+                      <SelectItem value="4-2-3-1">4-2-3-1</SelectItem>
+                      <SelectItem value="4-4-2">4-4-2</SelectItem>
+                      <SelectItem value="3-5-2">3-5-2</SelectItem>
+                      <SelectItem value="5-3-2">5-3-2</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <div>
-                <Label className="text-white mb-2 block">Gameplay Style</Label>
-                <Select 
-                  value={settings.gameplayStyle} 
-                  onValueChange={(value: 'aggressive' | 'balanced' | 'defensive') => 
-                    setSettings({...settings, gameplayStyle: value})}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="aggressive">Aggressive</SelectItem>
-                    <SelectItem value="balanced">Balanced</SelectItem>
-                    <SelectItem value="defensive">Defensive</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label className="text-white mb-2 block">Games Per Week</Label>
-                <Select 
-                  value={settings.gamesPerWeek.toString()} 
-                  onValueChange={(value) => setSettings({...settings, gamesPerWeek: parseInt(value)})}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="15">15 Games (FC25)</SelectItem>
-                    <SelectItem value="20">20 Games (FC24)</SelectItem>
-                    <SelectItem value="25">25 Games (Custom)</SelectItem>
-                    <SelectItem value="30">30 Games (Custom)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label className="text-white mb-2 block">Tracking Start Date</Label>
-                <Input
-                  type="date"
-                  value={settings.trackingStartDate}
-                  onChange={(e) => setSettings({...settings, trackingStartDate: e.target.value})}
-                />
+                <div>
+                  <Label htmlFor="gameplayStyle" className="text-gray-300">Gameplay Style</Label>
+                  <Select 
+                    value={settings.gameplayStyle} 
+                    onValueChange={(value: 'aggressive' | 'balanced' | 'defensive') => updateSettings({ gameplayStyle: value })}
+                  >
+                    <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="aggressive">Aggressive</SelectItem>
+                      <SelectItem value="balanced">Balanced</SelectItem>
+                      <SelectItem value="defensive">Defensive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div className="flex items-center justify-between">
                 <div>
-                  <Label className="text-white">Notifications</Label>
-                  <p className="text-sm text-gray-400">Enable browser notifications for reminders</p>
+                  <Label className="text-white font-medium">Notifications</Label>
+                  <p className="text-sm text-gray-400">Get notified about achievements and targets</p>
                 </div>
                 <Switch
                   checked={settings.notifications}
-                  onCheckedChange={(checked) => setSettings({...settings, notifications: checked})}
+                  onCheckedChange={(checked) => updateSettings({ notifications: checked })}
                 />
               </div>
             </CardContent>
           </Card>
 
-          {/* Data Management */}
+          {/* Dashboard Customization */}
           <Card className="glass-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-white">
-                <Download className="h-5 w-5 text-fifa-green" />
-                Data Management
+                <BarChart3 className="h-5 w-5 text-fifa-green" />
+                Dashboard Tiles
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex gap-4">
-                <Button onClick={handleExportData} className="flex items-center gap-2">
-                  <Download className="h-4 w-4" />
-                  Export Data
-                </Button>
-                
-                <div className="relative">
-                  <input
-                    type="file"
-                    accept=".json"
-                    onChange={handleImportData}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Object.entries(settings.dashboardSettings).map(([key, enabled]) => (
+                  <div key={key} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                    <Label className="text-white capitalize">
+                      {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                    </Label>
+                    <Switch
+                      checked={enabled}
+                      onCheckedChange={(checked) => updateDashboardSettings(key as any, checked)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Analytics Preferences */}
+          <Card className="glass-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-white">
+                <Zap className="h-5 w-5 text-fifa-gold" />
+                Analytics & Features
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {Object.entries(settings.analyticsPreferences).map(([key, enabled]) => (
+                <div key={key} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                  <div>
+                    <Label className="text-white capitalize font-medium">
+                      {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                    </Label>
+                    <p className="text-sm text-gray-400">
+                      {key === 'showAnimations' && 'Show celebratory animations and visual effects'}
+                      {key === 'dynamicFeedback' && 'Get real-time feedback during data input'}
+                      {key === 'detailedPlayerStats' && 'Track comprehensive player performance metrics'}
+                      {key === 'opponentTracking' && 'Analyze opponent patterns and tactics'}
+                      {key === 'timeTracking' && 'Monitor performance across different times'}
+                      {key === 'stressTracking' && 'Track stress levels and their impact on performance'}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={enabled}
+                    onCheckedChange={(checked) => updateSettings({
+                      analyticsPreferences: { ...settings.analyticsPreferences, [key]: checked }
+                    })}
                   />
-                  <Button variant="outline" className="flex items-center gap-2">
-                    <Upload className="h-4 w-4" />
-                    Import Data
-                  </Button>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Qualifier Settings */}
+          <Card className="glass-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-white">
+                <Shield className="h-5 w-5 text-fifa-red" />
+                Qualifier Settings
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="totalGames" className="text-gray-300">Total Qualifier Games</Label>
+                  <Input
+                    id="totalGames"
+                    type="number"
+                    min="1"
+                    max="10"
+                    value={settings.qualifierSettings.totalGames}
+                    onChange={(e) => updateSettings({
+                      qualifierSettings: { 
+                        ...settings.qualifierSettings, 
+                        totalGames: parseInt(e.target.value) 
+                      }
+                    })}
+                    className="bg-white/10 border-white/20 text-white"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="winsRequired" className="text-gray-300">Wins Required</Label>
+                  <Input
+                    id="winsRequired"
+                    type="number"
+                    min="1"
+                    max="10"
+                    value={settings.qualifierSettings.winsRequired}
+                    onChange={(e) => updateSettings({
+                      qualifierSettings: { 
+                        ...settings.qualifierSettings, 
+                        winsRequired: parseInt(e.target.value) 
+                      }
+                    })}
+                    className="bg-white/10 border-white/20 text-white"
+                  />
                 </div>
               </div>
-              
-              <p className="text-sm text-gray-400">
-                Export your data to backup your progress, or import previously exported data.
-                All data is stored locally in your browser.
-              </p>
             </CardContent>
           </Card>
         </div>

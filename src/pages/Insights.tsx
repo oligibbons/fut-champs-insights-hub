@@ -21,7 +21,6 @@ const Insights = () => {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const generateInsights = (): Insight[] => {
-    // Get all games, not just from completed weeks
     const allGames = weeks.flatMap(week => week.games);
     if (allGames.length === 0) return [];
 
@@ -41,127 +40,174 @@ const Insights = () => {
     const winRate = totalGames > 0 ? (totalWins / totalGames) * 100 : 0;
     const goalRatio = totalConceded > 0 ? totalGoals / totalConceded : totalGoals;
 
-    // Get player performances
-    const allPlayerPerformances = allGames.flatMap(game => game.playerStats || []);
-    const topScorers = allPlayerPerformances.reduce((acc, perf) => {
-      const existing = acc.find(p => p.name === perf.name);
-      if (existing) {
-        existing.goals += perf.goals;
-        existing.games += 1;
-      } else {
-        acc.push({ name: perf.name, goals: perf.goals, games: 1 });
-      }
-      return acc;
-    }, [] as any[]).sort((a, b) => b.goals - a.goals);
-
-    // Single game insights
-    if (totalGames === 1) {
-      const game = allGames[0];
-      if (game.result === 'win') {
+    // Generate insights based on performance
+    if (totalGames >= 1) {
+      if (winRate > 70) {
         insights.push({
-          id: '1',
+          id: 'excellent_performance',
           type: 'general',
-          title: 'Great Start!',
-          description: `Excellent first game! You won ${game.scoreLine} against a ${game.opponentSkill}/10 rated opponent.`,
-          confidence: 90,
-          actionable: false
-        });
-      } else {
-        insights.push({
-          id: '2',
-          type: 'tactical',
-          title: 'Learning Opportunity',
-          description: `First game was tough, but every loss is a chance to improve. Consider analyzing what went wrong in the ${game.scoreLine} result.`,
-          confidence: 85,
-          actionable: true
-        });
-      }
-    }
-
-    // Win Rate Analysis (for 2+ games)
-    if (totalGames >= 2) {
-      if (winRate < 40) {
-        insights.push({
-          id: '3',
-          type: 'tactical',
-          title: 'Focus on Defensive Stability',
-          description: `Your current win rate is ${winRate.toFixed(1)}%. Consider switching to a more defensive formation like 5-3-2 or 4-2-3-1 to improve defensive solidity.`,
-          confidence: 85,
-          actionable: true
-        });
-      } else if (winRate > 70) {
-        insights.push({
-          id: '4',
-          type: 'general',
-          title: 'Excellent Performance!',
-          description: `Your win rate of ${winRate.toFixed(1)}% is outstanding. You're playing at a high level consistently.`,
+          title: 'Outstanding Performance!',
+          description: `Your win rate of ${winRate.toFixed(1)}% is exceptional. You're playing at an elite level and consistently outperforming opponents.`,
           confidence: 95,
           actionable: false
         });
-      }
-    }
-
-    // Goal Scoring Analysis
-    if (totalGames >= 3) {
-      if (goalRatio < 1) {
+      } else if (winRate < 40) {
         insights.push({
-          id: '5',
+          id: 'improve_consistency',
           type: 'tactical',
-          title: 'Improve Attacking Play',
-          description: `You're scoring ${goalRatio.toFixed(2)} goals for every goal conceded. Focus on creating more chances and clinical finishing.`,
-          confidence: 80,
+          title: 'Focus on Consistency',
+          description: `Your current win rate is ${winRate.toFixed(1)}%. Consider reviewing your tactics and focusing on defensive stability to improve results.`,
+          confidence: 85,
           actionable: true
         });
       }
     }
 
-    // Player Performance Insights
-    if (topScorers.length > 0 && topScorers[0].goals > 0) {
-      insights.push({
-        id: '6',
-        type: 'player',
-        title: 'Top Scorer Identified',
-        description: `${topScorers[0].name} is your key player with ${topScorers[0].goals} goals in ${topScorers[0].games} games. Build your tactics around them!`,
-        confidence: 90,
-        actionable: true
-      });
+    if (totalGames >= 3) {
+      if (goalRatio > 2) {
+        insights.push({
+          id: 'attacking_strength',
+          type: 'tactical',
+          title: 'Attacking Powerhouse',
+          description: `You're scoring ${goalRatio.toFixed(2)} goals for every goal conceded. Your attacking play is your biggest strength - keep utilizing it!`,
+          confidence: 90,
+          actionable: false
+        });
+      } else if (goalRatio < 1) {
+        insights.push({
+          id: 'defensive_improvement',
+          type: 'tactical',
+          title: 'Tighten Your Defense',
+          description: `You're conceding more goals than you score. Focus on defensive positioning and consider a more conservative formation.`,
+          confidence: 85,
+          actionable: true
+        });
+      }
     }
 
-    // Opponent Skill Analysis
     if (avgOpponentSkill > 7) {
       insights.push({
-        id: '7',
+        id: 'strong_opposition',
         type: 'general',
-        title: 'Playing Strong Opposition',
-        description: `Your average opponent skill level is ${avgOpponentSkill.toFixed(1)}/10. You're consistently facing skilled players, which will improve your game.`,
+        title: 'Facing Elite Competition',
+        description: `Your average opponent skill level is ${avgOpponentSkill.toFixed(1)}/10. You're consistently facing high-level players, which will accelerate your improvement.`,
         confidence: 90,
         actionable: false
       });
     }
 
-    // Recent form analysis (last 5 games)
+    // XG Analysis
+    const totalXG = allGames.reduce((sum, game) => sum + (game.teamStats.expectedGoals || 0), 0);
+    const totalXGA = allGames.reduce((sum, game) => sum + (game.teamStats.expectedGoalsAgainst || 0), 0);
+    
+    if (totalXG > 0) {
+      const xgPerformance = ((totalGoals - totalXG) / totalXG) * 100;
+      if (xgPerformance > 20) {
+        insights.push({
+          id: 'clinical_finishing',
+          type: 'player',
+          title: 'Clinical Finishing',
+          description: `You're outperforming your Expected Goals by ${xgPerformance.toFixed(1)}%. Your finishing is exceptional - maintain this clinical edge!`,
+          confidence: 92,
+          actionable: false
+        });
+      } else if (xgPerformance < -20) {
+        insights.push({
+          id: 'improve_finishing',
+          type: 'player',
+          title: 'Work on Finishing',
+          description: `You're underperforming your Expected Goals by ${Math.abs(xgPerformance).toFixed(1)}%. Focus on finishing drills and shot selection.`,
+          confidence: 88,
+          actionable: true
+        });
+      }
+    }
+
+    // Recent form analysis
     if (totalGames >= 5) {
       const recentGames = allGames.slice(-5);
       const recentWins = recentGames.filter(game => game.result === 'win').length;
       const recentForm = (recentWins / 5) * 100;
       
-      if (recentForm < 40) {
+      if (recentForm >= 80) {
         insights.push({
-          id: '8',
+          id: 'hot_streak',
+          type: 'general',
+          title: 'On Fire! 🔥',
+          description: `You've won ${recentWins} of your last 5 games (${recentForm}% win rate). You're in excellent form - ride this momentum!`,
+          confidence: 95,
+          actionable: false
+        });
+      } else if (recentForm <= 20) {
+        insights.push({
+          id: 'form_slump',
           type: 'tactical',
-          title: 'Poor Recent Form',
-          description: `You've won only ${recentWins} of your last 5 games. Consider changing formation or adjusting tactics.`,
+          title: 'Break the Slump',
+          description: `Only ${recentWins} wins in your last 5 games. Consider changing your formation or tactics to refresh your approach.`,
           confidence: 85,
           actionable: true
         });
-      } else if (recentForm > 60) {
+      }
+    }
+
+    // Player performance insights
+    const allPlayerStats = allGames.flatMap(game => game.playerStats || []);
+    if (allPlayerStats.length > 0) {
+      const topScorer = allPlayerStats.reduce((acc, player) => {
+        const existing = acc.find(p => p.name === player.name);
+        if (existing) {
+          existing.goals += player.goals;
+          existing.games += 1;
+        } else {
+          acc.push({ name: player.name, goals: player.goals, games: 1 });
+        }
+        return acc;
+      }, [] as any[]).sort((a, b) => b.goals - a.goals)[0];
+
+      if (topScorer && topScorer.goals > 0) {
         insights.push({
-          id: '9',
-          type: 'general',
-          title: 'Hot Streak!',
-          description: `You're in great form with ${recentWins} wins in your last 5 games. Keep up the momentum!`,
+          id: 'top_performer',
+          type: 'player',
+          title: 'Star Player Identified',
+          description: `${topScorer.name} is your top performer with ${topScorer.goals} goals in ${topScorer.games} games. Build your tactics around this key player!`,
           confidence: 90,
-          actionable: false
+          actionable: true
+        });
+      }
+    }
+
+    // Time-based insights
+    const gamesByTime = allGames.filter(game => game.time);
+    if (gamesByTime.length >= 5) {
+      const eveningGames = gamesByTime.filter(game => {
+        const hour = parseInt(game.time!.split(':')[0]);
+        return hour >= 18;
+      });
+      const eveningWinRate = eveningGames.length > 0 ? (eveningGames.filter(g => g.result === 'win').length / eveningGames.length) * 100 : 0;
+      
+      const morningGames = gamesByTime.filter(game => {
+        const hour = parseInt(game.time!.split(':')[0]);
+        return hour < 12;
+      });
+      const morningWinRate = morningGames.length > 0 ? (morningGames.filter(g => g.result === 'win').length / morningGames.length) * 100 : 0;
+
+      if (eveningWinRate - morningWinRate > 20) {
+        insights.push({
+          id: 'evening_performer',
+          type: 'general',
+          title: 'Evening Warrior',
+          description: `You perform ${(eveningWinRate - morningWinRate).toFixed(1)}% better in evening games. Schedule your key matches for later in the day!`,
+          confidence: 80,
+          actionable: true
+        });
+      } else if (morningWinRate - eveningWinRate > 20) {
+        insights.push({
+          id: 'morning_performer',
+          type: 'general',
+          title: 'Early Bird Advantage',
+          description: `You perform ${(morningWinRate - eveningWinRate).toFixed(1)}% better in morning games. Consider playing your important matches earlier in the day!`,
+          confidence: 80,
+          actionable: true
         });
       }
     }
@@ -226,7 +272,7 @@ const Insights = () => {
               <CardContent className="p-6 lg:p-8 text-center">
                 <Brain className="h-16 w-16 text-fifa-blue mx-auto mb-4 opacity-50" />
                 <h3 className="text-xl font-semibold text-white mb-2">No Insights Available</h3>
-                <p className="text-gray-400">Play at least one game to receive AI-powered insights.</p>
+                <p className="text-gray-400">Play at least one game to receive AI-powered insights about your performance.</p>
               </CardContent>
             </Card>
           ) : (

@@ -1,5 +1,4 @@
-
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navigation from '@/components/Navigation';
 import WeeklyOverview from '@/components/WeeklyOverview';
 import StatCard from '@/components/StatCard';
@@ -172,6 +171,43 @@ const Index = () => {
   // Calculate achievements count
   const unlockedAchievements = 3; // This would be calculated by the achievement system
 
+  // Mock stats calculation
+  const calculateStats = () => {
+    const allGames = weeklyData.flatMap(week => week.games);
+    return {
+      totalGames: allGames.length,
+      totalWins: weeklyData.reduce((sum, week) => sum + week.totalWins, 0),
+      totalGoals: weeklyData.reduce((sum, week) => sum + week.totalGoals, 0),
+      avgRating: allGames.length > 0 ? 
+        allGames.reduce((sum, game) => {
+          const avgPlayerRating = game.playerStats.length > 0 
+            ? game.playerStats.reduce((playerSum, player) => playerSum + player.rating, 0) / game.playerStats.length
+            : 7.0;
+          return sum + avgPlayerRating;
+        }, 0) / allGames.length : 7.0,
+      currentStreak: calculateCurrentStreak(allGames)
+    };
+  };
+
+  const calculateCurrentStreak = (games: GameResult[]): number => {
+    if (games.length === 0) return 0;
+    
+    let streak = 0;
+    const sortedGames = [...games].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    
+    for (const game of sortedGames) {
+      if (game.result === 'win') {
+        streak++;
+      } else {
+        break;
+      }
+    }
+    
+    return streak;
+  };
+
+  const stats = calculateStats();
+
   return (
     <div className="min-h-screen">
       <Navigation />
@@ -179,202 +215,167 @@ const Index = () => {
       <main className="lg:ml-64 p-4 lg:p-6">
         <div className="max-w-7xl mx-auto space-y-6 lg:space-y-8">
           {/* Header */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-2xl lg:text-3xl font-bold gradient-text">FUT Champions Command Center</h1>
-              <p className="text-gray-400 mt-1 text-sm">Your ultimate performance tracking headquarters</p>
+          <div className="text-center space-y-4">
+            <div className="inline-flex items-center gap-3 p-4 bg-fifa-gradient rounded-3xl shadow-2xl">
+              <Trophy className="h-8 w-8 text-white" />
+              <h1 className="text-3xl lg:text-4xl font-bold text-white">
+                FUT Champions Insights Hub
+              </h1>
             </div>
-            <div className="flex gap-2">
-              <Link to="/current-week">
-                <Button className="bg-fifa-gradient hover:shadow-lg transition-all duration-300">
-                  <Plus className="h-4 w-4 mr-2" />
-                  New Game
-                </Button>
-              </Link>
-            </div>
+            <p className="text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed">
+              Track, analyze, and dominate your FUT Champions journey with AI-powered insights and comprehensive performance analytics.
+            </p>
           </div>
 
-          {/* Enhanced Stats Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+          {/* Quick Stats Grid */}
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 lg:gap-6">
             <StatCard
-              title="Total Weeks"
-              value={overallStats.totalWeeks}
-              icon={<Calendar className="h-5 w-5 text-fifa-blue" />}
-              trend={weeklyData.length > 1 ? '+1' : undefined}
+              title="Total Games"
+              value={stats.totalGames}
+              icon={<Target className="h-6 w-6" />}
+              trend="neutral"
+              className="stat-card-gradient-blue"
             />
             <StatCard
-              title="Win Rate"
-              value={`${overallStats.averageWinRate.toFixed(1)}%`}
-              icon={<Trophy className="h-5 w-5 text-fifa-gold" />}
-              trend={overallStats.averageWinRate > 60 ? 'Excellent' : overallStats.averageWinRate > 40 ? 'Good' : 'Improving'}
+              title="Total Wins"
+              value={stats.totalWins}
+              icon={<Trophy className="h-6 w-6" />}
+              trend="positive"
+              className="stat-card-gradient-green"
             />
             <StatCard
               title="Total Goals"
-              value={overallStats.totalGoals}
-              icon={<Target className="h-5 w-5 text-fifa-green" />}
-              trend={`${(overallStats.totalGoals / Math.max(overallStats.totalGames, 1)).toFixed(1)} per game`}
+              value={stats.totalGoals}
+              icon={<Target className="h-6 w-6" />}
+              trend="positive"
+              className="stat-card-gradient-gold"
             />
             <StatCard
-              title="Best Week"
-              value={`${overallStats.bestWeek} wins`}
-              icon={<Star className="h-5 w-5 text-fifa-purple" />}
+              title="Avg Rating"
+              value={stats.avgRating.toFixed(1)}
+              icon={<Star className="h-6 w-6" />}
+              trend="neutral"
+              className="stat-card-gradient-purple"
             />
             <StatCard
-              title="Current Streak"
-              value={`${overallStats.currentStreak}W`}
-              icon={<Zap className="h-5 w-5 text-fifa-blue" />}
-              trend={overallStats.currentStreak > 0 ? 'Hot!' : 'Build momentum'}
-            />
-            <StatCard
-              title="Playtime"
-              value={`${overallStats.totalPlaytime}h`}
-              icon={<Clock className="h-5 w-5 text-fifa-red" />}
-              trend={`${overallStats.averageGameTime}m avg`}
+              title="Win Streak"
+              value={stats.currentStreak}
+              icon={<TrendingUp className="h-6 w-6" />}
+              trend={stats.currentStreak > 0 ? "positive" : "neutral"}
+              className="stat-card-gradient-red"
             />
           </div>
 
-          {/* Main Dashboard Tabs */}
-          <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 bg-white/10">
-              <TabsTrigger value="overview" className="text-white">Overview</TabsTrigger>
-              <TabsTrigger value="analytics" className="text-white">Analytics</TabsTrigger>
-              <TabsTrigger value="achievements" className="text-white">Achievements</TabsTrigger>
-            </TabsList>
+          {/* Main Dashboard Carousel */}
+          <DashboardCarousel 
+            title="Performance Overview"
+            weeklyData={weeklyData}
+            currentWeek={currentWeek}
+            enabledTiles={enabledTiles}
+          />
 
-            <TabsContent value="overview" className="space-y-6 mt-6">
-              {/* Current Week Overview */}
-              <WeeklyOverview weekData={getCurrentWeekData()} />
-
-              {/* Dashboard Analytics Carousel */}
-              {weeklyData.length > 0 && (
-                <DashboardCarousel 
-                  title="Performance Analytics"
-                  weeklyData={weeklyData}
-                  currentWeek={currentWeek}
-                  enabledTiles={enabledTiles}
-                />
-              )}
-
-              {/* Recent Activity & Quick Actions */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Recent Games */}
-                <Card className="glass-card p-4 lg:p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-white">Recent Games</h3>
-                    <Link to="/current-week">
-                      <Button variant="outline" size="sm" className="text-sm">View All</Button>
-                    </Link>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    {recentGames.length > 0 ? (
-                      recentGames.map((game) => (
-                        <div key={game.id} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
-                          <div className="flex items-center space-x-3 min-w-0 flex-1">
-                            <Badge 
-                              variant={game.result === 'win' ? 'default' : 'destructive'}
-                              className="w-10 text-center flex-shrink-0"
-                            >
-                              {game.result === 'win' ? 'W' : 'L'}
-                            </Badge>
-                            <div className="min-w-0">
-                              <p className="text-sm font-medium text-white truncate">{game.scoreLine}</p>
-                              <p className="text-xs text-gray-400">Game {game.gameNumber}</p>
-                            </div>
-                          </div>
-                          <div className="text-right flex-shrink-0">
-                            <p className="text-xs text-gray-400">Opponent Skill</p>
-                            <p className="text-sm font-medium text-white">{game.opponentSkill}/10</p>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="text-center py-6 lg:py-8 text-gray-400">
-                        <Clock className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                        <p className="text-sm">No games played yet</p>
-                        <Link to="/current-week">
-                          <Button variant="outline" size="sm" className="mt-2 text-sm">
-                            Start First Game
-                          </Button>
-                        </Link>
-                      </div>
-                    )}
-                  </div>
-                </Card>
-
-                {/* Enhanced Quick Actions */}
-                <Card className="glass-card p-4 lg:p-6">
-                  <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
-                  
-                  <div className="space-y-3">
-                    <Link to="/current-week" className="block">
-                      <Button className="w-full justify-start bg-fifa-blue hover:bg-fifa-blue/80 text-sm">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Record New Game
-                      </Button>
-                    </Link>
-                    
-                    <Link to="/squads" className="block">
-                      <Button variant="outline" className="w-full justify-start text-sm">
-                        <Users className="h-4 w-4 mr-2" />
-                        Manage Squads
-                      </Button>
-                    </Link>
-                    
-                    <Link to="/analytics" className="block">
-                      <Button variant="outline" className="w-full justify-start text-sm">
-                        <BarChart3 className="h-4 w-4 mr-2" />
-                        Deep Analytics
-                      </Button>
-                    </Link>
-                    
-                    <Link to="/insights" className="block">
-                      <Button variant="outline" className="w-full justify-start text-sm">
-                        <Trophy className="h-4 w-4 mr-2" />
-                        AI Insights
-                      </Button>
-                    </Link>
-
-                    {/* Achievement preview */}
-                    <div className="pt-2 border-t border-white/10">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-gray-400">Latest Achievement</span>
-                        <Badge className="bg-fifa-gold/20 text-fifa-gold border-fifa-gold/30">
-                          <Award className="h-3 w-3 mr-1" />
-                          {unlockedAchievements}
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-white">First Victory unlocked!</p>
-                    </div>
-                  </div>
-                </Card>
+          {/* Quick Actions Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Recent Games */}
+            <Card className="glass-card p-4 lg:p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-white">Recent Games</h3>
+                <Link to="/current-week">
+                  <Button variant="outline" size="sm" className="text-sm">View All</Button>
+                </Link>
               </div>
-            </TabsContent>
-
-            <TabsContent value="analytics" className="space-y-6 mt-6">
-              <Card className="glass-card p-6">
-                <div className="text-center">
-                  <BarChart3 className="h-12 w-12 mx-auto text-fifa-blue mb-4" />
-                  <h3 className="text-xl font-semibold text-white mb-2">Advanced Analytics</h3>
-                  <p className="text-gray-400 mb-4">
-                    Detailed performance analytics are available on the Current Week page and dedicated Analytics section.
-                  </p>
-                  <div className="flex gap-2 justify-center">
+              
+              <div className="space-y-3">
+                {recentGames.length > 0 ? (
+                  recentGames.map((game) => (
+                    <div key={game.id} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                      <div className="flex items-center space-x-3 min-w-0 flex-1">
+                        <Badge 
+                          variant={game.result === 'win' ? 'default' : 'destructive'}
+                          className="w-10 text-center flex-shrink-0"
+                        >
+                          {game.result === 'win' ? 'W' : 'L'}
+                        </Badge>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-white truncate">{game.scoreLine}</p>
+                          <p className="text-xs text-gray-400">Game {game.gameNumber}</p>
+                        </div>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-xs text-gray-400">Opponent Skill</p>
+                        <p className="text-sm font-medium text-white">{game.opponentSkill}/10</p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-6 lg:py-8 text-gray-400">
+                    <Clock className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">No games played yet</p>
                     <Link to="/current-week">
-                      <Button>View Current Week Analytics</Button>
-                    </Link>
-                    <Link to="/analytics">
-                      <Button variant="outline">Full Analytics</Button>
+                      <Button variant="outline" size="sm" className="mt-2 text-sm">
+                        Start First Game
+                      </Button>
                     </Link>
                   </div>
-                </div>
-              </Card>
-            </TabsContent>
+                )}
+              </div>
+            </Card>
 
-            <TabsContent value="achievements" className="space-y-6 mt-6">
-              <AchievementSystem weeklyData={weeklyData} />
-            </TabsContent>
-          </Tabs>
+            {/* Enhanced Quick Actions */}
+            <Card className="glass-card p-4 lg:p-6">
+              <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
+              
+              <div className="space-y-3">
+                <Link to="/current-week" className="block">
+                  <Button className="w-full justify-start bg-fifa-blue hover:bg-fifa-blue/80 text-sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Record New Game
+                  </Button>
+                </Link>
+                
+                <Link to="/squads" className="block">
+                  <Button variant="outline" className="w-full justify-start text-sm">
+                    <Users className="h-4 w-4 mr-2" />
+                    Manage Squads
+                  </Button>
+                </Link>
+                
+                <Link to="/analytics" className="block">
+                  <Button variant="outline" className="w-full justify-start text-sm">
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Deep Analytics
+                  </Button>
+                </Link>
+                
+                <Link to="/insights" className="block">
+                  <Button variant="outline" className="w-full justify-start text-sm">
+                    <Trophy className="h-4 w-4 mr-2" />
+                    AI Insights
+                  </Button>
+                </Link>
+
+                {/* Achievement preview */}
+                <div className="pt-2 border-t border-white/10">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-gray-400">Latest Achievement</span>
+                    <Badge className="bg-fifa-gold/20 text-fifa-gold border-fifa-gold/30">
+                      <Award className="h-3 w-3 mr-1" />
+                      {unlockedAchievements}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-white">First Victory unlocked!</p>
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          {/* Weekly Overview */}
+          {currentWeek && (
+            <WeeklyOverview 
+              weeklyData={weeklyData}
+              currentWeek={currentWeek}
+            />
+          )}
         </div>
       </main>
     </div>

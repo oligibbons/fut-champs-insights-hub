@@ -1,78 +1,39 @@
 
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
-import { WeeklyPerformance, PlayerPerformance } from '@/types/futChampions';
+import { WeeklyPerformance } from '@/types/futChampions';
 import { 
   Trophy, 
   Target, 
   TrendingUp, 
   TrendingDown, 
   Star, 
-  Users, 
   BarChart3,
   Brain,
   Zap,
-  Shield,
-  Crown
+  Shield
 } from 'lucide-react';
 
 interface CurrentWeekCarouselProps {
-  currentWeek: WeeklyPerformance | null;
+  currentWeek: WeeklyPerformance;
   enabledTiles: string[];
 }
 
 const CurrentWeekCarousel = ({ currentWeek, enabledTiles }: CurrentWeekCarouselProps) => {
-  if (!currentWeek) return null;
+  // Calculate stats
+  const totalGames = currentWeek.games.length;
+  const winRate = totalGames > 0 ? (currentWeek.totalWins / totalGames) * 100 : 0;
+  const xgPerformance = currentWeek.totalExpectedGoals > 0 ? 
+    ((currentWeek.totalGoals - currentWeek.totalExpectedGoals) / currentWeek.totalExpectedGoals) * 100 : 0;
+  const xgaPerformance = currentWeek.totalExpectedGoalsAgainst > 0 ? 
+    ((currentWeek.totalConceded - currentWeek.totalExpectedGoalsAgainst) / currentWeek.totalExpectedGoalsAgainst) * 100 : 0;
 
-  // Calculate current week stats
-  const games = currentWeek.games;
-  const totalGames = games.length;
-  const wins = currentWeek.totalWins;
-  const losses = currentWeek.totalLosses;
-  const winRate = totalGames > 0 ? (wins / totalGames) * 100 : 0;
-  
-  // Get all player performances from this week
-  const allPlayerPerformances: PlayerPerformance[] = games.flatMap(game => game.playerStats || []);
-  
-  // Calculate top performers for the week
-  const playerStats = allPlayerPerformances.reduce((acc, perf) => {
-    const existing = acc.find(p => p.name === perf.name);
-    if (existing) {
-      existing.totalRating += perf.rating;
-      existing.games += 1;
-      existing.goals += perf.goals;
-      existing.assists += perf.assists;
-    } else {
-      acc.push({
-        name: perf.name,
-        position: perf.position,
-        totalRating: perf.rating,
-        games: 1,
-        goals: perf.goals,
-        assists: perf.assists,
-        avgRating: perf.rating
-      });
-    }
-    return acc;
-  }, [] as any[]);
-
-  playerStats.forEach(player => {
-    player.avgRating = player.totalRating / player.games;
-  });
-
-  const topPerformers = playerStats
-    .sort((a, b) => b.avgRating - a.avgRating)
-    .slice(0, 3);
-
-  // Calculate XG performance
-  const totalXG = currentWeek.totalExpectedGoals || 0;
-  const totalXGA = currentWeek.totalExpectedGoalsAgainst || 0;
-  const actualGoals = currentWeek.totalGoals;
-  const actualConceded = currentWeek.totalConceded;
-  
-  const xgPerformance = totalXG > 0 ? ((actualGoals - totalXG) / totalXG) * 100 : 0;
-  const xgaPerformance = totalXGA > 0 ? ((actualConceded - totalXGA) / totalXGA) * 100 : 0;
+  // Get recent form (last 5 games)
+  const recentGames = currentWeek.games.slice(-5);
+  const recentWins = recentGames.filter(game => game.result === 'win').length;
+  const recentForm = recentGames.length > 0 ? (recentWins / recentGames.length) * 100 : 0;
 
   const tiles = [
     {
@@ -87,74 +48,35 @@ const CurrentWeekCarousel = ({ currentWeek, enabledTiles }: CurrentWeekCarouselP
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-center mb-4">
-              <p className="text-4xl font-bold text-fifa-blue mb-2">{winRate.toFixed(0)}%</p>
-              <p className="text-gray-400">Win Rate</p>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4 mb-4">
               <div className="text-center">
-                <p className="text-2xl font-bold text-fifa-green mb-1">{wins}</p>
+                <p className="text-3xl font-bold text-fifa-green mb-1">{currentWeek.totalWins}</p>
                 <p className="text-xs text-gray-400">Wins</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-fifa-red mb-1">{losses}</p>
+                <p className="text-3xl font-bold text-fifa-red mb-1">{currentWeek.totalLosses}</p>
                 <p className="text-xs text-gray-400">Losses</p>
               </div>
             </div>
-            {currentWeek.winTarget && (
-              <div className="mt-4">
-                <div className="flex justify-between text-sm text-gray-400 mb-2">
-                  <span>Target Progress</span>
-                  <span>{wins}/{currentWeek.winTarget}</span>
-                </div>
-                <div className="w-full bg-white/10 rounded-full h-2">
-                  <div 
-                    className="bg-fifa-gold rounded-full h-2 transition-all duration-300"
-                    style={{ width: `${Math.min((wins / currentWeek.winTarget) * 100, 100)}%` }}
-                  ></div>
-                </div>
+            <div>
+              <div className="flex justify-between text-sm text-gray-400 mb-2">
+                <span>Target: {currentWeek.winTarget?.wins || 11} wins</span>
+                <span>{totalGames}/15</span>
               </div>
-            )}
-          </CardContent>
-        </Card>
-      )
-    },
-    {
-      id: 'topPerformers',
-      enabled: enabledTiles.includes('showTopPerformers') && topPerformers.length > 0,
-      content: (
-        <Card className="metric-card h-full">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-fifa-gold text-lg">
-              <Star className="h-5 w-5" />
-              Top Performers
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {topPerformers.map((player, index) => (
-              <div key={player.name} className="flex items-center justify-between p-3 bg-white/5 rounded-xl">
-                <div className="flex items-center gap-3">
-                  <Badge className="bg-fifa-gold/20 text-fifa-gold border-fifa-gold/30 w-8 h-8 flex items-center justify-center rounded-full">
-                    {index + 1}
-                  </Badge>
-                  <div>
-                    <span className="text-white font-medium">{player.name}</span>
-                    <p className="text-xs text-gray-400">{player.position}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-fifa-gold font-bold">{player.avgRating.toFixed(1)}</p>
-                  <p className="text-xs text-gray-400">{player.goals}G {player.assists}A</p>
-                </div>
+              <div className="w-full bg-white/10 rounded-full h-2">
+                <div 
+                  className="bg-fifa-blue rounded-full h-2 transition-all duration-300"
+                  style={{ width: `${(totalGames / 15) * 100}%` }}
+                ></div>
               </div>
-            ))}
+            </div>
           </CardContent>
         </Card>
       )
     },
     {
       id: 'xgAnalysis',
-      enabled: enabledTiles.includes('showXGAnalysis') && totalGames > 0,
+      enabled: enabledTiles.includes('showXGAnalysis'),
       content: (
         <Card className="metric-card h-full">
           <CardHeader className="pb-3">
@@ -197,45 +119,70 @@ const CurrentWeekCarousel = ({ currentWeek, enabledTiles }: CurrentWeekCarouselP
       )
     },
     {
-      id: 'weeklyInsights',
-      enabled: enabledTiles.includes('showAIInsights') && totalGames > 0,
+      id: 'formAnalysis',
+      enabled: enabledTiles.includes('showFormAnalysis'),
+      content: (
+        <Card className="metric-card h-full">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-fifa-purple text-lg">
+              <TrendingUp className="h-5 w-5" />
+              Recent Form
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center mb-4">
+              <p className="text-4xl font-bold text-fifa-purple mb-2">{recentForm.toFixed(0)}%</p>
+              <p className="text-gray-400">Last {recentGames.length} Games</p>
+            </div>
+            <div className="flex justify-center gap-1">
+              {recentGames.map((game, index) => (
+                <div
+                  key={game.id}
+                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                    game.result === 'win' 
+                      ? 'bg-fifa-green text-white' 
+                      : 'bg-fifa-red text-white'
+                  }`}
+                >
+                  {game.result === 'win' ? 'W' : 'L'}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )
+    },
+    {
+      id: 'aiInsights',
+      enabled: enabledTiles.includes('showAIInsights'),
       content: (
         <Card className="metric-card h-full">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-fifa-green text-lg">
               <Brain className="h-5 w-5" />
-              Week Insights
+              AI Insights
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {winRate > 60 && (
-                <div className="p-3 bg-fifa-green/10 border border-fifa-green/20 rounded-xl">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Zap className="h-4 w-4 text-fifa-green" />
-                    <span className="text-fifa-green font-medium text-sm">Strong Week</span>
-                  </div>
-                  <p className="text-white text-sm">Excellent {winRate.toFixed(0)}% win rate this week!</p>
+              <div className="p-3 bg-fifa-green/10 border border-fifa-green/20 rounded-xl">
+                <div className="flex items-center gap-2 mb-2">
+                  <Zap className="h-4 w-4 text-fifa-green" />
+                  <span className="text-fifa-green font-medium text-sm">Strength</span>
                 </div>
-              )}
-              {currentWeek.averageOpponentSkill > 7 && (
-                <div className="p-3 bg-fifa-blue/10 border border-fifa-blue/20 rounded-xl">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Crown className="h-4 w-4 text-fifa-blue" />
-                    <span className="text-fifa-blue font-medium text-sm">Tough Competition</span>
-                  </div>
-                  <p className="text-white text-sm">Facing skilled opponents ({currentWeek.averageOpponentSkill.toFixed(1)}/10)</p>
+                <p className="text-white text-sm">
+                  {xgPerformance > 0 ? 'Clinical finishing - outperforming XG' : 'Solid defensive structure'}
+                </p>
+              </div>
+              <div className="p-3 bg-fifa-red/10 border border-fifa-red/20 rounded-xl">
+                <div className="flex items-center gap-2 mb-2">
+                  <Shield className="h-4 w-4 text-fifa-red" />
+                  <span className="text-fifa-red font-medium text-sm">Focus Area</span>
                 </div>
-              )}
-              {winRate < 40 && totalGames > 2 && (
-                <div className="p-3 bg-fifa-red/10 border border-fifa-red/20 rounded-xl">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Shield className="h-4 w-4 text-fifa-red" />
-                    <span className="text-fifa-red font-medium text-sm">Focus Needed</span>
-                  </div>
-                  <p className="text-white text-sm">Consider adjusting tactics for better results</p>
-                </div>
-              )}
+                <p className="text-white text-sm">
+                  {winRate < 50 ? 'Work on game management' : 'Maintain consistency'}
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -249,7 +196,7 @@ const CurrentWeekCarousel = ({ currentWeek, enabledTiles }: CurrentWeekCarouselP
     return (
       <Card className="glass-card">
         <CardContent className="text-center py-8">
-          <p className="text-gray-400">No data to display yet. Play some games to see insights!</p>
+          <p className="text-gray-400">No tiles enabled. Configure in Settings.</p>
         </CardContent>
       </Card>
     );
@@ -258,7 +205,7 @@ const CurrentWeekCarousel = ({ currentWeek, enabledTiles }: CurrentWeekCarouselP
   return (
     <Card className="glass-card">
       <CardHeader>
-        <CardTitle className="text-white">Week {currentWeek.weekNumber} Analytics</CardTitle>
+        <CardTitle className="text-white">Week Analytics</CardTitle>
       </CardHeader>
       <CardContent>
         <Carousel className="w-full">
