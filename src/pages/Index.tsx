@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { useAchievementNotifications } from '@/hooks/useAchievementNotifications';
 import { WeeklyPerformance, UserSettings, GameResult } from '@/types/futChampions';
 import { 
   Trophy, 
@@ -27,6 +28,8 @@ import { Link } from 'react-router-dom';
 
 const Index = () => {
   const [weeklyData] = useLocalStorage<WeeklyPerformance[]>('futChampions_weeks', []);
+  const { notifyMilestone } = useAchievementNotifications();
+  
   const [settings] = useLocalStorage<UserSettings>('futChampions_settings', {
     preferredFormation: '4-3-3',
     trackingStartDate: new Date().toISOString().split('T')[0],
@@ -142,8 +145,19 @@ const Index = () => {
         currentStreak,
         bestStreak
       });
+
+      // Check for major milestones and notify
+      if (totalGames === 50) {
+        notifyMilestone('Veteran Status', 'You\'ve played 50 games!');
+      } else if (totalGames === 100) {
+        notifyMilestone('Centurion', 'You\'ve reached 100 games!');
+      } else if (totalGoals === 100) {
+        notifyMilestone('Goal Machine', 'You\'ve scored 100 goals!');
+      } else if (weeklyData.length === 10) {
+        notifyMilestone('Dedicated Player', 'You\'ve completed 10 weeks!');
+      }
     }
-  }, [weeklyData]);
+  }, [weeklyData, notifyMilestone]);
 
   const getCurrentWeekData = () => {
     if (!currentWeek) {

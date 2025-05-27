@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { useAchievementNotifications } from '@/hooks/useAchievementNotifications';
 import { WeeklyPerformance, GameResult, UserSettings, WeeklyTarget } from '@/types/futChampions';
 import { ArrowLeft, Trophy, Calendar, Target, Edit, Settings, BarChart3, Award } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -19,6 +20,8 @@ import { useToast } from '@/hooks/use-toast';
 const CurrentWeek = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { checkAndNotifyAchievements, notifyGameFeedback, notifyTargetProgress } = useAchievementNotifications();
+  
   const [weeklyData, setWeeklyData] = useLocalStorage<WeeklyPerformance[]>('futChampions_weeks', []);
   const [settings] = useLocalStorage<UserSettings>('futChampions_settings', {
     preferredFormation: '4-3-3',
@@ -181,6 +184,7 @@ const CurrentWeek = () => {
     setShowGameForm(false);
     setEditingGame(null);
 
+    // Basic success toast
     toast({
       title: editingGame ? "Game Updated" : "Game Recorded",
       description: editingGame 
@@ -188,18 +192,39 @@ const CurrentWeek = () => {
         : `Game ${gameData.gameNumber} has been saved successfully!`,
     });
 
-    if (currentWeek.winTarget && wins >= currentWeek.winTarget.wins && settings.targetSettings.notifyOnTarget) {
-      toast({
-        title: "🎯 Target Achieved!",
-        description: `Congratulations! You've reached your target of ${currentWeek.winTarget.wins} wins!`,
-      });
+    // Check for achievements and notify
+    if (!editingGame) {
+      const allTimeStats = {
+        totalGames: weeklyData.reduce((sum, week) => sum + week.games.length, 0) + 1,
+        totalWins: weeklyData.reduce((sum, week) => sum + week.totalWins, 0) + (gameData.result === 'win' ? 1 : 0),
+        totalGoals: weeklyData.reduce((sum, week) => sum + week.totalGoals, 0) + totalGoals
+      };
+
+      checkAndNotifyAchievements(updatedWeeks, updatedWeek);
+      
+      if (gameData.result) {
+        notifyGameFeedback(gameData as GameResult, updatedWeek, allTimeStats);
+      }
     }
 
+    // Target progress notifications
+    if (currentWeek.winTarget) {
+      notifyTargetProgress(wins, currentWeek.winTarget.wins, 'wins');
+      
+      if (currentWeek.winTarget.goalsScored) {
+        notifyTargetProgress(totalGoals, currentWeek.winTarget.goalsScored, 'goals');
+      }
+    }
+
+    // Week completion notification
     if (updatedWeek.isCompleted && !editingGame) {
-      toast({
-        title: "Week Completed!",
-        description: `Congratulations! You've finished Week ${updatedWeek.weekNumber} with ${wins} wins.`,
-      });
+      setTimeout(() => {
+        toast({
+          title: "🏁 Week Completed!",
+          description: `Congratulations! You've finished Week ${updatedWeek.weekNumber} with ${wins} wins.`,
+          duration: 6000,
+        });
+      }, 2000);
     }
   };
 
