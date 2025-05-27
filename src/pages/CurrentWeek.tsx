@@ -26,6 +26,7 @@ const CurrentWeek = () => {
     gameplayStyle: 'balanced',
     notifications: true,
     gamesPerWeek: 15,
+    theme: 'default',
     dashboardSettings: {
       showTopPerformers: true,
       showXGAnalysis: true,
@@ -53,6 +54,10 @@ const CurrentWeek = () => {
       showTargetProgress: true,
       showTimeAnalysis: true,
       showStressAnalysis: true,
+    },
+    qualifierSettings: {
+      totalGames: 5,
+      winsRequired: 2,
     },
     targetSettings: {
       autoSetTargets: false,

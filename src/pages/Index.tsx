@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import Navigation from '@/components/Navigation';
 import WeeklyOverview from '@/components/WeeklyOverview';
@@ -34,6 +33,7 @@ const Index = () => {
     gameplayStyle: 'balanced',
     notifications: true,
     gamesPerWeek: 15,
+    theme: 'default',
     dashboardSettings: {
       showTopPerformers: true,
       showXGAnalysis: true,
@@ -61,6 +61,10 @@ const Index = () => {
       showTargetProgress: true,
       showTimeAnalysis: true,
       showStressAnalysis: true,
+    },
+    qualifierSettings: {
+      totalGames: 5,
+      winsRequired: 2,
     },
     targetSettings: {
       autoSetTargets: false,
@@ -375,7 +379,7 @@ const Index = () => {
           {/* Weekly Overview */}
           {currentWeek && (
             <WeeklyOverview 
-              weekData={currentWeek}
+              weekData={getCurrentWeekData()}
             />
           )}
         </div>
