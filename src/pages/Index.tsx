@@ -240,35 +240,35 @@ const Index = () => {
               title="Total Games"
               value={stats.totalGames.toString()}
               icon={<Target className="h-6 w-6" />}
-              trend="neutral"
+              trend={5}
               className="stat-card-gradient-blue"
             />
             <StatCard
               title="Total Wins"
               value={stats.totalWins.toString()}
               icon={<Trophy className="h-6 w-6" />}
-              trend="positive"
+              trend={10}
               className="stat-card-gradient-green"
             />
             <StatCard
               title="Total Goals"
               value={stats.totalGoals.toString()}
               icon={<Target className="h-6 w-6" />}
-              trend="positive"
+              trend={8}
               className="stat-card-gradient-gold"
             />
             <StatCard
               title="Avg Rating"
               value={stats.avgRating.toFixed(1)}
               icon={<Star className="h-6 w-6" />}
-              trend="neutral"
+              trend={3}
               className="stat-card-gradient-purple"
             />
             <StatCard
               title="Win Streak"
               value={stats.currentStreak.toString()}
               icon={<TrendingUp className="h-6 w-6" />}
-              trend={stats.currentStreak > 0 ? "positive" : "neutral"}
+              trend={stats.currentStreak > 0 ? 15 : 0}
               className="stat-card-gradient-red"
             />
           </div>

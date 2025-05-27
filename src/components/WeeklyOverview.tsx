@@ -1,5 +1,3 @@
-
-
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -41,7 +39,7 @@ const WeeklyOverview = ({ weekData }: WeeklyOverviewProps) => {
           title="Win Rate"
           value={`${winRate.toFixed(1)}%`}
           icon={<Trophy className="h-5 w-5 text-fifa-gold" />}
-          trend={winRate > 60 ? "positive" : winRate < 40 ? "negative" : "neutral"}
+          trend={winRate > 60 ? 15 : winRate < 40 ? -10 : 5}
         />
         
         <StatCard
@@ -55,7 +53,7 @@ const WeeklyOverview = ({ weekData }: WeeklyOverviewProps) => {
           title="Goal Difference"
           value={(goalsFor - goalsAgainst).toString()}
           icon={<TrendingUp className="h-5 w-5 text-fifa-blue" />}
-          trend={goalsFor - goalsAgainst > 0 ? "positive" : "negative"}
+          trend={goalsFor - goalsAgainst > 0 ? 20 : -15}
         />
         
         <StatCard
@@ -92,4 +90,3 @@ const WeeklyOverview = ({ weekData }: WeeklyOverviewProps) => {
 };
 
 export default WeeklyOverview;
-
