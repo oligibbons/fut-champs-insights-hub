@@ -64,6 +64,8 @@ const CurrentWeek = () => {
       opponentTracking: true,
       timeTracking: true,
       stressTracking: true,
+      showAnimations: true,
+      dynamicFeedback: true,
     }
   });
   const [currentWeek, setCurrentWeek] = useState<WeeklyPerformance | null>(null);

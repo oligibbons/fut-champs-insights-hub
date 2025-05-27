@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import Navigation from '@/components/Navigation';
 import WeeklyOverview from '@/components/WeeklyOverview';
@@ -9,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { WeeklyPerformance, UserSettings } from '@/types/futChampions';
+import { WeeklyPerformance, UserSettings, GameResult } from '@/types/futChampions';
 import { 
   Trophy, 
   TrendingUp, 
@@ -71,6 +72,8 @@ const Index = () => {
       opponentTracking: true,
       timeTracking: true,
       stressTracking: true,
+      showAnimations: true,
+      dynamicFeedback: true,
     }
   });
   const [currentWeek, setCurrentWeek] = useState<WeeklyPerformance | null>(null);
@@ -231,21 +234,21 @@ const Index = () => {
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 lg:gap-6">
             <StatCard
               title="Total Games"
-              value={stats.totalGames}
+              value={stats.totalGames.toString()}
               icon={<Target className="h-6 w-6" />}
               trend="neutral"
               className="stat-card-gradient-blue"
             />
             <StatCard
               title="Total Wins"
-              value={stats.totalWins}
+              value={stats.totalWins.toString()}
               icon={<Trophy className="h-6 w-6" />}
               trend="positive"
               className="stat-card-gradient-green"
             />
             <StatCard
               title="Total Goals"
-              value={stats.totalGoals}
+              value={stats.totalGoals.toString()}
               icon={<Target className="h-6 w-6" />}
               trend="positive"
               className="stat-card-gradient-gold"
@@ -259,7 +262,7 @@ const Index = () => {
             />
             <StatCard
               title="Win Streak"
-              value={stats.currentStreak}
+              value={stats.currentStreak.toString()}
               icon={<TrendingUp className="h-6 w-6" />}
               trend={stats.currentStreak > 0 ? "positive" : "neutral"}
               className="stat-card-gradient-red"
@@ -372,8 +375,7 @@ const Index = () => {
           {/* Weekly Overview */}
           {currentWeek && (
             <WeeklyOverview 
-              weeklyData={weeklyData}
-              currentWeek={currentWeek}
+              weekData={currentWeek}
             />
           )}
         </div>
