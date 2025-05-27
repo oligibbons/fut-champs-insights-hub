@@ -1,99 +1,166 @@
 
 import { GameResult, WeeklyPerformance } from '@/types/futChampions';
 
-export function calculateGameRating(game: GameResult): { rating: string; score: number } {
+export function calculateGameRating(game: GameResult, week: WeeklyPerformance): { letter: string; score: number; color: string } {
   let score = 50; // Base score
   
   // Win/Loss impact (40 points)
   if (game.result === 'win') {
-    score += 40;
+    score += 30;
+    
+    // Bonus for decisive wins
+    const [goalsFor, goalsAgainst] = game.scoreLine.split('-').map(Number);
+    const goalDifference = goalsFor - goalsAgainst;
+    if (goalDifference >= 3) score += 10;
+    else if (goalDifference >= 2) score += 5;
+    
+    // Clean sheet bonus
+    if (goalsAgainst === 0) score += 5;
   } else {
     score -= 20;
+    
+    // Penalty for heavy defeats
+    const [goalsFor, goalsAgainst] = game.scoreLine.split('-').map(Number);
+    const goalDifference = goalsAgainst - goalsFor;
+    if (goalDifference >= 3) score -= 10;
+    else if (goalDifference >= 2) score -= 5;
   }
   
-  // Goal difference impact (20 points max)
-  const [goalsFor, goalsAgainst] = game.scoreLine.split('-').map(Number);
-  const goalDiff = goalsFor - goalsAgainst;
-  score += Math.min(Math.max(goalDiff * 5, -20), 20);
+  // Opponent skill adjustment (15 points)
+  const opponentBonus = (game.opponentSkill - 5) * 2;
+  score += opponentBonus;
   
-  // XG performance (15 points max)
-  const xgDiff = game.teamStats.actualGoals - game.teamStats.expectedGoals;
-  score += Math.min(Math.max(xgDiff * 3, -10), 15);
+  // Player performance (20 points)
+  if (game.playerStats && game.playerStats.length > 0) {
+    const avgRating = game.playerStats.reduce((sum, player) => sum + player.rating, 0) / game.playerStats.length;
+    score += (avgRating - 6) * 4;
+  }
   
-  // Opponent skill bonus (10 points max)
-  if (game.opponentSkill >= 8) score += 10;
-  else if (game.opponentSkill >= 6) score += 5;
-  else if (game.opponentSkill <= 3) score -= 5;
+  // Expected Goals performance (10 points)
+  if (game.teamStats.expectedGoals > 0) {
+    const [goalsFor] = game.scoreLine.split('-').map(Number);
+    const xgDifference = goalsFor - game.teamStats.expectedGoals;
+    score += xgDifference * 3;
+  }
   
-  // Clean sheet bonus (5 points)
-  if (goalsAgainst === 0 && game.result === 'win') score += 5;
+  // Context bonuses/penalties (10 points)
+  switch (game.gameContext) {
+    case 'extra_time':
+      score += 5;
+      break;
+    case 'penalties':
+      score += game.penaltyShootout?.userWon ? 8 : -3;
+      break;
+    case 'rage_quit':
+      score += game.result === 'win' ? 10 : -5;
+      break;
+    case 'disconnect':
+      score -= 5;
+      break;
+  }
   
-  // High scoring bonus (5 points)
-  if (goalsFor >= 4) score += 5;
+  // Server quality adjustment (5 points)
+  if (game.serverQuality) {
+    score += (game.serverQuality - 5);
+  }
   
-  // Penalty win bonus (5 points)
-  if (game.penaltyShootout?.userWon) score += 5;
+  // Stress level adjustment (5 points)
+  if (game.stressLevel) {
+    score -= (game.stressLevel - 5) * 0.5;
+  }
   
-  // Game context penalties
-  if (game.gameContext === 'rage_quit') score -= 5;
-  if (game.gameContext === 'disconnect') score -= 10;
-  if (game.gameContext === 'hacker') score -= 15;
+  // Ensure score is within bounds
+  score = Math.max(0, Math.min(100, Math.round(score)));
   
-  // Clamp score between 0 and 100
-  score = Math.max(0, Math.min(100, score));
+  // Determine letter grade and color
+  let letter: string;
+  let color: string;
   
-  // Convert to letter grade
-  let rating = 'F';
-  if (score >= 95) rating = 'S';
-  else if (score >= 85) rating = 'A';
-  else if (score >= 75) rating = 'B';
-  else if (score >= 65) rating = 'C';
-  else if (score >= 50) rating = 'D';
+  if (score >= 90) {
+    letter = 'S';
+    color = '#9932CC';
+  } else if (score >= 80) {
+    letter = 'A';
+    color = '#32CD32';
+  } else if (score >= 70) {
+    letter = 'B';
+    color = '#FFD700';
+  } else if (score >= 50) {
+    letter = 'C';
+    color = '#FF8C00';
+  } else if (score >= 40) {
+    letter = 'D';
+    color = '#DC143C';
+  } else {
+    letter = 'F';
+    color = '#8B0000';
+  }
   
-  return { rating, score: Math.round(score) };
+  return { letter, score, color };
 }
 
-export function calculateWeekRating(week: WeeklyPerformance): { rating: string; score: number } {
-  if (week.games.length === 0) return { rating: 'F', score: 0 };
-  
-  let score = 50; // Base score
-  
-  // Win rate impact (40 points)
-  const winRate = week.totalWins / week.games.length;
-  score += winRate * 40;
-  
-  // Target achievement (20 points)
-  if (week.winTarget && week.totalWins >= week.winTarget.wins) {
-    score += 20;
+export function calculateWeekRating(week: WeeklyPerformance): { letter: string; score: number; color: string } {
+  if (week.games.length === 0) {
+    return { letter: 'F', score: 0, color: '#8B0000' };
   }
   
-  // Goal difference (15 points max)
-  const goalDiff = week.totalGoals - week.totalConceded;
-  score += Math.min(Math.max(goalDiff, -15), 15);
+  const gameRatings = week.games.map(game => calculateGameRating(game, week));
+  const avgScore = gameRatings.reduce((sum, rating) => sum + rating.score, 0) / gameRatings.length;
   
-  // XG performance (15 points max)
-  const xgDiff = week.totalGoals - week.totalExpectedGoals;
-  score += Math.min(Math.max(xgDiff * 2, -10), 15);
+  // Week-specific bonuses
+  let weekScore = avgScore;
   
-  // Opponent strength bonus (10 points max)
-  if (week.averageOpponentSkill >= 7) score += 10;
-  else if (week.averageOpponentSkill >= 5) score += 5;
+  // Win rate bonus
+  const winRate = (week.totalWins / week.games.length) * 100;
+  if (winRate >= 80) weekScore += 5;
+  else if (winRate >= 60) weekScore += 2;
+  else if (winRate < 40) weekScore -= 5;
   
-  // Consistency bonus (10 points max)
-  const gameRatings = week.games.map(game => calculateGameRating(game).score);
-  const consistency = 100 - (Math.max(...gameRatings) - Math.min(...gameRatings));
-  score += (consistency / 100) * 10;
+  // Consistency bonus (less variation in game ratings)
+  const ratingVariation = Math.sqrt(
+    gameRatings.reduce((sum, rating) => sum + Math.pow(rating.score - avgScore, 2), 0) / gameRatings.length
+  );
   
-  // Clamp score between 0 and 100
-  score = Math.max(0, Math.min(100, score));
+  if (ratingVariation < 10) weekScore += 3;
+  else if (ratingVariation > 20) weekScore -= 2;
   
-  // Convert to letter grade
-  let rating = 'F';
-  if (score >= 95) rating = 'S';
-  else if (score >= 85) rating = 'A';
-  else if (score >= 75) rating = 'B';
-  else if (score >= 65) rating = 'C';
-  else if (score >= 50) rating = 'D';
+  // Goals scored bonus
+  if (week.totalGoals >= 30) weekScore += 3;
+  else if (week.totalGoals >= 20) weekScore += 1;
   
-  return { rating, score: Math.round(score) };
+  // Clean sheets bonus
+  const cleanSheets = week.games.filter(game => {
+    const [, goalsAgainst] = game.scoreLine.split('-').map(Number);
+    return goalsAgainst === 0 && game.result === 'win';
+  }).length;
+  
+  weekScore += cleanSheets * 2;
+  
+  weekScore = Math.max(0, Math.min(100, Math.round(weekScore)));
+  
+  // Determine letter grade and color
+  let letter: string;
+  let color: string;
+  
+  if (weekScore >= 90) {
+    letter = 'S';
+    color = '#9932CC';
+  } else if (weekScore >= 80) {
+    letter = 'A';
+    color = '#32CD32';
+  } else if (weekScore >= 70) {
+    letter = 'B';
+    color = '#FFD700';
+  } else if (weekScore >= 50) {
+    letter = 'C';
+    color = '#FF8C00';
+  } else if (weekScore >= 40) {
+    letter = 'D';
+    color = '#DC143C';
+  } else {
+    letter = 'F';
+    color = '#8B0000';
+  }
+  
+  return { letter, score: weekScore, color };
 }

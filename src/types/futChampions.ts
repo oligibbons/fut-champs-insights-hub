@@ -1,4 +1,3 @@
-
 export interface PlayerPerformance {
   id: string;
   name: string;
@@ -285,7 +284,7 @@ export interface MatchFeedback {
   context: 'win' | 'loss' | 'milestone' | 'streak';
 }
 
-// FC25 Rank System
+// FC25 Rank System - Updated with correct win requirements
 export const FC25_RANKS = [
   { name: 'Rank X', wins: 2, color: '#8B4513' },
   { name: 'Rank IX', wins: 4, color: '#CD853F' },
@@ -297,4 +296,14 @@ export const FC25_RANKS = [
   { name: 'Rank III', wins: 11, color: '#FF1493' },
   { name: 'Rank II', wins: 13, color: '#FF4500' },
   { name: 'Rank I', wins: 15, color: '#FF0000' }
+];
+
+// Game Rating System
+export const GAME_RATINGS = [
+  { letter: 'F', minScore: 0, maxScore: 39, color: '#8B0000' },
+  { letter: 'D', minScore: 40, maxScore: 49, color: '#DC143C' },
+  { letter: 'C', minScore: 50, maxScore: 69, color: '#FF8C00' },
+  { letter: 'B', minScore: 70, maxScore: 79, color: '#FFD700' },
+  { letter: 'A', minScore: 80, maxScore: 89, color: '#32CD32' },
+  { letter: 'S', minScore: 90, maxScore: 100, color: '#9932CC' }
 ];

@@ -3,7 +3,8 @@ import Navigation from '@/components/Navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useAccountData } from '@/hooks/useAccountData';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { WeeklyPerformance, UserSettings } from '@/types/futChampions';
 import { Lightbulb, TrendingUp, Target, Users, RefreshCw, Brain } from 'lucide-react';
 import { useState, useMemo } from 'react';
 
@@ -17,11 +18,11 @@ interface Insight {
 }
 
 const Insights = () => {
-  const { weeks, activeAccount } = useAccountData();
+  const [weeklyData] = useLocalStorage<WeeklyPerformance[]>('futChampions_weeks', []);
   const [isGenerating, setIsGenerating] = useState(false);
 
   const generateInsights = (): Insight[] => {
-    const allGames = weeks.flatMap(week => week.games);
+    const allGames = weeklyData.flatMap(week => week.games);
     if (allGames.length === 0) return [];
 
     const insights: Insight[] = [];
@@ -212,10 +213,52 @@ const Insights = () => {
       }
     }
 
+    // Stress level insights
+    const stressGames = allGames.filter(game => game.stressLevel);
+    if (stressGames.length >= 10) {
+      const lowStressGames = stressGames.filter(game => game.stressLevel! <= 4);
+      const highStressGames = stressGames.filter(game => game.stressLevel! >= 7);
+      
+      const lowStressWinRate = lowStressGames.length > 0 ? (lowStressGames.filter(g => g.result === 'win').length / lowStressGames.length) * 100 : 0;
+      const highStressWinRate = highStressGames.length > 0 ? (highStressGames.filter(g => g.result === 'win').length / highStressGames.length) * 100 : 0;
+      
+      if (lowStressWinRate - highStressWinRate > 20) {
+        insights.push({
+          id: 'stress_management',
+          type: 'general',
+          title: 'Stress Affects Performance',
+          description: `You win ${(lowStressWinRate - highStressWinRate).toFixed(1)}% more often when stress is low. Practice relaxation techniques between games!`,
+          confidence: 85,
+          actionable: true
+        });
+      }
+    }
+
+    // Server quality insights
+    const serverGames = allGames.filter(game => game.serverQuality);
+    if (serverGames.length >= 10) {
+      const goodServerGames = serverGames.filter(game => game.serverQuality! >= 7);
+      const badServerGames = serverGames.filter(game => game.serverQuality! <= 4);
+      
+      const goodServerWinRate = goodServerGames.length > 0 ? (goodServerGames.filter(g => g.result === 'win').length / goodServerGames.length) * 100 : 0;
+      const badServerWinRate = badServerGames.length > 0 ? (badServerGames.filter(g => g.result === 'win').length / badServerGames.length) * 100 : 0;
+      
+      if (goodServerWinRate - badServerWinRate > 15) {
+        insights.push({
+          id: 'server_dependency',
+          type: 'general',
+          title: 'Server Quality Matters',
+          description: `You perform ${(goodServerWinRate - badServerWinRate).toFixed(1)}% better with good server quality. Try playing during off-peak hours for better connections!`,
+          confidence: 80,
+          actionable: true
+        });
+      }
+    }
+
     return insights;
   };
 
-  const insights = useMemo(() => generateInsights(), [weeks]);
+  const insights = useMemo(() => generateInsights(), [weeklyData]);
 
   const handleRefreshInsights = () => {
     setIsGenerating(true);
@@ -251,7 +294,7 @@ const Insights = () => {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 lg:mb-8 gap-4">
             <div>
               <h1 className="text-2xl lg:text-3xl font-bold gradient-text mb-2">AI Insights</h1>
-              <p className="text-gray-400 text-sm">AI-powered analysis for {activeAccount}</p>
+              <p className="text-gray-400 text-sm">AI-powered performance analysis and recommendations</p>
             </div>
             <Button 
               onClick={handleRefreshInsights}

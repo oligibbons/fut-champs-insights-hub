@@ -8,6 +8,7 @@ import Settings from "./pages/Settings";
 import Squads from "./pages/Squads";
 import Players from "./pages/Players";
 import Insights from "./pages/Insights";
+import History from "./pages/History";
 import NotFound from "./pages/NotFound";
 import "./App.css";
 
@@ -23,6 +24,7 @@ function App() {
           <Route path="/squads" element={<Squads />} />
           <Route path="/players" element={<Players />} />
           <Route path="/insights" element={<Insights />} />
+          <Route path="/history" element={<History />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <Toaster />
