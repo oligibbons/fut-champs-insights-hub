@@ -1,4 +1,5 @@
 
+import { useEffect } from 'react';
 import { useLocalStorage } from './useLocalStorage';
 
 export interface Theme {
@@ -94,7 +95,7 @@ export function useTheme() {
     
     setActiveTheme(themeId);
     
-    // Apply CSS custom properties
+    // Apply CSS custom properties to the document
     const root = document.documentElement;
     root.style.setProperty('--theme-primary', theme.colors.primary);
     root.style.setProperty('--theme-secondary', theme.colors.secondary);
@@ -102,7 +103,15 @@ export function useTheme() {
     root.style.setProperty('--theme-background', theme.colors.background);
     root.style.setProperty('--theme-surface', theme.colors.surface);
     root.style.setProperty('--theme-text', theme.colors.text);
+    
+    // Apply the background to the body
+    document.body.style.background = theme.colors.background;
   };
+  
+  // Apply theme on mount and when activeTheme changes
+  useEffect(() => {
+    applyTheme(activeTheme);
+  }, [activeTheme]);
   
   return {
     themes,
