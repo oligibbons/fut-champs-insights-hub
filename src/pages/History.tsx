@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import Navigation from '@/components/Navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { WeeklyPerformance, GameResult } from '@/types/futChampions';
-import { Search, Calendar, Trophy, Target, Clock, Star, Filter } from 'lucide-react';
+import { Search, Calendar, Trophy, Target, Clock, Star, Filter, Users } from 'lucide-react';
 import { calculateWeekRating, calculateGameRating } from '@/utils/gameRating';
 
 const History = () => {
@@ -17,7 +16,7 @@ const History = () => {
   const [filterResult, setFilterResult] = useState<'all' | 'win' | 'loss'>('all');
   const [filterWeek, setFilterWeek] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'date' | 'rating' | 'score'>('date');
-  const [viewMode, setViewMode] = useState<'weeks' | 'games'>('weeks');
+  const [viewMode, setViewMode] = useState<'weeks' | 'games' | 'players'>('weeks');
 
   const filteredWeeks = weeklyData.filter(week => {
     if (filterWeek !== 'all' && week.id !== filterWeek) return false;
@@ -80,7 +79,7 @@ const History = () => {
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input
-                      placeholder={viewMode === 'weeks' ? "Search weeks..." : "Search games..."}
+                      placeholder={viewMode === 'weeks' ? "Search weeks..." : viewMode === 'games' ? "Search games..." : "Search players..."}
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="pl-10 bg-white/10 border-white/20 text-white"
@@ -106,9 +105,17 @@ const History = () => {
                     <Trophy className="h-4 w-4 mr-2" />
                     Games
                   </Button>
+                  <Button
+                    variant={viewMode === 'players' ? 'default' : 'outline'}
+                    onClick={() => setViewMode('players')}
+                    size="sm"
+                  >
+                    <Users className="h-4 w-4 mr-2" />
+                    Players
+                  </Button>
                 </div>
 
-                {/* Filters */}
+                {/* Filters - only for games view */}
                 {viewMode === 'games' && (
                   <>
                     <Select value={filterResult} onValueChange={(value: any) => setFilterResult(value)}>
@@ -135,25 +142,29 @@ const History = () => {
                   </>
                 )}
 
-                <Select value={filterWeek} onValueChange={setFilterWeek}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Weeks</SelectItem>
-                    {weeklyData.map(week => (
-                      <SelectItem key={week.id} value={week.id}>
-                        Week {week.weekNumber}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {viewMode !== 'players' && (
+                  <Select value={filterWeek} onValueChange={setFilterWeek}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Weeks</SelectItem>
+                      {weeklyData.map(week => (
+                        <SelectItem key={week.id} value={week.id}>
+                          Week {week.weekNumber}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
             </CardContent>
           </Card>
 
           {/* Content */}
-          {viewMode === 'weeks' ? (
+          {viewMode === 'players' ? (
+            <PlayerHistoryTable weeklyData={weeklyData} />
+          ) : viewMode === 'weeks' ? (
             <div className="grid gap-4 lg:gap-6">
               {filteredWeeks.length === 0 ? (
                 <Card className="glass-card">

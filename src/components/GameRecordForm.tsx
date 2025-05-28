@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,7 +23,6 @@ interface GameRecordFormProps {
 
 const GameRecordForm = ({ onSubmit, gameNumber, existingGame }: GameRecordFormProps) => {
   const { squads } = useSquadData();
-  const [result, setResult] = useState<'win' | 'loss' | ''>(existingGame?.result || '');
   const [gameContext, setGameContext] = useState<string>(existingGame?.gameContext || 'normal');
   const [selectedSquad, setSelectedSquad] = useState<Squad | null>(null);
   const [playerPerformances, setPlayerPerformances] = useState<PlayerPerformance[]>(existingGame?.playerStats || []);
@@ -97,25 +95,78 @@ const GameRecordForm = ({ onSubmit, gameNumber, existingGame }: GameRecordFormPr
     }
   }, [selectedSquad, playerPerformances.length]);
 
+  const { toast } = useToast();
+
   const onFormSubmit = (data: any) => {
+    // Validation: Check if goal data is consistent
+    const goalsFor = parseInt(data.goalsFor) || 0;
+    const goalsAgainst = parseInt(data.goalsAgainst) || 0;
+    const totalPlayerGoals = playerPerformances.reduce((sum, player) => sum + player.goals, 0);
+    const totalOwnGoals = playerPerformances.reduce((sum, player) => sum + player.ownGoals, 0);
+    
+    // Check if player goals match the score
+    if (totalPlayerGoals !== goalsFor) {
+      toast({
+        title: "Goal Data Mismatch",
+        description: `Player goals (${totalPlayerGoals}) don't match the score you entered (${goalsFor}). Please check your data.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Auto-determine result based on score
+    let gameResult: 'win' | 'loss';
+    if (goalsFor > goalsAgainst) {
+      gameResult = 'win';
+    } else if (goalsFor < goalsAgainst) {
+      gameResult = 'loss';
+    } else {
+      // If it's a draw, check for penalty shootout
+      toast({
+        title: "Draw Detected",
+        description: "The score indicates a draw. In FUT Champions, this should go to penalties or extra time. Please adjust the score or add penalty information.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const teamStats: TeamStats = {
       shots: parseInt(data.shots) || 0,
       shotsOnTarget: parseInt(data.shotsOnTarget) || 0,
       possession: parseInt(data.possession) || 50,
       expectedGoals: parseFloat(data.expectedGoals) || 0,
-      actualGoals: parseInt(data.goalsFor) || 0,
+      actualGoals: goalsFor,
       expectedGoalsAgainst: parseFloat(data.expectedGoalsAgainst) || 0,
-      actualGoalsAgainst: parseInt(data.goalsAgainst) || 0,
+      actualGoalsAgainst: goalsAgainst,
       passes: parseInt(data.passes) || 0,
       passAccuracy: parseInt(data.passAccuracy) || 0,
       corners: parseInt(data.corners) || 0,
       fouls: parseInt(data.fouls) || 0,
     };
 
+    // Additional validation
+    if (teamStats.shotsOnTarget > teamStats.shots) {
+      toast({
+        title: "Shot Data Error",
+        description: "Shots on target cannot be more than total shots.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (teamStats.possession > 100) {
+      toast({
+        title: "Possession Error",
+        description: "Possession cannot be more than 100%.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const gameData: Partial<GameResult> = {
       id: existingGame?.id,
       gameNumber,
-      result: result as 'win' | 'loss',
+      result: gameResult, // Use auto-determined result
       scoreLine: `${data.goalsFor}-${data.goalsAgainst}`,
       opponentSkill: parseInt(data.opponentSkill),
       gameContext: gameContext as any,
@@ -126,19 +177,19 @@ const GameRecordForm = ({ onSubmit, gameNumber, existingGame }: GameRecordFormPr
       date: existingGame?.date || new Date().toISOString()
     };
 
+    // Success toast
+    toast({
+      title: gameResult === 'win' ? "Victory Recorded!" : "Loss Recorded",
+      description: `Game ${gameNumber} saved with result: ${data.goalsFor}-${data.goalsAgainst}`,
+    });
+
     onSubmit(gameData);
   };
 
-  // Auto-determine result based on score
+  // Update the score change handler to remove manual result setting
   const handleScoreChange = () => {
-    const goalsForNum = parseInt(goalsFor) || 0;
-    const goalsAgainstNum = parseInt(goalsAgainst) || 0;
-    
-    if (goalsForNum > goalsAgainstNum) {
-      setResult('win');
-    } else if (goalsForNum < goalsAgainstNum) {
-      setResult('loss');
-    }
+    // Just trigger validation, don't set result manually
+    // The result will be determined automatically on submit
   };
 
   const handleSquadSelect = (squadId: string) => {
@@ -227,15 +278,6 @@ const GameRecordForm = ({ onSubmit, gameNumber, existingGame }: GameRecordFormPr
                         />
                       </div>
                     </div>
-
-                    {result && (
-                      <Badge 
-                        variant={result === 'win' ? 'default' : 'destructive'}
-                        className="text-sm"
-                      >
-                        {result === 'win' ? 'Victory!' : 'Defeat'}
-                      </Badge>
-                    )}
                   </div>
 
                   <div className="space-y-4">
@@ -430,7 +472,6 @@ const GameRecordForm = ({ onSubmit, gameNumber, existingGame }: GameRecordFormPr
             <Button 
               type="submit" 
               className="w-full bg-fifa-gradient hover:shadow-lg transition-all duration-300"
-              disabled={!result}
             >
               <Trophy className="h-4 w-4 mr-2" />
               {existingGame ? 'Update Game' : 'Save Game'}

@@ -28,76 +28,76 @@ export const themes: Theme[] = [
       primary: '#00d4ff',
       secondary: '#ff6b35',
       accent: '#ffd700',
-      background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
-      surface: 'rgba(255, 255, 255, 0.1)',
-      text: '#ffffff',
-      cardBg: 'rgba(255, 255, 255, 0.1)',
-      border: 'rgba(255, 255, 255, 0.2)',
-      muted: '#6b7280'
-    }
-  },
-  {
-    id: 'light',
-    name: 'Clean White',
-    description: 'Minimalist light theme',
-    colors: {
-      primary: '#2563eb',
-      secondary: '#dc2626',
-      accent: '#059669',
-      background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-      surface: 'rgba(255, 255, 255, 0.9)',
-      text: '#1e293b',
-      cardBg: '#ffffff',
-      border: '#e2e8f0',
-      muted: '#64748b'
-    }
-  },
-  {
-    id: 'dark',
-    name: 'Midnight Black',
-    description: 'Pure dark mode',
-    colors: {
-      primary: '#3b82f6',
-      secondary: '#ef4444',
-      accent: '#10b981',
-      background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-      surface: 'rgba(15, 23, 42, 0.8)',
-      text: '#f1f5f9',
-      cardBg: 'rgba(15, 23, 42, 0.8)',
-      border: 'rgba(71, 85, 105, 0.5)',
+      background: 'linear-gradient(135deg, #0a0f1c 0%, #1a1f2e 50%, #2a2f3e 100%)',
+      surface: 'rgba(255, 255, 255, 0.08)',
+      text: '#e2e8f0',
+      cardBg: 'rgba(255, 255, 255, 0.05)',
+      border: 'rgba(255, 255, 255, 0.1)',
       muted: '#94a3b8'
     }
   },
   {
-    id: 'neon',
-    name: 'Neon Gaming',
-    description: 'Cyberpunk vibes',
+    id: 'midnight',
+    name: 'Midnight Blue',
+    description: 'Deep blue professional theme',
     colors: {
-      primary: '#00ff88',
-      secondary: '#ff0080',
-      accent: '#ffff00',
-      background: 'linear-gradient(135deg, #0a0a0a 0%, #1a0a1a 50%, #0a1a0a 100%)',
-      surface: 'rgba(0, 255, 136, 0.1)',
-      text: '#00ff88',
-      cardBg: 'rgba(0, 255, 136, 0.1)',
-      border: 'rgba(0, 255, 136, 0.3)',
-      muted: '#666666'
+      primary: '#3b82f6',
+      secondary: '#1e40af',
+      accent: '#60a5fa',
+      background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)',
+      surface: 'rgba(59, 130, 246, 0.1)',
+      text: '#f1f5f9',
+      cardBg: 'rgba(30, 41, 59, 0.6)',
+      border: 'rgba(59, 130, 246, 0.2)',
+      muted: '#64748b'
+    }
+  },
+  {
+    id: 'forest',
+    name: 'Forest Green',
+    description: 'Calm and natural theme',
+    colors: {
+      primary: '#10b981',
+      secondary: '#047857',
+      accent: '#34d399',
+      background: 'linear-gradient(135deg, #064e3b 0%, #065f46 50%, #047857 100%)',
+      surface: 'rgba(16, 185, 129, 0.1)',
+      text: '#ecfdf5',
+      cardBg: 'rgba(6, 78, 59, 0.7)',
+      border: 'rgba(16, 185, 129, 0.2)',
+      muted: '#6ee7b7'
     }
   },
   {
     id: 'sunset',
-    name: 'Sunset Vibes',
-    description: 'Warm and inviting',
+    name: 'Sunset Orange',
+    description: 'Warm sunset vibes',
     colors: {
       primary: '#f97316',
-      secondary: '#dc2626',
-      accent: '#fbbf24',
-      background: 'linear-gradient(135deg, #7c2d12 0%, #dc2626 50%, #f97316 100%)',
-      surface: 'rgba(249, 115, 22, 0.2)',
-      text: '#fef3c7',
-      cardBg: 'rgba(249, 115, 22, 0.2)',
-      border: 'rgba(249, 115, 22, 0.4)',
-      muted: '#fbbf24'
+      secondary: '#ea580c',
+      accent: '#fb923c',
+      background: 'linear-gradient(135deg, #7c2d12 0%, #9a3412 50%, #c2410c 100%)',
+      surface: 'rgba(249, 115, 22, 0.1)',
+      text: '#fed7aa',
+      cardBg: 'rgba(124, 45, 18, 0.7)',
+      border: 'rgba(249, 115, 22, 0.2)',
+      muted: '#fdba74'
+    }
+  },
+  {
+    id: 'purple',
+    name: 'Royal Purple',
+    description: 'Elegant purple theme',
+    colors: {
+      primary: '#8b5cf6',
+      secondary: '#7c3aed',
+      accent: '#a78bfa',
+      background: 'linear-gradient(135deg, #3730a3 0%, #4c1d95 50%, #5b21b6 100%)',
+      surface: 'rgba(139, 92, 246, 0.1)',
+      text: '#ede9fe',
+      cardBg: 'rgba(55, 48, 163, 0.7)',
+      border: 'rgba(139, 92, 246, 0.2)',
+      muted: '#c4b5fd'
     }
   }
 ];
@@ -128,6 +128,7 @@ export function useTheme() {
     // Apply the background to the body
     document.body.style.background = theme.colors.background;
     document.body.style.color = theme.colors.text;
+    document.body.style.minHeight = '100vh';
   };
   
   // Apply theme on mount and when activeTheme changes

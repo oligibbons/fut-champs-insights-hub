@@ -23,7 +23,15 @@ const WeekSettings = ({ weekData, onUpdateWeek }: WeekSettingsProps) => {
   const [targetRank, setTargetRank] = useState(weekData?.targetRank || 'Rank VII');
   const [targetWins, setTargetWins] = useState(weekData?.targetWins || 7);
   const [personalNotes, setPersonalNotes] = useState(weekData?.personalNotes || '');
-  const [trackingEnabled, setTrackingEnabled] = useState(true);
+
+  // Update local state when weekData changes
+  useEffect(() => {
+    if (weekData) {
+      setTargetRank(weekData.targetRank || 'Rank VII');
+      setTargetWins(weekData.targetWins || 7);
+      setPersonalNotes(weekData.personalNotes || '');
+    }
+  }, [weekData]);
 
   const ranks = [
     { name: 'Rank I', wins: 15 },
@@ -65,7 +73,7 @@ const WeekSettings = ({ weekData, onUpdateWeek }: WeekSettingsProps) => {
             No Active Week
           </h3>
           <p style={{ color: currentTheme.colors.muted }}>
-            Start a new week to access settings and targets.
+            Start a new week from the Current Week page to access settings and targets.
           </p>
         </CardContent>
       </Card>
