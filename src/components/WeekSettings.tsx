@@ -4,12 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useTheme } from '@/hooks/useTheme';
 import { WeeklyPerformance } from '@/types/futChampions';
-import { Settings, Target, Calendar, Trophy, Zap } from 'lucide-react';
+import { Settings, Target, Calendar, Trophy, Zap, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface WeekSettingsProps {
@@ -98,9 +97,9 @@ const WeekSettings = ({ weekData, onUpdateWeek }: WeekSettingsProps) => {
                 <SelectTrigger style={{ backgroundColor: currentTheme.colors.surface, borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}>
                   {ranks.map(rank => (
-                    <SelectItem key={rank.name} value={rank.name}>
+                    <SelectItem key={rank.name} value={rank.name} style={{ color: currentTheme.colors.text }}>
                       {rank.name} ({rank.wins} wins)
                     </SelectItem>
                   ))}

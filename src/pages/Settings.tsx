@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import Navigation from '@/components/Navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useTheme, themes } from '@/hooks/useTheme';
 import { UserSettings } from '@/types/futChampions';
-import { Settings as SettingsIcon, Palette, Bell, BarChart3, Shield, Zap } from 'lucide-react';
+import { Settings as SettingsIcon, Palette, Bell, BarChart3, Shield, Zap, Monitor, Moon, Sun } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const Settings = () => {
@@ -24,7 +23,7 @@ const Settings = () => {
     gameplayStyle: 'balanced',
     notifications: true,
     gamesPerWeek: 15,
-    theme: 'default',
+    theme: 'futvisionary',
     dashboardSettings: {
       showTopPerformers: true,
       showXGAnalysis: true,
@@ -98,6 +97,14 @@ const Settings = () => {
     updateSettings({ theme: themeId });
   };
 
+  const getThemeIcon = (themeId: string) => {
+    switch (themeId) {
+      case 'light': return <Sun className="h-4 w-4" />;
+      case 'midnight': case 'futvisionary': case 'neon': return <Moon className="h-4 w-4" />;
+      default: return <Monitor className="h-4 w-4" />;
+    }
+  };
+
   return (
     <div className="min-h-screen">
       <Navigation />
@@ -106,42 +113,71 @@ const Settings = () => {
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Header */}
           <div className="flex items-center gap-4 mb-8">
-            <div className="p-3 bg-fifa-blue/20 rounded-2xl">
-              <SettingsIcon className="h-8 w-8 text-fifa-blue" />
+            <div className="p-3 rounded-2xl" style={{ backgroundColor: `${currentTheme.colors.primary}20` }}>
+              <SettingsIcon className="h-8 w-8" style={{ color: currentTheme.colors.primary }} />
             </div>
             <div>
-              <h1 className="text-3xl font-bold gradient-text">Settings</h1>
-              <p className="text-gray-400 mt-1">Customize your FUT Champions experience</p>
+              <h1 className="text-3xl font-bold gradient-text">FUT Visionary Settings</h1>
+              <p className="text-gray-400 mt-1">Customize your AI-powered FUT experience</p>
             </div>
           </div>
 
           {/* Theme Settings */}
           <Card className="glass-card">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-white">
-                <Palette className="h-5 w-5 text-fifa-purple" />
-                Appearance
+              <CardTitle className="flex items-center gap-2" style={{ color: currentTheme.colors.text }}>
+                <Palette className="h-5 w-5" style={{ color: currentTheme.colors.accent }} />
+                Visual Experience
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               <div>
-                <Label className="text-gray-300 mb-3 block">Theme</Label>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                <Label className="text-lg font-medium mb-4 block" style={{ color: currentTheme.colors.text }}>Choose Your Theme</Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {themes.map(theme => (
                     <Button
                       key={theme.id}
                       variant={currentTheme.id === theme.id ? "default" : "outline"}
                       onClick={() => handleThemeChange(theme.id)}
-                      className="p-4 h-auto flex-col items-start space-y-2 bg-white/5 border-white/20 hover:bg-white/10"
+                      className="p-4 h-auto flex-col items-start space-y-3 relative overflow-hidden"
+                      style={{
+                        backgroundColor: currentTheme.id === theme.id 
+                          ? `${theme.colors.primary}20` 
+                          : currentTheme.colors.surface,
+                        borderColor: currentTheme.id === theme.id 
+                          ? theme.colors.primary 
+                          : currentTheme.colors.border,
+                        color: currentTheme.colors.text
+                      }}
                     >
-                      <div className="flex items-center gap-2 w-full">
+                      <div className="flex items-center gap-3 w-full">
+                        {getThemeIcon(theme.id)}
                         <div 
-                          className="w-4 h-4 rounded-full"
+                          className="w-6 h-6 rounded-full border-2 border-white/20"
                           style={{ background: theme.colors.primary }}
                         />
-                        <span className="font-medium text-white">{theme.name}</span>
+                        <span className="font-semibold">{theme.name}</span>
+                        {currentTheme.id === theme.id && (
+                          <Badge className="ml-auto bg-fifa-green text-white">Active</Badge>
+                        )}
                       </div>
-                      <p className="text-xs text-gray-400 text-left">{theme.description}</p>
+                      <p className="text-sm opacity-75 text-left w-full">{theme.description}</p>
+                      
+                      {/* Theme Preview */}
+                      <div className="flex gap-2 w-full">
+                        <div 
+                          className="w-4 h-4 rounded"
+                          style={{ backgroundColor: theme.colors.primary }}
+                        />
+                        <div 
+                          className="w-4 h-4 rounded"
+                          style={{ backgroundColor: theme.colors.secondary }}
+                        />
+                        <div 
+                          className="w-4 h-4 rounded"
+                          style={{ backgroundColor: theme.colors.accent }}
+                        />
+                      </div>
                     </Button>
                   ))}
                 </div>
@@ -152,23 +188,23 @@ const Settings = () => {
           {/* General Settings */}
           <Card className="glass-card">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-white">
-                <SettingsIcon className="h-5 w-5 text-fifa-blue" />
-                General
+              <CardTitle className="flex items-center gap-2" style={{ color: currentTheme.colors.text }}>
+                <SettingsIcon className="h-5 w-5" style={{ color: currentTheme.colors.primary }} />
+                General Preferences
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="formation" className="text-gray-300">Preferred Formation</Label>
+                  <Label htmlFor="formation" style={{ color: currentTheme.colors.text }}>Preferred Formation</Label>
                   <Select 
                     value={settings.preferredFormation} 
                     onValueChange={(value) => updateSettings({ preferredFormation: value })}
                   >
-                    <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                    <SelectTrigger style={{ backgroundColor: currentTheme.colors.surface, borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}>
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}>
                       <SelectItem value="4-3-3">4-3-3</SelectItem>
                       <SelectItem value="4-2-3-1">4-2-3-1</SelectItem>
                       <SelectItem value="4-4-2">4-4-2</SelectItem>
@@ -179,15 +215,15 @@ const Settings = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="gameplayStyle" className="text-gray-300">Gameplay Style</Label>
+                  <Label htmlFor="gameplayStyle" style={{ color: currentTheme.colors.text }}>Gameplay Style</Label>
                   <Select 
                     value={settings.gameplayStyle} 
                     onValueChange={(value: 'aggressive' | 'balanced' | 'defensive') => updateSettings({ gameplayStyle: value })}
                   >
-                    <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                    <SelectTrigger style={{ backgroundColor: currentTheme.colors.surface, borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}>
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}>
                       <SelectItem value="aggressive">Aggressive</SelectItem>
                       <SelectItem value="balanced">Balanced</SelectItem>
                       <SelectItem value="defensive">Defensive</SelectItem>
@@ -196,10 +232,10 @@ const Settings = () => {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between p-4 rounded-lg" style={{ backgroundColor: currentTheme.colors.surface }}>
                 <div>
-                  <Label className="text-white font-medium">Notifications</Label>
-                  <p className="text-sm text-gray-400">Get notified about achievements and targets</p>
+                  <Label style={{ color: currentTheme.colors.text, fontWeight: 600 }}>AI Notifications</Label>
+                  <p className="text-sm" style={{ color: currentTheme.colors.muted }}>Get notified about achievements and AI insights</p>
                 </div>
                 <Switch
                   checked={settings.notifications}
@@ -212,16 +248,17 @@ const Settings = () => {
           {/* Dashboard Customization */}
           <Card className="glass-card">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-white">
-                <BarChart3 className="h-5 w-5 text-fifa-green" />
+              <CardTitle className="flex items-center gap-2" style={{ color: currentTheme.colors.text }}>
+                <BarChart3 className="h-5 w-5" style={{ color: currentTheme.colors.secondary }} />
                 Dashboard Tiles
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {Object.entries(settings.dashboardSettings).map(([key, enabled]) => (
-                  <div key={key} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
-                    <Label className="text-white capitalize">
+                  <div key={key} className="flex items-center justify-between p-3 rounded-lg" 
+                       style={{ backgroundColor: currentTheme.colors.surface }}>
+                    <Label style={{ color: currentTheme.colors.text }} className="capitalize">
                       {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
                     </Label>
                     <Switch
@@ -237,21 +274,22 @@ const Settings = () => {
           {/* Analytics Preferences */}
           <Card className="glass-card">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-white">
-                <Zap className="h-5 w-5 text-fifa-gold" />
-                Analytics & Features
+              <CardTitle className="flex items-center gap-2" style={{ color: currentTheme.colors.text }}>
+                <Zap className="h-5 w-5" style={{ color: currentTheme.colors.accent }} />
+                AI Analytics & Features
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {Object.entries(settings.analyticsPreferences).map(([key, enabled]) => (
-                <div key={key} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                <div key={key} className="flex items-center justify-between p-4 rounded-lg" 
+                     style={{ backgroundColor: currentTheme.colors.surface }}>
                   <div>
-                    <Label className="text-white capitalize font-medium">
+                    <Label style={{ color: currentTheme.colors.text }} className="capitalize font-medium">
                       {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
                     </Label>
-                    <p className="text-sm text-gray-400">
+                    <p className="text-sm" style={{ color: currentTheme.colors.muted }}>
                       {key === 'showAnimations' && 'Show celebratory animations and visual effects'}
-                      {key === 'dynamicFeedback' && 'Get real-time feedback during data input'}
+                      {key === 'dynamicFeedback' && 'Get real-time AI feedback during data input'}
                       {key === 'detailedPlayerStats' && 'Track comprehensive player performance metrics'}
                       {key === 'opponentTracking' && 'Analyze opponent patterns and tactics'}
                       {key === 'timeTracking' && 'Monitor performance across different times'}
@@ -272,15 +310,15 @@ const Settings = () => {
           {/* Qualifier Settings */}
           <Card className="glass-card">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-white">
-                <Shield className="h-5 w-5 text-fifa-red" />
+              <CardTitle className="flex items-center gap-2" style={{ color: currentTheme.colors.text }}>
+                <Shield className="h-5 w-5" style={{ color: currentTheme.colors.secondary }} />
                 Qualifier Settings
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="totalGames" className="text-gray-300">Total Qualifier Games</Label>
+                  <Label htmlFor="totalGames" style={{ color: currentTheme.colors.text }}>Total Qualifier Games</Label>
                   <Input
                     id="totalGames"
                     type="number"
@@ -293,12 +331,12 @@ const Settings = () => {
                         totalGames: parseInt(e.target.value) 
                       }
                     })}
-                    className="bg-white/10 border-white/20 text-white"
+                    style={{ backgroundColor: currentTheme.colors.surface, borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="winsRequired" className="text-gray-300">Wins Required</Label>
+                  <Label htmlFor="winsRequired" style={{ color: currentTheme.colors.text }}>Wins Required</Label>
                   <Input
                     id="winsRequired"
                     type="number"
@@ -311,7 +349,7 @@ const Settings = () => {
                         winsRequired: parseInt(e.target.value) 
                       }
                     })}
-                    className="bg-white/10 border-white/20 text-white"
+                    style={{ backgroundColor: currentTheme.colors.surface, borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}
                   />
                 </div>
               </div>

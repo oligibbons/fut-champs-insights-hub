@@ -3,25 +3,45 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import FUT Visionary brand fonts */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap');
+
 /* Global theme variables */
 :root {
-  --theme-primary: #00d4ff;
-  --theme-secondary: #ff6b35;
-  --theme-accent: #ffd700;
-  --theme-background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-  --theme-surface: rgba(255, 255, 255, 0.1);
-  --theme-text: #ffffff;
-  --theme-card-bg: rgba(255, 255, 255, 0.1);
-  --theme-border: rgba(255, 255, 255, 0.2);
-  --theme-muted: #6b7280;
+  --theme-primary: #00D4FF;
+  --theme-secondary: #6C5CE7;
+  --theme-accent: #00FF88;
+  --theme-background: linear-gradient(135deg, #1B1F3B 0%, #0F1419 50%, #000000 100%);
+  --theme-surface: rgba(0, 212, 255, 0.08);
+  --theme-text: #EAEAEA;
+  --theme-card-bg: rgba(27, 31, 59, 0.6);
+  --theme-border: rgba(0, 212, 255, 0.2);
+  --theme-muted: #8892B0;
+
+  /* Brand fonts */
+  --font-primary: 'Poppins', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+}
+
+/* Base body styling with brand fonts */
+body {
+  font-family: var(--font-primary);
+  font-weight: 400;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Theme-aware utility classes */
 .glass-card {
   background: var(--theme-card-bg);
   border-color: var(--theme-border);
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(20px);
   border-width: 1px;
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.4),
+    0 15px 30px -5px rgba(0, 212, 255, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .gradient-text {
@@ -29,106 +49,129 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  font-family: var(--font-primary);
+  font-weight: 700;
 }
 
 .modern-button-primary {
-  background: var(--theme-primary);
+  background: linear-gradient(135deg, var(--theme-primary), var(--theme-secondary));
   color: white;
   border: none;
   transition: all 0.3s ease;
+  font-family: var(--font-primary);
+  font-weight: 600;
+  position: relative;
+  overflow: hidden;
+}
+
+.modern-button-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.modern-button-primary:hover::before {
+  left: 100%;
 }
 
 .modern-button-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(0, 212, 255, 0.3);
+  box-shadow: 0 20px 40px rgba(0, 212, 255, 0.4);
 }
 
+/* Enhanced metric cards */
 .metric-card {
   background: var(--theme-card-bg);
   border: 1px solid var(--theme-border);
   border-radius: 1.5rem;
   padding: 1.5rem;
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(20px);
   transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.metric-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--theme-primary), var(--theme-accent));
+  opacity: 0.8;
 }
 
 .metric-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
 }
 
-/* FIFA Colors with theme support */
+/* Brand-specific animations */
+@keyframes futvisionary-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(0, 212, 255, 0.6);
+  }
+}
+
+@keyframes data-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+.brand-glow {
+  animation: futvisionary-glow 3s ease-in-out infinite;
+}
+
+.data-pulse {
+  animation: data-pulse 2s ease-in-out infinite;
+}
+
+/* Enhanced FIFA colors with brand identity */
 .text-fifa-blue { color: var(--theme-primary); }
 .text-fifa-gold { color: var(--theme-accent); }
-.text-fifa-green { color: #10b981; }
-.text-fifa-red { color: var(--theme-secondary); }
-.text-fifa-purple { color: #8b5cf6; }
+.text-fifa-green { color: #00FF88; }
+.text-fifa-red { color: #FF4757; }
+.text-fifa-purple { color: var(--theme-secondary); }
 
 .bg-fifa-blue { background-color: var(--theme-primary); }
 .bg-fifa-gold { background-color: var(--theme-accent); }
-.bg-fifa-green { background-color: #10b981; }
-.bg-fifa-red { background-color: var(--theme-secondary); }
-.bg-fifa-purple { background-color: #8b5cf6; }
+.bg-fifa-green { background-color: #00FF88; }
+.bg-fifa-red { background-color: #FF4757; }
+.bg-fifa-purple { background-color: var(--theme-secondary); }
 
-/* Animations */
-@keyframes fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* Light theme specific overrides */
+.theme-light .glass-card {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(108, 92, 231, 0.15);
+  backdrop-filter: blur(20px);
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.1),
+    0 15px 30px -5px rgba(108, 92, 231, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
-@keyframes floating {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
+.theme-light .metric-card {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(108, 92, 231, 0.15);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
 }
 
-.animate-fade-in {
-  animation: fade-in 0.6s ease-out;
-}
-
-.floating-element {
-  animation: floating 3s ease-in-out infinite;
-}
-
-.stagger-animation > * {
-  animation: fade-in 0.6s ease-out;
-}
-
-.stagger-animation > *:nth-child(2) {
-  animation-delay: 0.1s;
-}
-
-.stagger-animation > *:nth-child(3) {
-  animation-delay: 0.2s;
-}
-
-.stagger-animation > *:nth-child(4) {
-  animation-delay: 0.3s;
-}
-
-/* Shadow depths */
-.shadow-depth-sm {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.shadow-depth-md {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-}
-
-.shadow-depth-lg {
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-}
-
-/* Custom scrollbars */
+/* Custom scrollbars with brand colors */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -140,10 +183,66 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--theme-primary);
+  background: linear-gradient(to bottom, var(--theme-primary), var(--theme-secondary));
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--theme-accent);
+  background: linear-gradient(to bottom, var(--theme-accent), var(--theme-primary));
+}
+
+/* Typography improvements */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-primary);
+  font-weight: 700;
+}
+
+.mono-text {
+  font-family: var(--font-mono);
+}
+
+/* Loading animations for brand identity */
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--theme-surface);
+  border-top: 3px solid var(--theme-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Achievement and gamification elements */
+.achievement-badge {
+  background: linear-gradient(135deg, var(--theme-accent), var(--theme-primary));
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+  font-family: var(--font-primary);
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(0, 255, 136, 0.3);
+  animation: data-pulse 2s ease-in-out infinite;
+}
+
+/* Enhanced button styles */
+.btn-futvisionary {
+  background: linear-gradient(135deg, var(--theme-primary), var(--theme-secondary));
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 1rem;
+  font-family: var(--font-primary);
+  font-weight: 600;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-futvisionary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 30px rgba(0, 212, 255, 0.4);
 }

@@ -21,89 +21,105 @@ export interface Theme {
 
 export const themes: Theme[] = [
   {
-    id: 'default',
-    name: 'FC25 Pro',
-    description: 'The classic FUT Champions look',
+    id: 'futvisionary',
+    name: 'FUT Visionary',
+    description: 'The signature dark mode experience',
     colors: {
-      primary: '#00d4ff',
-      secondary: '#ff6b35',
-      accent: '#ffd700',
-      background: 'linear-gradient(135deg, #0a0f1c 0%, #1a1f2e 50%, #2a2f3e 100%)',
-      surface: 'rgba(255, 255, 255, 0.08)',
-      text: '#e2e8f0',
-      cardBg: 'rgba(255, 255, 255, 0.05)',
-      border: 'rgba(255, 255, 255, 0.1)',
-      muted: '#94a3b8'
+      primary: '#00D4FF',
+      secondary: '#6C5CE7',
+      accent: '#00FF88',
+      background: 'linear-gradient(135deg, #1B1F3B 0%, #0F1419 50%, #000000 100%)',
+      surface: 'rgba(0, 212, 255, 0.08)',
+      text: '#EAEAEA',
+      cardBg: 'rgba(27, 31, 59, 0.6)',
+      border: 'rgba(0, 212, 255, 0.2)',
+      muted: '#8892B0'
+    }
+  },
+  {
+    id: 'light',
+    name: 'Clean Light',
+    description: 'Minimalistic light mode',
+    colors: {
+      primary: '#6C5CE7',
+      secondary: '#00D4FF',
+      accent: '#00FF88',
+      background: 'linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 50%, #F1F5F9 100%)',
+      surface: 'rgba(108, 92, 231, 0.05)',
+      text: '#1E293B',
+      cardBg: 'rgba(255, 255, 255, 0.8)',
+      border: 'rgba(108, 92, 231, 0.15)',
+      muted: '#64748B'
     }
   },
   {
     id: 'midnight',
-    name: 'Midnight Blue',
-    description: 'Deep blue professional theme',
+    name: 'Midnight Pro',
+    description: 'Deep professional theme',
     colors: {
-      primary: '#3b82f6',
-      secondary: '#1e40af',
-      accent: '#60a5fa',
-      background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)',
-      surface: 'rgba(59, 130, 246, 0.1)',
-      text: '#f1f5f9',
-      cardBg: 'rgba(30, 41, 59, 0.6)',
-      border: 'rgba(59, 130, 246, 0.2)',
-      muted: '#64748b'
+      primary: '#00FF88',
+      secondary: '#1B1F3B',
+      accent: '#00D4FF',
+      background: 'linear-gradient(135deg, #000000 0%, #1B1F3B 50%, #2D3748 100%)',
+      surface: 'rgba(0, 255, 136, 0.1)',
+      text: '#F7FAFC',
+      cardBg: 'rgba(27, 31, 59, 0.7)',
+      border: 'rgba(0, 255, 136, 0.2)',
+      muted: '#A0AEC0'
+    }
+  },
+  {
+    id: 'neon',
+    name: 'Neon Gaming',
+    description: 'High-contrast gaming experience',
+    colors: {
+      primary: '#FF0080',
+      secondary: '#00FFFF',
+      accent: '#FFFF00',
+      background: 'linear-gradient(135deg, #0A0A0A 0%, #1A0B2E 50%, #16213E 100%)',
+      surface: 'rgba(255, 0, 128, 0.1)',
+      text: '#FFFFFF',
+      cardBg: 'rgba(26, 11, 46, 0.8)',
+      border: 'rgba(255, 0, 128, 0.3)',
+      muted: '#B794F6'
     }
   },
   {
     id: 'forest',
-    name: 'Forest Green',
-    description: 'Calm and natural theme',
+    name: 'Elite Green',
+    description: 'Focused and calm',
     colors: {
-      primary: '#10b981',
+      primary: '#10B981',
       secondary: '#047857',
-      accent: '#34d399',
-      background: 'linear-gradient(135deg, #064e3b 0%, #065f46 50%, #047857 100%)',
+      accent: '#34D399',
+      background: 'linear-gradient(135deg, #064E3B 0%, #065F46 50%, #047857 100%)',
       surface: 'rgba(16, 185, 129, 0.1)',
-      text: '#ecfdf5',
+      text: '#ECFDF5',
       cardBg: 'rgba(6, 78, 59, 0.7)',
       border: 'rgba(16, 185, 129, 0.2)',
-      muted: '#6ee7b7'
+      muted: '#6EE7B7'
     }
   },
   {
     id: 'sunset',
-    name: 'Sunset Orange',
-    description: 'Warm sunset vibes',
+    name: 'Champion Gold',
+    description: 'Victory and achievement theme',
     colors: {
-      primary: '#f97316',
-      secondary: '#ea580c',
-      accent: '#fb923c',
-      background: 'linear-gradient(135deg, #7c2d12 0%, #9a3412 50%, #c2410c 100%)',
-      surface: 'rgba(249, 115, 22, 0.1)',
-      text: '#fed7aa',
+      primary: '#F59E0B',
+      secondary: '#EA580C',
+      accent: '#FBB040',
+      background: 'linear-gradient(135deg, #7C2D12 0%, #9A3412 50%, #C2410C 100%)',
+      surface: 'rgba(245, 158, 11, 0.1)',
+      text: '#FED7AA',
       cardBg: 'rgba(124, 45, 18, 0.7)',
-      border: 'rgba(249, 115, 22, 0.2)',
-      muted: '#fdba74'
-    }
-  },
-  {
-    id: 'purple',
-    name: 'Royal Purple',
-    description: 'Elegant purple theme',
-    colors: {
-      primary: '#8b5cf6',
-      secondary: '#7c3aed',
-      accent: '#a78bfa',
-      background: 'linear-gradient(135deg, #3730a3 0%, #4c1d95 50%, #5b21b6 100%)',
-      surface: 'rgba(139, 92, 246, 0.1)',
-      text: '#ede9fe',
-      cardBg: 'rgba(55, 48, 163, 0.7)',
-      border: 'rgba(139, 92, 246, 0.2)',
-      muted: '#c4b5fd'
+      border: 'rgba(245, 158, 11, 0.2)',
+      muted: '#FDBA74'
     }
   }
 ];
 
 export function useTheme() {
-  const [activeTheme, setActiveTheme] = useLocalStorage<string>('fc25-theme', 'default');
+  const [activeTheme, setActiveTheme] = useLocalStorage<string>('futvisionary-theme', 'futvisionary');
   
   const currentTheme = themes.find(t => t.id === activeTheme) || themes[0];
   
@@ -129,6 +145,10 @@ export function useTheme() {
     document.body.style.background = theme.colors.background;
     document.body.style.color = theme.colors.text;
     document.body.style.minHeight = '100vh';
+    
+    // Add theme class to body for conditional styling
+    document.body.className = document.body.className.replace(/theme-\w+/g, '');
+    document.body.classList.add(`theme-${themeId}`);
   };
   
   // Apply theme on mount and when activeTheme changes
