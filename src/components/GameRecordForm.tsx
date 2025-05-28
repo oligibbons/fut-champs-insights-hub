@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GameResult, TeamStats, PlayerPerformance } from '@/types/futChampions';
 import { Squad } from '@/types/squads';
 import { useSquadData } from '@/hooks/useSquadData';
+import { useToast } from '@/hooks/use-toast';
 import { Trophy, Target, Clock, MessageSquare, Users } from 'lucide-react';
 import PlayerPerformanceInput from './PlayerPerformanceInput';
 
