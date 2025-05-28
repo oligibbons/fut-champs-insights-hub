@@ -1,6 +1,7 @@
 
 import { Toaster } from "@/components/ui/toaster";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { useTheme } from "@/hooks/useTheme";
 import Index from "./pages/Index";
 import CurrentWeek from "./pages/CurrentWeek";
 import Analytics from "./pages/Analytics";
@@ -13,9 +14,17 @@ import NotFound from "./pages/NotFound";
 import "./App.css";
 
 function App() {
+  const { currentTheme } = useTheme();
+  
   return (
     <Router>
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-800">
+      <div 
+        className="min-h-screen transition-all duration-500"
+        style={{
+          background: currentTheme.colors.background,
+          color: currentTheme.colors.text
+        }}
+      >
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/current-week" element={<CurrentWeek />} />

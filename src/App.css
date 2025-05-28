@@ -1,42 +1,149 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global theme variables */
+:root {
+  --theme-primary: #00d4ff;
+  --theme-secondary: #ff6b35;
+  --theme-accent: #ffd700;
+  --theme-background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  --theme-surface: rgba(255, 255, 255, 0.1);
+  --theme-text: #ffffff;
+  --theme-card-bg: rgba(255, 255, 255, 0.1);
+  --theme-border: rgba(255, 255, 255, 0.2);
+  --theme-muted: #6b7280;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+/* Theme-aware utility classes */
+.glass-card {
+  background: var(--theme-card-bg);
+  border-color: var(--theme-border);
+  backdrop-filter: blur(12px);
+  border-width: 1px;
 }
 
-@keyframes logo-spin {
+.gradient-text {
+  background: linear-gradient(135deg, var(--theme-primary), var(--theme-accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.modern-button-primary {
+  background: var(--theme-primary);
+  color: white;
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.modern-button-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 212, 255, 0.3);
+}
+
+.metric-card {
+  background: var(--theme-card-bg);
+  border: 1px solid var(--theme-border);
+  border-radius: 1.5rem;
+  padding: 1.5rem;
+  backdrop-filter: blur(12px);
+  transition: all 0.3s ease;
+}
+
+.metric-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+/* FIFA Colors with theme support */
+.text-fifa-blue { color: var(--theme-primary); }
+.text-fifa-gold { color: var(--theme-accent); }
+.text-fifa-green { color: #10b981; }
+.text-fifa-red { color: var(--theme-secondary); }
+.text-fifa-purple { color: #8b5cf6; }
+
+.bg-fifa-blue { background-color: var(--theme-primary); }
+.bg-fifa-gold { background-color: var(--theme-accent); }
+.bg-fifa-green { background-color: #10b981; }
+.bg-fifa-red { background-color: var(--theme-secondary); }
+.bg-fifa-purple { background-color: #8b5cf6; }
+
+/* Animations */
+@keyframes fade-in {
   from {
-    transform: rotate(0deg);
+    opacity: 0;
+    transform: translateY(20px);
   }
   to {
-    transform: rotate(360deg);
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+@keyframes floating {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
   }
 }
 
-.card {
-  padding: 2em;
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out;
 }
 
-.read-the-docs {
-  color: #888;
+.floating-element {
+  animation: floating 3s ease-in-out infinite;
+}
+
+.stagger-animation > * {
+  animation: fade-in 0.6s ease-out;
+}
+
+.stagger-animation > *:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.stagger-animation > *:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+.stagger-animation > *:nth-child(4) {
+  animation-delay: 0.3s;
+}
+
+/* Shadow depths */
+.shadow-depth-sm {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.shadow-depth-md {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.shadow-depth-lg {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--theme-surface);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--theme-primary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--theme-accent);
 }

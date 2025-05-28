@@ -1,0 +1,199 @@
+
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { useTheme } from '@/hooks/useTheme';
+import { WeeklyPerformance } from '@/types/futChampions';
+import { Settings, Target, Calendar, Trophy, Zap } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+
+interface WeekSettingsProps {
+  weekData: WeeklyPerformance | null;
+  onUpdateWeek: (updates: Partial<WeeklyPerformance>) => void;
+}
+
+const WeekSettings = ({ weekData, onUpdateWeek }: WeekSettingsProps) => {
+  const { currentTheme } = useTheme();
+  const { toast } = useToast();
+  const [targetRank, setTargetRank] = useState(weekData?.targetRank || 'Rank VII');
+  const [targetWins, setTargetWins] = useState(weekData?.targetWins || 7);
+  const [personalNotes, setPersonalNotes] = useState(weekData?.personalNotes || '');
+  const [trackingEnabled, setTrackingEnabled] = useState(true);
+
+  const ranks = [
+    { name: 'Rank I', wins: 15 },
+    { name: 'Rank II', wins: 13 },
+    { name: 'Rank III', wins: 11 },
+    { name: 'Rank IV', wins: 10 },
+    { name: 'Rank V', wins: 9 },
+    { name: 'Rank VI', wins: 8 },
+    { name: 'Rank VII', wins: 7 },
+    { name: 'Rank VIII', wins: 6 },
+    { name: 'Rank IX', wins: 4 },
+    { name: 'Rank X', wins: 2 }
+  ];
+
+  const handleSetTarget = () => {
+    if (!weekData) return;
+    
+    const selectedRank = ranks.find(r => r.name === targetRank);
+    const winsNeeded = selectedRank ? selectedRank.wins : targetWins;
+    
+    onUpdateWeek({
+      targetRank,
+      targetWins: winsNeeded,
+      personalNotes
+    });
+    
+    toast({
+      title: "Target Set!",
+      description: `Target set to ${targetRank} (${winsNeeded} wins)`,
+    });
+  };
+
+  if (!weekData) {
+    return (
+      <Card style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}>
+        <CardContent className="p-8 text-center">
+          <Settings className="h-16 w-16 mx-auto mb-4 opacity-50" style={{ color: currentTheme.colors.muted }} />
+          <h3 className="text-xl font-semibold mb-2" style={{ color: currentTheme.colors.text }}>
+            No Active Week
+          </h3>
+          <p style={{ color: currentTheme.colors.muted }}>
+            Start a new week to access settings and targets.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Target Setting */}
+      <Card style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2" style={{ color: currentTheme.colors.text }}>
+            <Target className="h-5 w-5" style={{ color: currentTheme.colors.primary }} />
+            Week Target
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label style={{ color: currentTheme.colors.text }}>Target Rank</Label>
+              <Select value={targetRank} onValueChange={setTargetRank}>
+                <SelectTrigger style={{ backgroundColor: currentTheme.colors.surface, borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ranks.map(rank => (
+                    <SelectItem key={rank.name} value={rank.name}>
+                      {rank.name} ({rank.wins} wins)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label style={{ color: currentTheme.colors.text }}>Custom Wins Target</Label>
+              <Input
+                type="number"
+                min="1"
+                max="15"
+                value={targetWins}
+                onChange={(e) => setTargetWins(parseInt(e.target.value))}
+                style={{ backgroundColor: currentTheme.colors.surface, borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}
+              />
+            </div>
+          </div>
+          
+          <Button 
+            onClick={handleSetTarget} 
+            className="w-full"
+            style={{ backgroundColor: currentTheme.colors.primary, color: '#ffffff' }}
+          >
+            <Trophy className="h-4 w-4 mr-2" />
+            Set Target
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Week Notes */}
+      <Card style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2" style={{ color: currentTheme.colors.text }}>
+            <Calendar className="h-5 w-5" style={{ color: currentTheme.colors.accent }} />
+            Week Notes
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div>
+              <Label style={{ color: currentTheme.colors.text }}>Personal Notes</Label>
+              <textarea
+                className="w-full p-3 rounded-lg resize-none"
+                rows={4}
+                placeholder="Add notes about this week's goals, formation changes, or anything else..."
+                value={personalNotes}
+                onChange={(e) => setPersonalNotes(e.target.value)}
+                style={{ backgroundColor: currentTheme.colors.surface, borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}
+              />
+            </div>
+            
+            <Button 
+              onClick={() => onUpdateWeek({ personalNotes })}
+              variant="outline"
+              style={{ borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}
+            >
+              Save Notes
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Week Info */}
+      <Card style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2" style={{ color: currentTheme.colors.text }}>
+            <Zap className="h-5 w-5" style={{ color: currentTheme.colors.secondary }} />
+            Week Information
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold" style={{ color: currentTheme.colors.primary }}>
+                {weekData.games.length}/15
+              </div>
+              <div className="text-sm" style={{ color: currentTheme.colors.muted }}>Games Played</div>
+            </div>
+            
+            <div className="text-center">
+              <div className="text-2xl font-bold" style={{ color: currentTheme.colors.accent }}>
+                {weekData.totalWins}
+              </div>
+              <div className="text-sm" style={{ color: currentTheme.colors.muted }}>Current Wins</div>
+            </div>
+          </div>
+          
+          <div className="mt-4 flex justify-center">
+            <Badge 
+              variant="outline"
+              style={{ borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}
+            >
+              {weekData.isCompleted ? 'Week Completed' : 'In Progress'}
+            </Badge>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default WeekSettings;

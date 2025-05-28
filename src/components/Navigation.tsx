@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { useTheme } from '@/hooks/useTheme';
 import {
   Home,
   Calendar,
@@ -10,16 +11,19 @@ import {
   Settings,
   Menu,
   X,
-  Trophy
+  Trophy,
+  History
 } from 'lucide-react';
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const { currentTheme } = useTheme();
 
   const navigationItems = [
     { name: 'Dashboard', path: '/', icon: Home },
     { name: 'Current Week', path: '/current-week', icon: Calendar },
+    { name: 'History', path: '/history', icon: History },
     { name: 'Squads', path: '/squads', icon: Users },
     { name: 'Analytics', path: '/analytics', icon: TrendingUp },
     { name: 'AI Insights', path: '/insights', icon: Trophy },
@@ -34,7 +38,11 @@ const Navigation = () => {
           variant="outline"
           size="icon"
           onClick={() => setIsOpen(!isOpen)}
-          className="bg-black/20 backdrop-blur-md border-white/20"
+          style={{
+            backgroundColor: currentTheme.colors.surface,
+            borderColor: currentTheme.colors.border,
+            color: currentTheme.colors.text
+          }}
         >
           {isOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
         </Button>
@@ -42,17 +50,30 @@ const Navigation = () => {
 
       {/* Navigation Sidebar */}
       <nav className={`
-        fixed left-0 top-0 h-full w-64 glass-card border-r border-white/20 z-40
+        fixed left-0 top-0 h-full w-64 border-r z-40
         transform transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0
-      `}>
+      `}
+      style={{
+        backgroundColor: currentTheme.colors.surface,
+        borderColor: currentTheme.colors.border,
+        backdropFilter: 'blur(12px)'
+      }}>
         <div className="p-6">
           <div className="flex items-center space-x-2 mb-8">
-            <div className="w-8 h-8 bg-fifa-gradient rounded-lg flex items-center justify-center">
+            <div 
+              className="w-8 h-8 rounded-lg flex items-center justify-center"
+              style={{ background: currentTheme.colors.primary }}
+            >
               <Trophy className="h-5 w-5 text-white" />
             </div>
-            <h1 className="text-xl font-bold gradient-text">FUT Champions</h1>
+            <h1 
+              className="text-xl font-bold"
+              style={{ color: currentTheme.colors.text }}
+            >
+              FUT Champions
+            </h1>
           </div>
 
           <div className="space-y-2">
@@ -66,10 +87,14 @@ const Navigation = () => {
                   className={`
                     flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200
                     ${isActive 
-                      ? 'bg-fifa-blue text-white shadow-lg' 
-                      : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                      ? 'shadow-lg' 
+                      : 'hover:opacity-80'
                     }
                   `}
+                  style={{
+                    backgroundColor: isActive ? currentTheme.colors.primary : 'transparent',
+                    color: isActive ? '#ffffff' : currentTheme.colors.text
+                  }}
                 >
                   <item.icon className="h-5 w-5" />
                   <span className="font-medium">{item.name}</span>
