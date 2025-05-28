@@ -149,6 +149,9 @@ export interface WeeklyPerformance {
   averageGameDuration?: number;
   totalPlayTime?: number; // in minutes
   averageServerQuality?: number;
+  targetRank?: string;
+  targetWins?: number;
+  personalNotes?: string;
 }
 
 export interface Achievement {
