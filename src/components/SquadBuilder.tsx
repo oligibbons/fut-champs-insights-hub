@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,21 +32,21 @@ const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
       startingXI: defaultFormation.positions.map((pos, index) => ({
         id: `starting-${index}`,
         position: pos.position,
-        player: null,
+        player: undefined,
         x: pos.x,
         y: pos.y
       })),
       substitutes: Array.from({ length: 7 }, (_, index) => ({
         id: `sub-${index}`,
         position: 'SUB',
-        player: null,
+        player: undefined,
         x: 0,
         y: 0
       })),
       reserves: Array.from({ length: 5 }, (_, index) => ({
         id: `res-${index}`,
         position: 'RES',
-        player: null,
+        player: undefined,
         x: 0,
         y: 0
       })),
@@ -82,7 +81,7 @@ const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
       startingXI: formationData.positions.map((pos, index) => ({
         id: `starting-${index}`,
         position: pos.position,
-        player: prev.startingXI[index]?.player || null,
+        player: prev.startingXI[index]?.player || undefined,
         x: pos.x,
         y: pos.y
       })),
@@ -395,9 +394,11 @@ const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
                     id: `player-${Date.now()}`,
                     name: playerSearch,
                     position: selectedPosition?.position || 'ST',
-                    overall: 85,
-                    cardType: 'Gold',
                     rating: 85,
+                    cardType: 'gold',
+                    club: '',
+                    nationality: '',
+                    league: '',
                     gamesPlayed: 0,
                     goals: 0,
                     assists: 0,
@@ -405,6 +406,7 @@ const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
                     averageRating: 6.0,
                     yellowCards: 0,
                     redCards: 0,
+                    ownGoals: 0,
                     minutesPlayed: 0,
                     wins: 0,
                     losses: 0,
