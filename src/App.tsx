@@ -32,16 +32,18 @@ function App() {
         <div className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b animate-slide-in-from-top" 
              style={{ borderColor: currentTheme.colors.border, backgroundColor: `${currentTheme.colors.cardBg}80` }}>
           <div className="px-4 py-2 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center brand-glow">
-                <span className="text-white font-bold text-sm">FV</span>
-              </div>
+            <div className="flex items-center gap-3">
+              <img 
+                src="/lovable-uploads/bb8114bb-d9f2-40fe-8413-4232e31f0621.png" 
+                alt="FUT Visionary Logo" 
+                className="w-10 h-10 object-contain"
+              />
               <div>
-                <h1 className="text-lg font-bold gradient-text">FUT Visionary</h1>
+                <h1 className="text-lg font-bold text-white">FUT Visionary</h1>
                 <p className="text-xs" style={{ color: currentTheme.colors.muted }}>AI Insights for FUT Greatness</p>
               </div>
             </div>
-            <div className="text-xs mono-text" style={{ color: currentTheme.colors.muted }}>
+            <div className="text-xs font-mono text-white">
               Dominate with Data
             </div>
           </div>

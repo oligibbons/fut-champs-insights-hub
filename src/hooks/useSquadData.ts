@@ -23,6 +23,18 @@ export function useSquadData() {
     setSquads(squads.filter(s => s.id !== squadId));
   };
 
+  const setDefaultSquad = (squadId: string) => {
+    const updatedSquads = squads.map(squad => ({
+      ...squad,
+      isDefault: squad.id === squadId
+    }));
+    setSquads(updatedSquads);
+  };
+
+  const getDefaultSquad = (): Squad | null => {
+    return squads.find(squad => squad.isDefault) || null;
+  };
+
   const savePlayer = (player: PlayerCard) => {
     const existingPlayerIndex = players.findIndex(p => 
       p.name.toLowerCase() === player.name.toLowerCase() && 
@@ -52,6 +64,8 @@ export function useSquadData() {
     players,
     saveSquad,
     deleteSquad,
+    setDefaultSquad,
+    getDefaultSquad,
     savePlayer,
     getPlayerSuggestions
   };

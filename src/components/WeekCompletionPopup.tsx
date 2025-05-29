@@ -50,55 +50,62 @@ const WeekCompletionPopup = ({ isOpen, onClose, weekData, onNewWeek }: WeekCompl
     onClose();
   };
 
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto animate-fade-in" 
-                     style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}>
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-3 text-3xl" style={{ color: currentTheme.colors.text }}>
-            <div className="p-4 bg-gradient-to-br from-primary to-accent rounded-3xl">
-              <Trophy className="h-8 w-8 text-white" />
-            </div>
-            {weekData.customName || `Week ${weekData.weekNumber}`} Complete!
-          </DialogTitle>
-        </DialogHeader>
+  if (!isOpen) return null;
 
-        <div className="space-y-8">
+  return (
+    <div className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+      <div className="w-full max-w-6xl max-h-[95vh] overflow-y-auto rounded-3xl" 
+           style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}>
+        <div className="p-8 space-y-8">
+          <div className="flex items-center gap-4">
+            <div className="p-6 bg-gradient-to-br from-primary to-accent rounded-3xl">
+              <Trophy className="h-10 w-10 text-white" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold" style={{ color: currentTheme.colors.text }}>
+                {weekData.customName || `Week ${weekData.weekNumber}`} Complete!
+              </h1>
+              <p className="text-xl" style={{ color: currentTheme.colors.muted }}>
+                Performance Summary & Analysis
+              </p>
+            </div>
+          </div>
+
           {/* Week Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center p-6 rounded-3xl" style={{ backgroundColor: weekGrade.color + '20' }}>
-              <div className="text-6xl font-bold mb-2" style={{ color: weekGrade.color }}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="text-center p-8 rounded-3xl" style={{ backgroundColor: weekGrade.color + '20' }}>
+              <div className="text-8xl font-bold mb-4" style={{ color: weekGrade.color }}>
                 {weekGrade.grade}
               </div>
-              <div className="text-lg font-semibold" style={{ color: currentTheme.colors.text }}>
+              <div className="text-2xl font-semibold" style={{ color: currentTheme.colors.text }}>
                 Week Grade
               </div>
-              <div className="text-sm" style={{ color: currentTheme.colors.muted }}>
+              <div className="text-lg" style={{ color: currentTheme.colors.muted }}>
                 {winRate.toFixed(1)}% Win Rate
               </div>
             </div>
 
-            <div className="text-center p-6 rounded-3xl" style={{ backgroundColor: currentTheme.colors.surface }}>
-              <div className="text-4xl font-bold mb-2" style={{ color: currentTheme.colors.primary }}>
+            <div className="text-center p-8 rounded-3xl" style={{ backgroundColor: currentTheme.colors.surface }}>
+              <div className="text-6xl font-bold mb-4" style={{ color: currentTheme.colors.primary }}>
                 {weekData.totalWins}
               </div>
-              <div className="text-lg font-semibold" style={{ color: currentTheme.colors.text }}>
+              <div className="text-2xl font-semibold" style={{ color: currentTheme.colors.text }}>
                 Total Wins
               </div>
-              <div className="text-sm" style={{ color: currentTheme.colors.muted }}>
+              <div className="text-lg" style={{ color: currentTheme.colors.muted }}>
                 {weekData.totalLosses} Losses
               </div>
             </div>
 
-            <div className="text-center p-6 rounded-3xl" style={{ backgroundColor: achievedRank ? achievedRank.color + '20' : currentTheme.colors.surface }}>
-              <div className="text-2xl font-bold mb-2" style={{ color: achievedRank?.color || currentTheme.colors.text }}>
+            <div className="text-center p-8 rounded-3xl" style={{ backgroundColor: achievedRank ? achievedRank.color + '20' : currentTheme.colors.surface }}>
+              <div className="text-3xl font-bold mb-4" style={{ color: achievedRank?.color || currentTheme.colors.text }}>
                 {achievedRank?.name || 'Unranked'}
               </div>
-              <div className="text-lg font-semibold" style={{ color: currentTheme.colors.text }}>
+              <div className="text-2xl font-semibold" style={{ color: currentTheme.colors.text }}>
                 Final Rank
               </div>
               {nextRank && (
-                <div className="text-sm" style={{ color: currentTheme.colors.muted }}>
+                <div className="text-lg" style={{ color: currentTheme.colors.muted }}>
                   {nextRank.wins - weekData.totalWins} wins to {nextRank.name}
                 </div>
               )}
@@ -106,85 +113,85 @@ const WeekCompletionPopup = ({ isOpen, onClose, weekData, onNewWeek }: WeekCompl
           </div>
 
           {/* Statistics Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="p-4 rounded-xl" style={{ backgroundColor: currentTheme.colors.surface }}>
-              <div className="flex items-center gap-2 mb-2">
-                <Target className="h-4 w-4" style={{ color: currentTheme.colors.accent }} />
-                <span className="text-sm font-medium" style={{ color: currentTheme.colors.text }}>Goals</span>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="p-6 rounded-2xl" style={{ backgroundColor: currentTheme.colors.surface }}>
+              <div className="flex items-center gap-3 mb-3">
+                <Target className="h-6 w-6" style={{ color: currentTheme.colors.accent }} />
+                <span className="text-lg font-medium" style={{ color: currentTheme.colors.text }}>Goals</span>
               </div>
-              <div className="text-2xl font-bold" style={{ color: currentTheme.colors.accent }}>
+              <div className="text-4xl font-bold" style={{ color: currentTheme.colors.accent }}>
                 {weekData.totalGoals}
               </div>
-              <div className="text-xs" style={{ color: currentTheme.colors.muted }}>
+              <div className="text-sm" style={{ color: currentTheme.colors.muted }}>
                 {(weekData.totalGoals / weekData.games.length).toFixed(1)} per game
               </div>
             </div>
 
-            <div className="p-4 rounded-xl" style={{ backgroundColor: currentTheme.colors.surface }}>
-              <div className="flex items-center gap-2 mb-2">
-                <BarChart3 className="h-4 w-4" style={{ color: currentTheme.colors.secondary }} />
-                <span className="text-sm font-medium" style={{ color: currentTheme.colors.text }}>Avg Rating</span>
+            <div className="p-6 rounded-2xl" style={{ backgroundColor: currentTheme.colors.surface }}>
+              <div className="flex items-center gap-3 mb-3">
+                <BarChart3 className="h-6 w-6" style={{ color: currentTheme.colors.secondary }} />
+                <span className="text-lg font-medium" style={{ color: currentTheme.colors.text }}>Avg Rating</span>
               </div>
-              <div className="text-2xl font-bold" style={{ color: currentTheme.colors.secondary }}>
+              <div className="text-4xl font-bold" style={{ color: currentTheme.colors.secondary }}>
                 {avgRating.toFixed(1)}
               </div>
-              <div className="text-xs" style={{ color: currentTheme.colors.muted }}>
+              <div className="text-sm" style={{ color: currentTheme.colors.muted }}>
                 Best: {bestRating.toFixed(1)}
               </div>
             </div>
 
-            <div className="p-4 rounded-xl" style={{ backgroundColor: currentTheme.colors.surface }}>
-              <div className="flex items-center gap-2 mb-2">
-                <Star className="h-4 w-4" style={{ color: currentTheme.colors.primary }} />
-                <span className="text-sm font-medium" style={{ color: currentTheme.colors.text }}>XG Diff</span>
+            <div className="p-6 rounded-2xl" style={{ backgroundColor: currentTheme.colors.surface }}>
+              <div className="flex items-center gap-3 mb-3">
+                <Star className="h-6 w-6" style={{ color: currentTheme.colors.primary }} />
+                <span className="text-lg font-medium" style={{ color: currentTheme.colors.text }}>XG Diff</span>
               </div>
-              <div className="text-2xl font-bold" style={{ color: xgPerformance > 0 ? '#10b981' : '#ef4444' }}>
+              <div className="text-4xl font-bold" style={{ color: xgPerformance > 0 ? '#10b981' : '#ef4444' }}>
                 {xgPerformance > 0 ? '+' : ''}{xgPerformance.toFixed(1)}%
               </div>
-              <div className="text-xs" style={{ color: currentTheme.colors.muted }}>
+              <div className="text-sm" style={{ color: currentTheme.colors.muted }}>
                 vs Expected
               </div>
             </div>
 
-            <div className="p-4 rounded-xl" style={{ backgroundColor: currentTheme.colors.surface }}>
-              <div className="flex items-center gap-2 mb-2">
-                <Award className="h-4 w-4" style={{ color: currentTheme.colors.text }} />
-                <span className="text-sm font-medium" style={{ color: currentTheme.colors.text }}>Opponent</span>
+            <div className="p-6 rounded-2xl" style={{ backgroundColor: currentTheme.colors.surface }}>
+              <div className="flex items-center gap-3 mb-3">
+                <Award className="h-6 w-6" style={{ color: currentTheme.colors.text }} />
+                <span className="text-lg font-medium" style={{ color: currentTheme.colors.text }}>Opponent</span>
               </div>
-              <div className="text-2xl font-bold" style={{ color: currentTheme.colors.text }}>
+              <div className="text-4xl font-bold" style={{ color: currentTheme.colors.text }}>
                 {weekData.averageOpponentSkill.toFixed(1)}
               </div>
-              <div className="text-xs" style={{ color: currentTheme.colors.muted }}>
+              <div className="text-sm" style={{ color: currentTheme.colors.muted }}>
                 Avg Skill
               </div>
             </div>
           </div>
 
           {/* XG Analysis */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="p-6 rounded-2xl" style={{ backgroundColor: currentTheme.colors.surface }}>
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={{ color: currentTheme.colors.text }}>
-                <TrendingUp className="h-5 w-5" style={{ color: currentTheme.colors.primary }} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="p-8 rounded-3xl" style={{ backgroundColor: currentTheme.colors.surface }}>
+              <h3 className="text-2xl font-semibold mb-6 flex items-center gap-3" style={{ color: currentTheme.colors.text }}>
+                <TrendingUp className="h-6 w-6" style={{ color: currentTheme.colors.primary }} />
                 Attack Analysis
               </h3>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div className="flex justify-between">
-                  <span style={{ color: currentTheme.colors.muted }}>Goals Scored</span>
-                  <span className="font-bold" style={{ color: currentTheme.colors.text }}>{weekData.totalGoals}</span>
+                  <span className="text-lg" style={{ color: currentTheme.colors.muted }}>Goals Scored</span>
+                  <span className="text-lg font-bold" style={{ color: currentTheme.colors.text }}>{weekData.totalGoals}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span style={{ color: currentTheme.colors.muted }}>Expected Goals</span>
-                  <span className="font-bold" style={{ color: currentTheme.colors.text }}>{weekData.totalExpectedGoals.toFixed(1)}</span>
+                  <span className="text-lg" style={{ color: currentTheme.colors.muted }}>Expected Goals</span>
+                  <span className="text-lg font-bold" style={{ color: currentTheme.colors.text }}>{weekData.totalExpectedGoals.toFixed(1)}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span style={{ color: currentTheme.colors.muted }}>Performance</span>
-                  <div className="flex items-center gap-2">
+                  <span className="text-lg" style={{ color: currentTheme.colors.muted }}>Performance</span>
+                  <div className="flex items-center gap-3">
                     {xgPerformance > 0 ? (
-                      <TrendingUp className="h-4 w-4 text-green-400" />
+                      <TrendingUp className="h-5 w-5 text-green-400" />
                     ) : (
-                      <TrendingDown className="h-4 w-4 text-red-400" />
+                      <TrendingDown className="h-5 w-5 text-red-400" />
                     )}
-                    <span className={`font-bold ${xgPerformance > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    <span className={`text-lg font-bold ${xgPerformance > 0 ? 'text-green-400' : 'text-red-400'}`}>
                       {xgPerformance > 0 ? '+' : ''}{xgPerformance.toFixed(1)}%
                     </span>
                   </div>
@@ -192,29 +199,29 @@ const WeekCompletionPopup = ({ isOpen, onClose, weekData, onNewWeek }: WeekCompl
               </div>
             </div>
 
-            <div className="p-6 rounded-2xl" style={{ backgroundColor: currentTheme.colors.surface }}>
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={{ color: currentTheme.colors.text }}>
-                <TrendingDown className="h-5 w-5" style={{ color: currentTheme.colors.secondary }} />
+            <div className="p-8 rounded-3xl" style={{ backgroundColor: currentTheme.colors.surface }}>
+              <h3 className="text-2xl font-semibold mb-6 flex items-center gap-3" style={{ color: currentTheme.colors.text }}>
+                <TrendingDown className="h-6 w-6" style={{ color: currentTheme.colors.secondary }} />
                 Defense Analysis
               </h3>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div className="flex justify-between">
-                  <span style={{ color: currentTheme.colors.muted }}>Goals Conceded</span>
-                  <span className="font-bold" style={{ color: currentTheme.colors.text }}>{weekData.totalConceded}</span>
+                  <span className="text-lg" style={{ color: currentTheme.colors.muted }}>Goals Conceded</span>
+                  <span className="text-lg font-bold" style={{ color: currentTheme.colors.text }}>{weekData.totalConceded}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span style={{ color: currentTheme.colors.muted }}>Expected Goals Against</span>
-                  <span className="font-bold" style={{ color: currentTheme.colors.text }}>{weekData.totalExpectedGoalsAgainst.toFixed(1)}</span>
+                  <span className="text-lg" style={{ color: currentTheme.colors.muted }}>Expected Goals Against</span>
+                  <span className="text-lg font-bold" style={{ color: currentTheme.colors.text }}>{weekData.totalExpectedGoalsAgainst.toFixed(1)}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span style={{ color: currentTheme.colors.muted }}>Performance</span>
-                  <div className="flex items-center gap-2">
+                  <span className="text-lg" style={{ color: currentTheme.colors.muted }}>Performance</span>
+                  <div className="flex items-center gap-3">
                     {xgaPerformance < 0 ? (
-                      <TrendingUp className="h-4 w-4 text-green-400" />
+                      <TrendingUp className="h-5 w-5 text-green-400" />
                     ) : (
-                      <TrendingDown className="h-4 w-4 text-red-400" />
+                      <TrendingDown className="h-5 w-5 text-red-400" />
                     )}
-                    <span className={`font-bold ${xgaPerformance < 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    <span className={`text-lg font-bold ${xgaPerformance < 0 ? 'text-green-400' : 'text-red-400'}`}>
                       {xgaPerformance > 0 ? '+' : ''}{xgaPerformance.toFixed(1)}%
                     </span>
                   </div>
@@ -224,14 +231,14 @@ const WeekCompletionPopup = ({ isOpen, onClose, weekData, onNewWeek }: WeekCompl
           </div>
 
           {/* Insights */}
-          <div className="p-6 rounded-2xl" style={{ backgroundColor: currentTheme.colors.surface }}>
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={{ color: currentTheme.colors.text }}>
-              <Star className="h-5 w-5" style={{ color: currentTheme.colors.accent }} />
+          <div className="p-8 rounded-3xl" style={{ backgroundColor: currentTheme.colors.surface }}>
+            <h3 className="text-2xl font-semibold mb-6 flex items-center gap-3" style={{ color: currentTheme.colors.text }}>
+              <Star className="h-6 w-6" style={{ color: currentTheme.colors.accent }} />
               Week Insights
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div className="space-y-2">
-                <h4 className="font-medium text-green-400">Strengths</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-lg">
+              <div className="space-y-3">
+                <h4 className="text-xl font-medium text-green-400">Strengths</h4>
                 <div style={{ color: currentTheme.colors.muted }}>
                   {winRate >= 70 && <p>✅ Excellent win rate - you're dominating!</p>}
                   {xgPerformance > 15 && <p>✅ Clinical finishing - outperforming XG significantly</p>}
@@ -241,8 +248,8 @@ const WeekCompletionPopup = ({ isOpen, onClose, weekData, onNewWeek }: WeekCompl
                 </div>
               </div>
               
-              <div className="space-y-2">
-                <h4 className="font-medium text-red-400">Areas for Improvement</h4>
+              <div className="space-y-3">
+                <h4 className="text-xl font-medium text-red-400">Areas for Improvement</h4>
                 <div style={{ color: currentTheme.colors.muted }}>
                   {winRate < 50 && <p>⚠️ Win rate needs improvement - focus on consistency</p>}
                   {xgPerformance < -20 && <p>⚠️ Finishing could be better - practice in skill games</p>}
@@ -255,18 +262,18 @@ const WeekCompletionPopup = ({ isOpen, onClose, weekData, onNewWeek }: WeekCompl
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-4">
-            <Button onClick={onClose} variant="outline" className="flex-1" style={{ borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}>
+          <div className="flex gap-6">
+            <Button onClick={onClose} variant="outline" className="flex-1 py-4 text-xl rounded-2xl" style={{ borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}>
               Review Later
             </Button>
-            <Button onClick={handleStartNewWeek} className="flex-1" style={{ backgroundColor: currentTheme.colors.primary, color: '#ffffff' }}>
-              <Calendar className="h-4 w-4 mr-2" />
+            <Button onClick={handleStartNewWeek} className="flex-1 py-4 text-xl rounded-2xl" style={{ backgroundColor: currentTheme.colors.primary, color: '#ffffff' }}>
+              <Calendar className="h-6 w-6 mr-3" />
               Start Next Week
             </Button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 };
 

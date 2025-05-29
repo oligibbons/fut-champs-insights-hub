@@ -2,29 +2,27 @@
 export interface PlayerCard {
   id: string;
   name: string;
-  position: string;
-  overall: number;
-  cardType: string; // e.g., "Gold", "TOTW", "Icon", etc.
   rating: number;
-  gamesPlayed: number;
-  goals: number;
-  assists: number;
-  cleanSheets: number;
-  averageRating: number;
-  yellowCards: number;
-  redCards: number;
-  minutesPlayed: number;
-  wins: number;
-  losses: number;
-  lastUsed: string;
+  position: string;
+  club: string;
+  nationality: string;
+  league: string;
+  cardType: 'gold' | 'rare_gold' | 'totw' | 'hero' | 'icon' | 'special';
+  pace?: number;
+  shooting?: number;
+  passing?: number;
+  dribbling?: number;
+  defending?: number;
+  physical?: number;
+  price?: number;
+  imageUrl?: string;
 }
 
 export interface SquadPosition {
-  id: string;
   position: string;
-  player: PlayerCard | null;
-  x: number; // Position on formation grid (0-100)
-  y: number; // Position on formation grid (0-100)
+  x: number;
+  y: number;
+  player?: PlayerCard;
 }
 
 export interface Squad {
@@ -39,464 +37,73 @@ export interface Squad {
   gamesPlayed: number;
   wins: number;
   losses: number;
+  isDefault?: boolean;
+  description?: string;
+  totalRating?: number;
+  averageAge?: number;
+  totalValue?: number;
+  keyPlayers?: string[];
 }
 
-export interface Formation {
-  name: string;
-  positions: {
-    position: string;
-    x: number;
-    y: number;
-  }[];
-}
+export const FORMATIONS = {
+  '4-3-3': [
+    { position: 'GK', x: 50, y: 85 },
+    { position: 'RB', x: 80, y: 65 },
+    { position: 'RCB', x: 65, y: 70 },
+    { position: 'LCB', x: 35, y: 70 },
+    { position: 'LB', x: 20, y: 65 },
+    { position: 'RCM', x: 70, y: 45 },
+    { position: 'CM', x: 50, y: 50 },
+    { position: 'LCM', x: 30, y: 45 },
+    { position: 'RW', x: 80, y: 25 },
+    { position: 'ST', x: 50, y: 15 },
+    { position: 'LW', x: 20, y: 25 }
+  ],
+  '4-4-2': [
+    { position: 'GK', x: 50, y: 85 },
+    { position: 'RB', x: 80, y: 65 },
+    { position: 'RCB', x: 65, y: 70 },
+    { position: 'LCB', x: 35, y: 70 },
+    { position: 'LB', x: 20, y: 65 },
+    { position: 'RM', x: 80, y: 45 },
+    { position: 'RCM', x: 65, y: 50 },
+    { position: 'LCM', x: 35, y: 50 },
+    { position: 'LM', x: 20, y: 45 },
+    { position: 'RST', x: 60, y: 15 },
+    { position: 'LST', x: 40, y: 15 }
+  ],
+  '3-5-2': [
+    { position: 'GK', x: 50, y: 85 },
+    { position: 'RCB', x: 70, y: 70 },
+    { position: 'CB', x: 50, y: 72 },
+    { position: 'LCB', x: 30, y: 70 },
+    { position: 'RWB', x: 85, y: 50 },
+    { position: 'RCM', x: 65, y: 45 },
+    { position: 'CM', x: 50, y: 50 },
+    { position: 'LCM', x: 35, y: 45 },
+    { position: 'LWB', x: 15, y: 50 },
+    { position: 'RST', x: 60, y: 15 },
+    { position: 'LST', x: 40, y: 15 }
+  ]
+};
 
-export const FORMATIONS: Formation[] = [
-  {
-    name: "3-1-4-2",
-    positions: [
-      { position: "GK", x: 50, y: 10 },
-      { position: "CB", x: 30, y: 25 },
-      { position: "CB", x: 50, y: 20 },
-      { position: "CB", x: 70, y: 25 },
-      { position: "CDM", x: 50, y: 40 },
-      { position: "LM", x: 15, y: 55 },
-      { position: "CM", x: 35, y: 55 },
-      { position: "CM", x: 65, y: 55 },
-      { position: "RM", x: 85, y: 55 },
-      { position: "ST", x: 40, y: 80 },
-      { position: "ST", x: 60, y: 80 }
-    ]
-  },
-  {
-    name: "3-4-1-2",
-    positions: [
-      { position: "GK", x: 50, y: 10 },
-      { position: "CB", x: 30, y: 25 },
-      { position: "CB", x: 50, y: 20 },
-      { position: "CB", x: 70, y: 25 },
-      { position: "LM", x: 15, y: 45 },
-      { position: "CM", x: 35, y: 45 },
-      { position: "CM", x: 65, y: 45 },
-      { position: "RM", x: 85, y: 45 },
-      { position: "CAM", x: 50, y: 65 },
-      { position: "ST", x: 40, y: 85 },
-      { position: "ST", x: 60, y: 85 }
-    ]
-  },
-  {
-    name: "3-4-2-1",
-    positions: [
-      { position: "GK", x: 50, y: 10 },
-      { position: "CB", x: 30, y: 25 },
-      { position: "CB", x: 50, y: 20 },
-      { position: "CB", x: 70, y: 25 },
-      { position: "LM", x: 15, y: 45 },
-      { position: "CM", x: 35, y: 45 },
-      { position: "CM", x: 65, y: 45 },
-      { position: "RM", x: 85, y: 45 },
-      { position: "CAM", x: 35, y: 70 },
-      { position: "CAM", x: 65, y: 70 },
-      { position: "ST", x: 50, y: 85 }
-    ]
-  },
-  {
-    name: "3-4-3",
-    positions: [
-      { position: "GK", x: 50, y: 10 },
-      { position: "CB", x: 30, y: 25 },
-      { position: "CB", x: 50, y: 20 },
-      { position: "CB", x: 70, y: 25 },
-      { position: "LM", x: 15, y: 45 },
-      { position: "CM", x: 35, y: 45 },
-      { position: "CM", x: 65, y: 45 },
-      { position: "RM", x: 85, y: 45 },
-      { position: "LW", x: 25, y: 75 },
-      { position: "ST", x: 50, y: 80 },
-      { position: "RW", x: 75, y: 75 }
-    ]
-  },
-  {
-    name: "3-5-2",
-    positions: [
-      { position: "GK", x: 50, y: 10 },
-      { position: "CB", x: 30, y: 25 },
-      { position: "CB", x: 50, y: 20 },
-      { position: "CB", x: 70, y: 25 },
-      { position: "LWB", x: 15, y: 45 },
-      { position: "CM", x: 35, y: 50 },
-      { position: "CM", x: 50, y: 45 },
-      { position: "CM", x: 65, y: 50 },
-      { position: "RWB", x: 85, y: 45 },
-      { position: "ST", x: 40, y: 80 },
-      { position: "ST", x: 60, y: 80 }
-    ]
-  },
-  {
-    name: "4-1-2-1-2 (2)",
-    positions: [
-      { position: "GK", x: 50, y: 10 },
-      { position: "LB", x: 20, y: 25 },
-      { position: "CB", x: 35, y: 25 },
-      { position: "CB", x: 65, y: 25 },
-      { position: "RB", x: 80, y: 25 },
-      { position: "CDM", x: 50, y: 40 },
-      { position: "CM", x: 35, y: 55 },
-      { position: "CM", x: 65, y: 55 },
-      { position: "CAM", x: 50, y: 70 },
-      { position: "ST", x: 40, y: 85 },
-      { position: "ST", x: 60, y: 85 }
-    ]
-  },
-  {
-    name: "4-1-2-1-2",
-    positions: [
-      { position: "GK", x: 50, y: 10 },
-      { position: "LB", x: 20, y: 25 },
-      { position: "CB", x: 35, y: 25 },
-      { position: "CB", x: 65, y: 25 },
-      { position: "RB", x: 80, y: 25 },
-      { position: "CDM", x: 50, y: 40 },
-      { position: "LM", x: 25, y: 55 },
-      { position: "RM", x: 75, y: 55 },
-      { position: "CAM", x: 50, y: 70 },
-      { position: "ST", x: 40, y: 85 },
-      { position: "ST", x: 60, y: 85 }
-    ]
-  },
-  {
-    name: "4-1-3-2",
-    positions: [
-      { position: "GK", x: 50, y: 10 },
-      { position: "LB", x: 20, y: 25 },
-      { position: "CB", x: 35, y: 25 },
-      { position: "CB", x: 65, y: 25 },
-      { position: "RB", x: 80, y: 25 },
-      { position: "CDM", x: 50, y: 40 },
-      { position: "CM", x: 30, y: 55 },
-      { position: "CAM", x: 50, y: 60 },
-      { position: "CM", x: 70, y: 55 },
-      { position: "ST", x: 40, y: 80 },
-      { position: "ST", x: 60, y: 80 }
-    ]
-  },
-  {
-    name: "4-1-4-1",
-    positions: [
-      { position: "GK", x: 50, y: 10 },
-      { position: "LB", x: 20, y: 25 },
-      { position: "CB", x: 35, y: 25 },
-      { position: "CB", x: 65, y: 25 },
-      { position: "RB", x: 80, y: 25 },
-      { position: "CDM", x: 50, y: 40 },
-      { position: "LM", x: 20, y: 55 },
-      { position: "CM", x: 40, y: 55 },
-      { position: "CM", x: 60, y: 55 },
-      { position: "RM", x: 80, y: 55 },
-      { position: "ST", x: 50, y: 80 }
-    ]
-  },
-  {
-    name: "4-2-2-2",
-    positions: [
-      { position: "GK", x: 50, y: 10 },
-      { position: "LB", x: 20, y: 25 },
-      { position: "CB", x: 35, y: 25 },
-      { position: "CB", x: 65, y: 25 },
-      { position: "RB", x: 80, y: 25 },
-      { position: "CDM", x: 40, y: 40 },
-      { position: "CDM", x: 60, y: 40 },
-      { position: "CAM", x: 35, y: 65 },
-      { position: "CAM", x: 65, y: 65 },
-      { position: "ST", x: 40, y: 80 },
-      { position: "ST", x: 60, y: 80 }
-    ]
-  },
-  {
-    name: "4-2-3-1",
-    positions: [
-      { position: "GK", x: 50, y: 10 },
-      { position: "LB", x: 20, y: 25 },
-      { position: "CB", x: 35, y: 25 },
-      { position: "CB", x: 65, y: 25 },
-      { position: "RB", x: 80, y: 25 },
-      { position: "CDM", x: 40, y: 40 },
-      { position: "CDM", x: 60, y: 40 },
-      { position: "LAM", x: 25, y: 65 },
-      { position: "CAM", x: 50, y: 65 },
-      { position: "RAM", x: 75, y: 65 },
-      { position: "ST", x: 50, y: 85 }
-    ]
-  },
-  {
-    name: "4-2-3-1 (2)",
-    positions: [
-      { position: "GK", x: 50, y: 10 },
-      { position: "LB", x: 20, y: 25 },
-      { position: "CB", x: 35, y: 25 },
-      { position: "CB", x: 65, y: 25 },
-      { position: "RB", x: 80, y: 25 },
-      { position: "CDM", x: 40, y: 40 },
-      { position: "CDM", x: 60, y: 40 },
-      { position: "LW", x: 25, y: 65 },
-      { position: "CAM", x: 50, y: 65 },
-      { position: "RW", x: 75, y: 65 },
-      { position: "ST", x: 50, y: 85 }
-    ]
-  },
-  {
-    name: "4-2-4",
-    positions: [
-      { position: "GK", x: 50, y: 10 },
-      { position: "LB", x: 20, y: 25 },
-      { position: "CB", x: 35, y: 25 },
-      { position: "CB", x: 65, y: 25 },
-      { position: "RB", x: 80, y: 25 },
-      { position: "CM", x: 40, y: 45 },
-      { position: "CM", x: 60, y: 45 },
-      { position: "LW", x: 20, y: 75 },
-      { position: "ST", x: 40, y: 80 },
-      { position: "ST", x: 60, y: 80 },
-      { position: "RW", x: 80, y: 75 }
-    ]
-  },
-  {
-    name: "4-3-1-2",
-    positions: [
-      { position: "GK", x: 50, y: 10 },
-      { position: "LB", x: 20, y: 25 },
-      { position: "CB", x: 35, y: 25 },
-      { position: "CB", x: 65, y: 25 },
-      { position: "RB", x: 80, y: 25 },
-      { position: "CM", x: 35, y: 50 },
-      { position: "CM", x: 50, y: 45 },
-      { position: "CM", x: 65, y: 50 },
-      { position: "CAM", x: 50, y: 65 },
-      { position: "ST", x: 40, y: 80 },
-      { position: "ST", x: 60, y: 80 }
-    ]
-  },
-  {
-    name: "4-3-2-1",
-    positions: [
-      { position: "GK", x: 50, y: 10 },
-      { position: "LB", x: 20, y: 25 },
-      { position: "CB", x: 35, y: 25 },
-      { position: "CB", x: 65, y: 25 },
-      { position: "RB", x: 80, y: 25 },
-      { position: "CM", x: 35, y: 50 },
-      { position: "CM", x: 50, y: 45 },
-      { position: "CM", x: 65, y: 50 },
-      { position: "LF", x: 35, y: 70 },
-      { position: "RF", x: 65, y: 70 },
-      { position: "ST", x: 50, y: 85 }
-    ]
-  },
-  {
-    name: "4-3-3",
-    positions: [
-      { position: "GK", x: 50, y: 10 },
-      { position: "LB", x: 20, y: 25 },
-      { position: "CB", x: 35, y: 25 },
-      { position: "CB", x: 65, y: 25 },
-      { position: "RB", x: 80, y: 25 },
-      { position: "CM", x: 35, y: 50 },
-      { position: "CM", x: 50, y: 45 },
-      { position: "CM", x: 65, y: 50 },
-      { position: "LW", x: 25, y: 75 },
-      { position: "ST", x: 50, y: 80 },
-      { position: "RW", x: 75, y: 75 }
-    ]
-  },
-  {
-    name: "4-3-3 (2)",
-    positions: [
-      { position: "GK", x: 50, y: 10 },
-      { position: "LB", x: 20, y: 25 },
-      { position: "CB", x: 35, y: 25 },
-      { position: "CB", x: 65, y: 25 },
-      { position: "RB", x: 80, y: 25 },
-      { position: "CDM", x: 50, y: 40 },
-      { position: "CM", x: 35, y: 55 },
-      { position: "CM", x: 65, y: 55 },
-      { position: "LW", x: 25, y: 75 },
-      { position: "ST", x: 50, y: 80 },
-      { position: "RW", x: 75, y: 75 }
-    ]
-  },
-  {
-    name: "4-3-3 (3)",
-    positions: [
-      { position: "GK", x: 50, y: 10 },
-      { position: "LB", x: 20, y: 25 },
-      { position: "CB", x: 35, y: 25 },
-      { position: "CB", x: 65, y: 25 },
-      { position: "RB", x: 80, y: 25 },
-      { position: "CM", x: 35, y: 50 },
-      { position: "CAM", x: 50, y: 55 },
-      { position: "CM", x: 65, y: 50 },
-      { position: "LW", x: 25, y: 75 },
-      { position: "ST", x: 50, y: 80 },
-      { position: "RW", x: 75, y: 75 }
-    ]
-  },
-  {
-    name: "4-3-3 (4)",
-    positions: [
-      { position: "GK", x: 50, y: 10 },
-      { position: "LB", x: 20, y: 25 },
-      { position: "CB", x: 35, y: 25 },
-      { position: "CB", x: 65, y: 25 },
-      { position: "RB", x: 80, y: 25 },
-      { position: "CM", x: 35, y: 50 },
-      { position: "CAM", x: 50, y: 55 },
-      { position: "CM", x: 65, y: 50 },
-      { position: "LF", x: 30, y: 75 },
-      { position: "CF", x: 50, y: 80 },
-      { position: "RF", x: 70, y: 75 }
-    ]
-  },
-  {
-    name: "4-3-3 (5)",
-    positions: [
-      { position: "GK", x: 50, y: 10 },
-      { position: "LB", x: 20, y: 25 },
-      { position: "CB", x: 35, y: 25 },
-      { position: "CB", x: 65, y: 25 },
-      { position: "RB", x: 80, y: 25 },
-      { position: "CDM", x: 40, y: 40 },
-      { position: "CDM", x: 60, y: 40 },
-      { position: "CAM", x: 50, y: 55 },
-      { position: "LW", x: 25, y: 75 },
-      { position: "ST", x: 50, y: 80 },
-      { position: "RW", x: 75, y: 75 }
-    ]
-  },
-  {
-    name: "4-4-1-1",
-    positions: [
-      { position: "GK", x: 50, y: 10 },
-      { position: "LB", x: 20, y: 25 },
-      { position: "CB", x: 35, y: 25 },
-      { position: "CB", x: 65, y: 25 },
-      { position: "RB", x: 80, y: 25 },
-      { position: "LM", x: 20, y: 55 },
-      { position: "CM", x: 40, y: 50 },
-      { position: "CM", x: 60, y: 50 },
-      { position: "RM", x: 80, y: 55 },
-      { position: "CAM", x: 50, y: 70 },
-      { position: "ST", x: 50, y: 85 }
-    ]
-  },
-  {
-    name: "4-4-2",
-    positions: [
-      { position: "GK", x: 50, y: 10 },
-      { position: "LB", x: 20, y: 25 },
-      { position: "CB", x: 35, y: 25 },
-      { position: "CB", x: 65, y: 25 },
-      { position: "RB", x: 80, y: 25 },
-      { position: "LM", x: 20, y: 55 },
-      { position: "CM", x: 40, y: 50 },
-      { position: "CM", x: 60, y: 50 },
-      { position: "RM", x: 80, y: 55 },
-      { position: "ST", x: 40, y: 80 },
-      { position: "ST", x: 60, y: 80 }
-    ]
-  },
-  {
-    name: "4-4-2 (2)",
-    positions: [
-      { position: "GK", x: 50, y: 10 },
-      { position: "LB", x: 20, y: 25 },
-      { position: "CB", x: 35, y: 25 },
-      { position: "CB", x: 65, y: 25 },
-      { position: "RB", x: 80, y: 25 },
-      { position: "LM", x: 20, y: 55 },
-      { position: "CDM", x: 40, y: 40 },
-      { position: "CDM", x: 60, y: 40 },
-      { position: "RM", x: 80, y: 55 },
-      { position: "ST", x: 40, y: 80 },
-      { position: "ST", x: 60, y: 80 }
-    ]
-  },
-  {
-    name: "4-5-1",
-    positions: [
-      { position: "GK", x: 50, y: 10 },
-      { position: "LB", x: 20, y: 25 },
-      { position: "CB", x: 35, y: 25 },
-      { position: "CB", x: 65, y: 25 },
-      { position: "RB", x: 80, y: 25 },
-      { position: "LM", x: 15, y: 50 },
-      { position: "CM", x: 35, y: 50 },
-      { position: "CM", x: 50, y: 45 },
-      { position: "CM", x: 65, y: 50 },
-      { position: "RM", x: 85, y: 50 },
-      { position: "ST", x: 50, y: 80 }
-    ]
-  },
-  {
-    name: "4-5-1 (2)",
-    positions: [
-      { position: "GK", x: 50, y: 10 },
-      { position: "LB", x: 20, y: 25 },
-      { position: "CB", x: 35, y: 25 },
-      { position: "CB", x: 65, y: 25 },
-      { position: "RB", x: 80, y: 25 },
-      { position: "LM", x: 15, y: 50 },
-      { position: "CDM", x: 35, y: 40 },
-      { position: "CAM", x: 50, y: 55 },
-      { position: "CDM", x: 65, y: 40 },
-      { position: "RM", x: 85, y: 50 },
-      { position: "ST", x: 50, y: 80 }
-    ]
-  },
-  {
-    name: "5-2-1-2",
-    positions: [
-      { position: "GK", x: 50, y: 10 },
-      { position: "LWB", x: 15, y: 25 },
-      { position: "CB", x: 30, y: 20 },
-      { position: "CB", x: 50, y: 18 },
-      { position: "CB", x: 70, y: 20 },
-      { position: "RWB", x: 85, y: 25 },
-      { position: "CM", x: 40, y: 45 },
-      { position: "CM", x: 60, y: 45 },
-      { position: "CAM", x: 50, y: 65 },
-      { position: "ST", x: 40, y: 80 },
-      { position: "ST", x: 60, y: 80 }
-    ]
-  },
-  {
-    name: "5-2-2-1",
-    positions: [
-      { position: "GK", x: 50, y: 10 },
-      { position: "LWB", x: 15, y: 25 },
-      { position: "CB", x: 30, y: 20 },
-      { position: "CB", x: 50, y: 18 },
-      { position: "CB", x: 70, y: 20 },
-      { position: "RWB", x: 85, y: 25 },
-      { position: "CM", x: 40, y: 45 },
-      { position: "CM", x: 60, y: 45 },
-      { position: "LF", x: 35, y: 70 },
-      { position: "RF", x: 65, y: 70 },
-      { position: "ST", x: 50, y: 85 }
-    ]
-  },
-  {
-    name: "5-3-2",
-    positions: [
-      { position: "GK", x: 50, y: 10 },
-      { position: "LWB", x: 15, y: 25 },
-      { position: "CB", x: 30, y: 20 },
-      { position: "CB", x: 50, y: 18 },
-      { position: "CB", x: 70, y: 20 },
-      { position: "RWB", x: 85, y: 25 },
-      { position: "CM", x: 35, y: 50 },
-      { position: "CM", x: 50, y: 45 },
-      { position: "CM", x: 65, y: 50 },
-      { position: "ST", x: 40, y: 80 },
-      { position: "ST", x: 60, y: 80 }
-    ]
-  }
+export const SUBSTITUTE_POSITIONS = [
+  { position: 'SUB', x: 20, y: 20 },
+  { position: 'SUB', x: 30, y: 20 },
+  { position: 'SUB', x: 40, y: 20 },
+  { position: 'SUB', x: 50, y: 20 },
+  { position: 'SUB', x: 60, y: 20 },
+  { position: 'SUB', x: 70, y: 20 },
+  { position: 'SUB', x: 80, y: 20 }
 ];
+
+export const RESERVE_POSITIONS = [
+  { position: 'RES', x: 20, y: 10 },
+  { position: 'RES', x: 30, y: 10 },
+  { position: 'RES', x: 40, y: 10 },
+  { position: 'RES', x: 50, y: 10 },
+  { position: 'RES', x: 60, y: 10 },
+  { position: 'RES', x: 70, y: 10 },
+  { position: 'RES', x: 80, y: 10 }
+];
+

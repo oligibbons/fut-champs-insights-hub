@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import Navigation from '@/components/Navigation';
 import WeeklyOverview from '@/components/WeeklyOverview';
@@ -25,8 +26,10 @@ import {
   Award
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useTheme } from '@/hooks/useTheme';
 
 const Index = () => {
+  const { currentTheme } = useTheme();
   const [weeklyData] = useLocalStorage<WeeklyPerformance[]>('futChampions_weeks', []);
   const { notifyMilestone } = useAchievementNotifications();
   
@@ -237,13 +240,18 @@ const Index = () => {
         <div className="max-w-7xl mx-auto space-y-6 lg:space-y-8">
           {/* Header */}
           <div className="text-center space-y-4">
-            <div className="inline-flex items-center gap-3 p-4 bg-fifa-gradient rounded-3xl shadow-2xl">
-              <Trophy className="h-8 w-8 text-white" />
+            <div className="inline-flex items-center gap-4 p-6 rounded-3xl shadow-2xl" 
+                 style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}>
+              <img 
+                src="/lovable-uploads/bb8114bb-d9f2-40fe-8413-4232e31f0621.png" 
+                alt="FUT Visionary Logo" 
+                className="w-12 h-12 object-contain"
+              />
               <h1 className="text-3xl lg:text-4xl font-bold text-white">
-                FUT Champions Insights Hub
+                FUT Visionary Insights Hub
               </h1>
             </div>
-            <p className="text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed">
+            <p className="text-lg max-w-2xl mx-auto leading-relaxed" style={{ color: currentTheme.colors.muted }}>
               Track, analyze, and dominate your FUT Champions journey with AI-powered insights and comprehensive performance analytics.
             </p>
           </div>
@@ -298,7 +306,8 @@ const Index = () => {
           {/* Quick Actions Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Recent Games */}
-            <Card className="glass-card p-4 lg:p-6">
+            <Card style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }} 
+                  className="p-4 lg:p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-white">Recent Games</h3>
                 <Link to="/current-week">
@@ -309,7 +318,8 @@ const Index = () => {
               <div className="space-y-3">
                 {recentGames.length > 0 ? (
                   recentGames.map((game) => (
-                    <div key={game.id} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                    <div key={game.id} className="flex items-center justify-between p-3 rounded-lg" 
+                         style={{ backgroundColor: currentTheme.colors.surface }}>
                       <div className="flex items-center space-x-3 min-w-0 flex-1">
                         <Badge 
                           variant={game.result === 'win' ? 'default' : 'destructive'}
@@ -319,17 +329,17 @@ const Index = () => {
                         </Badge>
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-white truncate">{game.scoreLine}</p>
-                          <p className="text-xs text-gray-400">Game {game.gameNumber}</p>
+                          <p className="text-xs" style={{ color: currentTheme.colors.muted }}>Game {game.gameNumber}</p>
                         </div>
                       </div>
                       <div className="text-right flex-shrink-0">
-                        <p className="text-xs text-gray-400">Opponent Skill</p>
+                        <p className="text-xs" style={{ color: currentTheme.colors.muted }}>Opponent Skill</p>
                         <p className="text-sm font-medium text-white">{game.opponentSkill}/10</p>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <div className="text-center py-6 lg:py-8 text-gray-400">
+                  <div className="text-center py-6 lg:py-8" style={{ color: currentTheme.colors.muted }}>
                     <Clock className="h-8 w-8 mx-auto mb-2 opacity-50" />
                     <p className="text-sm">No games played yet</p>
                     <Link to="/current-week">
@@ -343,43 +353,48 @@ const Index = () => {
             </Card>
 
             {/* Enhanced Quick Actions */}
-            <Card className="glass-card p-4 lg:p-6">
+            <Card style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }} 
+                  className="p-4 lg:p-6">
               <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
               
               <div className="space-y-3">
                 <Link to="/current-week" className="block">
-                  <Button className="w-full justify-start bg-fifa-blue hover:bg-fifa-blue/80 text-sm">
+                  <Button className="w-full justify-start text-sm hover:scale-105 transition-transform" 
+                          style={{ backgroundColor: currentTheme.colors.primary, color: '#ffffff' }}>
                     <Plus className="h-4 w-4 mr-2" />
                     Record New Game
                   </Button>
                 </Link>
                 
                 <Link to="/squads" className="block">
-                  <Button variant="outline" className="w-full justify-start text-sm">
+                  <Button variant="outline" className="w-full justify-start text-sm hover:scale-105 transition-transform" 
+                          style={{ borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}>
                     <Users className="h-4 w-4 mr-2" />
                     Manage Squads
                   </Button>
                 </Link>
                 
                 <Link to="/analytics" className="block">
-                  <Button variant="outline" className="w-full justify-start text-sm">
+                  <Button variant="outline" className="w-full justify-start text-sm hover:scale-105 transition-transform" 
+                          style={{ borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}>
                     <BarChart3 className="h-4 w-4 mr-2" />
                     Deep Analytics
                   </Button>
                 </Link>
                 
                 <Link to="/insights" className="block">
-                  <Button variant="outline" className="w-full justify-start text-sm">
+                  <Button variant="outline" className="w-full justify-start text-sm hover:scale-105 transition-transform" 
+                          style={{ borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}>
                     <Trophy className="h-4 w-4 mr-2" />
                     AI Insights
                   </Button>
                 </Link>
 
                 {/* Achievement preview */}
-                <div className="pt-2 border-t border-white/10">
+                <div className="pt-2 border-t" style={{ borderColor: currentTheme.colors.border }}>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-gray-400">Latest Achievement</span>
-                    <Badge className="bg-fifa-gold/20 text-fifa-gold border-fifa-gold/30">
+                    <span className="text-sm" style={{ color: currentTheme.colors.muted }}>Latest Achievement</span>
+                    <Badge style={{ backgroundColor: currentTheme.colors.accent + '30', color: currentTheme.colors.accent, borderColor: currentTheme.colors.accent + '50' }}>
                       <Award className="h-3 w-3 mr-1" />
                       {unlockedAchievements}
                     </Badge>

@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { WeeklyPerformance, PlayerPerformance } from '@/types/futChampions';
-import { Search, Users, Star } from 'lucide-react';
+import { Search, Users, Star, ChevronUp, ChevronDown } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 
 interface PlayerHistoryTableProps {
@@ -30,11 +30,15 @@ interface PlayerStats {
   gamesLost: number;
 }
 
+type SortField = 'name' | 'position' | 'totalGames' | 'totalGoals' | 'totalAssists' | 'averageRating' | 'gamesWon';
+type SortDirection = 'asc' | 'desc';
+
 const PlayerHistoryTable = ({ weeklyData }: PlayerHistoryTableProps) => {
   const { currentTheme } = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterPosition, setFilterPosition] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<'name' | 'games' | 'goals' | 'rating'>('games');
+  const [sortField, setSortField] = useState<SortField>('totalGames');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   // Aggregate all player performances
   const playerStats: PlayerStats[] = [];
@@ -102,23 +106,80 @@ const PlayerHistoryTable = ({ weeklyData }: PlayerHistoryTableProps) => {
     return matchesSearch && matchesPosition;
   });
 
+  // Handle column click sorting
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('desc');
+    }
+  };
+
   // Sort players
   const sortedPlayers = [...filteredPlayers].sort((a, b) => {
-    switch (sortBy) {
+    let aValue: string | number;
+    let bValue: string | number;
+
+    switch (sortField) {
       case 'name':
-        return a.name.localeCompare(b.name);
-      case 'games':
-        return b.totalGames - a.totalGames;
-      case 'goals':
-        return b.totalGoals - a.totalGoals;
-      case 'rating':
-        return b.averageRating - a.averageRating;
+        aValue = a.name;
+        bValue = b.name;
+        break;
+      case 'position':
+        aValue = a.position;
+        bValue = b.position;
+        break;
+      case 'totalGames':
+        aValue = a.totalGames;
+        bValue = b.totalGames;
+        break;
+      case 'totalGoals':
+        aValue = a.totalGoals;
+        bValue = b.totalGoals;
+        break;
+      case 'totalAssists':
+        aValue = a.totalAssists;
+        bValue = b.totalAssists;
+        break;
+      case 'averageRating':
+        aValue = a.averageRating;
+        bValue = b.averageRating;
+        break;
+      case 'gamesWon':
+        aValue = a.gamesWon;
+        bValue = b.gamesWon;
+        break;
       default:
-        return 0;
+        aValue = a.totalGames;
+        bValue = b.totalGames;
+    }
+
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      return sortDirection === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+    } else {
+      return sortDirection === 'asc' ? (aValue as number) - (bValue as number) : (bValue as number) - (aValue as number);
     }
   });
 
   const positions = [...new Set(playerStats.map(p => p.position))].sort();
+
+  const SortableHeader = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
+    <TableHead 
+      className="cursor-pointer hover:bg-white/5 transition-colors select-none"
+      style={{ color: currentTheme.colors.text }}
+      onClick={() => handleSort(field)}
+    >
+      <div className="flex items-center gap-2">
+        {children}
+        {sortField === field && (
+          sortDirection === 'asc' ? 
+            <ChevronUp className="h-4 w-4" /> : 
+            <ChevronDown className="h-4 w-4" />
+        )}
+      </div>
+    </TableHead>
+  );
 
   return (
     <Card style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}>
@@ -153,18 +214,6 @@ const PlayerHistoryTable = ({ weeklyData }: PlayerHistoryTableProps) => {
               ))}
             </SelectContent>
           </Select>
-
-          <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-            <SelectTrigger className="w-40" style={{ backgroundColor: currentTheme.colors.surface, borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="name">By Name</SelectItem>
-              <SelectItem value="games">By Games</SelectItem>
-              <SelectItem value="goals">By Goals</SelectItem>
-              <SelectItem value="rating">By Rating</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
 
         {/* Table */}
@@ -172,13 +221,13 @@ const PlayerHistoryTable = ({ weeklyData }: PlayerHistoryTableProps) => {
           <Table>
             <TableHeader>
               <TableRow style={{ borderColor: currentTheme.colors.border }}>
-                <TableHead style={{ color: currentTheme.colors.text }}>Player</TableHead>
-                <TableHead style={{ color: currentTheme.colors.text }}>Position</TableHead>
-                <TableHead style={{ color: currentTheme.colors.text }}>Games</TableHead>
-                <TableHead style={{ color: currentTheme.colors.text }}>Goals</TableHead>
-                <TableHead style={{ color: currentTheme.colors.text }}>Assists</TableHead>
-                <TableHead style={{ color: currentTheme.colors.text }}>Avg Rating</TableHead>
-                <TableHead style={{ color: currentTheme.colors.text }}>Win Rate</TableHead>
+                <SortableHeader field="name">Player</SortableHeader>
+                <SortableHeader field="position">Position</SortableHeader>
+                <SortableHeader field="totalGames">Games</SortableHeader>
+                <SortableHeader field="totalGoals">Goals</SortableHeader>
+                <SortableHeader field="totalAssists">Assists</SortableHeader>
+                <SortableHeader field="averageRating">Avg Rating</SortableHeader>
+                <SortableHeader field="gamesWon">Win Rate</SortableHeader>
                 <TableHead style={{ color: currentTheme.colors.text }}>Cards</TableHead>
               </TableRow>
             </TableHeader>
