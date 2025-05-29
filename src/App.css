@@ -30,9 +30,15 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
-/* Theme-aware utility classes */
+/* Enhanced animations and transitions */
+* {
+  transition: transform 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Theme-aware utility classes with enhanced animations */
 .glass-card {
   background: var(--theme-card-bg);
   border-color: var(--theme-border);
@@ -42,6 +48,16 @@ body {
     0 25px 50px -12px rgba(0, 0, 0, 0.4),
     0 15px 30px -5px rgba(0, 212, 255, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transform: translateZ(0);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 
+    0 35px 70px -12px rgba(0, 0, 0, 0.5),
+    0 25px 50px -5px rgba(0, 212, 255, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .gradient-text {
@@ -51,17 +67,28 @@ body {
   background-clip: text;
   font-family: var(--font-primary);
   font-weight: 700;
+  animation: gradient-shift 3s ease-in-out infinite alternate;
+}
+
+@keyframes gradient-shift {
+  0% {
+    background: linear-gradient(135deg, var(--theme-primary), var(--theme-accent));
+  }
+  100% {
+    background: linear-gradient(135deg, var(--theme-accent), var(--theme-secondary));
+  }
 }
 
 .modern-button-primary {
   background: linear-gradient(135deg, var(--theme-primary), var(--theme-secondary));
   color: white;
   border: none;
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   font-family: var(--font-primary);
   font-weight: 600;
   position: relative;
   overflow: hidden;
+  transform: translateZ(0);
 }
 
 .modern-button-primary::before {
@@ -72,7 +99,7 @@ body {
   width: 100%;
   height: 100%;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s;
+  transition: left 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .modern-button-primary:hover::before {
@@ -80,20 +107,21 @@ body {
 }
 
 .modern-button-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 20px 40px rgba(0, 212, 255, 0.4);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 25px 50px rgba(0, 212, 255, 0.5);
 }
 
-/* Enhanced metric cards */
+/* Enhanced metric cards with parallax effect */
 .metric-card {
   background: var(--theme-card-bg);
   border: 1px solid var(--theme-border);
   border-radius: 1.5rem;
   padding: 1.5rem;
   backdrop-filter: blur(20px);
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
+  transform: translateZ(0);
 }
 
 .metric-card::before {
@@ -105,11 +133,120 @@ body {
   height: 3px;
   background: linear-gradient(90deg, var(--theme-primary), var(--theme-accent));
   opacity: 0.8;
+  transition: opacity 0.3s ease;
+}
+
+.metric-card::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(0, 212, 255, 0.1) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
 }
 
 .metric-card:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+  transform: translateY(-12px) scale(1.03) rotateX(2deg);
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.4);
+}
+
+.metric-card:hover::before {
+  opacity: 1;
+}
+
+.metric-card:hover::after {
+  opacity: 1;
+}
+
+/* Floating elements with subtle movement */
+.floating-element {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-10px) rotate(1deg);
+  }
+  66% {
+    transform: translateY(-5px) rotate(-1deg);
+  }
+}
+
+/* Staggered animations for lists */
+.stagger-animation > * {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: stagger-in 0.6s ease-out forwards;
+}
+
+.stagger-animation > *:nth-child(1) { animation-delay: 0.1s; }
+.stagger-animation > *:nth-child(2) { animation-delay: 0.2s; }
+.stagger-animation > *:nth-child(3) { animation-delay: 0.3s; }
+.stagger-animation > *:nth-child(4) { animation-delay: 0.4s; }
+.stagger-animation > *:nth-child(5) { animation-delay: 0.5s; }
+
+@keyframes stagger-in {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Parallax background effects */
+.parallax-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 20% 20%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(108, 92, 231, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 90%, rgba(0, 255, 136, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: -1;
+  animation: parallax-drift 20s ease-in-out infinite;
+}
+
+@keyframes parallax-drift {
+  0%, 100% {
+    transform: translateX(0) translateY(0) scale(1);
+  }
+  25% {
+    transform: translateX(20px) translateY(-10px) scale(1.02);
+  }
+  50% {
+    transform: translateX(-10px) translateY(15px) scale(0.98);
+  }
+  75% {
+    transform: translateX(-20px) translateY(-5px) scale(1.01);
+  }
+}
+
+/* Depth and shadow effects */
+.shadow-depth-sm {
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.1),
+    0 4px 16px rgba(0, 212, 255, 0.05);
+}
+
+.shadow-depth-md {
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.2),
+    0 16px 64px rgba(0, 212, 255, 0.1);
+}
+
+.shadow-depth-lg {
+  box-shadow: 
+    0 16px 64px rgba(0, 0, 0, 0.3),
+    0 32px 128px rgba(0, 212, 255, 0.15);
 }
 
 /* Brand-specific animations */
@@ -133,12 +270,57 @@ body {
   }
 }
 
+@keyframes slide-in-from-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-from-left {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes zoom-in {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 .brand-glow {
   animation: futvisionary-glow 3s ease-in-out infinite;
 }
 
 .data-pulse {
   animation: data-pulse 2s ease-in-out infinite;
+}
+
+.slide-in-right {
+  animation: slide-in-from-right 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.slide-in-left {
+  animation: slide-in-from-left 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.zoom-in {
+  animation: zoom-in 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Enhanced FIFA colors with brand identity */
@@ -153,6 +335,32 @@ body {
 .bg-fifa-green { background-color: #00FF88; }
 .bg-fifa-red { background-color: #FF4757; }
 .bg-fifa-purple { background-color: var(--theme-secondary); }
+
+/* Enhanced stat card gradients */
+.stat-card-gradient-blue {
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(0, 212, 255, 0.05));
+  border: 1px solid rgba(0, 212, 255, 0.2);
+}
+
+.stat-card-gradient-green {
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 255, 136, 0.05));
+  border: 1px solid rgba(0, 255, 136, 0.2);
+}
+
+.stat-card-gradient-gold {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(251, 191, 36, 0.05));
+  border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+.stat-card-gradient-purple {
+  background: linear-gradient(135deg, rgba(108, 92, 231, 0.1), rgba(108, 92, 231, 0.05));
+  border: 1px solid rgba(108, 92, 231, 0.2);
+}
+
+.stat-card-gradient-red {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05));
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
 
 /* Light theme specific overrides */
 .theme-light .glass-card {
@@ -245,4 +453,42 @@ h1, h2, h3, h4, h5, h6 {
 .btn-futvisionary:hover {
   transform: translateY(-2px);
   box-shadow: 0 15px 30px rgba(0, 212, 255, 0.4);
+}
+
+/* FIFA gradient background */
+.bg-fifa-gradient {
+  background: linear-gradient(135deg, var(--theme-primary), var(--theme-secondary));
+}
+
+/* Interactive hover effects for cards */
+.interactive-card {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.interactive-card:hover {
+  transform: translateY(-8px) scale(1.02);
+}
+
+/* Responsive animations */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .glass-card:hover,
+  .metric-card:hover {
+    transform: translateY(-4px) scale(1.01);
+  }
+  
+  .parallax-bg {
+    animation: none;
+  }
 }

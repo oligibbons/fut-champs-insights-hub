@@ -19,18 +19,21 @@ function App() {
   return (
     <Router>
       <div 
-        className="min-h-screen transition-all duration-500"
+        className="min-h-screen transition-all duration-500 relative"
         style={{
           background: currentTheme.colors.background,
           color: currentTheme.colors.text
         }}
       >
+        {/* Parallax Background */}
+        <div className="parallax-bg"></div>
+        
         {/* Brand Header - visible on all pages */}
-        <div className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b" 
+        <div className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b animate-slide-in-from-top" 
              style={{ borderColor: currentTheme.colors.border, backgroundColor: `${currentTheme.colors.cardBg}80` }}>
           <div className="px-4 py-2 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center brand-glow">
                 <span className="text-white font-bold text-sm">FV</span>
               </div>
               <div>
@@ -38,7 +41,7 @@ function App() {
                 <p className="text-xs" style={{ color: currentTheme.colors.muted }}>AI Insights for FUT Greatness</p>
               </div>
             </div>
-            <div className="text-xs" style={{ color: currentTheme.colors.muted }}>
+            <div className="text-xs mono-text" style={{ color: currentTheme.colors.muted }}>
               Dominate with Data
             </div>
           </div>

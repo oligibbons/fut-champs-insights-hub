@@ -6,10 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTheme } from '@/hooks/useTheme';
 import { WeeklyPerformance } from '@/types/futChampions';
-import { Settings, Target, Calendar, Trophy, Zap, Users } from 'lucide-react';
+import { Settings, Target, Calendar, Trophy, Zap, Users, Edit3 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import WeekNaming from './WeekNaming';
+import QualifierSystem from './QualifierSystem';
 
 interface WeekSettingsProps {
   weekData: WeeklyPerformance | null;
@@ -80,125 +83,144 @@ const WeekSettings = ({ weekData, onUpdateWeek }: WeekSettingsProps) => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Target Setting */}
-      <Card style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2" style={{ color: currentTheme.colors.text }}>
-            <Target className="h-5 w-5" style={{ color: currentTheme.colors.primary }} />
-            Week Target
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label style={{ color: currentTheme.colors.text }}>Target Rank</Label>
-              <Select value={targetRank} onValueChange={setTargetRank}>
-                <SelectTrigger style={{ backgroundColor: currentTheme.colors.surface, borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}>
-                  {ranks.map(rank => (
-                    <SelectItem key={rank.name} value={rank.name} style={{ color: currentTheme.colors.text }}>
-                      {rank.name} ({rank.wins} wins)
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <Label style={{ color: currentTheme.colors.text }}>Custom Wins Target</Label>
-              <Input
-                type="number"
-                min="1"
-                max="15"
-                value={targetWins}
-                onChange={(e) => setTargetWins(parseInt(e.target.value))}
-                style={{ backgroundColor: currentTheme.colors.surface, borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}
-              />
-            </div>
-          </div>
-          
-          <Button 
-            onClick={handleSetTarget} 
-            className="w-full"
-            style={{ backgroundColor: currentTheme.colors.primary, color: '#ffffff' }}
-          >
-            <Trophy className="h-4 w-4 mr-2" />
-            Set Target
-          </Button>
-        </CardContent>
-      </Card>
+    <div className="space-y-6 animate-fade-in">
+      <Tabs defaultValue="general" style={{ backgroundColor: 'transparent' }}>
+        <TabsList className="grid w-full grid-cols-3" style={{ backgroundColor: currentTheme.colors.surface }}>
+          <TabsTrigger value="general" style={{ color: currentTheme.colors.text }}>General</TabsTrigger>
+          <TabsTrigger value="qualifiers" style={{ color: currentTheme.colors.text }}>Qualifiers</TabsTrigger>
+          <TabsTrigger value="targets" style={{ color: currentTheme.colors.text }}>Targets</TabsTrigger>
+        </TabsList>
 
-      {/* Week Notes */}
-      <Card style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2" style={{ color: currentTheme.colors.text }}>
-            <Calendar className="h-5 w-5" style={{ color: currentTheme.colors.accent }} />
-            Week Notes
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div>
-              <Label style={{ color: currentTheme.colors.text }}>Personal Notes</Label>
-              <textarea
-                className="w-full p-3 rounded-lg resize-none"
-                rows={4}
-                placeholder="Add notes about this week's goals, formation changes, or anything else..."
-                value={personalNotes}
-                onChange={(e) => setPersonalNotes(e.target.value)}
-                style={{ backgroundColor: currentTheme.colors.surface, borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}
-              />
-            </div>
-            
-            <Button 
-              onClick={() => onUpdateWeek({ personalNotes })}
-              variant="outline"
-              style={{ borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}
-            >
-              Save Notes
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+        <TabsContent value="general" className="space-y-6">
+          {/* Week Naming */}
+          <WeekNaming weekData={weekData} onUpdateWeek={onUpdateWeek} />
 
-      {/* Week Info */}
-      <Card style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2" style={{ color: currentTheme.colors.text }}>
-            <Zap className="h-5 w-5" style={{ color: currentTheme.colors.secondary }} />
-            Week Information
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold" style={{ color: currentTheme.colors.primary }}>
-                {weekData.games.length}/15
+          {/* Week Notes */}
+          <Card style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2" style={{ color: currentTheme.colors.text }}>
+                <Edit3 className="h-5 w-5" style={{ color: currentTheme.colors.accent }} />
+                Week Notes
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <Label style={{ color: currentTheme.colors.text }}>Personal Notes</Label>
+                  <textarea
+                    className="w-full p-3 rounded-lg resize-none"
+                    rows={4}
+                    placeholder="Add notes about this week's goals, formation changes, or anything else..."
+                    value={personalNotes}
+                    onChange={(e) => setPersonalNotes(e.target.value)}
+                    style={{ backgroundColor: currentTheme.colors.surface, borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}
+                  />
+                </div>
+                
+                <Button 
+                  onClick={() => onUpdateWeek({ personalNotes })}
+                  variant="outline"
+                  style={{ borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}
+                >
+                  Save Notes
+                </Button>
               </div>
-              <div className="text-sm" style={{ color: currentTheme.colors.muted }}>Games Played</div>
-            </div>
-            
-            <div className="text-center">
-              <div className="text-2xl font-bold" style={{ color: currentTheme.colors.accent }}>
-                {weekData.totalWins}
+            </CardContent>
+          </Card>
+
+          {/* Week Info */}
+          <Card style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2" style={{ color: currentTheme.colors.text }}>
+                <Zap className="h-5 w-5" style={{ color: currentTheme.colors.secondary }} />
+                Week Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold" style={{ color: currentTheme.colors.primary }}>
+                    {weekData.games.length}/15
+                  </div>
+                  <div className="text-sm" style={{ color: currentTheme.colors.muted }}>Games Played</div>
+                </div>
+                
+                <div className="text-center">
+                  <div className="text-2xl font-bold" style={{ color: currentTheme.colors.accent }}>
+                    {weekData.totalWins}
+                  </div>
+                  <div className="text-sm" style={{ color: currentTheme.colors.muted }}>Current Wins</div>
+                </div>
               </div>
-              <div className="text-sm" style={{ color: currentTheme.colors.muted }}>Current Wins</div>
-            </div>
-          </div>
-          
-          <div className="mt-4 flex justify-center">
-            <Badge 
-              variant="outline"
-              style={{ borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}
-            >
-              {weekData.isCompleted ? 'Week Completed' : 'In Progress'}
-            </Badge>
-          </div>
-        </CardContent>
-      </Card>
+              
+              <div className="mt-4 flex justify-center">
+                <Badge 
+                  variant="outline"
+                  style={{ borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}
+                >
+                  {weekData.isCompleted ? 'Week Completed' : 'In Progress'}
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="qualifiers" className="space-y-6">
+          <QualifierSystem weekData={weekData} onUpdateWeek={onUpdateWeek} />
+        </TabsContent>
+
+        <TabsContent value="targets" className="space-y-6">
+          {/* Target Setting */}
+          <Card style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2" style={{ color: currentTheme.colors.text }}>
+                <Target className="h-5 w-5" style={{ color: currentTheme.colors.primary }} />
+                Week Target
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label style={{ color: currentTheme.colors.text }}>Target Rank</Label>
+                  <Select value={targetRank} onValueChange={setTargetRank}>
+                    <SelectTrigger style={{ backgroundColor: currentTheme.colors.surface, borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}>
+                      {ranks.map(rank => (
+                        <SelectItem key={rank.name} value={rank.name} style={{ color: currentTheme.colors.text }}>
+                          {rank.name} ({rank.wins} wins)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label style={{ color: currentTheme.colors.text }}>Custom Wins Target</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="15"
+                    value={targetWins}
+                    onChange={(e) => setTargetWins(parseInt(e.target.value))}
+                    style={{ backgroundColor: currentTheme.colors.surface, borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}
+                  />
+                </div>
+              </div>
+              
+              <Button 
+                onClick={handleSetTarget} 
+                className="w-full"
+                style={{ backgroundColor: currentTheme.colors.primary, color: '#ffffff' }}
+              >
+                <Trophy className="h-4 w-4 mr-2" />
+                Set Target
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

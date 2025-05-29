@@ -125,6 +125,7 @@ export interface QualifierRun {
 export interface WeeklyPerformance {
   id: string;
   weekNumber: number;
+  customName?: string; // New field for custom week names
   startDate: string;
   endDate: string;
   games: GameResult[];
