@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/useTheme';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   Home,
   Calendar,
@@ -12,13 +13,17 @@ import {
   Menu,
   X,
   Trophy,
-  History
+  History,
+  UserPlus,
+  Crown,
+  LogOut
 } from 'lucide-react';
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const { currentTheme } = useTheme();
+  const { signOut, user } = useAuth();
 
   const navigationItems = [
     { name: 'Dashboard', path: '/', icon: Home },
@@ -27,8 +32,18 @@ const Navigation = () => {
     { name: 'Squads', path: '/squads', icon: Users },
     { name: 'Analytics', path: '/analytics', icon: TrendingUp },
     { name: 'AI Insights', path: '/insights', icon: Trophy },
+    { name: 'Friends', path: '/friends', icon: UserPlus },
+    { name: 'Leaderboards', path: '/leaderboards', icon: Crown },
     { name: 'Settings', path: '/settings', icon: Settings },
   ];
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   return (
     <>
@@ -60,7 +75,7 @@ const Navigation = () => {
         borderColor: currentTheme.colors.border,
         backdropFilter: 'blur(12px)'
       }}>
-        <div className="p-6">
+        <div className="p-6 h-full flex flex-col">
           <div className="flex items-center space-x-2 mb-8">
             <div 
               className="w-8 h-8 rounded-lg flex items-center justify-center"
@@ -76,7 +91,7 @@ const Navigation = () => {
             </h1>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 flex-1">
             {navigationItems.map((item) => {
               const isActive = location.pathname === item.path;
               return (
@@ -102,6 +117,31 @@ const Navigation = () => {
               );
             })}
           </div>
+
+          {/* User Section */}
+          {user && (
+            <div className="mt-auto pt-4 border-t" style={{ borderColor: currentTheme.colors.border }}>
+              <div className="mb-4 p-3 rounded-lg" style={{ backgroundColor: currentTheme.colors.cardBg }}>
+                <p className="text-sm font-medium text-white">{user.email}</p>
+                <p className="text-xs" style={{ color: currentTheme.colors.muted }}>
+                  Signed in
+                </p>
+              </div>
+              <Button
+                onClick={handleSignOut}
+                variant="outline"
+                className="w-full flex items-center gap-2 rounded-lg"
+                style={{
+                  backgroundColor: 'transparent',
+                  borderColor: currentTheme.colors.border,
+                  color: currentTheme.colors.text
+                }}
+              >
+                <LogOut className="h-4 w-4" />
+                Sign Out
+              </Button>
+            </div>
+          )}
         </div>
       </nav>
 

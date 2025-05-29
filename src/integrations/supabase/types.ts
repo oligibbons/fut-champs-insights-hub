@@ -9,7 +9,503 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      achievements: {
+        Row: {
+          achievement_id: string
+          category: string
+          description: string
+          id: string
+          progress: number | null
+          rarity: string
+          target: number | null
+          title: string
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          category: string
+          description: string
+          id?: string
+          progress?: number | null
+          rarity: string
+          target?: number | null
+          title: string
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          category?: string
+          description?: string
+          id?: string
+          progress?: number | null
+          rarity?: string
+          target?: number | null
+          title?: string
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "achievements_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      friends: {
+        Row: {
+          created_at: string
+          friend_id: string
+          id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          friend_id: string
+          id?: string
+          status: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          friend_id?: string
+          id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "friends_friend_id_fkey"
+            columns: ["friend_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "friends_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_results: {
+        Row: {
+          actual_game_time: number | null
+          comments: string | null
+          created_at: string
+          date_played: string
+          duration: number
+          game_context: string
+          game_number: number
+          game_rating: string | null
+          game_score: number | null
+          id: string
+          opponent_skill: number
+          rage_moments: number | null
+          result: string
+          score_line: string
+          server_quality: number | null
+          squad_used: string | null
+          stress_level: number | null
+          time_played: string | null
+          user_id: string
+          week_id: string
+        }
+        Insert: {
+          actual_game_time?: number | null
+          comments?: string | null
+          created_at?: string
+          date_played?: string
+          duration: number
+          game_context?: string
+          game_number: number
+          game_rating?: string | null
+          game_score?: number | null
+          id?: string
+          opponent_skill: number
+          rage_moments?: number | null
+          result: string
+          score_line: string
+          server_quality?: number | null
+          squad_used?: string | null
+          stress_level?: number | null
+          time_played?: string | null
+          user_id: string
+          week_id: string
+        }
+        Update: {
+          actual_game_time?: number | null
+          comments?: string | null
+          created_at?: string
+          date_played?: string
+          duration?: number
+          game_context?: string
+          game_number?: number
+          game_rating?: string | null
+          game_score?: number | null
+          id?: string
+          opponent_skill?: number
+          rage_moments?: number | null
+          result?: string
+          score_line?: string
+          server_quality?: number | null
+          squad_used?: string | null
+          stress_level?: number | null
+          time_played?: string | null
+          user_id?: string
+          week_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_results_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_results_week_id_fkey"
+            columns: ["week_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_performances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      players: {
+        Row: {
+          assists: number | null
+          average_rating: number | null
+          card_type: string
+          clean_sheets: number | null
+          club: string | null
+          created_at: string
+          defending: number | null
+          dribbling: number | null
+          games_played: number | null
+          goals: number | null
+          id: string
+          image_url: string | null
+          last_used: string | null
+          league: string | null
+          losses: number | null
+          minutes_played: number | null
+          name: string
+          nationality: string | null
+          own_goals: number | null
+          pace: number | null
+          passing: number | null
+          physical: number | null
+          position: string
+          price: number | null
+          rating: number
+          red_cards: number | null
+          shooting: number | null
+          updated_at: string
+          user_id: string
+          wins: number | null
+          yellow_cards: number | null
+        }
+        Insert: {
+          assists?: number | null
+          average_rating?: number | null
+          card_type: string
+          clean_sheets?: number | null
+          club?: string | null
+          created_at?: string
+          defending?: number | null
+          dribbling?: number | null
+          games_played?: number | null
+          goals?: number | null
+          id?: string
+          image_url?: string | null
+          last_used?: string | null
+          league?: string | null
+          losses?: number | null
+          minutes_played?: number | null
+          name: string
+          nationality?: string | null
+          own_goals?: number | null
+          pace?: number | null
+          passing?: number | null
+          physical?: number | null
+          position: string
+          price?: number | null
+          rating: number
+          red_cards?: number | null
+          shooting?: number | null
+          updated_at?: string
+          user_id: string
+          wins?: number | null
+          yellow_cards?: number | null
+        }
+        Update: {
+          assists?: number | null
+          average_rating?: number | null
+          card_type?: string
+          clean_sheets?: number | null
+          club?: string | null
+          created_at?: string
+          defending?: number | null
+          dribbling?: number | null
+          games_played?: number | null
+          goals?: number | null
+          id?: string
+          image_url?: string | null
+          last_used?: string | null
+          league?: string | null
+          losses?: number | null
+          minutes_played?: number | null
+          name?: string
+          nationality?: string | null
+          own_goals?: number | null
+          pace?: number | null
+          passing?: number | null
+          physical?: number | null
+          position?: string
+          price?: number | null
+          rating?: number
+          red_cards?: number | null
+          shooting?: number | null
+          updated_at?: string
+          user_id?: string
+          wins?: number | null
+          yellow_cards?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "players_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          best_rank: string | null
+          best_streak: number | null
+          created_at: string
+          current_streak: number | null
+          display_name: string | null
+          id: string
+          total_games: number | null
+          total_goals: number | null
+          total_wins: number | null
+          updated_at: string
+          username: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          best_rank?: string | null
+          best_streak?: number | null
+          created_at?: string
+          current_streak?: number | null
+          display_name?: string | null
+          id: string
+          total_games?: number | null
+          total_goals?: number | null
+          total_wins?: number | null
+          updated_at?: string
+          username: string
+        }
+        Update: {
+          avatar_url?: string | null
+          best_rank?: string | null
+          best_streak?: number | null
+          created_at?: string
+          current_streak?: number | null
+          display_name?: string | null
+          id?: string
+          total_games?: number | null
+          total_goals?: number | null
+          total_wins?: number | null
+          updated_at?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      squads: {
+        Row: {
+          average_age: number | null
+          created_at: string
+          description: string | null
+          formation: string
+          games_played: number | null
+          id: string
+          is_default: boolean | null
+          key_players: string[] | null
+          last_used: string | null
+          losses: number | null
+          name: string
+          total_rating: number | null
+          total_value: number | null
+          updated_at: string
+          user_id: string
+          wins: number | null
+        }
+        Insert: {
+          average_age?: number | null
+          created_at?: string
+          description?: string | null
+          formation: string
+          games_played?: number | null
+          id?: string
+          is_default?: boolean | null
+          key_players?: string[] | null
+          last_used?: string | null
+          losses?: number | null
+          name: string
+          total_rating?: number | null
+          total_value?: number | null
+          updated_at?: string
+          user_id: string
+          wins?: number | null
+        }
+        Update: {
+          average_age?: number | null
+          created_at?: string
+          description?: string | null
+          formation?: string
+          games_played?: number | null
+          id?: string
+          is_default?: boolean | null
+          key_players?: string[] | null
+          last_used?: string | null
+          losses?: number | null
+          name?: string
+          total_rating?: number | null
+          total_value?: number | null
+          updated_at?: string
+          user_id?: string
+          wins?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "squads_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      weekly_performances: {
+        Row: {
+          average_game_duration: number | null
+          average_opponent_skill: number | null
+          average_server_quality: number | null
+          best_streak: number | null
+          created_at: string
+          current_rank: string | null
+          custom_name: string | null
+          end_date: string | null
+          id: string
+          is_completed: boolean | null
+          personal_notes: string | null
+          squad_used: string | null
+          start_date: string
+          starting_rank: string | null
+          target_rank: string | null
+          target_wins: number | null
+          total_conceded: number | null
+          total_expected_goals: number | null
+          total_expected_goals_against: number | null
+          total_goals: number | null
+          total_losses: number | null
+          total_play_time: number | null
+          total_wins: number | null
+          updated_at: string
+          user_id: string
+          week_number: number
+          week_rating: string | null
+          week_score: number | null
+          weekly_rating: number | null
+          worst_streak: number | null
+        }
+        Insert: {
+          average_game_duration?: number | null
+          average_opponent_skill?: number | null
+          average_server_quality?: number | null
+          best_streak?: number | null
+          created_at?: string
+          current_rank?: string | null
+          custom_name?: string | null
+          end_date?: string | null
+          id?: string
+          is_completed?: boolean | null
+          personal_notes?: string | null
+          squad_used?: string | null
+          start_date: string
+          starting_rank?: string | null
+          target_rank?: string | null
+          target_wins?: number | null
+          total_conceded?: number | null
+          total_expected_goals?: number | null
+          total_expected_goals_against?: number | null
+          total_goals?: number | null
+          total_losses?: number | null
+          total_play_time?: number | null
+          total_wins?: number | null
+          updated_at?: string
+          user_id: string
+          week_number: number
+          week_rating?: string | null
+          week_score?: number | null
+          weekly_rating?: number | null
+          worst_streak?: number | null
+        }
+        Update: {
+          average_game_duration?: number | null
+          average_opponent_skill?: number | null
+          average_server_quality?: number | null
+          best_streak?: number | null
+          created_at?: string
+          current_rank?: string | null
+          custom_name?: string | null
+          end_date?: string | null
+          id?: string
+          is_completed?: boolean | null
+          personal_notes?: string | null
+          squad_used?: string | null
+          start_date?: string
+          starting_rank?: string | null
+          target_rank?: string | null
+          target_wins?: number | null
+          total_conceded?: number | null
+          total_expected_goals?: number | null
+          total_expected_goals_against?: number | null
+          total_goals?: number | null
+          total_losses?: number | null
+          total_play_time?: number | null
+          total_wins?: number | null
+          updated_at?: string
+          user_id?: string
+          week_number?: number
+          week_rating?: string | null
+          week_score?: number | null
+          weekly_rating?: number | null
+          worst_streak?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_performances_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
