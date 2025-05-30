@@ -4,6 +4,7 @@ import WeeklyOverview from '@/components/WeeklyOverview';
 import StatCard from '@/components/StatCard';
 import DashboardCarousel from '@/components/DashboardCarousel';
 import AchievementSystem from '@/components/AchievementSystem';
+import TopPerformers from '@/components/TopPerformers';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -254,7 +255,7 @@ const Index = () => {
                 alt="FUTALYST Logo" 
                 className="w-12 h-12 object-contain floating-element"
               />
-              <h1 className="text-3xl lg:text-4xl font-bold gradient-text">
+              <h1 className="text-3xl lg:text-4xl font-bold text-white">
                 FUTALYST Analytics Hub
               </h1>
             </div>
@@ -270,35 +271,35 @@ const Index = () => {
               value={stats.totalGames.toString()}
               icon={<Target className="h-6 w-6" />}
               trend={5}
-              className="stat-card-gradient-blue hover-scale glow-effect"
+              className="stat-card hover-scale"
             />
             <StatCard
               title="Total Wins"
               value={stats.totalWins.toString()}
               icon={<Trophy className="h-6 w-6" />}
               trend={10}
-              className="stat-card-gradient-green hover-scale glow-effect"
+              className="stat-card hover-scale"
             />
             <StatCard
               title="Total Goals"
               value={stats.totalGoals.toString()}
               icon={<Target className="h-6 w-6" />}
               trend={8}
-              className="stat-card-gradient-gold hover-scale glow-effect"
+              className="stat-card hover-scale"
             />
             <StatCard
               title="Avg Rating"
               value={stats.avgRating.toFixed(1)}
               icon={<Star className="h-6 w-6" />}
               trend={3}
-              className="stat-card-gradient-purple hover-scale glow-effect"
+              className="stat-card hover-scale"
             />
             <StatCard
               title="Win Streak"
               value={stats.currentStreak.toString()}
               icon={<TrendingUp className="h-6 w-6" />}
               trend={stats.currentStreak > 0 ? 15 : 0}
-              className="stat-card-gradient-red hover-scale glow-effect"
+              className="stat-card hover-scale"
             />
           </div>
 
@@ -312,12 +313,12 @@ const Index = () => {
 
           {/* Enhanced Quick Actions Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Recent Games with Celebratory Effects */}
+            {/* Recent Games */}
             <Card className="glass-card hover-scale" 
                   style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}>
               <div className="p-4 lg:p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold gradient-text">Recent Games</h3>
+                  <h3 className="text-lg font-semibold text-white">Recent Games</h3>
                   <Link to="/current-week">
                     <Button variant="outline" size="sm" className="modern-button-secondary">View All</Button>
                   </Link>
@@ -328,7 +329,7 @@ const Index = () => {
                     recentGames.map((game, index) => (
                       <div key={game.id} 
                            className={`flex items-center justify-between p-3 rounded-lg transition-all duration-300 animate-fade-in ${
-                             game.result === 'win' ? 'bg-gradient-to-r from-green-500/20 to-green-600/10 animate-pulse-glow' : ''
+                             game.result === 'win' ? 'bg-gradient-to-r from-green-500/20 to-green-600/10' : ''
                            }`}
                            style={{ 
                              backgroundColor: game.result === 'win' ? '' : currentTheme.colors.surface,
@@ -337,9 +338,7 @@ const Index = () => {
                         <div className="flex items-center space-x-3 min-w-0 flex-1">
                           <Badge 
                             variant={game.result === 'win' ? 'default' : 'destructive'}
-                            className={`w-10 text-center flex-shrink-0 ${
-                              game.result === 'win' ? 'bg-gradient-to-r from-green-500 to-green-600 animate-pulse' : ''
-                            }`}
+                            className="w-10 text-center flex-shrink-0"
                           >
                             {game.result === 'win' ? '🏆' : '❌'}
                           </Badge>
@@ -369,61 +368,14 @@ const Index = () => {
               </div>
             </Card>
 
-            {/* Enhanced Quick Actions */}
-            <Card className="glass-card hover-scale" 
-                  style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}>
-              <div className="p-4 lg:p-6">
-                <h3 className="text-lg font-semibold gradient-text mb-4">Quick Actions</h3>
-                
-                <div className="space-y-3">
-                  <Link to="/current-week" className="block">
-                    <Button className="w-full justify-start modern-button-primary group">
-                      <Plus className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
-                      Record New Game
-                    </Button>
-                  </Link>
-                  
-                  <Link to="/squads" className="block">
-                    <Button variant="outline" className="w-full justify-start modern-button-secondary group">
-                      <Users className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
-                      Manage Squads
-                    </Button>
-                  </Link>
-                  
-                  <Link to="/analytics" className="block">
-                    <Button variant="outline" className="w-full justify-start modern-button-secondary group">
-                      <BarChart3 className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
-                      Deep Analytics
-                    </Button>
-                  </Link>
-                  
-                  <Link to="/insights" className="block">
-                    <Button variant="outline" className="w-full justify-start modern-button-secondary group">
-                      <Trophy className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
-                      AI Insights
-                    </Button>
-                  </Link>
-
-                  {/* Achievement preview with celebration */}
-                  <div className="pt-2 border-t" style={{ borderColor: currentTheme.colors.border }}>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm gradient-text">Latest Achievement</span>
-                      <Badge className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-black animate-pulse">
-                        <Award className="h-3 w-3 mr-1" />
-                        {unlockedAchievements}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-white">🎉 First Victory unlocked!</p>
-                  </div>
-                </div>
-              </div>
-            </Card>
+            {/* Top Performers - Now using real data */}
+            <TopPerformers />
 
             {/* Performance Insights Card */}
             <Card className="glass-card hover-scale" 
                   style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}>
               <div className="p-4 lg:p-6">
-                <h3 className="text-lg font-semibold gradient-text mb-4">Performance Insights</h3>
+                <h3 className="text-lg font-semibold text-white mb-4">Performance Insights</h3>
                 
                 <div className="space-y-3">
                   <div className="p-3 rounded-lg bg-gradient-to-r from-blue-500/20 to-blue-600/10 border border-blue-500/30">

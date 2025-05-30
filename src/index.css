@@ -75,11 +75,11 @@
   }
   
   .gradient-text {
-    @apply bg-gradient-to-r from-blue-400 via-purple-500 to-blue-600 bg-clip-text text-transparent;
+    @apply text-white font-bold;
   }
   
   .hover-scale {
-    @apply transition-all duration-300 hover:scale-105 hover:shadow-3xl;
+    @apply transition-all duration-300 hover:scale-105;
   }
   
   .stat-card {
@@ -136,21 +136,6 @@
     0%, 100% { transform: translateY(0px) rotate(0deg); }
     33% { transform: translateY(-10px) rotate(1deg); }
     66% { transform: translateY(-5px) rotate(-1deg); }
-  }
-
-  .glow-effect {
-    @apply rounded-3xl;
-    box-shadow: 
-      0 0 20px rgba(59, 130, 246, 0.3),
-      0 0 40px rgba(59, 130, 246, 0.1),
-      0 0 60px rgba(139, 92, 246, 0.05);
-  }
-
-  .glow-effect:hover {
-    box-shadow: 
-      0 0 30px rgba(59, 130, 246, 0.5),
-      0 0 60px rgba(59, 130, 246, 0.2),
-      0 0 90px rgba(139, 92, 246, 0.1);
   }
 
   .modern-input {
