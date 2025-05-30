@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -35,7 +34,7 @@ const Friends = () => {
         .from('friends')
         .select(`
           *,
-          friend_profile:friend_id (
+          friend_profile:profiles!friends_friend_id_fkey (
             id,
             username,
             display_name,
@@ -54,13 +53,7 @@ const Friends = () => {
 
       if (error) throw error;
       
-      // Type assertion to ensure proper typing
-      const typedData = data.map(item => ({
-        ...item,
-        status: item.status as 'pending' | 'accepted' | 'blocked'
-      })) as Friend[];
-      
-      setFriends(typedData);
+      setFriends(data as Friend[]);
     } catch (error) {
       console.error('Error fetching friends:', error);
       toast({
