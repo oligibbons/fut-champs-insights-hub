@@ -1,3 +1,4 @@
+
 import { WeeklyPerformance, GameResult } from '@/types/futChampions';
 
 export interface AIInsight {
@@ -41,7 +42,7 @@ export function generateAIInsights(
       severity: 'low',
       confidence: 95,
       actionable: false,
-      category: 'performance',
+      category: 'strength',
       priority: 'low'
     });
   } else if (winRate >= 60) {
@@ -53,7 +54,7 @@ export function generateAIInsights(
       severity: 'low',
       confidence: 85,
       actionable: true,
-      category: 'performance',
+      category: 'strength',
       priority: 'medium'
     });
   } else if (winRate < 40) {
@@ -65,7 +66,7 @@ export function generateAIInsights(
       severity: 'high',
       confidence: 90,
       actionable: true,
-      category: 'performance',
+      category: 'weakness',
       priority: 'high'
     });
   }
@@ -80,7 +81,7 @@ export function generateAIInsights(
       severity: 'low',
       confidence: 88,
       actionable: false,
-      category: 'tactical',
+      category: 'strength',
       priority: 'low'
     });
   } else if (avgGoalsPerGame < 1.2) {
@@ -92,7 +93,7 @@ export function generateAIInsights(
       severity: 'medium',
       confidence: 85,
       actionable: true,
-      category: 'tactical',
+      category: 'weakness',
       priority: 'medium'
     });
   }
@@ -107,7 +108,7 @@ export function generateAIInsights(
       severity: 'low',
       confidence: 90,
       actionable: false,
-      category: 'tactical',
+      category: 'strength',
       priority: 'low'
     });
   } else if (avgConcededPerGame >= 2.5) {
@@ -119,7 +120,7 @@ export function generateAIInsights(
       severity: 'high',
       confidence: 88,
       actionable: true,
-      category: 'tactical',
+      category: 'weakness',
       priority: 'high'
     });
   }
@@ -135,7 +136,7 @@ export function generateAIInsights(
       severity: 'medium',
       confidence: 92,
       actionable: true,
-      category: 'strategic',
+      category: 'opportunity',
       priority: 'medium'
     });
   }
@@ -154,7 +155,7 @@ export function generateAIInsights(
         severity: 'low',
         confidence: 85,
         actionable: true,
-        category: 'mental',
+        category: 'strength',
         priority: 'low'
       });
     } else if (recentWinRate <= 20) {
@@ -166,7 +167,7 @@ export function generateAIInsights(
         severity: 'high',
         confidence: 90,
         actionable: true,
-        category: 'mental',
+        category: 'weakness',
         priority: 'high'
       });
     }
@@ -185,7 +186,7 @@ export function generateAIInsights(
         severity: 'medium',
         confidence: 80,
         actionable: true,
-        category: 'mental',
+        category: 'threat',
         priority: 'medium'
       });
     }
@@ -204,7 +205,7 @@ export function generateAIInsights(
         severity: 'medium',
         confidence: 75,
         actionable: true,
-        category: 'technical',
+        category: 'threat',
         priority: 'medium'
       });
     }
@@ -225,7 +226,7 @@ export function generateAIInsights(
         severity: 'low',
         confidence: 85,
         actionable: false,
-        category: 'mental',
+        category: 'strength',
         priority: 'low'
       });
     } else if (penaltyWinRate <= 30) {
@@ -237,7 +238,7 @@ export function generateAIInsights(
         severity: 'medium',
         confidence: 80,
         actionable: true,
-        category: 'technical',
+        category: 'weakness',
         priority: 'medium'
       });
     }
@@ -261,7 +262,7 @@ export function generateAIInsights(
         severity: 'low',
         confidence: 88,
         actionable: false,
-        category: 'mental',
+        category: 'strength',
         priority: 'low'
       });
     } else if (winRateVariation >= 35) {
@@ -273,7 +274,7 @@ export function generateAIInsights(
         severity: 'medium',
         confidence: 82,
         actionable: true,
-        category: 'mental',
+        category: 'weakness',
         priority: 'medium'
       });
     }
@@ -318,7 +319,7 @@ export function generateAIInsights(
         severity: 'low',
         confidence: 75,
         actionable: true,
-        category: 'strategic',
+        category: 'opportunity',
         priority: 'medium'
       });
     }
@@ -341,7 +342,7 @@ export function generateAIInsights(
       severity: 'low',
       confidence: 85,
       actionable: false,
-      category: 'performance',
+      category: 'strength',
       priority: 'low'
     });
   }
@@ -358,7 +359,7 @@ export function generateAIInsights(
       severity: 'low',
       confidence: 70,
       actionable: false,
-      category: 'mental',
+      category: 'strength',
       priority: 'low'
     });
   }
@@ -383,7 +384,7 @@ export function generateAIInsights(
         severity: 'low',
         confidence: 90,
         actionable: false,
-        category: 'technical',
+        category: 'strength',
         priority: 'low'
       });
     } else if (xgDifference <= -15) {
@@ -395,7 +396,7 @@ export function generateAIInsights(
         severity: 'medium',
         confidence: 88,
         actionable: true,
-        category: 'technical',
+        category: 'weakness',
         priority: 'medium'
       });
     }
@@ -415,7 +416,7 @@ export function generateAIInsights(
         severity: 'low',
         confidence: 85,
         actionable: true,
-        category: 'performance',
+        category: 'opportunity',
         priority: 'low'
       });
     }
@@ -438,7 +439,7 @@ export function generateAIInsights(
       severity: 'low',
       confidence: 85,
       actionable: false,
-      category: 'tactical',
+      category: 'strength',
       priority: 'low'
     });
   }
