@@ -1,22 +1,22 @@
+
 import { useState } from 'react';
-import Navigation from '@/components/Navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { useTheme, themes } from '@/hooks/useTheme';
+import { useTheme } from '@/hooks/useTheme';
 import { UserSettings } from '@/types/futChampions';
-import { Settings as SettingsIcon, Palette, Bell, BarChart3, Shield, Zap, Monitor, Moon, Sun } from 'lucide-react';
+import Navigation from '@/components/Navigation';
+import { Settings as SettingsIcon, Palette, Trash2, RefreshCw, Download, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const Settings = () => {
+  const { currentTheme, themes, applyTheme } = useTheme();
   const { toast } = useToast();
-  const { currentTheme, applyTheme } = useTheme();
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  
   const [settings, setSettings] = useLocalStorage<UserSettings>('futChampions_settings', {
     preferredFormation: '4-3-3',
     trackingStartDate: new Date().toISOString().split('T')[0],
@@ -72,37 +72,81 @@ const Settings = () => {
   });
 
   const updateSettings = (newSettings: Partial<UserSettings>) => {
-    const updated = { ...settings, ...newSettings };
-    setSettings(updated);
-    toast({
-      title: "Settings Updated",
-      description: "Your preferences have been saved successfully.",
+    setSettings({ ...settings, ...newSettings });
+  };
+
+  const updateDashboardSettings = (key: string, value: boolean) => {
+    setSettings({
+      ...settings,
+      dashboardSettings: {
+        ...settings.dashboardSettings,
+        [key]: value
+      }
     });
   };
 
-  const updateDashboardSettings = (key: keyof typeof settings.dashboardSettings, value: boolean) => {
-    updateSettings({
-      dashboardSettings: { ...settings.dashboardSettings, [key]: value }
-    });
-  };
-
-  const updateCurrentWeekSettings = (key: keyof typeof settings.currentWeekSettings, value: boolean) => {
-    updateSettings({
-      currentWeekSettings: { ...settings.currentWeekSettings, [key]: value }
-    });
-  };
-
-  const handleThemeChange = (themeId: string) => {
-    applyTheme(themeId);
-    updateSettings({ theme: themeId });
-  };
-
-  const getThemeIcon = (themeId: string) => {
-    switch (themeId) {
-      case 'light': return <Sun className="h-4 w-4" />;
-      case 'midnight': case 'futvisionary': case 'neon': return <Moon className="h-4 w-4" />;
-      default: return <Monitor className="h-4 w-4" />;
+  const handleDataReset = () => {
+    if (showResetConfirm) {
+      // Clear all local storage data except settings
+      const keysToRemove = [
+        'futChampions_weeks',
+        'fc25-squads-',
+        'fc25-players-',
+        'futChampions_achievements'
+      ];
+      
+      keysToRemove.forEach(key => {
+        if (key.endsWith('-')) {
+          // Handle keys with dynamic suffixes
+          Object.keys(localStorage).forEach(storageKey => {
+            if (storageKey.startsWith(key)) {
+              localStorage.removeItem(storageKey);
+            }
+          });
+        } else {
+          localStorage.removeItem(key);
+        }
+      });
+      
+      toast({
+        title: "Data Reset Complete",
+        description: "All performance data has been cleared. Settings preserved.",
+      });
+      
+      setShowResetConfirm(false);
+    } else {
+      setShowResetConfirm(true);
+      setTimeout(() => setShowResetConfirm(false), 5000);
     }
+  };
+
+  const exportData = () => {
+    const data = {
+      settings,
+      weeklyData: JSON.parse(localStorage.getItem('futChampions_weeks') || '[]'),
+      squads: Object.keys(localStorage)
+        .filter(key => key.startsWith('fc25-squads-'))
+        .reduce((acc, key) => ({ ...acc, [key]: JSON.parse(localStorage.getItem(key) || '[]') }), {}),
+      players: Object.keys(localStorage)
+        .filter(key => key.startsWith('fc25-players-'))
+        .reduce((acc, key) => ({ ...acc, [key]: JSON.parse(localStorage.getItem(key) || '[]') }), {}),
+      achievements: JSON.parse(localStorage.getItem('futChampions_achievements') || '[]')
+    };
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `futalyst-data-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Data Exported",
+      description: "Your FUTALYST data has been downloaded as a JSON file.",
+    });
   };
 
   return (
@@ -117,8 +161,8 @@ const Settings = () => {
               <SettingsIcon className="h-8 w-8" style={{ color: currentTheme.colors.primary }} />
             </div>
             <div>
-              <h1 className="text-3xl font-bold gradient-text">FUT Visionary Settings</h1>
-              <p className="text-gray-400 mt-1">Customize your AI-powered FUT experience</p>
+              <h1 className="text-3xl font-bold gradient-text">FUTALYST Settings</h1>
+              <p className="text-gray-400 mt-1">Customize your analytics experience</p>
             </div>
           </div>
 
@@ -126,121 +170,37 @@ const Settings = () => {
           <Card className="glass-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2" style={{ color: currentTheme.colors.text }}>
-                <Palette className="h-5 w-5" style={{ color: currentTheme.colors.accent }} />
-                Visual Experience
+                <Palette className="h-5 w-5" />
+                Theme & Appearance
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <Label className="text-lg font-medium mb-4 block" style={{ color: currentTheme.colors.text }}>Choose Your Theme</Label>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {themes.map(theme => (
-                    <Button
-                      key={theme.id}
-                      variant={currentTheme.id === theme.id ? "default" : "outline"}
-                      onClick={() => handleThemeChange(theme.id)}
-                      className="p-4 h-auto flex-col items-start space-y-3 relative overflow-hidden"
-                      style={{
-                        backgroundColor: currentTheme.id === theme.id 
-                          ? `${theme.colors.primary}20` 
-                          : currentTheme.colors.surface,
-                        borderColor: currentTheme.id === theme.id 
-                          ? theme.colors.primary 
-                          : currentTheme.colors.border,
-                        color: currentTheme.colors.text
-                      }}
-                    >
-                      <div className="flex items-center gap-3 w-full">
-                        {getThemeIcon(theme.id)}
-                        <div 
-                          className="w-6 h-6 rounded-full border-2 border-white/20"
-                          style={{ background: theme.colors.primary }}
-                        />
-                        <span className="font-semibold">{theme.name}</span>
-                        {currentTheme.id === theme.id && (
-                          <Badge className="ml-auto bg-fifa-green text-white">Active</Badge>
-                        )}
-                      </div>
-                      <p className="text-sm opacity-75 text-left w-full">{theme.description}</p>
-                      
-                      {/* Theme Preview */}
-                      <div className="flex gap-2 w-full">
-                        <div 
-                          className="w-4 h-4 rounded"
-                          style={{ backgroundColor: theme.colors.primary }}
-                        />
-                        <div 
-                          className="w-4 h-4 rounded"
-                          style={{ backgroundColor: theme.colors.secondary }}
-                        />
-                        <div 
-                          className="w-4 h-4 rounded"
-                          style={{ backgroundColor: theme.colors.accent }}
-                        />
-                      </div>
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* General Settings */}
-          <Card className="glass-card">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2" style={{ color: currentTheme.colors.text }}>
-                <SettingsIcon className="h-5 w-5" style={{ color: currentTheme.colors.primary }} />
-                General Preferences
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="formation" style={{ color: currentTheme.colors.text }}>Preferred Formation</Label>
-                  <Select 
-                    value={settings.preferredFormation} 
-                    onValueChange={(value) => updateSettings({ preferredFormation: value })}
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {themes.map((theme) => (
+                  <div
+                    key={theme.id}
+                    className={`p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 hover:scale-105 ${
+                      currentTheme.id === theme.id 
+                        ? 'border-blue-500 bg-blue-500/20 shadow-lg shadow-blue-500/30' 
+                        : 'border-gray-600 hover:border-gray-500'
+                    }`}
+                    onClick={() => applyTheme(theme.id)}
+                    style={{ backgroundColor: currentTheme.colors.surface }}
                   >
-                    <SelectTrigger style={{ backgroundColor: currentTheme.colors.surface, borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}>
-                      <SelectItem value="4-3-3">4-3-3</SelectItem>
-                      <SelectItem value="4-2-3-1">4-2-3-1</SelectItem>
-                      <SelectItem value="4-4-2">4-4-2</SelectItem>
-                      <SelectItem value="3-5-2">3-5-2</SelectItem>
-                      <SelectItem value="5-3-2">5-3-2</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="gameplayStyle" style={{ color: currentTheme.colors.text }}>Gameplay Style</Label>
-                  <Select 
-                    value={settings.gameplayStyle} 
-                    onValueChange={(value: 'aggressive' | 'balanced' | 'defensive') => updateSettings({ gameplayStyle: value })}
-                  >
-                    <SelectTrigger style={{ backgroundColor: currentTheme.colors.surface, borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}>
-                      <SelectItem value="aggressive">Aggressive</SelectItem>
-                      <SelectItem value="balanced">Balanced</SelectItem>
-                      <SelectItem value="defensive">Defensive</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between p-4 rounded-lg" style={{ backgroundColor: currentTheme.colors.surface }}>
-                <div>
-                  <Label style={{ color: currentTheme.colors.text, fontWeight: 600 }}>AI Notifications</Label>
-                  <p className="text-sm" style={{ color: currentTheme.colors.muted }}>Get notified about achievements and AI insights</p>
-                </div>
-                <Switch
-                  checked={settings.notifications}
-                  onCheckedChange={(checked) => updateSettings({ notifications: checked })}
-                />
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-semibold text-white">{theme.name}</h3>
+                      {currentTheme.id === theme.id && (
+                        <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse" />
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-400 mb-3">{theme.description}</p>
+                    <div className="flex gap-2">
+                      <div className="w-4 h-4 rounded-full" style={{ backgroundColor: theme.colors.primary }} />
+                      <div className="w-4 h-4 rounded-full" style={{ backgroundColor: theme.colors.secondary }} />
+                      <div className="w-4 h-4 rounded-full" style={{ backgroundColor: theme.colors.accent }} />
+                    </div>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
@@ -248,22 +208,20 @@ const Settings = () => {
           {/* Dashboard Customization */}
           <Card className="glass-card">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2" style={{ color: currentTheme.colors.text }}>
-                <BarChart3 className="h-5 w-5" style={{ color: currentTheme.colors.secondary }} />
-                Dashboard Tiles
-              </CardTitle>
+              <CardTitle style={{ color: currentTheme.colors.text }}>Dashboard Tiles</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {Object.entries(settings.dashboardSettings).map(([key, enabled]) => (
-                  <div key={key} className="flex items-center justify-between p-3 rounded-lg" 
+                {Object.entries(settings.dashboardSettings).map(([key, value]) => (
+                  <div key={key} className="flex items-center justify-between p-3 rounded-lg"
                        style={{ backgroundColor: currentTheme.colors.surface }}>
-                    <Label style={{ color: currentTheme.colors.text }} className="capitalize">
+                    <Label htmlFor={key} className="text-white cursor-pointer">
                       {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
                     </Label>
                     <Switch
-                      checked={enabled}
-                      onCheckedChange={(checked) => updateDashboardSettings(key as any, checked)}
+                      id={key}
+                      checked={value}
+                      onCheckedChange={(checked) => updateDashboardSettings(key, checked)}
                     />
                   </div>
                 ))}
@@ -271,88 +229,128 @@ const Settings = () => {
             </CardContent>
           </Card>
 
-          {/* Analytics Preferences */}
+          {/* General Settings */}
           <Card className="glass-card">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2" style={{ color: currentTheme.colors.text }}>
-                <Zap className="h-5 w-5" style={{ color: currentTheme.colors.accent }} />
-                AI Analytics & Features
-              </CardTitle>
+              <CardTitle style={{ color: currentTheme.colors.text }}>General Settings</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {Object.entries(settings.analyticsPreferences).map(([key, enabled]) => (
-                <div key={key} className="flex items-center justify-between p-4 rounded-lg" 
-                     style={{ backgroundColor: currentTheme.colors.surface }}>
-                  <div>
-                    <Label style={{ color: currentTheme.colors.text }} className="capitalize font-medium">
-                      {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                    </Label>
-                    <p className="text-sm" style={{ color: currentTheme.colors.muted }}>
-                      {key === 'showAnimations' && 'Show celebratory animations and visual effects'}
-                      {key === 'dynamicFeedback' && 'Get real-time AI feedback during data input'}
-                      {key === 'detailedPlayerStats' && 'Track comprehensive player performance metrics'}
-                      {key === 'opponentTracking' && 'Analyze opponent patterns and tactics'}
-                      {key === 'timeTracking' && 'Monitor performance across different times'}
-                      {key === 'stressTracking' && 'Track stress levels and their impact on performance'}
-                    </p>
-                  </div>
-                  <Switch
-                    checked={enabled}
-                    onCheckedChange={(checked) => updateSettings({
-                      analyticsPreferences: { ...settings.analyticsPreferences, [key]: checked }
-                    })}
-                  />
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label className="text-white">Preferred Formation</Label>
+                  <Select value={settings.preferredFormation} onValueChange={(value) => updateSettings({ preferredFormation: value })}>
+                    <SelectTrigger style={{ backgroundColor: currentTheme.colors.surface, borderColor: currentTheme.colors.border }}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="4-3-3">4-3-3</SelectItem>
+                      <SelectItem value="4-4-2">4-4-2</SelectItem>
+                      <SelectItem value="3-5-2">3-5-2</SelectItem>
+                      <SelectItem value="4-2-3-1">4-2-3-1</SelectItem>
+                      <SelectItem value="4-1-2-1-2">4-1-2-1-2</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-              ))}
+
+                <div className="space-y-2">
+                  <Label className="text-white">Gameplay Style</Label>
+                  <Select value={settings.gameplayStyle} onValueChange={(value) => updateSettings({ gameplayStyle: value })}>
+                    <SelectTrigger style={{ backgroundColor: currentTheme.colors.surface, borderColor: currentTheme.colors.border }}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="attacking">Attacking</SelectItem>
+                      <SelectItem value="balanced">Balanced</SelectItem>
+                      <SelectItem value="defensive">Defensive</SelectItem>
+                      <SelectItem value="possession">Possession</SelectItem>
+                      <SelectItem value="counter-attack">Counter Attack</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-lg"
+                   style={{ backgroundColor: currentTheme.colors.surface }}>
+                <div>
+                  <Label className="text-white">Enable Notifications</Label>
+                  <p className="text-sm text-gray-400">Get achievement and milestone notifications</p>
+                </div>
+                <Switch
+                  checked={settings.notifications}
+                  onCheckedChange={(checked) => updateSettings({ notifications: checked })}
+                />
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-lg"
+                   style={{ backgroundColor: currentTheme.colors.surface }}>
+                <div>
+                  <Label className="text-white">Show Animations</Label>
+                  <p className="text-sm text-gray-400">Enable celebratory animations and effects</p>
+                </div>
+                <Switch
+                  checked={settings.analyticsPreferences.showAnimations}
+                  onCheckedChange={(checked) => updateSettings({ 
+                    analyticsPreferences: { 
+                      ...settings.analyticsPreferences, 
+                      showAnimations: checked 
+                    } 
+                  })}
+                />
+              </div>
             </CardContent>
           </Card>
 
-          {/* Qualifier Settings */}
+          {/* Data Management */}
           <Card className="glass-card">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2" style={{ color: currentTheme.colors.text }}>
-                <Shield className="h-5 w-5" style={{ color: currentTheme.colors.secondary }} />
-                Qualifier Settings
-              </CardTitle>
+              <CardTitle style={{ color: currentTheme.colors.text }}>Data Management</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="totalGames" style={{ color: currentTheme.colors.text }}>Total Qualifier Games</Label>
-                  <Input
-                    id="totalGames"
-                    type="number"
-                    min="1"
-                    max="10"
-                    value={settings.qualifierSettings.totalGames}
-                    onChange={(e) => updateSettings({
-                      qualifierSettings: { 
-                        ...settings.qualifierSettings, 
-                        totalGames: parseInt(e.target.value) 
-                      }
-                    })}
-                    style={{ backgroundColor: currentTheme.colors.surface, borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}
-                  />
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Button
+                  onClick={exportData}
+                  variant="outline"
+                  className="w-full modern-button-secondary"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Export Data
+                </Button>
 
-                <div>
-                  <Label htmlFor="winsRequired" style={{ color: currentTheme.colors.text }}>Wins Required</Label>
-                  <Input
-                    id="winsRequired"
-                    type="number"
-                    min="1"
-                    max="10"
-                    value={settings.qualifierSettings.winsRequired}
-                    onChange={(e) => updateSettings({
-                      qualifierSettings: { 
-                        ...settings.qualifierSettings, 
-                        winsRequired: parseInt(e.target.value) 
-                      }
-                    })}
-                    style={{ backgroundColor: currentTheme.colors.surface, borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}
-                  />
-                </div>
+                <Button
+                  variant="outline"
+                  className="w-full modern-button-secondary"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Import Data
+                </Button>
+
+                <Button
+                  onClick={handleDataReset}
+                  variant="destructive"
+                  className={`w-full ${showResetConfirm ? 'bg-red-600 hover:bg-red-700 animate-pulse' : ''}`}
+                >
+                  {showResetConfirm ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Confirm Reset
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Reset All Data
+                    </>
+                  )}
+                </Button>
               </div>
+
+              {showResetConfirm && (
+                <div className="p-4 rounded-lg bg-red-500/20 border border-red-500/50">
+                  <p className="text-red-300 text-sm">
+                    ⚠️ Warning: This will permanently delete all your game data, squads, and statistics. 
+                    Settings will be preserved. Click again to confirm.
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

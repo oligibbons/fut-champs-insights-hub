@@ -240,166 +240,209 @@ const Index = () => {
         <div className="max-w-7xl mx-auto space-y-6 lg:space-y-8">
           {/* Header */}
           <div className="text-center space-y-4">
-            <div className="inline-flex items-center gap-4 p-6 rounded-3xl shadow-2xl" 
+            <div className="inline-flex items-center gap-4 p-6 rounded-3xl shadow-2xl animate-fade-in" 
                  style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}>
               <img 
-                src="/lovable-uploads/bb8114bb-d9f2-40fe-8413-4232e31f0621.png" 
-                alt="FUT Visionary Logo" 
-                className="w-12 h-12 object-contain"
+                src="/lovable-uploads/6b6465f4-e466-4f3b-9761-8a829fbe395c.png" 
+                alt="FUTALYST Logo" 
+                className="w-12 h-12 object-contain floating-element"
               />
-              <h1 className="text-3xl lg:text-4xl font-bold text-white">
-                FUT Visionary Insights Hub
+              <h1 className="text-3xl lg:text-4xl font-bold gradient-text">
+                FUTALYST Analytics Hub
               </h1>
             </div>
             <p className="text-lg max-w-2xl mx-auto leading-relaxed" style={{ color: currentTheme.colors.muted }}>
-              Track, analyze, and dominate your FUT Champions journey with AI-powered insights and comprehensive performance analytics.
+              Master your FUT Champions journey with AI-powered insights, comprehensive analytics, and data-driven performance optimization.
             </p>
           </div>
 
-          {/* Quick Stats Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 lg:gap-6">
+          {/* Quick Stats Grid with Enhanced Animations */}
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 lg:gap-6 stagger-animation">
             <StatCard
               title="Total Games"
               value={stats.totalGames.toString()}
               icon={<Target className="h-6 w-6" />}
               trend={5}
-              className="stat-card-gradient-blue"
+              className="stat-card-gradient-blue hover-scale glow-effect"
             />
             <StatCard
               title="Total Wins"
               value={stats.totalWins.toString()}
               icon={<Trophy className="h-6 w-6" />}
               trend={10}
-              className="stat-card-gradient-green"
+              className="stat-card-gradient-green hover-scale glow-effect"
             />
             <StatCard
               title="Total Goals"
               value={stats.totalGoals.toString()}
               icon={<Target className="h-6 w-6" />}
               trend={8}
-              className="stat-card-gradient-gold"
+              className="stat-card-gradient-gold hover-scale glow-effect"
             />
             <StatCard
               title="Avg Rating"
               value={stats.avgRating.toFixed(1)}
               icon={<Star className="h-6 w-6" />}
               trend={3}
-              className="stat-card-gradient-purple"
+              className="stat-card-gradient-purple hover-scale glow-effect"
             />
             <StatCard
               title="Win Streak"
               value={stats.currentStreak.toString()}
               icon={<TrendingUp className="h-6 w-6" />}
               trend={stats.currentStreak > 0 ? 15 : 0}
-              className="stat-card-gradient-red"
+              className="stat-card-gradient-red hover-scale glow-effect"
             />
           </div>
 
-          {/* Main Dashboard Carousel */}
+          {/* Enhanced Dashboard Carousel */}
           <DashboardCarousel 
-            title="Performance Overview"
+            title="Performance Analytics Dashboard"
             weeklyData={weeklyData}
             currentWeek={currentWeek}
             enabledTiles={enabledTiles}
           />
 
-          {/* Quick Actions Grid */}
+          {/* Enhanced Quick Actions Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Recent Games */}
-            <Card style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }} 
-                  className="p-4 lg:p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-white">Recent Games</h3>
-                <Link to="/current-week">
-                  <Button variant="outline" size="sm" className="text-sm">View All</Button>
-                </Link>
-              </div>
-              
-              <div className="space-y-3">
-                {recentGames.length > 0 ? (
-                  recentGames.map((game) => (
-                    <div key={game.id} className="flex items-center justify-between p-3 rounded-lg" 
-                         style={{ backgroundColor: currentTheme.colors.surface }}>
-                      <div className="flex items-center space-x-3 min-w-0 flex-1">
-                        <Badge 
-                          variant={game.result === 'win' ? 'default' : 'destructive'}
-                          className="w-10 text-center flex-shrink-0"
-                        >
-                          {game.result === 'win' ? 'W' : 'L'}
-                        </Badge>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-white truncate">{game.scoreLine}</p>
-                          <p className="text-xs" style={{ color: currentTheme.colors.muted }}>Game {game.gameNumber}</p>
+            {/* Recent Games with Celebratory Effects */}
+            <Card className="glass-card hover-scale" 
+                  style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}>
+              <div className="p-4 lg:p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold gradient-text">Recent Games</h3>
+                  <Link to="/current-week">
+                    <Button variant="outline" size="sm" className="modern-button-secondary">View All</Button>
+                  </Link>
+                </div>
+                
+                <div className="space-y-3">
+                  {recentGames.length > 0 ? (
+                    recentGames.map((game, index) => (
+                      <div key={game.id} 
+                           className={`flex items-center justify-between p-3 rounded-lg transition-all duration-300 animate-fade-in ${
+                             game.result === 'win' ? 'bg-gradient-to-r from-green-500/20 to-green-600/10 animate-pulse-glow' : ''
+                           }`}
+                           style={{ 
+                             backgroundColor: game.result === 'win' ? '' : currentTheme.colors.surface,
+                             animationDelay: `${index * 100}ms`
+                           }}>
+                        <div className="flex items-center space-x-3 min-w-0 flex-1">
+                          <Badge 
+                            variant={game.result === 'win' ? 'default' : 'destructive'}
+                            className={`w-10 text-center flex-shrink-0 ${
+                              game.result === 'win' ? 'bg-gradient-to-r from-green-500 to-green-600 animate-pulse' : ''
+                            }`}
+                          >
+                            {game.result === 'win' ? '🏆' : '❌'}
+                          </Badge>
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-white truncate">{game.scoreLine}</p>
+                            <p className="text-xs" style={{ color: currentTheme.colors.muted }}>Game {game.gameNumber}</p>
+                          </div>
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          <p className="text-xs" style={{ color: currentTheme.colors.muted }}>Opponent</p>
+                          <p className="text-sm font-medium text-white">{game.opponentSkill}/10</p>
                         </div>
                       </div>
-                      <div className="text-right flex-shrink-0">
-                        <p className="text-xs" style={{ color: currentTheme.colors.muted }}>Opponent Skill</p>
-                        <p className="text-sm font-medium text-white">{game.opponentSkill}/10</p>
-                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-6 lg:py-8" style={{ color: currentTheme.colors.muted }}>
+                      <Clock className="h-8 w-8 mx-auto mb-2 opacity-50 floating-element" />
+                      <p className="text-sm">No games recorded yet</p>
+                      <Link to="/current-week">
+                        <Button variant="outline" size="sm" className="mt-2 modern-button-secondary">
+                          Record First Game
+                        </Button>
+                      </Link>
                     </div>
-                  ))
-                ) : (
-                  <div className="text-center py-6 lg:py-8" style={{ color: currentTheme.colors.muted }}>
-                    <Clock className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">No games played yet</p>
-                    <Link to="/current-week">
-                      <Button variant="outline" size="sm" className="mt-2 text-sm">
-                        Start First Game
-                      </Button>
-                    </Link>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </Card>
 
             {/* Enhanced Quick Actions */}
-            <Card style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }} 
-                  className="p-4 lg:p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
-              
-              <div className="space-y-3">
-                <Link to="/current-week" className="block">
-                  <Button className="w-full justify-start text-sm hover:scale-105 transition-transform" 
-                          style={{ backgroundColor: currentTheme.colors.primary, color: '#ffffff' }}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Record New Game
-                  </Button>
-                </Link>
+            <Card className="glass-card hover-scale" 
+                  style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}>
+              <div className="p-4 lg:p-6">
+                <h3 className="text-lg font-semibold gradient-text mb-4">Quick Actions</h3>
                 
-                <Link to="/squads" className="block">
-                  <Button variant="outline" className="w-full justify-start text-sm hover:scale-105 transition-transform" 
-                          style={{ borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}>
-                    <Users className="h-4 w-4 mr-2" />
-                    Manage Squads
-                  </Button>
-                </Link>
-                
-                <Link to="/analytics" className="block">
-                  <Button variant="outline" className="w-full justify-start text-sm hover:scale-105 transition-transform" 
-                          style={{ borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}>
-                    <BarChart3 className="h-4 w-4 mr-2" />
-                    Deep Analytics
-                  </Button>
-                </Link>
-                
-                <Link to="/insights" className="block">
-                  <Button variant="outline" className="w-full justify-start text-sm hover:scale-105 transition-transform" 
-                          style={{ borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}>
-                    <Trophy className="h-4 w-4 mr-2" />
-                    AI Insights
-                  </Button>
-                </Link>
+                <div className="space-y-3">
+                  <Link to="/current-week" className="block">
+                    <Button className="w-full justify-start modern-button-primary group">
+                      <Plus className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
+                      Record New Game
+                    </Button>
+                  </Link>
+                  
+                  <Link to="/squads" className="block">
+                    <Button variant="outline" className="w-full justify-start modern-button-secondary group">
+                      <Users className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
+                      Manage Squads
+                    </Button>
+                  </Link>
+                  
+                  <Link to="/analytics" className="block">
+                    <Button variant="outline" className="w-full justify-start modern-button-secondary group">
+                      <BarChart3 className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
+                      Deep Analytics
+                    </Button>
+                  </Link>
+                  
+                  <Link to="/insights" className="block">
+                    <Button variant="outline" className="w-full justify-start modern-button-secondary group">
+                      <Trophy className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
+                      AI Insights
+                    </Button>
+                  </Link>
 
-                {/* Achievement preview */}
-                <div className="pt-2 border-t" style={{ borderColor: currentTheme.colors.border }}>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm" style={{ color: currentTheme.colors.muted }}>Latest Achievement</span>
-                    <Badge style={{ backgroundColor: currentTheme.colors.accent + '30', color: currentTheme.colors.accent, borderColor: currentTheme.colors.accent + '50' }}>
-                      <Award className="h-3 w-3 mr-1" />
-                      {unlockedAchievements}
-                    </Badge>
+                  {/* Achievement preview with celebration */}
+                  <div className="pt-2 border-t" style={{ borderColor: currentTheme.colors.border }}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm gradient-text">Latest Achievement</span>
+                      <Badge className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-black animate-pulse">
+                        <Award className="h-3 w-3 mr-1" />
+                        {unlockedAchievements}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-white">🎉 First Victory unlocked!</p>
                   </div>
-                  <p className="text-xs text-white">First Victory unlocked!</p>
+                </div>
+              </div>
+            </Card>
+
+            {/* Performance Insights Card */}
+            <Card className="glass-card hover-scale" 
+                  style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}>
+              <div className="p-4 lg:p-6">
+                <h3 className="text-lg font-semibold gradient-text mb-4">Performance Insights</h3>
+                
+                <div className="space-y-3">
+                  <div className="p-3 rounded-lg bg-gradient-to-r from-blue-500/20 to-blue-600/10 border border-blue-500/30">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Zap className="h-4 w-4 text-blue-400" />
+                      <span className="text-blue-400 font-medium text-sm">Latest Insight</span>
+                    </div>
+                    <p className="text-white text-sm">Your finishing has improved 23% this week!</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="text-center p-2 bg-white/5 rounded-lg">
+                      <p className="text-lg font-bold text-green-400">{(winRate || 0).toFixed(0)}%</p>
+                      <p className="text-xs text-gray-400">Win Rate</p>
+                    </div>
+                    <div className="text-center p-2 bg-white/5 rounded-lg">
+                      <p className="text-lg font-bold text-blue-400">{(avgGoalsPerGame || 0).toFixed(1)}</p>
+                      <p className="text-xs text-gray-400">Goals/Game</p>
+                    </div>
+                  </div>
+                  
+                  <Link to="/insights" className="block">
+                    <Button variant="outline" className="w-full text-sm modern-button-secondary">
+                      View All Insights
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </Card>
@@ -407,9 +450,11 @@ const Index = () => {
 
           {/* Weekly Overview */}
           {currentWeek && (
-            <WeeklyOverview 
-              weekData={getCurrentWeekData()}
-            />
+            <div className="animate-fade-in">
+              <WeeklyOverview 
+                weekData={getCurrentWeekData()}
+              />
+            </div>
           )}
         </div>
       </main>

@@ -1,224 +1,475 @@
 
-import { GameResult, WeeklyPerformance } from '@/types/futChampions';
-import { PlayerCard, Squad } from '@/types/squads';
+import { WeeklyPerformance, GameResult } from '@/types/futChampions';
 
-export const generateGameInsights = (
-  game: GameResult, 
-  weekStats: WeeklyPerformance,
-  previousGames: GameResult[]
-): string[] => {
-  const insights: string[] = [];
-  const isWin = game.result === 'win';
+export interface AIInsight {
+  id: string;
+  type: 'strength' | 'weakness' | 'trend' | 'recommendation' | 'pattern' | 'tactical' | 'psychological';
+  title: string;
+  description: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  confidence: number;
+  actionable: boolean;
+  category: 'performance' | 'tactical' | 'mental' | 'technical' | 'strategic';
+}
 
-  // Performance-based insights
-  if (isWin) {
-    if (game.opponentSkill >= 8) {
-      insights.push("🏆 Exceptional performance! Defeating a highly skilled opponent shows your improvement.");
-    }
-    if (game.duration <= 15) {
-      insights.push("⚡ Quick victory! You dominated early and maintained control throughout the match.");
-    }
-    if (weekStats.totalWins >= 15) {
-      insights.push("🔥 You're on fire this week! Your consistency is paying off in Champions.");
-    }
-  } else {
-    if (game.opponentSkill <= 3) {
-      insights.push("🎯 Focus needed: losses against weaker opponents suggest concentration issues. Take breaks between games.");
-    }
-    if (game.stressLevel && game.stressLevel >= 8) {
-      insights.push("🧘 High stress detected. Consider playing when you're more relaxed for better performance.");
-    }
-  }
-
-  // Pattern analysis
-  const recentGames = previousGames.slice(-5);
-  const recentWins = recentGames.filter(g => g.result === 'win').length;
+export function generateAIInsights(
+  weeklyData: WeeklyPerformance[], 
+  currentWeek: WeeklyPerformance | null,
+  recentGames: GameResult[] = []
+): AIInsight[] {
+  const insights: AIInsight[] = [];
+  const allGames = weeklyData.flatMap(week => week.games);
+  const totalGames = allGames.length;
   
-  if (recentWins <= 1 && recentGames.length >= 5) {
-    insights.push("📊 Struggling streak detected. Try switching formations or taking a longer break.");
-  }
-  
-  if (recentWins >= 4 && recentGames.length >= 5) {
-    insights.push("🚀 Hot streak! You're in the zone - keep this momentum going.");
-  }
+  if (totalGames === 0) return [];
 
-  // Time-based insights
-  const hour = new Date().getHours();
-  if (hour >= 22 || hour <= 6) {
-    if (!isWin) {
-      insights.push("🌙 Late night gaming affecting performance? Consider your peak hours for optimal results.");
-    }
-  }
+  // Performance Analysis
+  const totalWins = weeklyData.reduce((sum, week) => sum + week.totalWins, 0);
+  const winRate = (totalWins / totalGames) * 100;
+  const totalGoals = weeklyData.reduce((sum, week) => sum + week.totalGoals, 0);
+  const totalConceded = weeklyData.reduce((sum, week) => sum + week.totalConceded, 0);
+  const avgGoalsPerGame = totalGoals / totalGames;
+  const avgConcededPerGame = totalConceded / totalGames;
 
-  // Goal-based insights
-  if (weekStats.targetWins && weekStats.totalWins >= weekStats.targetWins * 0.8) {
-    insights.push("🎯 Nearly at your weekly target! Stay focused and finish strong.");
-  }
-
-  return insights.slice(0, 3); // Limit to 3 insights
-};
-
-export const generateWeeklyInsights = (week: WeeklyPerformance, allWeeks: WeeklyPerformance[]): string[] => {
-  const insights: string[] = [];
-  
-  const winRate = week.totalWins / Math.max(week.totalWins + week.totalLosses, 1) * 100;
-  
+  // Win Rate Analysis
   if (winRate >= 75) {
-    insights.push("🔥 Outstanding week! You're performing at an elite level in FUT Champions.");
+    insights.push({
+      id: 'high-win-rate',
+      type: 'strength',
+      title: 'Exceptional Win Rate',
+      description: `Outstanding ${winRate.toFixed(1)}% win rate demonstrates consistent high-level performance. You're playing at an elite level.`,
+      severity: 'low',
+      confidence: 95,
+      actionable: false,
+      category: 'performance'
+    });
   } else if (winRate >= 60) {
-    insights.push("💪 Solid performance this week. You're consistently above average.");
-  } else if (winRate >= 45) {
-    insights.push("📈 Room for improvement. Focus on key areas to boost your win rate.");
-  } else {
-    insights.push("🎯 Challenging week. Consider reviewing your tactics and squad selection.");
+    insights.push({
+      id: 'good-win-rate',
+      type: 'strength',
+      title: 'Strong Performance',
+      description: `Solid ${winRate.toFixed(1)}% win rate shows good consistency. Focus on maintaining this level while improving weak areas.`,
+      severity: 'low',
+      confidence: 85,
+      actionable: true,
+      category: 'performance'
+    });
+  } else if (winRate < 40) {
+    insights.push({
+      id: 'low-win-rate',
+      type: 'weakness',
+      title: 'Performance Concerns',
+      description: `${winRate.toFixed(1)}% win rate indicates areas needing improvement. Consider tactical adjustments and practice specific scenarios.`,
+      severity: 'high',
+      confidence: 90,
+      actionable: true,
+      category: 'performance'
+    });
   }
 
-  // Compare to previous weeks
-  if (allWeeks.length > 1) {
-    const prevWeek = allWeeks[allWeeks.length - 2];
-    const prevWinRate = prevWeek.totalWins / Math.max(prevWeek.totalWins + prevWeek.totalLosses, 1) * 100;
+  // Goal Scoring Analysis
+  if (avgGoalsPerGame >= 2.5) {
+    insights.push({
+      id: 'prolific-scoring',
+      type: 'strength',
+      title: 'Clinical Finishing',
+      description: `Averaging ${avgGoalsPerGame.toFixed(1)} goals per game shows excellent attacking prowess. Your offensive play is a major strength.`,
+      severity: 'low',
+      confidence: 88,
+      actionable: false,
+      category: 'tactical'
+    });
+  } else if (avgGoalsPerGame < 1.2) {
+    insights.push({
+      id: 'goal-drought',
+      type: 'weakness',
+      title: 'Scoring Struggles',
+      description: `Only ${avgGoalsPerGame.toFixed(1)} goals per game suggests attacking difficulties. Work on finishing, shot selection, and chance creation.`,
+      severity: 'medium',
+      confidence: 85,
+      actionable: true,
+      category: 'tactical'
+    });
+  }
+
+  // Defensive Analysis
+  if (avgConcededPerGame <= 1.0) {
+    insights.push({
+      id: 'solid-defense',
+      type: 'strength',
+      title: 'Defensive Solidity',
+      description: `Conceding only ${avgConcededPerGame.toFixed(1)} goals per game shows excellent defensive organization and discipline.`,
+      severity: 'low',
+      confidence: 90,
+      actionable: false,
+      category: 'tactical'
+    });
+  } else if (avgConcededPerGame >= 2.5) {
+    insights.push({
+      id: 'defensive-issues',
+      type: 'weakness',
+      title: 'Defensive Vulnerabilities',
+      description: `Conceding ${avgConcededPerGame.toFixed(1)} goals per game indicates defensive frailties. Focus on positioning, pressing, and concentration.`,
+      severity: 'high',
+      confidence: 88,
+      actionable: true,
+      category: 'tactical'
+    });
+  }
+
+  // Opponent Skill Analysis
+  const avgOpponentSkill = allGames.reduce((sum, game) => sum + game.opponentSkill, 0) / totalGames;
+  if (avgOpponentSkill >= 7.5) {
+    insights.push({
+      id: 'tough-competition',
+      type: 'pattern',
+      title: 'Elite Competition',
+      description: `Facing opponents averaging ${avgOpponentSkill.toFixed(1)}/10 skill shows you're competing at the highest level. Results may fluctuate against such opposition.`,
+      severity: 'medium',
+      confidence: 92,
+      actionable: true,
+      category: 'strategic'
+    });
+  }
+
+  // Recent Form Analysis
+  if (recentGames.length >= 5) {
+    const recentWins = recentGames.filter(game => game.result === 'win').length;
+    const recentWinRate = (recentWins / recentGames.length) * 100;
     
-    if (winRate > prevWinRate + 10) {
-      insights.push("📊 Significant improvement from last week! Keep building on this progress.");
-    } else if (winRate < prevWinRate - 10) {
-      insights.push("📉 Performance dipped from last week. Analyze what changed and adjust accordingly.");
+    if (recentWinRate >= 80) {
+      insights.push({
+        id: 'hot-streak',
+        type: 'trend',
+        title: 'Excellent Recent Form',
+        description: `${recentWinRate}% win rate in last ${recentGames.length} games shows you're in top form. Maintain this momentum.`,
+        severity: 'low',
+        confidence: 85,
+        actionable: true,
+        category: 'mental'
+      });
+    } else if (recentWinRate <= 20) {
+      insights.push({
+        id: 'poor-form',
+        type: 'trend',
+        title: 'Concerning Recent Form',
+        description: `Only ${recentWinRate}% wins in last ${recentGames.length} games suggests a dip in form. Consider tactical changes or take a break.`,
+        severity: 'high',
+        confidence: 90,
+        actionable: true,
+        category: 'mental'
+      });
     }
   }
 
-  return insights;
-};
-
-export const generateSquadInsights = (squad: Squad, players: PlayerCard[]): string[] => {
-  const insights: string[] = [];
-  
-  const squadPlayers = [
-    ...squad.startingXI.filter(pos => pos.player).map(pos => pos.player!),
-    ...squad.substitutes.filter(pos => pos.player).map(pos => pos.player!)
-  ];
-
-  if (squadPlayers.length === 0) return insights;
-
-  const avgRating = squadPlayers.reduce((sum, p) => sum + p.rating, 0) / squadPlayers.length;
-  
-  if (avgRating >= 85) {
-    insights.push("⭐ Elite squad! Your high-rated players give you a competitive advantage.");
-  }
-
-  // Chemistry insights
-  const leagues = [...new Set(squadPlayers.map(p => p.league))];
-  const nations = [...new Set(squadPlayers.map(p => p.nationality))];
-  
-  if (leagues.length <= 3) {
-    insights.push("🔗 Good league links! This should boost your squad's chemistry rating.");
-  }
-  
-  if (nations.length <= 5) {
-    insights.push("🌍 Strong nationality connections! Chemistry boosts incoming.");
-  }
-
-  // Performance insights
-  const topPerformers = squadPlayers
-    .filter(p => p.gamesPlayed > 5)
-    .sort((a, b) => b.averageRating - a.averageRating)
-    .slice(0, 3);
-
-  if (topPerformers.length > 0) {
-    insights.push(`🏆 Top performer: ${topPerformers[0].name} with ${topPerformers[0].averageRating.toFixed(1)} avg rating.`);
-  }
-
-  return insights.slice(0, 4);
-};
-
-export const generatePlayerInsights = (player: PlayerCard): string[] => {
-  const insights: string[] = [];
-  
-  if (player.gamesPlayed === 0) {
-    insights.push("🆕 New signing! Time to see how they perform in your squad.");
-    return insights;
-  }
-
-  const goalRatio = player.goals / Math.max(player.gamesPlayed, 1);
-  const assistRatio = player.assists / Math.max(player.gamesPlayed, 1);
-  
-  if (goalRatio >= 0.7) {
-    insights.push("⚽ Prolific goal scorer! This player is clinical in front of goal.");
-  } else if (assistRatio >= 0.5) {
-    insights.push("🎯 Creative force! Excellent at setting up teammates for goals.");
-  }
-
-  if (player.averageRating >= 8.0) {
-    insights.push("🌟 Consistent performer! Rarely has a bad game for your team.");
-  } else if (player.averageRating <= 6.0 && player.gamesPlayed >= 5) {
-    insights.push("📉 Struggling form. Consider rotation or tactical changes.");
-  }
-
-  const winRate = player.wins / Math.max(player.gamesPlayed, 1) * 100;
-  if (winRate >= 70) {
-    insights.push("🍀 Lucky charm! Team performs better with this player.");
-  }
-
-  return insights.slice(0, 3);
-};
-
-export const generateDashboardInsights = (
-  weeks: WeeklyPerformance[], 
-  squads: Squad[], 
-  players: PlayerCard[]
-): string[] => {
-  const insights: string[] = [];
-  
-  if (weeks.length === 0) {
-    insights.push("🚀 Welcome to FUT Champions tracking! Start by recording your first week of games.");
-    return insights;
-  }
-
-  const currentWeek = weeks.find(w => !w.isCompleted);
-  const completedWeeks = weeks.filter(w => w.isCompleted);
-  
-  // Current week insights
-  if (currentWeek) {
-    const totalGames = currentWeek.totalWins + currentWeek.totalLosses;
-    if (totalGames >= 20) {
-      insights.push("🏁 Week nearly complete! Just a few more games to finish strong.");
-    } else if (totalGames >= 10) {
-      insights.push("⚡ Halfway through the week! Maintain your focus for the remaining games.");
+  // Stress Level Analysis
+  const stressGames = allGames.filter(game => game.stressLevel);
+  if (stressGames.length > 0) {
+    const avgStress = stressGames.reduce((sum, game) => sum + (game.stressLevel || 0), 0) / stressGames.length;
+    if (avgStress >= 7) {
+      insights.push({
+        id: 'high-stress',
+        type: 'weakness',
+        title: 'High Stress Levels',
+        description: `Average stress level of ${avgStress.toFixed(1)}/10 may be impacting performance. Consider relaxation techniques and breaks.`,
+        severity: 'medium',
+        confidence: 80,
+        actionable: true,
+        category: 'mental'
+      });
     }
   }
 
-  // Overall performance insights
-  if (completedWeeks.length >= 3) {
-    const avgWinRate = completedWeeks.reduce((sum, w) => {
-      const games = w.totalWins + w.totalLosses;
-      return sum + (games > 0 ? w.totalWins / games : 0);
-    }, 0) / completedWeeks.length * 100;
-
-    if (avgWinRate >= 70) {
-      insights.push("🏆 Elite player! You're consistently performing at the highest level.");
-    } else if (avgWinRate >= 55) {
-      insights.push("💪 Strong performer! You're above average and improving.");
+  // Server Quality Impact
+  const serverGames = allGames.filter(game => game.serverQuality);
+  if (serverGames.length > 0) {
+    const avgServerQuality = serverGames.reduce((sum, game) => sum + (game.serverQuality || 0), 0) / serverGames.length;
+    if (avgServerQuality <= 4) {
+      insights.push({
+        id: 'server-issues',
+        type: 'pattern',
+        title: 'Server Quality Issues',
+        description: `Poor server quality (${avgServerQuality.toFixed(1)}/10) may be affecting your gameplay. Consider different play times or regions.`,
+        severity: 'medium',
+        confidence: 75,
+        actionable: true,
+        category: 'technical'
+      });
     }
   }
 
-  // Squad insights
-  if (squads.length > 0) {
-    const defaultSquad = squads.find(s => s.isDefault);
-    if (defaultSquad && defaultSquad.gamesPlayed > 10) {
-      const winRate = defaultSquad.wins / defaultSquad.gamesPlayed * 100;
-      if (winRate >= 65) {
-        insights.push(`⭐ Your "${defaultSquad.name}" squad is performing excellently!`);
-      } else if (winRate <= 40) {
-        insights.push(`🔧 Consider adjusting your "${defaultSquad.name}" formation or players.`);
+  // Game Context Analysis
+  const penaltyGames = allGames.filter(game => game.gameContext === 'penalties');
+  if (penaltyGames.length >= 3) {
+    const penaltyWins = penaltyGames.filter(game => game.result === 'win').length;
+    const penaltyWinRate = (penaltyWins / penaltyGames.length) * 100;
+    
+    if (penaltyWinRate >= 70) {
+      insights.push({
+        id: 'penalty-expert',
+        type: 'strength',
+        title: 'Penalty Shootout Specialist',
+        description: `${penaltyWinRate}% win rate in penalty shootouts shows excellent composure under pressure.`,
+        severity: 'low',
+        confidence: 85,
+        actionable: false,
+        category: 'mental'
+      });
+    } else if (penaltyWinRate <= 30) {
+      insights.push({
+        id: 'penalty-struggles',
+        type: 'weakness',
+        title: 'Penalty Shootout Difficulties',
+        description: `Only ${penaltyWinRate}% success in penalties suggests room for improvement. Practice penalty taking and staying calm.`,
+        severity: 'medium',
+        confidence: 80,
+        actionable: true,
+        category: 'technical'
+      });
+    }
+  }
+
+  // Weekly Consistency Analysis
+  if (weeklyData.length >= 3) {
+    const weeklyWinRates = weeklyData.map(week => 
+      week.games.length > 0 ? (week.totalWins / week.games.length) * 100 : 0
+    );
+    const winRateVariation = Math.sqrt(
+      weeklyWinRates.reduce((sum, rate) => sum + Math.pow(rate - winRate, 2), 0) / weeklyWinRates.length
+    );
+    
+    if (winRateVariation <= 15) {
+      insights.push({
+        id: 'consistent-performer',
+        type: 'strength',
+        title: 'Remarkable Consistency',
+        description: `Low variation in weekly performance (${winRateVariation.toFixed(1)}%) shows excellent mental strength and reliability.`,
+        severity: 'low',
+        confidence: 88,
+        actionable: false,
+        category: 'mental'
+      });
+    } else if (winRateVariation >= 35) {
+      insights.push({
+        id: 'inconsistent-form',
+        type: 'weakness',
+        title: 'Inconsistent Performance',
+        description: `High weekly variation (${winRateVariation.toFixed(1)}%) suggests inconsistency. Work on maintaining focus across sessions.`,
+        severity: 'medium',
+        confidence: 82,
+        actionable: true,
+        category: 'mental'
+      });
+    }
+  }
+
+  // Time-based Patterns
+  if (allGames.length >= 10) {
+    const gamesByHour = new Map<number, GameResult[]>();
+    allGames.forEach(game => {
+      const hour = new Date(game.date).getHours();
+      if (!gamesByHour.has(hour)) gamesByHour.set(hour, []);
+      gamesByHour.get(hour)!.push(game);
+    });
+
+    let bestHour = -1;
+    let bestWinRate = 0;
+    let worstHour = -1;
+    let worstWinRate = 100;
+
+    gamesByHour.forEach((games, hour) => {
+      if (games.length >= 3) {
+        const wins = games.filter(g => g.result === 'win').length;
+        const winRate = (wins / games.length) * 100;
+        
+        if (winRate > bestWinRate) {
+          bestWinRate = winRate;
+          bestHour = hour;
+        }
+        if (winRate < worstWinRate) {
+          worstWinRate = winRate;
+          worstHour = hour;
+        }
       }
+    });
+
+    if (bestHour !== -1 && bestWinRate >= 70) {
+      insights.push({
+        id: 'peak-hours',
+        type: 'pattern',
+        title: 'Optimal Playing Time',
+        description: `${bestWinRate.toFixed(0)}% win rate at ${bestHour}:00 suggests this is your peak performance time. Schedule important games accordingly.`,
+        severity: 'low',
+        confidence: 75,
+        actionable: true,
+        category: 'strategic'
+      });
     }
   }
 
-  // Achievement insights
-  const totalGames = weeks.reduce((sum, w) => sum + w.totalWins + w.totalLosses, 0);
-  if (totalGames >= 100) {
-    insights.push("🎯 Milestone: 100+ games played! You're a FUT Champions veteran.");
-  } else if (totalGames >= 50) {
-    insights.push("📈 Halfway to 100 games! Your experience is growing rapidly.");
+  // Goal Difference Analysis
+  const goalDifferences = allGames.map(game => {
+    const [goalsFor, goalsAgainst] = game.scoreLine.split('-').map(Number);
+    return goalsFor - goalsAgainst;
+  });
+  
+  const avgGoalDifference = goalDifferences.reduce((sum, diff) => sum + diff, 0) / goalDifferences.length;
+  
+  if (avgGoalDifference >= 1.5) {
+    insights.push({
+      id: 'dominant-wins',
+      type: 'strength',
+      title: 'Dominant Performances',
+      description: `Average goal difference of +${avgGoalDifference.toFixed(1)} shows you don't just win, you dominate games.`,
+      severity: 'low',
+      confidence: 85,
+      actionable: false,
+      category: 'performance'
+    });
   }
 
-  return insights.slice(0, 5);
-};
+  // Rage Quit Analysis
+  const rageQuits = allGames.filter(game => game.gameContext === 'rage_quit');
+  if (rageQuits.length >= 3) {
+    const rageQuitWins = rageQuits.filter(game => game.result === 'win').length;
+    insights.push({
+      id: 'rage-quit-impact',
+      type: 'pattern',
+      title: 'Opponent Rage Quits',
+      description: `${rageQuits.length} games ended in rage quits (${rageQuitWins} wins). Your playstyle may be frustrating opponents.`,
+      severity: 'low',
+      confidence: 70,
+      actionable: false,
+      category: 'psychological'
+    });
+  }
+
+  // Expected Goals Analysis
+  const xgGames = allGames.filter(game => game.teamStats.expectedGoals > 0);
+  if (xgGames.length >= 5) {
+    const totalXG = xgGames.reduce((sum, game) => sum + game.teamStats.expectedGoals, 0);
+    const actualGoals = xgGames.reduce((sum, game) => {
+      const [goals] = game.scoreLine.split('-').map(Number);
+      return sum + goals;
+    }, 0);
+    
+    const xgDifference = ((actualGoals - totalXG) / totalXG) * 100;
+    
+    if (xgDifference >= 15) {
+      insights.push({
+        id: 'clinical-finishing',
+        type: 'strength',
+        title: 'Clinical Finishing',
+        description: `Scoring ${xgDifference.toFixed(0)}% more goals than expected shows exceptional finishing ability.`,
+        severity: 'low',
+        confidence: 90,
+        actionable: false,
+        category: 'technical'
+      });
+    } else if (xgDifference <= -15) {
+      insights.push({
+        id: 'finishing-issues',
+        type: 'weakness',
+        title: 'Finishing Concerns',
+        description: `Scoring ${Math.abs(xgDifference).toFixed(0)}% fewer goals than expected suggests finishing practice is needed.`,
+        severity: 'medium',
+        confidence: 88,
+        actionable: true,
+        category: 'technical'
+      });
+    }
+  }
+
+  // Additional tactical insights based on patterns
+  if (currentWeek && currentWeek.games.length >= 5) {
+    const currentWinRate = (currentWeek.totalWins / currentWeek.games.length) * 100;
+    const overallWinRate = winRate;
+    
+    if (currentWinRate > overallWinRate + 20) {
+      insights.push({
+        id: 'current-improvement',
+        type: 'trend',
+        title: 'Significant Improvement',
+        description: `Current week win rate (${currentWinRate.toFixed(0)}%) is ${(currentWinRate - overallWinRate).toFixed(0)}% better than your average. You're evolving your game.`,
+        severity: 'low',
+        confidence: 85,
+        actionable: true,
+        category: 'performance'
+      });
+    }
+  }
+
+  // Clean sheet analysis
+  const cleanSheets = allGames.filter(game => {
+    const [, goalsAgainst] = game.scoreLine.split('-').map(Number);
+    return goalsAgainst === 0 && game.result === 'win';
+  }).length;
+  
+  const cleanSheetRate = (cleanSheets / totalWins) * 100;
+  
+  if (cleanSheetRate >= 40) {
+    insights.push({
+      id: 'clean-sheet-master',
+      type: 'strength',
+      title: 'Defensive Excellence',
+      description: `${cleanSheetRate.toFixed(0)}% of wins are clean sheets, showing exceptional defensive organization and discipline.`,
+      severity: 'low',
+      confidence: 85,
+      actionable: false,
+      category: 'tactical'
+    });
+  }
+
+  return insights.slice(0, 20); // Return maximum 20 insights
+}
+
+export function generateGameInsights(game: GameResult, weekStats: any): string[] {
+  const insights: string[] = [];
+  const [goalsFor, goalsAgainst] = game.scoreLine.split('-').map(Number);
+  const goalDifference = goalsFor - goalsAgainst;
+  
+  if (game.result === 'win') {
+    if (goalDifference >= 3) {
+      insights.push("Dominant victory! Your tactical approach completely overwhelmed the opponent.");
+    } else if (goalsAgainst === 0) {
+      insights.push("Clean sheet victory demonstrates excellent defensive discipline and concentration.");
+    } else if (goalDifference === 1) {
+      insights.push("Hard-fought narrow win shows mental resilience and clutch performance under pressure.");
+    }
+    
+    if (game.opponentSkill >= 8) {
+      insights.push("Impressive win against high-skilled opposition proves you can compete at the elite level.");
+    }
+    
+    if (game.gameContext === 'penalties') {
+      insights.push("Penalty shootout victory demonstrates exceptional mental fortitude and composure.");
+    }
+  } else {
+    if (goalDifference <= -3) {
+      insights.push("Heavy defeat suggests tactical adjustments needed. Analyze opponent's approach and adapt.");
+    } else if (goalDifference === -1) {
+      insights.push("Narrow loss shows you're competitive. Small improvements could turn these into wins.");
+    }
+    
+    if (game.opponentSkill <= 5) {
+      insights.push("Loss to lower-skilled opponent indicates concentration issues or complacency.");
+    }
+  }
+  
+  if (game.stressLevel && game.stressLevel >= 7) {
+    insights.push("High stress levels may have impacted decision-making. Consider relaxation techniques.");
+  }
+  
+  if (game.serverQuality && game.serverQuality <= 4) {
+    insights.push("Poor server quality likely affected gameplay. Consider playing at different times.");
+  }
+  
+  // Streak analysis
+  if (weekStats.currentStreak >= 3 && game.result === 'win') {
+    insights.push(`Outstanding ${weekStats.currentStreak}-game winning streak! Momentum is building.`);
+  } else if (weekStats.currentStreak <= -3 && game.result === 'loss') {
+    insights.push("Losing streak requires immediate attention. Consider tactical changes or a short break.");
+  }
+  
+  return insights;
+}

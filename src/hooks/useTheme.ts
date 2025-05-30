@@ -22,7 +22,7 @@ export interface Theme {
 export const themes: Theme[] = [
   {
     id: 'futvisionary',
-    name: 'FUT Visionary',
+    name: 'FUTALYST Dark',
     description: 'The signature dark mode experience',
     colors: {
       primary: '#00D4FF',
@@ -38,17 +38,17 @@ export const themes: Theme[] = [
   },
   {
     id: 'light',
-    name: 'Clean Light',
-    description: 'Minimalistic light mode',
+    name: 'FUTALYST Light',
+    description: 'Clean professional light mode',
     colors: {
-      primary: '#6C5CE7',
-      secondary: '#00D4FF',
-      accent: '#00FF88',
+      primary: '#2563EB',
+      secondary: '#7C3AED',
+      accent: '#059669',
       background: 'linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 50%, #F1F5F9 100%)',
-      surface: 'rgba(108, 92, 231, 0.05)',
+      surface: 'rgba(37, 99, 235, 0.05)',
       text: '#1E293B',
-      cardBg: 'rgba(255, 255, 255, 0.8)',
-      border: 'rgba(108, 92, 231, 0.15)',
+      cardBg: 'rgba(255, 255, 255, 0.9)',
+      border: 'rgba(37, 99, 235, 0.15)',
       muted: '#64748B'
     }
   },
@@ -119,7 +119,7 @@ export const themes: Theme[] = [
 ];
 
 export function useTheme() {
-  const [activeTheme, setActiveTheme] = useLocalStorage<string>('futvisionary-theme', 'futvisionary');
+  const [activeTheme, setActiveTheme] = useLocalStorage<string>('futalyst-theme', 'futvisionary');
   
   const currentTheme = themes.find(t => t.id === activeTheme) || themes[0];
   
