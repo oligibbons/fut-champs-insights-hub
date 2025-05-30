@@ -66,12 +66,8 @@
 @layer components {
   .glass-card {
     @apply backdrop-blur-xl border border-white/20 rounded-3xl;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0.02) 100%);
-    box-shadow: 
-      0 25px 50px -12px rgba(0, 0, 0, 0.5),
-      0 15px 30px -5px rgba(59, 130, 246, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.15),
-      inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   }
   
   .gradient-text {
@@ -84,10 +80,8 @@
   
   .stat-card {
     @apply glass-card p-8 hover-scale transition-all duration-500 rounded-3xl overflow-hidden relative;
-    box-shadow: 
-      0 25px 50px -12px rgba(0, 0, 0, 0.4),
-      0 15px 30px -5px rgba(59, 130, 246, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   }
 
   .stat-card::before {
@@ -102,30 +96,23 @@
   }
 
   .stat-card:hover {
-    box-shadow: 
-      0 35px 60px -12px rgba(0, 0, 0, 0.5),
-      0 20px 40px -5px rgba(59, 130, 246, 0.2),
-      inset 0 1px 0 rgba(255, 255, 255, 0.15);
-    transform: translateY(-8px) scale(1.02);
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-4px) scale(1.02);
   }
 
   .card-depth {
     @apply rounded-3xl overflow-hidden relative;
-    box-shadow: 
-      0 20px 25px -5px rgba(0, 0, 0, 0.3),
-      0 10px 10px -5px rgba(0, 0, 0, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   }
 
   .card-depth-hover {
-    @apply transition-all duration-500 hover:shadow-3xl hover:-translate-y-2;
+    @apply transition-all duration-500 hover:shadow-lg hover:-translate-y-2;
   }
 
   .card-depth-hover:hover {
-    box-shadow: 
-      0 30px 40px -5px rgba(0, 0, 0, 0.4),
-      0 15px 20px -5px rgba(0, 0, 0, 0.2),
-      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
   }
 
   .floating-element {
@@ -139,17 +126,7 @@
   }
 
   .modern-input {
-    @apply bg-gradient-to-br from-white/10 to-white/5 border border-white/20 backdrop-blur-lg rounded-2xl px-6 py-4 text-white placeholder:text-gray-400 focus:border-fifa-blue/50 focus:ring-2 focus:ring-fifa-blue/20 transition-all duration-300;
-    box-shadow: 
-      0 8px 16px -4px rgba(0, 0, 0, 0.2),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  }
-
-  .modern-input:focus {
-    box-shadow: 
-      0 12px 24px -4px rgba(0, 0, 0, 0.3),
-      0 0 0 3px rgba(59, 130, 246, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    @apply bg-white/10 border border-white/20 backdrop-blur-lg rounded-2xl px-6 py-4 text-white placeholder:text-gray-400 focus:border-fifa-blue/50 focus:ring-2 focus:ring-fifa-blue/20 transition-all duration-300;
   }
 
   .modern-button {
@@ -158,104 +135,34 @@
 
   .modern-button-primary {
     @apply modern-button text-white shadow-xl relative;
-    background: linear-gradient(135deg, var(--fifa-blue) 0%, var(--fifa-purple) 50%, var(--fifa-blue) 100%);
-    box-shadow: 
-      0 10px 20px -5px rgba(59, 130, 246, 0.4),
-      0 0 30px rgba(139, 92, 246, 0.2);
-  }
-
-  .modern-button-primary::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.5s;
-  }
-
-  .modern-button-primary:hover::before {
-    left: 100%;
+    background: linear-gradient(135deg, var(--fifa-blue) 0%, var(--fifa-purple) 100%);
   }
 
   .modern-button-primary:hover {
-    box-shadow: 
-      0 15px 30px -5px rgba(59, 130, 246, 0.6),
-      0 0 40px rgba(139, 92, 246, 0.3);
+    background: linear-gradient(135deg, var(--fifa-purple) 0%, var(--fifa-blue) 100%);
     transform: translateY(-2px) scale(1.05);
   }
 
   .modern-button-secondary {
-    @apply modern-button bg-gradient-to-br from-white/15 to-white/5 text-white border border-white/30 hover:from-white/25 hover:to-white/10 backdrop-blur-lg;
-    box-shadow: 
-      0 8px 16px -4px rgba(0, 0, 0, 0.2),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    @apply modern-button bg-white/15 text-white border border-white/30 hover:bg-white/25 backdrop-blur-lg;
   }
 
   .nav-item {
-    @apply flex items-center gap-3 p-4 rounded-2xl text-gray-300 hover:text-white hover:bg-gradient-to-r hover:from-white/15 hover:to-white/5 transition-all duration-300 group relative overflow-hidden;
-  }
-
-  .nav-item::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background: linear-gradient(to bottom, var(--fifa-blue), var(--fifa-purple));
-    transform: scaleY(0);
-    transition: transform 0.3s ease;
-  }
-
-  .nav-item:hover::before {
-    transform: scaleY(1);
+    @apply flex items-center gap-3 p-4 rounded-2xl text-gray-300 hover:text-white hover:bg-white/15 transition-all duration-300 group relative overflow-hidden;
   }
 
   .nav-item.active {
-    @apply bg-gradient-to-r from-fifa-blue/20 to-fifa-purple/10 text-fifa-blue border border-fifa-blue/30;
-    box-shadow: 
-      0 8px 16px -4px rgba(59, 130, 246, 0.3),
-      inset 0 1px 0 rgba(59, 130, 246, 0.2);
-  }
-
-  .nav-item.active::before {
-    transform: scaleY(1);
+    @apply bg-fifa-blue/20 text-fifa-blue border border-fifa-blue/30;
   }
 
   .section-card {
-    @apply glass-card p-8 hover:shadow-3xl transition-all duration-500 hover:-translate-y-2 relative overflow-hidden;
-  }
-
-  .section-card::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, var(--fifa-blue), var(--fifa-purple), var(--fifa-gold), var(--fifa-green));
-    opacity: 0.7;
+    @apply glass-card p-8 hover:shadow-lg transition-all duration-500 hover:-translate-y-2 relative overflow-hidden;
   }
 
   .metric-card {
-    @apply bg-gradient-to-br from-white/15 via-white/10 to-white/5 backdrop-blur-xl border border-white/20 rounded-3xl p-6 hover:scale-105 transition-all duration-300 relative overflow-hidden;
-    box-shadow: 
-      0 20px 25px -5px rgba(0, 0, 0, 0.3),
-      0 10px 10px -5px rgba(0, 0, 0, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.15);
-  }
-
-  .metric-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, var(--fifa-blue), var(--fifa-purple));
-    opacity: 0.8;
+    @apply bg-white/15 backdrop-blur-xl border border-white/20 rounded-3xl p-6 hover:scale-105 transition-all duration-300 relative overflow-hidden;
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   }
 
   .stagger-animation > * {
@@ -300,19 +207,6 @@
     }
   }
 
-  .animate-pulse-glow {
-    animation: pulse-glow 2s ease-in-out infinite;
-  }
-
-  @keyframes pulse-glow {
-    0%, 100% {
-      box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
-    }
-    50% {
-      box-shadow: 0 0 40px rgba(59, 130, 246, 0.6);
-    }
-  }
-
   /* FIFA Gradient Background */
   .fifa-gradient {
     background: linear-gradient(135deg, var(--fifa-blue) 0%, var(--fifa-purple) 100%);
@@ -353,17 +247,11 @@
   }
 
   .shadow-depth {
-    box-shadow: 
-      0 20px 25px -5px rgba(0, 0, 0, 0.3),
-      0 10px 10px -5px rgba(0, 0, 0, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   }
 
   .shadow-depth-lg {
-    box-shadow: 
-      0 25px 50px -12px rgba(0, 0, 0, 0.4),
-      0 15px 30px -5px rgba(0, 0, 0, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
   }
 
   /* FIFA Color Utilities */

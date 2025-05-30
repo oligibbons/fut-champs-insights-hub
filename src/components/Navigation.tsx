@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -51,7 +50,7 @@ const Navigation = () => {
   return (
     <>
       {/* Mobile Menu Button */}
-      <div className="lg:hidden fixed top-20 left-4 z-50">
+      <div className="lg:hidden fixed top-20 left-4 z-30">
         <Button
           variant="outline"
           size="icon"
@@ -68,7 +67,7 @@ const Navigation = () => {
 
       {/* Navigation Sidebar */}
       <nav className={`
-        fixed left-0 top-16 h-full w-64 border-r z-40
+        fixed left-0 top-16 h-full w-64 border-r z-30
         transform transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0
@@ -155,7 +154,7 @@ const Navigation = () => {
       {/* Overlay for mobile */}
       {isOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-black/50 z-30"
+          className="lg:hidden fixed inset-0 bg-black/50 z-20"
           onClick={() => setIsOpen(false)}
         />
       )}

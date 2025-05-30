@@ -36,7 +36,7 @@ function App() {
           <div className="parallax-bg"></div>
           
           {/* Brand Header - visible on all pages */}
-          <div className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b animate-slide-in-from-top" 
+          <div className="fixed top-0 left-0 right-0 z-40 backdrop-blur-md border-b animate-slide-in-from-top" 
                style={{ borderColor: currentTheme.colors.border, backgroundColor: `${currentTheme.colors.cardBg}80` }}>
             <div className="px-4 py-2 flex items-center justify-between">
               <div className="flex items-center gap-3">
