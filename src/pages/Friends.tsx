@@ -1,42 +1,24 @@
 
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import Navigation from '@/components/Navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/hooks/useTheme';
-import { UserPlus, Users, Search, Trophy, Target, TrendingUp } from 'lucide-react';
-
-interface Profile {
-  id: string;
-  username: string;
-  display_name: string;
-  total_games: number;
-  total_wins: number;
-  best_rank: string;
-  current_streak: number;
-}
-
-interface Friend {
-  id: string;
-  user_id: string;
-  friend_id: string;
-  status: 'pending' | 'accepted' | 'blocked';
-  friend_profile: Profile;
-}
+import { Friend, UserProfile } from '@/types/social';
+import { Users, UserPlus, Search, Check, X, MessageCircle } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const Friends = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
   const { currentTheme } = useTheme();
-  
+  const { toast } = useToast();
   const [friends, setFriends] = useState<Friend[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<Profile[]>([]);
+  const [searchResults, setSearchResults] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -46,27 +28,53 @@ const Friends = () => {
   }, [user]);
 
   const fetchFriends = async () => {
+    if (!user) return;
+
     try {
       const { data, error } = await supabase
         .from('friends')
         .select(`
           *,
-          friend_profile:profiles!friends_friend_id_fkey(*)
+          friend_profile:friend_id (
+            id,
+            username,
+            display_name,
+            avatar_url,
+            total_games,
+            total_wins,
+            total_goals,
+            best_rank,
+            current_streak,
+            best_streak,
+            created_at,
+            updated_at
+          )
         `)
-        .eq('user_id', user?.id)
-        .eq('status', 'accepted');
+        .eq('user_id', user.id);
 
       if (error) throw error;
-      setFriends(data || []);
+      
+      // Type assertion to ensure proper typing
+      const typedData = data.map(item => ({
+        ...item,
+        status: item.status as 'pending' | 'accepted' | 'blocked'
+      })) as Friend[];
+      
+      setFriends(typedData);
     } catch (error) {
       console.error('Error fetching friends:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load friends list",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const searchUsers = async () => {
-    if (!searchQuery.trim()) {
+  const searchUsers = async (query: string) => {
+    if (!query.trim() || !user) {
       setSearchResults([]);
       return;
     }
@@ -75,8 +83,8 @@ const Friends = () => {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .ilike('username', `%${searchQuery}%`)
-        .neq('id', user?.id)
+        .ilike('username', `%${query}%`)
+        .neq('id', user.id)
         .limit(10);
 
       if (error) throw error;
@@ -87,175 +95,258 @@ const Friends = () => {
   };
 
   const sendFriendRequest = async (friendId: string) => {
+    if (!user) return;
+
     try {
       const { error } = await supabase
         .from('friends')
-        .insert({
-          user_id: user?.id,
-          friend_id: friendId,
-          status: 'pending'
-        });
+        .insert([
+          { user_id: user.id, friend_id: friendId, status: 'pending' }
+        ]);
 
       if (error) throw error;
-      
+
       toast({
         title: "Friend Request Sent",
-        description: "Your friend request has been sent successfully."
+        description: "Your friend request has been sent successfully!",
       });
-      
-      setSearchResults(prev => prev.filter(p => p.id !== friendId));
+
+      setSearchResults([]);
+      setSearchQuery('');
     } catch (error) {
+      console.error('Error sending friend request:', error);
       toast({
         title: "Error",
-        description: "Failed to send friend request.",
-        variant: "destructive"
+        description: "Failed to send friend request",
+        variant: "destructive",
       });
     }
   };
+
+  const acceptFriendRequest = async (friendshipId: string) => {
+    try {
+      const { error } = await supabase
+        .from('friends')
+        .update({ status: 'accepted' })
+        .eq('id', friendshipId);
+
+      if (error) throw error;
+      
+      await fetchFriends();
+      toast({
+        title: "Friend Request Accepted",
+        description: "You are now friends!",
+      });
+    } catch (error) {
+      console.error('Error accepting friend request:', error);
+    }
+  };
+
+  const declineFriendRequest = async (friendshipId: string) => {
+    try {
+      const { error } = await supabase
+        .from('friends')
+        .delete()
+        .eq('id', friendshipId);
+
+      if (error) throw error;
+      
+      await fetchFriends();
+      toast({
+        title: "Friend Request Declined",
+        description: "Friend request has been declined",
+      });
+    } catch (error) {
+      console.error('Error declining friend request:', error);
+    }
+  };
+
+  const acceptedFriends = friends.filter(f => f.status === 'accepted');
+  const pendingRequests = friends.filter(f => f.status === 'pending');
 
   return (
     <div className="min-h-screen">
       <Navigation />
       
-      <main className="lg:ml-64 p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between mb-8">
+      <main className="lg:ml-64 p-4 lg:p-6">
+        <div className="max-w-6xl mx-auto space-y-6">
+          {/* Header */}
+          <div className="flex items-center gap-4 mb-8">
+            <div className="p-3 rounded-2xl" style={{ backgroundColor: `${currentTheme.colors.primary}20` }}>
+              <Users className="h-8 w-8" style={{ color: currentTheme.colors.primary }} />
+            </div>
             <div>
-              <h1 className="text-4xl font-bold text-white mb-3">Friends</h1>
-              <p className="text-lg" style={{ color: currentTheme.colors.muted }}>
-                Connect with other FUT Champions players
-              </p>
+              <h1 className="text-3xl font-bold gradient-text">Friends & Community</h1>
+              <p className="text-gray-400 mt-1">Connect with other FUT players</p>
             </div>
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-6">
-            {/* Search Section */}
-            <div className="lg:col-span-1">
-              <Card style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }} 
-                    className="rounded-3xl shadow-depth-lg border-0">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
-                    <Search className="h-5 w-5" />
-                    Find Friends
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Search by username..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="rounded-xl border-0"
-                      style={{ backgroundColor: currentTheme.colors.surface, color: currentTheme.colors.text }}
-                    />
-                    <Button
-                      onClick={searchUsers}
-                      className="rounded-xl"
-                      style={{ backgroundColor: currentTheme.colors.primary, color: '#ffffff' }}
-                    >
-                      <Search className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    {searchResults.map((profile) => (
-                      <div key={profile.id} 
-                           className="p-3 rounded-2xl border flex items-center justify-between"
-                           style={{ backgroundColor: currentTheme.colors.surface, borderColor: currentTheme.colors.border }}>
+          {/* Search Section */}
+          <Card className="glass-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2" style={{ color: currentTheme.colors.text }}>
+                <Search className="h-5 w-5" />
+                Find Friends
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-4">
+                <Input
+                  placeholder="Search by username..."
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    searchUsers(e.target.value);
+                  }}
+                  className="flex-1"
+                  style={{ 
+                    backgroundColor: currentTheme.colors.surface, 
+                    borderColor: currentTheme.colors.border,
+                    color: currentTheme.colors.text 
+                  }}
+                />
+              </div>
+              
+              {searchResults.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  {searchResults.map((user) => (
+                    <div key={user.id} className="flex items-center justify-between p-3 rounded-lg" 
+                         style={{ backgroundColor: currentTheme.colors.surface }}>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-fifa-blue flex items-center justify-center">
+                          <span className="text-white font-bold">
+                            {user.username.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
                         <div>
-                          <p className="font-medium text-white">{profile.username}</p>
+                          <p className="font-medium text-white">{user.username}</p>
                           <p className="text-sm" style={{ color: currentTheme.colors.muted }}>
-                            {profile.total_games} games • {profile.total_wins} wins
+                            {user.total_games} games, {user.total_wins} wins
                           </p>
                         </div>
-                        <Button
-                          size="sm"
-                          onClick={() => sendFriendRequest(profile.id)}
-                          className="rounded-xl"
-                          style={{ backgroundColor: currentTheme.colors.primary, color: '#ffffff' }}
-                        >
-                          <UserPlus className="h-4 w-4" />
-                        </Button>
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                      <Button
+                        onClick={() => sendFriendRequest(user.id)}
+                        size="sm"
+                        className="bg-fifa-blue hover:bg-fifa-blue/80"
+                      >
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Add Friend
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-            {/* Friends List */}
-            <div className="lg:col-span-2">
-              <Card style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }} 
-                    className="rounded-3xl shadow-depth-lg border-0">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    Your Friends ({friends.length})
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {loading ? (
-                    <div className="text-center py-8">
-                      <div className="w-8 h-8 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mx-auto" />
+          {/* Pending Requests */}
+          {pendingRequests.length > 0 && (
+            <Card className="glass-card">
+              <CardHeader>
+                <CardTitle style={{ color: currentTheme.colors.text }}>
+                  Pending Friend Requests ({pendingRequests.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {pendingRequests.map((request) => (
+                  <div key={request.id} className="flex items-center justify-between p-3 rounded-lg"
+                       style={{ backgroundColor: currentTheme.colors.surface }}>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-fifa-purple flex items-center justify-center">
+                        <span className="text-white font-bold">
+                          {request.friend_profile.username.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="font-medium text-white">{request.friend_profile.username}</p>
+                        <p className="text-sm" style={{ color: currentTheme.colors.muted }}>
+                          Wants to be your friend
+                        </p>
+                      </div>
                     </div>
-                  ) : friends.length === 0 ? (
-                    <div className="text-center py-8">
-                      <Users className="h-12 w-12 mx-auto mb-4" style={{ color: currentTheme.colors.muted }} />
-                      <h3 className="text-xl font-semibold text-white mb-2">No Friends Yet</h3>
-                      <p style={{ color: currentTheme.colors.muted }}>
-                        Search for friends above to start building your network!
-                      </p>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => acceptFriendRequest(request.id)}
+                        size="sm"
+                        className="bg-fifa-green hover:bg-fifa-green/80"
+                      >
+                        <Check className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        onClick={() => declineFriendRequest(request.id)}
+                        size="sm"
+                        variant="outline"
+                        className="border-fifa-red text-fifa-red hover:bg-fifa-red/20"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
                     </div>
-                  ) : (
-                    <div className="grid gap-4">
-                      {friends.map((friend) => (
-                        <div key={friend.id} 
-                             className="p-4 rounded-2xl border"
-                             style={{ backgroundColor: currentTheme.colors.surface, borderColor: currentTheme.colors.border }}>
-                          <div className="flex items-center justify-between mb-3">
-                            <div>
-                              <h3 className="font-semibold text-white text-lg">
-                                {friend.friend_profile.username}
-                              </h3>
-                              <p style={{ color: currentTheme.colors.muted }}>
-                                {friend.friend_profile.display_name}
-                              </p>
-                            </div>
-                            {friend.friend_profile.best_rank && (
-                              <Badge style={{ backgroundColor: currentTheme.colors.primary + '30', color: currentTheme.colors.primary }}>
-                                {friend.friend_profile.best_rank}
-                              </Badge>
-                            )}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Friends List */}
+          <Card className="glass-card">
+            <CardHeader>
+              <CardTitle style={{ color: currentTheme.colors.text }}>
+                My Friends ({acceptedFriends.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {acceptedFriends.length === 0 ? (
+                <div className="text-center py-8">
+                  <Users className="h-16 w-16 mx-auto mb-4 opacity-50" style={{ color: currentTheme.colors.muted }} />
+                  <h3 className="text-xl font-semibold text-white mb-2">No Friends Yet</h3>
+                  <p style={{ color: currentTheme.colors.muted }}>
+                    Search for other players to add as friends!
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {acceptedFriends.map((friend) => (
+                    <Card key={friend.id} className="metric-card">
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-12 h-12 rounded-full bg-fifa-gold flex items-center justify-center">
+                            <span className="text-black font-bold text-lg">
+                              {friend.friend_profile.username.charAt(0).toUpperCase()}
+                            </span>
                           </div>
-                          
-                          <div className="grid grid-cols-3 gap-4 text-center">
-                            <div>
-                              <p className="text-2xl font-bold" style={{ color: currentTheme.colors.primary }}>
-                                {friend.friend_profile.total_games}
-                              </p>
-                              <p className="text-xs" style={{ color: currentTheme.colors.muted }}>Games</p>
-                            </div>
-                            <div>
-                              <p className="text-2xl font-bold text-green-400">
-                                {friend.friend_profile.total_wins}
-                              </p>
-                              <p className="text-xs" style={{ color: currentTheme.colors.muted }}>Wins</p>
-                            </div>
-                            <div>
-                              <p className="text-2xl font-bold" style={{ color: currentTheme.colors.accent }}>
-                                {friend.friend_profile.current_streak}
-                              </p>
-                              <p className="text-xs" style={{ color: currentTheme.colors.muted }}>Streak</p>
-                            </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-white">{friend.friend_profile.username}</p>
+                            <p className="text-sm" style={{ color: currentTheme.colors.muted }}>
+                              {friend.friend_profile.best_rank || 'Unranked'}
+                            </p>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+                        
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div className="text-center p-2 bg-white/5 rounded">
+                            <p className="font-bold text-fifa-blue">{friend.friend_profile.total_games}</p>
+                            <p className="text-gray-400">Games</p>
+                          </div>
+                          <div className="text-center p-2 bg-white/5 rounded">
+                            <p className="font-bold text-fifa-green">{friend.friend_profile.total_wins}</p>
+                            <p className="text-gray-400">Wins</p>
+                          </div>
+                        </div>
+                        
+                        <div className="mt-3 flex gap-2">
+                          <Button size="sm" variant="outline" className="flex-1">
+                            <MessageCircle className="h-4 w-4 mr-1" />
+                            Message
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </main>
     </div>

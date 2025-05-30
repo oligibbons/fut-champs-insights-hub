@@ -16,7 +16,8 @@ import {
   History,
   UserPlus,
   Crown,
-  LogOut
+  LogOut,
+  Award
 } from 'lucide-react';
 
 const Navigation = () => {
@@ -30,8 +31,10 @@ const Navigation = () => {
     { name: 'Current Week', path: '/current-week', icon: Calendar },
     { name: 'History', path: '/history', icon: History },
     { name: 'Squads', path: '/squads', icon: Users },
+    { name: 'Players', path: '/players', icon: TrendingUp },
     { name: 'Analytics', path: '/analytics', icon: TrendingUp },
     { name: 'AI Insights', path: '/insights', icon: Trophy },
+    { name: 'Achievements', path: '/achievements', icon: Award },
     { name: 'Friends', path: '/friends', icon: UserPlus },
     { name: 'Leaderboards', path: '/leaderboards', icon: Crown },
     { name: 'Settings', path: '/settings', icon: Settings },
@@ -48,7 +51,7 @@ const Navigation = () => {
   return (
     <>
       {/* Mobile Menu Button */}
-      <div className="lg:hidden fixed top-4 left-4 z-50">
+      <div className="lg:hidden fixed top-20 left-4 z-50">
         <Button
           variant="outline"
           size="icon"
@@ -65,7 +68,7 @@ const Navigation = () => {
 
       {/* Navigation Sidebar */}
       <nav className={`
-        fixed left-0 top-0 h-full w-64 border-r z-40
+        fixed left-0 top-16 h-full w-64 border-r z-40
         transform transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0
@@ -77,18 +80,22 @@ const Navigation = () => {
       }}>
         <div className="p-6 h-full flex flex-col">
           <div className="flex items-center space-x-2 mb-8">
-            <div 
-              className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: currentTheme.colors.primary }}
-            >
-              <Trophy className="h-5 w-5 text-white" />
+            <img 
+              src="/lovable-uploads/6b6465f4-e466-4f3b-9761-8a829fbe395c.png" 
+              alt="FUTALYST Logo" 
+              className="w-10 h-10 object-contain"
+            />
+            <div>
+              <h1 
+                className="text-xl font-bold gradient-text"
+                style={{ color: currentTheme.colors.text }}
+              >
+                FUTALYST
+              </h1>
+              <p className="text-xs" style={{ color: currentTheme.colors.muted }}>
+                AI-Powered FUT Analytics
+              </p>
             </div>
-            <h1 
-              className="text-xl font-bold"
-              style={{ color: currentTheme.colors.text }}
-            >
-              FUT Champions
-            </h1>
           </div>
 
           <div className="space-y-2 flex-1">

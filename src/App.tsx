@@ -15,6 +15,7 @@ import History from "./pages/History";
 import Auth from "./pages/Auth";
 import Friends from "./pages/Friends";
 import Leaderboards from "./pages/Leaderboards";
+import Achievements from "./pages/Achievements";
 import NotFound from "./pages/NotFound";
 import "./App.css";
 
@@ -40,17 +41,17 @@ function App() {
             <div className="px-4 py-2 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <img 
-                  src="/lovable-uploads/bb8114bb-d9f2-40fe-8413-4232e31f0621.png" 
-                  alt="FUT Visionary Logo" 
+                  src="/lovable-uploads/6b6465f4-e466-4f3b-9761-8a829fbe395c.png" 
+                  alt="FUTALYST Logo" 
                   className="w-10 h-10 object-contain"
                 />
                 <div>
-                  <h1 className="text-lg font-bold text-white">FUT Visionary</h1>
-                  <p className="text-xs" style={{ color: currentTheme.colors.muted }}>AI Insights for FUT Greatness</p>
+                  <h1 className="text-lg font-bold gradient-text">FUTALYST</h1>
+                  <p className="text-xs" style={{ color: currentTheme.colors.muted }}>AI-Powered FUT Analytics</p>
                 </div>
               </div>
-              <div className="text-xs font-mono text-white">
-                Dominate with Data
+              <div className="text-xs font-mono" style={{ color: currentTheme.colors.text }}>
+                Data-Driven Excellence
               </div>
             </div>
           </div>
@@ -68,6 +69,7 @@ function App() {
               <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
               <Route path="/friends" element={<ProtectedRoute><Friends /></ProtectedRoute>} />
               <Route path="/leaderboards" element={<ProtectedRoute><Leaderboards /></ProtectedRoute>} />
+              <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>
