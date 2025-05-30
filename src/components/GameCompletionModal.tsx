@@ -11,14 +11,14 @@ import { Trophy, Target, TrendingUp, Star, Calendar, Clock, Zap, Sparkles, Award
 interface GameCompletionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  game: GameResult;
+  game: GameResult | null;
   weekStats: {
     totalGames: number;
     wins: number;
     losses: number;
     winRate: number;
     currentStreak: number;
-  };
+  } | null;
 }
 
 const GameCompletionModal = ({ isOpen, onClose, game, weekStats }: GameCompletionModalProps) => {
@@ -28,7 +28,7 @@ const GameCompletionModal = ({ isOpen, onClose, game, weekStats }: GameCompletio
   const [insights, setInsights] = useState<string[]>([]);
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && game && weekStats) {
       // Generate AI insights
       const gameInsights = generateGameInsights(game, weekStats);
       setInsights(gameInsights);
@@ -47,6 +47,11 @@ const GameCompletionModal = ({ isOpen, onClose, game, weekStats }: GameCompletio
       setShowCelebration(false);
     }
   }, [isOpen, game, weekStats]);
+
+  // Early return if game or weekStats is null
+  if (!game || !weekStats) {
+    return null;
+  }
 
   const isWin = game.result === 'win';
   const [goalsFor, goalsAgainst] = game.scoreLine.split('-').map(Number);

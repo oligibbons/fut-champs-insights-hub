@@ -75,7 +75,13 @@ const CurrentWeek = () => {
   const [gameCompletionModal, setGameCompletionModal] = useState<{
     isOpen: boolean;
     game: GameResult | null;
-    weekStats: any;
+    weekStats: {
+      totalGames: number;
+      wins: number;
+      losses: number;
+      winRate: number;
+      currentStreak: number;
+    } | null;
   }>({
     isOpen: false,
     game: null,
@@ -161,8 +167,8 @@ const CurrentWeek = () => {
     // Show completion modal with enhanced stats
     const weekStats = {
       totalGames: updatedWeek.games.length,
-      totalWins: updatedWeek.totalWins,
-      totalLosses: updatedWeek.totalLosses,
+      wins: updatedWeek.totalWins,
+      losses: updatedWeek.totalLosses,
       winRate: updatedWeek.games.length > 0 ? (updatedWeek.totalWins / updatedWeek.games.length) * 100 : 0,
       currentStreak: calculateCurrentStreak(updatedWeek.games)
     };
@@ -170,7 +176,7 @@ const CurrentWeek = () => {
     setGameCompletionModal({
       isOpen: true,
       game: newGame,
-      weekStats
+      weekStats: weekStats
     });
 
     // Check achievements and provide feedback
@@ -426,8 +432,8 @@ const CurrentWeek = () => {
       <GameCompletionModal
         isOpen={gameCompletionModal.isOpen}
         onClose={() => setGameCompletionModal({ isOpen: false, game: null, weekStats: null })}
-        game={gameCompletionModal.game!}
-        weekStats={gameCompletionModal.weekStats!}
+        game={gameCompletionModal.game}
+        weekStats={gameCompletionModal.weekStats}
       />
     </div>
   );
