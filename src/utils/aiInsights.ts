@@ -8,7 +8,8 @@ export interface AIInsight {
   severity: 'low' | 'medium' | 'high' | 'critical';
   confidence: number;
   actionable: boolean;
-  category: 'performance' | 'tactical' | 'mental' | 'technical' | 'strategic';
+  category: 'strength' | 'weakness' | 'opportunity' | 'threat';
+  priority: 'low' | 'medium' | 'high';
 }
 
 export function generateAIInsights(
@@ -40,7 +41,8 @@ export function generateAIInsights(
       severity: 'low',
       confidence: 95,
       actionable: false,
-      category: 'performance'
+      category: 'performance',
+      priority: 'low'
     });
   } else if (winRate >= 60) {
     insights.push({
@@ -51,7 +53,8 @@ export function generateAIInsights(
       severity: 'low',
       confidence: 85,
       actionable: true,
-      category: 'performance'
+      category: 'performance',
+      priority: 'medium'
     });
   } else if (winRate < 40) {
     insights.push({
@@ -62,7 +65,8 @@ export function generateAIInsights(
       severity: 'high',
       confidence: 90,
       actionable: true,
-      category: 'performance'
+      category: 'performance',
+      priority: 'high'
     });
   }
 
@@ -76,7 +80,8 @@ export function generateAIInsights(
       severity: 'low',
       confidence: 88,
       actionable: false,
-      category: 'tactical'
+      category: 'tactical',
+      priority: 'low'
     });
   } else if (avgGoalsPerGame < 1.2) {
     insights.push({
@@ -87,7 +92,8 @@ export function generateAIInsights(
       severity: 'medium',
       confidence: 85,
       actionable: true,
-      category: 'tactical'
+      category: 'tactical',
+      priority: 'medium'
     });
   }
 
@@ -101,7 +107,8 @@ export function generateAIInsights(
       severity: 'low',
       confidence: 90,
       actionable: false,
-      category: 'tactical'
+      category: 'tactical',
+      priority: 'low'
     });
   } else if (avgConcededPerGame >= 2.5) {
     insights.push({
@@ -112,7 +119,8 @@ export function generateAIInsights(
       severity: 'high',
       confidence: 88,
       actionable: true,
-      category: 'tactical'
+      category: 'tactical',
+      priority: 'high'
     });
   }
 
@@ -127,7 +135,8 @@ export function generateAIInsights(
       severity: 'medium',
       confidence: 92,
       actionable: true,
-      category: 'strategic'
+      category: 'strategic',
+      priority: 'medium'
     });
   }
 
@@ -145,7 +154,8 @@ export function generateAIInsights(
         severity: 'low',
         confidence: 85,
         actionable: true,
-        category: 'mental'
+        category: 'mental',
+        priority: 'low'
       });
     } else if (recentWinRate <= 20) {
       insights.push({
@@ -156,7 +166,8 @@ export function generateAIInsights(
         severity: 'high',
         confidence: 90,
         actionable: true,
-        category: 'mental'
+        category: 'mental',
+        priority: 'high'
       });
     }
   }
@@ -174,7 +185,8 @@ export function generateAIInsights(
         severity: 'medium',
         confidence: 80,
         actionable: true,
-        category: 'mental'
+        category: 'mental',
+        priority: 'medium'
       });
     }
   }
@@ -192,7 +204,8 @@ export function generateAIInsights(
         severity: 'medium',
         confidence: 75,
         actionable: true,
-        category: 'technical'
+        category: 'technical',
+        priority: 'medium'
       });
     }
   }
@@ -212,7 +225,8 @@ export function generateAIInsights(
         severity: 'low',
         confidence: 85,
         actionable: false,
-        category: 'mental'
+        category: 'mental',
+        priority: 'low'
       });
     } else if (penaltyWinRate <= 30) {
       insights.push({
@@ -223,7 +237,8 @@ export function generateAIInsights(
         severity: 'medium',
         confidence: 80,
         actionable: true,
-        category: 'technical'
+        category: 'technical',
+        priority: 'medium'
       });
     }
   }
@@ -246,7 +261,8 @@ export function generateAIInsights(
         severity: 'low',
         confidence: 88,
         actionable: false,
-        category: 'mental'
+        category: 'mental',
+        priority: 'low'
       });
     } else if (winRateVariation >= 35) {
       insights.push({
@@ -257,7 +273,8 @@ export function generateAIInsights(
         severity: 'medium',
         confidence: 82,
         actionable: true,
-        category: 'mental'
+        category: 'mental',
+        priority: 'medium'
       });
     }
   }
@@ -301,7 +318,8 @@ export function generateAIInsights(
         severity: 'low',
         confidence: 75,
         actionable: true,
-        category: 'strategic'
+        category: 'strategic',
+        priority: 'medium'
       });
     }
   }
@@ -323,7 +341,8 @@ export function generateAIInsights(
       severity: 'low',
       confidence: 85,
       actionable: false,
-      category: 'performance'
+      category: 'performance',
+      priority: 'low'
     });
   }
 
@@ -339,7 +358,8 @@ export function generateAIInsights(
       severity: 'low',
       confidence: 70,
       actionable: false,
-      category: 'mental'
+      category: 'mental',
+      priority: 'low'
     });
   }
 
@@ -363,7 +383,8 @@ export function generateAIInsights(
         severity: 'low',
         confidence: 90,
         actionable: false,
-        category: 'technical'
+        category: 'technical',
+        priority: 'low'
       });
     } else if (xgDifference <= -15) {
       insights.push({
@@ -374,7 +395,8 @@ export function generateAIInsights(
         severity: 'medium',
         confidence: 88,
         actionable: true,
-        category: 'technical'
+        category: 'technical',
+        priority: 'medium'
       });
     }
   }
@@ -393,7 +415,8 @@ export function generateAIInsights(
         severity: 'low',
         confidence: 85,
         actionable: true,
-        category: 'performance'
+        category: 'performance',
+        priority: 'low'
       });
     }
   }
@@ -415,7 +438,8 @@ export function generateAIInsights(
       severity: 'low',
       confidence: 85,
       actionable: false,
-      category: 'tactical'
+      category: 'tactical',
+      priority: 'low'
     });
   }
 
