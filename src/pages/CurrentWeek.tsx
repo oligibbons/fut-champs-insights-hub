@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -94,6 +95,7 @@ const CurrentWeek = () => {
       id: `week-${Date.now()}`,
       weekNumber: weeklyData.length + 1,
       startDate: new Date().toISOString(),
+      endDate: '',
       games: [],
       totalWins: 0,
       totalLosses: 0,
@@ -102,11 +104,13 @@ const CurrentWeek = () => {
       totalExpectedGoals: 0,
       totalExpectedGoalsAgainst: 0,
       averageOpponentSkill: 0,
+      squadUsed: '',
+      weeklyRating: 0,
       isCompleted: false,
       bestStreak: 0,
       worstStreak: 0,
       currentStreak: 0,
-      weeklyRating: 0,
+      gamesPlayed: 0,
       weekScore: 0,
       totalPlayTime: 0,
       averageGameDuration: 0
@@ -157,8 +161,8 @@ const CurrentWeek = () => {
     // Show completion modal with enhanced stats
     const weekStats = {
       totalGames: updatedWeek.games.length,
-      wins: updatedWeek.totalWins,
-      losses: updatedWeek.totalLosses,
+      totalWins: updatedWeek.totalWins,
+      totalLosses: updatedWeek.totalLosses,
       winRate: updatedWeek.games.length > 0 ? (updatedWeek.totalWins / updatedWeek.games.length) * 100 : 0,
       currentStreak: calculateCurrentStreak(updatedWeek.games)
     };
@@ -200,6 +204,11 @@ const CurrentWeek = () => {
     return streak;
   };
 
+  const handleNewWeek = () => {
+    // This function will be implemented when needed
+    console.log('New week requested');
+  };
+
   // Generate AI insights for current week
   const weekInsights = generateAIInsights(weeklyData, currentWeek, currentWeek.games.slice(-10));
 
@@ -235,15 +244,8 @@ const CurrentWeek = () => {
 
           {/* Week Progress */}
           <WeekProgress 
-            weekData={{
-              weekNumber: currentWeek.weekNumber,
-              gamesPlayed: currentWeek.games.length,
-              wins: currentWeek.totalWins,
-              losses: currentWeek.totalLosses,
-              goalsFor: currentWeek.totalGoals,
-              goalsAgainst: currentWeek.totalConceded,
-              averageOpponentSkill: currentWeek.averageOpponentSkill
-            }}
+            weekData={currentWeek}
+            onNewWeek={handleNewWeek}
           />
 
           {/* Enhanced Content */}
@@ -363,31 +365,31 @@ const CurrentWeek = () => {
                       {weekInsights.slice(0, 10).map((insight, index) => (
                         <div key={insight.id} 
                              className={`p-4 rounded-2xl border transition-all duration-500 hover:scale-105 ${
-                               insight.type === 'strength' 
+                               insight.category === 'strength' 
                                  ? 'bg-gradient-to-r from-green-500/20 to-green-600/10 border-green-500/30'
-                                 : insight.type === 'weakness'
+                                 : insight.category === 'weakness'
                                  ? 'bg-gradient-to-r from-red-500/20 to-red-600/10 border-red-500/30'
                                  : 'bg-gradient-to-r from-blue-500/20 to-blue-600/10 border-blue-500/30'
                              }`}
                              style={{ animationDelay: `${index * 100}ms` }}>
                           <div className="flex items-start gap-3">
                             <div className={`p-2 rounded-lg ${
-                              insight.type === 'strength' ? 'bg-green-500/30' :
-                              insight.type === 'weakness' ? 'bg-red-500/30' : 'bg-blue-500/30'
+                              insight.category === 'strength' ? 'bg-green-500/30' :
+                              insight.category === 'weakness' ? 'bg-red-500/30' : 'bg-blue-500/30'
                             }`}>
-                              {insight.type === 'strength' ? '💪' : 
-                               insight.type === 'weakness' ? '⚠️' : '📊'}
+                              {insight.category === 'strength' ? '💪' : 
+                               insight.category === 'weakness' ? '⚠️' : '📊'}
                             </div>
                             <div className="flex-1">
                               <h4 className="font-semibold text-white mb-1">{insight.title}</h4>
                               <p className="text-gray-300 text-sm">{insight.description}</p>
                               <div className="flex items-center gap-2 mt-2">
                                 <span className={`text-xs px-2 py-1 rounded-full ${
-                                  insight.severity === 'high' ? 'bg-red-500/30 text-red-300' :
-                                  insight.severity === 'medium' ? 'bg-yellow-500/30 text-yellow-300' :
+                                  insight.priority === 'high' ? 'bg-red-500/30 text-red-300' :
+                                  insight.priority === 'medium' ? 'bg-yellow-500/30 text-yellow-300' :
                                   'bg-green-500/30 text-green-300'
                                 }`}>
-                                  {insight.severity}
+                                  {insight.priority}
                                 </span>
                                 <span className="text-xs text-gray-400">
                                   {insight.confidence}% confidence
