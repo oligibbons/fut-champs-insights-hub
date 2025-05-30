@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -254,16 +253,14 @@ const Settings = () => {
 
                 <div className="space-y-2">
                   <Label className="text-white">Gameplay Style</Label>
-                  <Select value={settings.gameplayStyle} onValueChange={(value) => updateSettings({ gameplayStyle: value })}>
+                  <Select value={settings.gameplayStyle} onValueChange={(value: 'aggressive' | 'balanced' | 'defensive') => updateSettings({ gameplayStyle: value })}>
                     <SelectTrigger style={{ backgroundColor: currentTheme.colors.surface, borderColor: currentTheme.colors.border }}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="attacking">Attacking</SelectItem>
+                      <SelectItem value="aggressive">Aggressive</SelectItem>
                       <SelectItem value="balanced">Balanced</SelectItem>
                       <SelectItem value="defensive">Defensive</SelectItem>
-                      <SelectItem value="possession">Possession</SelectItem>
-                      <SelectItem value="counter-attack">Counter Attack</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

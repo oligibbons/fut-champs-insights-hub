@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import Navigation from '@/components/Navigation';
 import WeeklyOverview from '@/components/WeeklyOverview';
@@ -198,10 +197,18 @@ const Index = () => {
   // Mock stats calculation
   const calculateStats = () => {
     const allGames = weeklyData.flatMap(week => week.games);
+    const totalGames = allGames.length;
+    const totalWins = weeklyData.reduce((sum, week) => sum + week.totalWins, 0);
+    const winRate = totalGames > 0 ? (totalWins / totalGames) * 100 : 0;
+    const totalGoals = weeklyData.reduce((sum, week) => sum + week.totalGoals, 0);
+    const avgGoalsPerGame = totalGames > 0 ? totalGoals / totalGames : 0;
+    
     return {
-      totalGames: allGames.length,
-      totalWins: weeklyData.reduce((sum, week) => sum + week.totalWins, 0),
-      totalGoals: weeklyData.reduce((sum, week) => sum + week.totalGoals, 0),
+      totalGames,
+      totalWins,
+      totalGoals,
+      winRate,
+      avgGoalsPerGame,
       avgRating: allGames.length > 0 ? 
         allGames.reduce((sum, game) => {
           const avgPlayerRating = game.playerStats.length > 0 
@@ -429,11 +436,11 @@ const Index = () => {
                   
                   <div className="grid grid-cols-2 gap-2">
                     <div className="text-center p-2 bg-white/5 rounded-lg">
-                      <p className="text-lg font-bold text-green-400">{(winRate || 0).toFixed(0)}%</p>
+                      <p className="text-lg font-bold text-green-400">{stats.winRate.toFixed(0)}%</p>
                       <p className="text-xs text-gray-400">Win Rate</p>
                     </div>
                     <div className="text-center p-2 bg-white/5 rounded-lg">
-                      <p className="text-lg font-bold text-blue-400">{(avgGoalsPerGame || 0).toFixed(1)}</p>
+                      <p className="text-lg font-bold text-blue-400">{stats.avgGoalsPerGame.toFixed(1)}</p>
                       <p className="text-xs text-gray-400">Goals/Game</p>
                     </div>
                   </div>

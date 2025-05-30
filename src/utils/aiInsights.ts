@@ -1,9 +1,8 @@
-
 import { WeeklyPerformance, GameResult } from '@/types/futChampions';
 
 export interface AIInsight {
   id: string;
-  type: 'strength' | 'weakness' | 'trend' | 'recommendation' | 'pattern' | 'tactical' | 'psychological';
+  type: 'strength' | 'weakness' | 'trend' | 'recommendation' | 'pattern' | 'tactical' | 'mental';
   title: string;
   description: string;
   severity: 'low' | 'medium' | 'high' | 'critical';
@@ -340,7 +339,7 @@ export function generateAIInsights(
       severity: 'low',
       confidence: 70,
       actionable: false,
-      category: 'psychological'
+      category: 'mental'
     });
   }
 

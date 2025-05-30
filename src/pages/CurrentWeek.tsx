@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -144,7 +143,9 @@ const CurrentWeek = () => {
       averageOpponentSkill: updatedGames.reduce((sum, g) => sum + g.opponentSkill, 0) / updatedGames.length,
       totalPlayTime: updatedGames.reduce((sum, g) => sum + g.duration, 0),
       averageGameDuration: updatedGames.reduce((sum, g) => sum + g.duration, 0) / updatedGames.length,
-      isCompleted: updatedGames.length >= settings.gamesPerWeek
+      isCompleted: updatedGames.length >= settings.gamesPerWeek,
+      gamesPlayed: updatedGames.length,
+      currentStreak: calculateCurrentStreak(updatedGames)
     };
 
     const updatedWeeklyData = weeklyData.map(week => 
@@ -415,7 +416,6 @@ const CurrentWeek = () => {
       {showGameForm && (
         <GameRecordForm
           onSubmit={handleGameSubmit}
-          onCancel={() => setShowGameForm(false)}
           gameNumber={currentWeek.games.length + 1}
         />
       )}

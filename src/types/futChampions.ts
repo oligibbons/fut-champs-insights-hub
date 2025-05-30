@@ -147,6 +147,8 @@ export interface WeeklyPerformance {
   startingRank?: string;
   bestStreak?: number;
   worstStreak?: number;
+  currentStreak?: number; // Add this missing property
+  gamesPlayed?: number; // Add this missing property
   averageGameDuration?: number;
   totalPlayTime?: number; // in minutes
   averageServerQuality?: number;
