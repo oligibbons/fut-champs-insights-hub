@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { UserSettings } from '@/types/futChampions';
 import { useTheme } from '@/hooks/useTheme';
-import { Settings as SettingsIcon, Save, RefreshCw } from 'lucide-react';
+import { Settings as SettingsIcon, Save, RefreshCw, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { FORMATIONS } from '@/types/squads';
 
@@ -141,6 +141,27 @@ const Settings = () => {
     });
   };
 
+  const handleDeleteAllData = () => {
+    if (window.confirm('Are you sure you want to delete ALL data? This cannot be undone!')) {
+      // Clear all localStorage data
+      const keys = Object.keys(localStorage);
+      keys.forEach(key => {
+        if (key.startsWith('futChampions_') || key.startsWith('fc25-')) {
+          localStorage.removeItem(key);
+        }
+      });
+      
+      // Reset settings to default
+      handleReset();
+      
+      toast({
+        title: "All Data Deleted",
+        description: "All FUT Champions data has been permanently deleted.",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen">
       <Navigation />
@@ -153,7 +174,9 @@ const Settings = () => {
               <SettingsIcon className="h-8 w-8" style={{ color: currentTheme.colors.primary }} />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-white page-header">Settings</h1>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent">
+                Settings
+              </h1>
               <p className="text-gray-400 mt-1">Customize your FUT Champions experience</p>
             </div>
           </div>
@@ -173,8 +196,8 @@ const Settings = () => {
                     onChange={(e) => setSettings({ ...settings, preferredFormation: e.target.value })}
                     className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white"
                   >
-                    {Object.keys(FORMATIONS).map(formation => (
-                      <option key={formation} value={formation}>{formation}</option>
+                    {FORMATIONS.map(formation => (
+                      <option key={formation.name} value={formation.name}>{formation.name}</option>
                     ))}
                   </select>
                 </div>
@@ -285,6 +308,31 @@ const Settings = () => {
                     />
                   </div>
                 ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Data Management */}
+          <Card className="glass-card static-element">
+            <CardHeader>
+              <CardTitle className="text-white">Data Management</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+                  <h4 className="text-red-400 font-semibold mb-2">Danger Zone</h4>
+                  <p className="text-gray-300 text-sm mb-4">
+                    This will permanently delete all your FUT Champions data including games, squads, players, and achievements. This action cannot be undone.
+                  </p>
+                  <Button 
+                    onClick={handleDeleteAllData}
+                    variant="destructive"
+                    className="bg-red-600 hover:bg-red-700"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete All Data
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>

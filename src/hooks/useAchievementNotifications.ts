@@ -1,85 +1,63 @@
 
-import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { WeeklyPerformance, GameResult, Achievement } from '@/types/futChampions';
 import { checkAchievements } from '@/utils/achievements';
-import { generateMatchFeedback } from '@/utils/feedback';
-import { WeeklyPerformance, GameResult } from '@/types/futChampions';
+import { generateGameFeedback } from '@/utils/feedback';
 
 export function useAchievementNotifications() {
   const { toast } = useToast();
+  const [achievements, setAchievements] = useLocalStorage<Achievement[]>('futChampions_achievements', []);
 
-  const checkAndNotifyAchievements = (weeklyData: WeeklyPerformance[], currentWeek: WeeklyPerformance | null) => {
-    const newAchievements = checkAchievements(weeklyData, currentWeek);
+  const checkAndNotifyAchievements = (weeklyData: WeeklyPerformance[], currentWeek: WeeklyPerformance) => {
+    // Calculate all-time stats
+    const allTimeStats = {
+      totalGames: weeklyData.reduce((sum, week) => sum + week.games.length, 0),
+      totalWins: weeklyData.reduce((sum, week) => sum + week.totalWins, 0),
+      totalGoals: weeklyData.reduce((sum, week) => sum + week.totalGoals, 0),
+      totalCleanSheets: 0, // This would need to be calculated from game data
+      longestWinStreak: Math.max(...weeklyData.map(week => week.bestStreak || 0)),
+      completedWeeks: weeklyData.filter(week => week.isCompleted).length,
+      averageOpponentSkill: weeklyData.length > 0 ? 
+        weeklyData.reduce((sum, week) => sum + (week.averageOpponentSkill || 0), 0) / weeklyData.length : 0
+    };
+
+    // Check for new achievements
+    const newAchievements = checkAchievements(allTimeStats, currentWeek, achievements);
     
-    newAchievements.forEach(achievement => {
-      toast({
-        title: `🏆 Achievement Unlocked!`,
-        description: `${achievement.title}: ${achievement.description}`,
-        duration: 5000,
-      });
-    });
-
-    return newAchievements;
-  };
-
-  const notifyGameFeedback = (
-    game: GameResult, 
-    week: WeeklyPerformance, 
-    allTimeStats: { totalGames: number; totalWins: number; totalGoals: number }
-  ) => {
-    const feedback = generateMatchFeedback(game, week, allTimeStats);
-    
-    feedback.forEach((feedbackItem, index) => {
-      setTimeout(() => {
-        const emoji = feedbackItem.type === 'encouragement' ? '🎉' : 
-                     feedbackItem.type === 'motivation' ? '💪' : 
-                     feedbackItem.type === 'analysis' ? '📊' : '💡';
-        
-        toast({
-          title: `${emoji} ${feedbackItem.type.charAt(0).toUpperCase() + feedbackItem.type.slice(1)}`,
-          description: feedbackItem.message,
-          duration: 4000,
+    if (newAchievements.length > 0) {
+      // Update achievements in storage
+      setAchievements(newAchievements);
+      
+      // Show notifications for newly unlocked achievements
+      newAchievements
+        .filter(achievement => achievement.unlocked && !achievements.find(a => a.id === achievement.id)?.unlocked)
+        .forEach(achievement => {
+          toast({
+            title: "🏆 Achievement Unlocked!",
+            description: `${achievement.title}: ${achievement.description}`,
+            duration: 5000,
+          });
         });
-      }, index * 1500); // Stagger notifications
-    });
+    }
   };
 
-  const notifyMilestone = (milestone: string, description: string) => {
-    toast({
-      title: `🎯 Milestone Reached!`,
-      description: `${milestone}: ${description}`,
-      duration: 4000,
-    });
-  };
-
-  const notifyTargetProgress = (current: number, target: number, type: string) => {
-    const percentage = Math.round((current / target) * 100);
+  const notifyGameFeedback = (game: GameResult, weekData: WeeklyPerformance, allTimeStats: any) => {
+    const feedback = generateGameFeedback(game, weekData, allTimeStats);
     
-    if (percentage === 50) {
+    if (feedback) {
       toast({
-        title: `⚡ Halfway There!`,
-        description: `You're 50% towards your ${type} target (${current}/${target})`,
-        duration: 3000,
-      });
-    } else if (percentage === 75) {
-      toast({
-        title: `🔥 Almost There!`,
-        description: `You're 75% towards your ${type} target (${current}/${target})`,
-        duration: 3000,
-      });
-    } else if (percentage >= 100) {
-      toast({
-        title: `🎯 Target Achieved!`,
-        description: `Congratulations! You've reached your ${type} target!`,
-        duration: 5000,
+        title: feedback.type === 'encouragement' ? "🎉 Great Job!" : 
+               feedback.type === 'motivation' ? "💪 Keep Going!" :
+               feedback.type === 'tip' ? "💡 Pro Tip" : "📊 Analysis",
+        description: feedback.message,
+        duration: 4000,
       });
     }
   };
 
   return {
     checkAndNotifyAchievements,
-    notifyGameFeedback,
-    notifyMilestone,
-    notifyTargetProgress
+    notifyGameFeedback
   };
 }

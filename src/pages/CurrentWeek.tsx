@@ -23,6 +23,7 @@ const CurrentWeek = () => {
     notifications: true,
     gamesPerWeek: 15,
     theme: 'futvisionary',
+    carouselSpeed: 12,
     dashboardSettings: {
       showTopPerformers: true,
       showXGAnalysis: true,
@@ -422,7 +423,7 @@ const CurrentWeek = () => {
       {/* Game Recording Modal - Fixed width and removed hover effects */}
       {showGameForm && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-gray-900 rounded-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto static-element lg:ml-20">
+          <div className="bg-gray-900 rounded-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <GameRecordForm
               onSubmit={handleGameSubmit}
               gameNumber={currentWeek.games.length + 1}
@@ -430,7 +431,7 @@ const CurrentWeek = () => {
             <Button 
               onClick={() => setShowGameForm(false)}
               variant="outline"
-              className="mt-4 w-full static-element"
+              className="mt-4 w-full"
             >
               Cancel
             </Button>

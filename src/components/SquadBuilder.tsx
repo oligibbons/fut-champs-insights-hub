@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Squad, PlayerCard, SquadPosition, FORMATIONS, FormationData } from '@/types/squads';
+import { Squad, PlayerCard, SquadPosition, FORMATIONS } from '@/types/squads';
 import { useSquadData } from '@/hooks/useSquadData';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { UserSettings } from '@/types/futChampions';
@@ -28,6 +28,7 @@ const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
     notifications: true,
     gamesPerWeek: 15,
     theme: 'futvisionary',
+    carouselSpeed: 12,
     dashboardSettings: {
       showTopPerformers: true,
       showXGAnalysis: true,

@@ -1,166 +1,136 @@
 
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100;200;300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Variables */
 :root {
-  --text-primary: #ffffff;
-  --text-secondary: #a1a1aa;
-  --bg-primary: #000000;
-  --bg-secondary: #1a1a1a;
-  --accent-primary: #0ea5e9;
-  --accent-secondary: #a855f7;
-  --border-color: #374151;
+  --fifa-blue: #0A84FF;
+  --fifa-purple: #5856D6;
+  --fifa-green: #30D158;
+  --fifa-gold: #FFD60A;
+  --fifa-red: #FF3B30;
+  --fifa-dark: #1C1C1E;
+  --fifa-darker: #0A0A0B;
+  --primary: var(--fifa-blue);
+  --background: var(--fifa-darker);
+  --foreground: #FFFFFF;
 }
 
-/* Base styles */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-html {
-  scroll-behavior: smooth;
-}
-
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
-  color: var(--text-primary);
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: linear-gradient(135deg, #0A0A0B 0%, #1C1C1E 50%, #2C2C2E 100%);
   min-height: 100vh;
+  color: white;
   overflow-x: hidden;
 }
 
-/* Glass morphism effects */
+/* Remove all hover effects for non-interactive elements */
+.static-element {
+  transform: none !important;
+  transition: none !important;
+}
+
+.static-element:hover {
+  transform: none !important;
+  scale: 1 !important;
+}
+
+/* FIFA-style components */
 .glass-card {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
+  background: rgba(28, 28, 30, 0.8);
+  backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 .metric-card {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(135deg, rgba(40, 40, 42, 0.9) 0%, rgba(28, 28, 30, 0.9) 100%);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
   transition: all 0.3s ease;
 }
 
-/* Remove hover effects from cards */
 .metric-card:hover {
-  transform: none;
-  scale: none;
-}
-
-/* Gradient text effects */
-.gradient-text {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  border-color: var(--fifa-blue);
+  box-shadow: 0 8px 32px rgba(10, 132, 255, 0.2);
+  transform: translateY(-2px);
 }
 
 /* Modern button styles */
 .modern-button-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--fifa-blue) 0%, var(--fifa-purple) 100%);
   border: none;
   border-radius: 12px;
   padding: 12px 24px;
-  color: white;
   font-weight: 600;
+  color: white;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px 0 rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 16px rgba(10, 132, 255, 0.3);
 }
 
 .modern-button-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px 0 rgba(102, 126, 234, 0.6);
+  box-shadow: 0 8px 24px rgba(10, 132, 255, 0.4);
 }
 
 .modern-button-secondary {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(58, 58, 60, 0.8);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 12px;
   padding: 12px 24px;
+  font-weight: 600;
   color: white;
-  font-weight: 500;
   transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
 }
 
 .modern-button-secondary:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(72, 72, 74, 0.9);
+  border-color: var(--fifa-blue);
 }
 
-/* Navigation animations */
-.nav-item {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+/* Modern input styles */
+.modern-input {
+  background: rgba(58, 58, 60, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 12px;
-  position: relative;
-  overflow: hidden;
+  padding: 12px 16px;
+  color: white;
+  transition: all 0.3s ease;
 }
 
-.nav-item::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s;
+.modern-input:focus {
+  border-color: var(--fifa-blue);
+  box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.1);
+  outline: none;
 }
 
-.nav-item:hover::before {
-  left: 100%;
+.modern-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
+/* Page header with gradient text */
+.page-header {
+  background: linear-gradient(135deg, var(--fifa-blue) 0%, var(--fifa-purple) 50%, var(--fifa-gold) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+  font-weight: 700;
 }
-
-::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-}
-
-/* Chart tooltips */
-.recharts-tooltip-wrapper {
-  background: rgba(0, 0, 0, 0.9) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  border-radius: 8px !important;
-  backdrop-filter: blur(10px) !important;
-}
-
-/* FIFA Colors */
-.text-fifa-blue { color: #0ea5e9; }
-.text-fifa-green { color: #10b981; }
-.text-fifa-purple { color: #a855f7; }
-.text-fifa-gold { color: #f59e0b; }
-.text-fifa-red { color: #ef4444; }
-
-.bg-fifa-blue { background-color: #0ea5e9; }
-.bg-fifa-green { background-color: #10b981; }
-.bg-fifa-purple { background-color: #a855f7; }
-.bg-fifa-gold { background-color: #f59e0b; }
-.bg-fifa-red { background-color: #ef4444; }
 
 /* Animation utilities */
-@keyframes fadeInUp {
+@keyframes fade-in {
   from {
     opacity: 0;
     transform: translateY(20px);
@@ -171,10 +141,21 @@ body {
   }
 }
 
-@keyframes slideIn {
+@keyframes scale-in {
   from {
     opacity: 0;
-    transform: translateX(-20px);
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
   }
   to {
     opacity: 1;
@@ -182,88 +163,90 @@ body {
   }
 }
 
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out;
 }
 
-.animate-fade-in-up {
-  animation: fadeInUp 0.6s ease-out forwards;
+.animate-scale-in {
+  animation: scale-in 0.4s ease-out;
 }
 
-.animate-slide-in {
-  animation: slideIn 0.5s ease-out forwards;
+.animate-slide-in-right {
+  animation: slide-in-right 0.5s ease-out;
 }
 
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+/* Scrollbar styles */
+::-webkit-scrollbar {
+  width: 8px;
 }
 
-/* Loading states */
-.loading-skeleton {
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.1) 25%, rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0.1) 75%);
-  background-size: 200% 100%;
-  animation: loading 1.5s infinite;
+::-webkit-scrollbar-track {
+  background: rgba(28, 28, 30, 0.5);
+  border-radius: 4px;
 }
 
-@keyframes loading {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
+::-webkit-scrollbar-thumb {
+  background: rgba(142, 142, 147, 0.6);
+  border-radius: 4px;
 }
 
-/* Interactive elements */
-.interactive-card {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  cursor: pointer;
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(142, 142, 147, 0.8);
 }
 
-/* Remove hover scale effects */
-.interactive-card:hover {
-  transform: none;
+/* Tab styles */
+.tabs-list {
+  background: rgba(28, 28, 30, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 4px;
 }
 
-/* Focus states for accessibility */
-.focus-ring:focus {
-  outline: 2px solid #667eea;
-  outline-offset: 2px;
+/* FIFA color utilities */
+.text-fifa-blue { color: var(--fifa-blue); }
+.text-fifa-purple { color: var(--fifa-purple); }
+.text-fifa-green { color: var(--fifa-green); }
+.text-fifa-gold { color: var(--fifa-gold); }
+.text-fifa-red { color: var(--fifa-red); }
+
+.bg-fifa-blue { background-color: var(--fifa-blue); }
+.bg-fifa-purple { background-color: var(--fifa-purple); }
+.bg-fifa-green { background-color: var(--fifa-green); }
+.bg-fifa-gold { background-color: var(--fifa-gold); }
+.bg-fifa-red { background-color: var(--fifa-red); }
+
+.border-fifa-blue { border-color: var(--fifa-blue); }
+.border-fifa-purple { border-color: var(--fifa-purple); }
+.border-fifa-green { border-color: var(--fifa-green); }
+.border-fifa-gold { border-color: var(--fifa-gold); }
+.border-fifa-red { border-color: var(--fifa-red); }
+
+/* Progress bar styling */
+.progress-bar {
+  background: linear-gradient(90deg, var(--fifa-blue) 0%, var(--fifa-purple) 100%);
+  border-radius: 8px;
+  transition: width 0.5s ease;
 }
 
-/* Status indicators */
-.status-online {
-  background: #10b981;
-  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
+/* Achievement badge styles */
+.achievement-badge {
+  background: linear-gradient(135deg, var(--fifa-gold) 0%, #FFB000 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  box-shadow: 0 4px 12px rgba(255, 214, 10, 0.3);
 }
 
-.status-away {
-  background: #f59e0b;
-  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.3);
-}
-
-.status-offline {
-  background: #6b7280;
-  box-shadow: 0 0 0 2px rgba(107, 114, 128, 0.3);
-}
-
-/* Typography enhancements */
-.text-gradient {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* Mobile optimizations */
+/* Responsive typography */
 @media (max-width: 768px) {
-  .glass-card {
-    backdrop-filter: blur(8px);
+  .page-header {
+    font-size: 1.5rem;
+  }
+  
+  .metric-card {
+    padding: 12px;
   }
   
   .modern-button-primary,
@@ -273,44 +256,66 @@ body {
   }
 }
 
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-  .glass-card {
-    background: rgba(0, 0, 0, 0.8);
-    border: 2px solid rgba(255, 255, 255, 0.5);
-  }
+/* Loading states */
+.loading-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
 }
 
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
-/* Print styles */
-@media print {
-  .glass-card {
-    background: white;
-    color: black;
-    border: 1px solid black;
-  }
+/* Form validation styles */
+.input-error {
+  border-color: var(--fifa-red);
+  box-shadow: 0 0 0 3px rgba(255, 59, 48, 0.1);
 }
 
-/* Page headers without text shadow */
-.page-header {
-  text-shadow: none;
+.input-success {
+  border-color: var(--fifa-green);
+  box-shadow: 0 0 0 3px rgba(48, 209, 88, 0.1);
 }
 
-/* Ensure elements don't expand/contract */
-.static-element {
+/* Notification styles */
+.notification-success {
+  background: linear-gradient(135deg, var(--fifa-green), #28A745);
+  color: white;
+  border-radius: 12px;
+  padding: 12px 16px;
+  box-shadow: 0 4px 16px rgba(48, 209, 88, 0.3);
+}
+
+.notification-error {
+  background: linear-gradient(135deg, var(--fifa-red), #DC3545);
+  color: white;
+  border-radius: 12px;
+  padding: 12px 16px;
+  box-shadow: 0 4px 16px rgba(255, 59, 48, 0.3);
+}
+
+/* Card hover effects for interactive elements only */
+.interactive-card {
+  transition: all 0.3s ease;
+}
+
+.interactive-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+}
+
+/* Make sure non-interactive elements don't have hover effects */
+.glass-card:not(.interactive-card),
+.metric-card:not(.interactive-card),
+[class*="static"] {
   transform: none !important;
   transition: none !important;
 }
 
-.static-element:hover {
+.glass-card:not(.interactive-card):hover,
+.metric-card:not(.interactive-card):hover,
+[class*="static"]:hover {
   transform: none !important;
-  scale: none !important;
 }
