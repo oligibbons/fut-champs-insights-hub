@@ -235,11 +235,9 @@
   h1, h2, h3, h4, h5, h6 {
     position: relative;
     z-index: 2;
-  }
-
-  /* Remove any text shadow or glow effects that might be blocking text */
-  .text-glow, .glow-text {
+    color: white !important;
     text-shadow: none !important;
+    background: transparent !important;
   }
 
   /* Ensure text is always visible */
@@ -247,6 +245,22 @@
     color: white !important;
     text-shadow: none !important;
     background: transparent !important;
+  }
+
+  /* Remove any problematic text overlays */
+  .text-glow, .glow-text, .gradient-text {
+    text-shadow: none !important;
+    background: transparent !important;
+    color: white !important;
+  }
+
+  /* Page titles specifically */
+  .page-header h1, .page-header h2, .page-header h3 {
+    color: white !important;
+    text-shadow: none !important;
+    background: none !important;
+    z-index: 10;
+    position: relative;
   }
 }
 

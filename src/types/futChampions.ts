@@ -161,13 +161,13 @@ export interface Achievement {
   id: string;
   title: string;
   description: string;
+  category: 'games' | 'wins' | 'goals' | 'streaks' | 'weekly' | 'cleanSheets' | 'assists' | 'special' | 'time' | 'defense' | 'squads' | 'formations' | 'consistency' | 'efficiency' | 'stats' | 'opponents' | 'engagement' | 'social' | 'competitive' | 'meta' | 'ultimate' | 'hidden' | 'improvement' | 'variety';
+  threshold: number;
+  rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic';
   icon: string;
-  category: 'wins' | 'goals' | 'streaks' | 'performance' | 'consistency' | 'milestone' | 'special' | 'legend';
+  unlocked: boolean;
   unlockedAt?: string;
   progress?: number;
-  target?: number;
-  rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic';
-  tier?: number; // For progressive achievements
 }
 
 export interface PlayerMilestone {

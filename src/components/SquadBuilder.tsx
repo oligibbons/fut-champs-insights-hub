@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Squad, PlayerCard, SquadPosition, FORMATIONS } from '@/types/squads';
+import { Squad, PlayerCard, SquadPosition, FORMATIONS, Formation } from '@/types/squads';
 import { useSquadData } from '@/hooks/useSquadData';
 import PlayerSearchModal from './PlayerSearchModal';
 import { Plus, Users, Save, Star, Trash2 } from 'lucide-react';
@@ -60,7 +60,7 @@ const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
   const [selectedPosition, setSelectedPosition] = useState<SquadPosition | null>(null);
   const [showPlayerModal, setShowPlayerModal] = useState(false);
 
-  const handleFormationChange = (formation: string) => {
+  const handleFormationChange = (formation: Formation) => {
     const formationData = FORMATIONS.find(f => f.name === formation);
     if (!formationData) return;
 
@@ -113,6 +113,7 @@ const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
     }
 
     setSelectedPosition(null);
+    setShowPlayerModal(false);
   };
 
   const handleRemovePlayer = (positionId: string, e: React.MouseEvent) => {
@@ -145,13 +146,16 @@ const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
     }
   };
 
-  const handleSave = () => {
-    const startingCount = squadData.startingXI.filter(pos => pos.player).length;
+  const handlePositionClick = (position: SquadPosition) => {
+    setSelectedPosition(position);
+    setShowPlayerModal(true);
+  };
 
-    if (startingCount < 11) {
+  const handleSave = () => {
+    if (!squadData.name.trim()) {
       toast({
-        title: "Incomplete Squad",
-        description: "Please fill all 11 starting positions.",
+        title: "Error",
+        description: "Please enter a squad name",
         variant: "destructive"
       });
       return;
@@ -159,228 +163,196 @@ const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
 
     onSave(squadData);
     toast({
-      title: "Squad Saved",
-      description: `${squadData.name} has been saved successfully!`
+      title: "Success",
+      description: `Squad "${squadData.name}" saved successfully`,
     });
   };
 
+  const getCardTypeColor = (cardType: PlayerCard['cardType']) => {
+    switch (cardType) {
+      case 'bronze': return 'bg-amber-700 text-white';
+      case 'silver': return 'bg-gray-400 text-black';
+      case 'gold': return 'bg-yellow-500 text-black';
+      case 'inform': return 'bg-gray-800 text-white';
+      case 'totw': return 'bg-blue-600 text-white';
+      case 'toty': return 'bg-blue-900 text-white';
+      case 'tots': return 'bg-green-600 text-white';
+      case 'icon': return 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black';
+      case 'hero': return 'bg-purple-600 text-white';
+      default: return 'bg-yellow-500 text-black';
+    }
+  };
+
   return (
-    <div className="space-y-8">
-      {/* Squad Header */}
-      <Card className="glass-card rounded-3xl shadow-depth-lg border-0 animate-fade-in">
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-2">
+    <div className="space-y-6">
+      <Card className="glass-card">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Squad Builder
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Squad Details */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-white text-sm font-medium mb-2">Squad Name</label>
               <Input
                 value={squadData.name}
                 onChange={(e) => setSquadData(prev => ({ ...prev, name: e.target.value }))}
-                className="text-2xl font-bold bg-transparent border-0 p-0 text-white focus:ring-0"
-                placeholder="Squad Name"
+                className="modern-input"
+                placeholder="Enter squad name"
               />
-              <div className="flex items-center gap-4">
-                <Select value={squadData.formation} onValueChange={handleFormationChange}>
-                  <SelectTrigger className="w-40 modern-input border-fifa-blue/30">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="glass-card border-fifa-blue/30 max-h-60">
-                    {FORMATIONS.map(formation => (
-                      <SelectItem key={formation.name} value={formation.name}>
-                        {formation.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Badge className="bg-fifa-blue/20 text-fifa-blue border-fifa-blue/30 rounded-xl">
-                  <Users className="h-3 w-3 mr-1" />
-                  {squadData.startingXI.filter(p => p.player).length}/11
-                </Badge>
-              </div>
             </div>
-            <div className="flex gap-3">
-              <Button onClick={onCancel} variant="outline" className="modern-button-secondary rounded-2xl">
-                Cancel
-              </Button>
-              <Button onClick={handleSave} className="modern-button-primary rounded-2xl">
-                <Save className="h-4 w-4 mr-2" />
-                Save Squad
-              </Button>
+            <div>
+              <label className="block text-white text-sm font-medium mb-2">Formation</label>
+              <Select value={squadData.formation} onValueChange={handleFormationChange}>
+                <SelectTrigger className="modern-input">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="max-h-60 overflow-y-auto">
+                  {FORMATIONS.map((formation) => (
+                    <SelectItem key={formation.name} value={formation.name}>
+                      {formation.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
-        </CardHeader>
-      </Card>
 
-      {/* Formation View */}
-      <Card className="glass-card rounded-3xl shadow-depth-lg border-0">
-        <CardContent className="p-8">
-          <div className="relative bg-gradient-to-b from-green-900/20 to-green-700/30 rounded-3xl p-8 min-h-[600px] border border-green-500/20">
-            {/* Pitch Lines */}
-            <div className="absolute inset-4 border-2 border-white/20 rounded-2xl">
-              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-32 h-16 border-2 border-white/20 border-t-0 rounded-b-2xl"></div>
-              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-32 h-16 border-2 border-white/20 border-b-0 rounded-t-2xl"></div>
-              <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-white/20"></div>
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 border-2 border-white/20 rounded-full"></div>
-            </div>
-
-            {/* Player Positions */}
+          {/* Formation Pitch */}
+          <div className="bg-gradient-to-b from-green-800 to-green-900 rounded-lg p-6 relative h-96 border-2 border-white/20">
+            <div className="absolute inset-0 bg-gradient-to-b from-green-500/10 to-green-700/10 rounded-lg"></div>
+            
+            {/* Pitch markings */}
+            <div className="absolute inset-x-0 top-0 h-px bg-white/30"></div>
+            <div className="absolute inset-x-0 bottom-0 h-px bg-white/30"></div>
+            <div className="absolute inset-y-0 left-0 w-px bg-white/30"></div>
+            <div className="absolute inset-y-0 right-0 w-px bg-white/30"></div>
+            <div className="absolute inset-x-0 top-1/2 h-px bg-white/30 transform -translate-y-1/2"></div>
+            
+            {/* Players */}
             {squadData.startingXI.map((position) => (
               <div
                 key={position.id}
                 className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group"
                 style={{ left: `${position.x}%`, top: `${position.y}%` }}
-                onClick={() => {
-                  setSelectedPosition(position);
-                  setShowPlayerModal(true);
-                }}
+                onClick={() => handlePositionClick(position)}
               >
-                <div className="relative">
-                  <div className={`w-20 h-20 rounded-2xl border-2 flex flex-col items-center justify-center text-xs font-bold transition-all duration-300 group-hover:scale-110 shadow-lg ${
-                    position.player 
-                      ? 'bg-fifa-blue/90 border-fifa-blue text-white shadow-fifa-blue/50' 
-                      : 'bg-white/10 border-white/30 text-white/70 hover:bg-white/20'
-                  }`}>
-                    {position.player ? (
-                      <div className="text-center p-1">
-                        <div className="text-[10px] leading-none font-bold">{position.player.name.split(' ').slice(-1)[0]}</div>
-                        <div className="text-[8px] opacity-75">{position.player.rating}</div>
-                        <div className="text-[7px] opacity-50">{position.position}</div>
-                      </div>
-                    ) : (
-                      <div className="text-center">
-                        <Plus className="h-5 w-5 mx-auto mb-1" />
-                        <div className="text-[8px]">{position.position}</div>
-                      </div>
-                    )}
+                {position.player ? (
+                  <div className="relative">
+                    <div className={`w-16 h-20 rounded-lg border-2 border-white/50 flex flex-col items-center justify-center text-xs font-bold transition-all duration-200 group-hover:scale-110 ${getCardTypeColor(position.player.cardType)}`}>
+                      <div className="text-xs font-bold">{position.player.rating}</div>
+                      <div className="text-xs">{position.position}</div>
+                      <div className="text-xs truncate w-full text-center px-1">{position.player.name.split(' ').pop()}</div>
+                    </div>
+                    <button
+                      onClick={(e) => handleRemovePlayer(position.id, e)}
+                      className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
                   </div>
-                  {position.player && (
-                    <>
-                      <div className="absolute -top-2 -right-2 w-6 h-6 bg-fifa-gold rounded-full flex items-center justify-center">
-                        <Star className="h-3 w-3 text-white" />
-                      </div>
-                      <button
-                        onClick={(e) => handleRemovePlayer(position.id, e)}
-                        className="absolute -bottom-2 -left-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:scale-110"
-                      >
-                        <Trash2 className="h-3 w-3 text-white" />
-                      </button>
-                    </>
-                  )}
-                </div>
+                ) : (
+                  <div className="w-16 h-20 border-2 border-dashed border-white/50 rounded-lg flex flex-col items-center justify-center text-white text-xs bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-all duration-200 group-hover:scale-110">
+                    <Plus className="h-4 w-4 mb-1" />
+                    <span>{position.position}</span>
+                  </div>
+                )}
               </div>
             ))}
           </div>
+
+          {/* Substitutes and Reserves */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Substitutes */}
+            <div>
+              <h3 className="text-white font-medium mb-3">Substitutes</h3>
+              <div className="grid grid-cols-1 gap-2">
+                {squadData.substitutes.map((position) => (
+                  <div
+                    key={position.id}
+                    className="flex items-center gap-3 p-3 bg-white/5 rounded-lg hover:bg-white/10 cursor-pointer transition-colors group"
+                    onClick={() => handlePositionClick(position)}
+                  >
+                    {position.player ? (
+                      <>
+                        <Badge className={`${getCardTypeColor(position.player.cardType)} text-xs`}>
+                          {position.player.rating}
+                        </Badge>
+                        <div className="flex-1">
+                          <p className="text-white font-medium">{position.player.name}</p>
+                          <p className="text-gray-400 text-sm">{position.player.position} • {position.player.club}</p>
+                        </div>
+                        <button
+                          onClick={(e) => handleRemovePlayer(position.id, e)}
+                          className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </>
+                    ) : (
+                      <div className="flex items-center gap-3 text-gray-400 w-full">
+                        <Plus className="h-4 w-4" />
+                        <span>Add Substitute</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Reserves */}
+            <div>
+              <h3 className="text-white font-medium mb-3">Reserves</h3>
+              <div className="grid grid-cols-1 gap-2">
+                {squadData.reserves.map((position) => (
+                  <div
+                    key={position.id}
+                    className="flex items-center gap-3 p-3 bg-white/5 rounded-lg hover:bg-white/10 cursor-pointer transition-colors group"
+                    onClick={() => handlePositionClick(position)}
+                  >
+                    {position.player ? (
+                      <>
+                        <Badge className={`${getCardTypeColor(position.player.cardType)} text-xs`}>
+                          {position.player.rating}
+                        </Badge>
+                        <div className="flex-1">
+                          <p className="text-white font-medium">{position.player.name}</p>
+                          <p className="text-gray-400 text-sm">{position.player.position} • {position.player.club}</p>
+                        </div>
+                        <button
+                          onClick={(e) => handleRemovePlayer(position.id, e)}
+                          className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </>
+                    ) : (
+                      <div className="flex items-center gap-3 text-gray-400 w-full">
+                        <Plus className="h-4 w-4" />
+                        <span>Add Reserve</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-4 pt-4">
+            <Button onClick={onCancel} variant="outline" className="flex-1 modern-button-secondary">
+              Cancel
+            </Button>
+            <Button onClick={handleSave} className="flex-1 modern-button-primary">
+              <Save className="h-4 w-4 mr-2" />
+              Save Squad
+            </Button>
+          </div>
         </CardContent>
       </Card>
-
-      {/* Substitutes & Reserves */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="glass-card rounded-3xl shadow-depth-lg border-0">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Users className="h-5 w-5 text-fifa-gold" />
-              Substitutes (7)
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {squadData.substitutes.map((position, index) => (
-              <div
-                key={position.id}
-                className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/10 cursor-pointer hover:bg-white/10 transition-all duration-300 group"
-                onClick={() => {
-                  setSelectedPosition(position);
-                  setShowPlayerModal(true);
-                }}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-fifa-purple/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                    {position.player ? (
-                      <span className="text-sm font-bold text-fifa-purple">{position.player.rating}</span>
-                    ) : (
-                      <Plus className="h-5 w-5 text-fifa-purple/60" />
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-white font-medium">
-                      {position.player ? position.player.name : `Substitute ${index + 1}`}
-                    </p>
-                    {position.player && (
-                      <p className="text-xs text-gray-400">{position.player.cardType} • {position.player.position}</p>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {position.player && (
-                    <button
-                      onClick={(e) => handleRemovePlayer(position.id, e)}
-                      className="w-8 h-8 bg-red-500/20 hover:bg-red-500 rounded-lg flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
-                    >
-                      <Trash2 className="h-3 w-3 text-red-400 hover:text-white" />
-                    </button>
-                  )}
-                  {!position.player && (
-                    <Badge variant="outline" className="text-fifa-purple border-fifa-purple/40 bg-fifa-purple/10 rounded-xl">
-                      Add Player
-                    </Badge>
-                  )}
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        <Card className="glass-card rounded-3xl shadow-depth-lg border-0">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Users className="h-5 w-5 text-fifa-green" />
-              Reserves (5)
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {squadData.reserves.map((position, index) => (
-              <div
-                key={position.id}
-                className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/10 cursor-pointer hover:bg-white/10 transition-all duration-300 group"
-                onClick={() => {
-                  setSelectedPosition(position);
-                  setShowPlayerModal(true);
-                }}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-fifa-green/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                    {position.player ? (
-                      <span className="text-sm font-bold text-fifa-green">{position.player.rating}</span>
-                    ) : (
-                      <Plus className="h-5 w-5 text-fifa-green/60" />
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-white font-medium">
-                      {position.player ? position.player.name : `Reserve ${index + 1}`}
-                    </p>
-                    {position.player && (
-                      <p className="text-xs text-gray-400">{position.player.cardType} • {position.player.position}</p>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {position.player && (
-                    <button
-                      onClick={(e) => handleRemovePlayer(position.id, e)}
-                      className="w-8 h-8 bg-red-500/20 hover:bg-red-500 rounded-lg flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
-                    >
-                      <Trash2 className="h-3 w-3 text-red-400 hover:text-white" />
-                    </button>
-                  )}
-                  {!position.player && (
-                    <Badge variant="outline" className="text-fifa-green border-fifa-green/40 bg-fifa-green/10 rounded-xl">
-                      Optional
-                    </Badge>
-                  )}
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Player Search Modal */}
       <PlayerSearchModal
@@ -390,7 +362,7 @@ const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
           setSelectedPosition(null);
         }}
         onPlayerSelect={handlePlayerSelect}
-        position={selectedPosition}
+        position={selectedPosition?.position}
       />
     </div>
   );

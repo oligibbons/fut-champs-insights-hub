@@ -49,25 +49,10 @@ const Navigation = () => {
     }
   };
 
-  // Auto-hide navigation after 3 seconds of no hover
-  useEffect(() => {
-    let timeout: NodeJS.Timeout;
-    
-    if (!isHovered && !isOpen) {
-      timeout = setTimeout(() => {
-        // Navigation will be hidden via CSS transform
-      }, 3000);
-    }
-
-    return () => {
-      if (timeout) clearTimeout(timeout);
-    };
-  }, [isHovered, isOpen]);
-
   return (
     <>
       {/* Mobile Menu Button */}
-      <div className="lg:hidden fixed top-20 left-4 z-50">
+      <div className="lg:hidden fixed top-20 left-4 z-40">
         <Button
           variant="outline"
           size="icon"
@@ -82,20 +67,21 @@ const Navigation = () => {
         </Button>
       </div>
 
-      {/* Navigation Sidebar */}
+      {/* Navigation Sidebar - Dock Style */}
       <nav 
         className={`
-          fixed left-0 top-16 h-full w-64 border-r z-40
+          fixed left-0 top-16 h-full border-r z-30
           transform transition-all duration-500 ease-in-out
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
           lg:translate-x-0
-          ${!isHovered && !isOpen ? 'lg:-translate-x-56' : 'lg:translate-x-0'}
-          hover:translate-x-0
+          ${!isHovered && !isOpen ? 'lg:w-16' : 'lg:w-64'}
+          hover:w-64
         `}
         style={{
           backgroundColor: currentTheme.colors.surface,
           borderColor: currentTheme.colors.border,
-          backdropFilter: 'blur(12px)'
+          backdropFilter: 'blur(12px)',
+          width: !isHovered && !isOpen ? '4rem' : '16rem'
         }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -111,16 +97,16 @@ const Navigation = () => {
             <img 
               src="/lovable-uploads/6b6465f4-e466-4f3b-9761-8a829fbe395c.png" 
               alt="FUTALYST Logo" 
-              className="w-10 h-10 object-contain"
+              className="w-10 h-10 object-contain flex-shrink-0"
             />
-            <div className={`transition-opacity duration-300 ${!isHovered && !isOpen ? 'lg:opacity-0' : 'lg:opacity-100'}`}>
+            <div className={`transition-all duration-300 overflow-hidden ${!isHovered && !isOpen ? 'lg:w-0 lg:opacity-0' : 'lg:w-auto lg:opacity-100'}`}>
               <h1 
-                className="text-xl font-bold"
+                className="text-xl font-bold whitespace-nowrap"
                 style={{ color: currentTheme.colors.text }}
               >
                 FUTALYST
               </h1>
-              <p className="text-xs" style={{ color: currentTheme.colors.muted }}>
+              <p className="text-xs whitespace-nowrap" style={{ color: currentTheme.colors.muted }}>
                 AI-Powered FUT Analytics
               </p>
             </div>
@@ -147,7 +133,7 @@ const Navigation = () => {
                   }}
                 >
                   <item.icon className="h-5 w-5 flex-shrink-0" />
-                  <span className={`font-medium transition-opacity duration-300 ${!isHovered && !isOpen ? 'lg:opacity-0 lg:w-0' : 'lg:opacity-100'}`}>
+                  <span className={`font-medium transition-all duration-300 overflow-hidden whitespace-nowrap ${!isHovered && !isOpen ? 'lg:w-0 lg:opacity-0' : 'lg:w-auto lg:opacity-100'}`}>
                     {item.name}
                   </span>
                 </Link>
@@ -158,17 +144,17 @@ const Navigation = () => {
           {/* User Section */}
           {user && (
             <div className="mt-auto pt-4 border-t" style={{ borderColor: currentTheme.colors.border }}>
-              <div className={`mb-4 p-3 rounded-lg transition-opacity duration-300 ${!isHovered && !isOpen ? 'lg:opacity-0' : 'lg:opacity-100'}`} 
+              <div className={`mb-4 p-3 rounded-lg transition-all duration-300 overflow-hidden ${!isHovered && !isOpen ? 'lg:w-0 lg:opacity-0' : 'lg:w-auto lg:opacity-100'}`} 
                    style={{ backgroundColor: currentTheme.colors.cardBg }}>
-                <p className="text-sm font-medium text-white">{user.email}</p>
-                <p className="text-xs" style={{ color: currentTheme.colors.muted }}>
+                <p className="text-sm font-medium text-white whitespace-nowrap">{user.email}</p>
+                <p className="text-xs whitespace-nowrap" style={{ color: currentTheme.colors.muted }}>
                   Signed in
                 </p>
               </div>
               <Button
                 onClick={handleSignOut}
                 variant="outline"
-                className={`w-full flex items-center gap-2 rounded-lg transition-all duration-300 ${!isHovered && !isOpen ? 'lg:w-12 lg:justify-center' : ''}`}
+                className={`w-full flex items-center gap-2 rounded-lg transition-all duration-300 ${!isHovered && !isOpen ? 'lg:w-12 lg:justify-center lg:px-2' : ''}`}
                 style={{
                   backgroundColor: 'transparent',
                   borderColor: currentTheme.colors.border,
@@ -176,7 +162,7 @@ const Navigation = () => {
                 }}
               >
                 <LogOut className="h-4 w-4 flex-shrink-0" />
-                <span className={`transition-opacity duration-300 ${!isHovered && !isOpen ? 'lg:opacity-0 lg:w-0' : 'lg:opacity-100'}`}>
+                <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${!isHovered && !isOpen ? 'lg:w-0 lg:opacity-0' : 'lg:w-auto lg:opacity-100'}`}>
                   Sign Out
                 </span>
               </Button>
@@ -191,7 +177,7 @@ const Navigation = () => {
       {/* Overlay for mobile */}
       {isOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-black/50 z-30"
+          className="lg:hidden fixed inset-0 bg-black/50 z-20"
           onClick={() => setIsOpen(false)}
         />
       )}
