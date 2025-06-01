@@ -19,8 +19,8 @@ const AchievementSystem = ({ weeklyData, currentWeek, onAchievementUnlocked }: A
   // Get all achievements with progress calculated
   const achievementsWithProgress = ACHIEVEMENTS.map(achievement => ({
     ...achievement,
-    progress: calculateAchievementProgress(achievement, weeklyData, currentWeek),
-    unlockedAt: calculateAchievementProgress(achievement, weeklyData, currentWeek) >= (achievement.target || 1) ? new Date().toISOString() : undefined
+    progress: calculateAchievementProgress(achievement, weeklyData),
+    unlockedAt: calculateAchievementProgress(achievement, weeklyData) >= achievement.threshold ? new Date().toISOString() : undefined
   }));
 
   const unlockedAchievements = achievementsWithProgress.filter(a => a.unlockedAt);
@@ -102,8 +102,8 @@ const AchievementSystem = ({ weeklyData, currentWeek, onAchievementUnlocked }: A
               const IconComponent = getIconComponent(achievement.icon);
               const isUnlocked = !!achievement.unlockedAt;
               const progress = achievement.progress || 0;
-              const target = achievement.target || 1;
-              const progressPercentage = Math.min((progress / target) * 100, 100);
+              const threshold = achievement.threshold;
+              const progressPercentage = Math.min((progress / threshold) * 100, 100);
 
               return (
                 <Card
@@ -141,7 +141,7 @@ const AchievementSystem = ({ weeklyData, currentWeek, onAchievementUnlocked }: A
                         <div className="space-y-1">
                           <div className="flex justify-between text-xs">
                             <span className="text-gray-400">
-                              {progress}/{target}
+                              {progress}/{threshold}
                             </span>
                             <span className="text-gray-400">
                               {progressPercentage.toFixed(0)}%
