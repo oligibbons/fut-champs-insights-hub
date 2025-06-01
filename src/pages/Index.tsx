@@ -305,7 +305,6 @@ const Index = () => {
 
           {/* Enhanced Dashboard Carousel */}
           <DashboardCarousel 
-            title="Performance Analytics Dashboard"
             weeklyData={weeklyData}
             currentWeek={currentWeek}
             enabledTiles={enabledTiles}

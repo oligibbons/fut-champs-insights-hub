@@ -6,7 +6,8 @@ import { WeeklyPerformance } from '@/types/futChampions';
 
 interface DashboardCarouselProps {
   weeklyData: WeeklyPerformance[];
-  currentWeek?: WeeklyPerformance | null;
+  currentWeek: WeeklyPerformance;
+  enabledTiles: string[];
 }
 
 const DashboardCarousel = ({ weeklyData, currentWeek }: DashboardCarouselProps) => {

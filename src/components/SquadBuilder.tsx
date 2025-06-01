@@ -1,11 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Squad, PlayerCard, SquadPosition, FORMATIONS, Formation } from '@/types/squads';
+import { Squad, PlayerCard, SquadPosition, FORMATIONS, FormationData } from '@/types/squads';
 import { useSquadData } from '@/hooks/useSquadData';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { UserSettings } from '@/types/futChampions';
@@ -106,11 +105,15 @@ const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
         x: 0,
         y: 0
       })),
-      created: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       lastModified: new Date().toISOString(),
       gamesPlayed: 0,
       wins: 0,
-      losses: 0
+      losses: 0,
+      isDefault: false,
+      totalRating: 0,
+      chemistry: 0
     };
   });
 
@@ -125,7 +128,7 @@ const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
     }
   }, [getDefaultSquad, squad]);
 
-  const handleFormationChange = (formation: Formation) => {
+  const handleFormationChange = (formation: string) => {
     const formationData = FORMATIONS.find(f => f.name === formation);
     if (!formationData) return;
 

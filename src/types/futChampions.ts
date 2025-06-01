@@ -227,19 +227,46 @@ export interface AppTheme {
 export interface UserSettings {
   preferredFormation: string;
   trackingStartDate: string;
-  gameplayStyle: 'aggressive' | 'balanced' | 'defensive';
+  gameplayStyle: 'attacking' | 'balanced' | 'defensive' | 'possession' | 'counter';
   notifications: boolean;
   gamesPerWeek: number;
   theme: string;
-  dashboardSettings: DashboardSettings;
-  currentWeekSettings: DashboardSettings;
+  carouselSpeed: number;
+  dashboardSettings: {
+    showTopPerformers: boolean;
+    showXGAnalysis: boolean;
+    showAIInsights: boolean;
+    showFormAnalysis: boolean;
+    showWeaknesses: boolean;
+    showOpponentAnalysis: boolean;
+    showPositionalAnalysis: boolean;
+    showRecentTrends: boolean;
+    showAchievements: boolean;
+    showTargetProgress: boolean;
+    showTimeAnalysis: boolean;
+    showStressAnalysis: boolean;
+  };
+  currentWeekSettings: {
+    showTopPerformers: boolean;
+    showXGAnalysis: boolean;
+    showAIInsights: boolean;
+    showFormAnalysis: boolean;
+    showWeaknesses: boolean;
+    showOpponentAnalysis: boolean;
+    showPositionalAnalysis: boolean;
+    showRecentTrends: boolean;
+    showAchievements: boolean;
+    showTargetProgress: boolean;
+    showTimeAnalysis: boolean;
+    showStressAnalysis: boolean;
+  };
   qualifierSettings: {
     totalGames: number;
     winsRequired: number;
   };
   targetSettings: {
     autoSetTargets: boolean;
-    adaptiveTargets: boolean; // Adjust based on performance
+    adaptiveTargets: boolean;
     notifyOnTarget: boolean;
   };
   analyticsPreferences: {

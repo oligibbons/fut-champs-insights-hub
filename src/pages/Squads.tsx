@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import Navigation from '@/components/Navigation';
 import SquadBuilder from '@/components/SquadBuilder';
@@ -40,7 +39,7 @@ const Squads = () => {
       ...squad,
       id: `squad-${Date.now()}`,
       name: `${squad.name} (Copy)`,
-      created: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
       lastModified: new Date().toISOString(),
       gamesPlayed: 0,
       wins: 0,
