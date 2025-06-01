@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -222,7 +221,7 @@ const CurrentWeek = () => {
     <div className="min-h-screen">
       <Navigation />
       
-      <main className="lg:ml-64 p-4 lg:p-6">
+      <main className="lg:ml-20 lg:hover:ml-64 transition-all duration-500 p-4 lg:p-6">
         <div className="max-w-6xl mx-auto space-y-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
@@ -231,7 +230,7 @@ const CurrentWeek = () => {
                 <Calendar className="h-8 w-8" style={{ color: currentTheme.colors.primary }} />
               </div>
               <div>
-                <h1 className="text-3xl font-bold gradient-text">Week {currentWeek.weekNumber}</h1>
+                <h1 className="text-3xl font-bold text-white">Week {currentWeek.weekNumber}</h1>
                 <p className="text-gray-400 mt-1">
                   {currentWeek.games.length}/{settings.gamesPerWeek} games completed
                 </p>
@@ -274,7 +273,7 @@ const CurrentWeek = () => {
             <TabsContent value="games" className="space-y-4">
               <Card className="glass-card">
                 <CardHeader>
-                  <CardTitle className="gradient-text">Recent Games</CardTitle>
+                  <CardTitle className="text-white">Recent Games</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {currentWeek.games.length > 0 ? (
@@ -360,7 +359,7 @@ const CurrentWeek = () => {
             <TabsContent value="insights" className="space-y-4">
               <Card className="glass-card">
                 <CardHeader>
-                  <CardTitle className="gradient-text flex items-center gap-2">
+                  <CardTitle className="text-white flex items-center gap-2">
                     <TrendingUp className="h-5 w-5" />
                     AI Performance Insights
                   </CardTitle>
@@ -422,10 +421,21 @@ const CurrentWeek = () => {
 
       {/* Game Recording Modal */}
       {showGameForm && (
-        <GameRecordForm
-          onSubmit={handleGameSubmit}
-          gameNumber={currentWeek.games.length + 1}
-        />
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-900 rounded-xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <GameRecordForm
+              onSubmit={handleGameSubmit}
+              gameNumber={currentWeek.games.length + 1}
+            />
+            <Button 
+              onClick={() => setShowGameForm(false)}
+              variant="outline"
+              className="mt-4 w-full"
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
       )}
 
       {/* Enhanced Game Completion Modal */}

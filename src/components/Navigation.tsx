@@ -74,14 +74,12 @@ const Navigation = () => {
           transform transition-all duration-500 ease-in-out
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
           lg:translate-x-0
-          ${!isHovered && !isOpen ? 'lg:w-16' : 'lg:w-64'}
-          hover:w-64
         `}
         style={{
           backgroundColor: currentTheme.colors.surface,
           borderColor: currentTheme.colors.border,
           backdropFilter: 'blur(12px)',
-          width: !isHovered && !isOpen ? '4rem' : '16rem'
+          width: !isHovered && !isOpen ? '5rem' : '16rem'
         }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -92,8 +90,8 @@ const Navigation = () => {
           onMouseEnter={() => setIsHovered(true)}
         />
         
-        <div className="p-6 h-full flex flex-col">
-          <div className="flex items-center space-x-2 mb-8">
+        <div className={`p-6 h-full flex flex-col ${!isHovered && !isOpen ? 'lg:items-center' : ''}`}>
+          <div className={`flex items-center mb-8 ${!isHovered && !isOpen ? 'lg:justify-center' : 'space-x-2'}`}>
             <img 
               src="/lovable-uploads/6b6465f4-e466-4f3b-9761-8a829fbe395c.png" 
               alt="FUTALYST Logo" 
@@ -121,7 +119,8 @@ const Navigation = () => {
                   to={item.path}
                   onClick={() => setIsOpen(false)}
                   className={`
-                    flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200
+                    flex items-center px-4 py-3 rounded-lg transition-all duration-200
+                    ${!isHovered && !isOpen ? 'lg:justify-center lg:px-2' : 'space-x-3'}
                     ${isActive 
                       ? 'shadow-lg' 
                       : 'hover:opacity-80'
@@ -144,7 +143,7 @@ const Navigation = () => {
           {/* User Section */}
           {user && (
             <div className="mt-auto pt-4 border-t" style={{ borderColor: currentTheme.colors.border }}>
-              <div className={`mb-4 p-3 rounded-lg transition-all duration-300 overflow-hidden ${!isHovered && !isOpen ? 'lg:w-0 lg:opacity-0' : 'lg:w-auto lg:opacity-100'}`} 
+              <div className={`mb-4 p-3 rounded-lg transition-all duration-300 overflow-hidden ${!isHovered && !isOpen ? 'lg:w-0 lg:opacity-0 lg:hidden' : 'lg:w-auto lg:opacity-100 lg:block'}`} 
                    style={{ backgroundColor: currentTheme.colors.cardBg }}>
                 <p className="text-sm font-medium text-white whitespace-nowrap">{user.email}</p>
                 <p className="text-xs whitespace-nowrap" style={{ color: currentTheme.colors.muted }}>

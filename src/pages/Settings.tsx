@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useTheme } from '@/hooks/useTheme';
 import { UserSettings } from '@/types/futChampions';
+import { FORMATIONS } from '@/types/squads';
 import Navigation from '@/components/Navigation';
 import { Settings as SettingsIcon, Palette, Trash2, RefreshCw, Download, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -152,7 +153,7 @@ const Settings = () => {
     <div className="min-h-screen">
       <Navigation />
       
-      <main className="lg:ml-64 p-4 lg:p-6">
+      <main className="lg:ml-64 p-4 lg:p-6 transition-all duration-500">
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Header */}
           <div className="flex items-center gap-4 mb-8">
@@ -160,7 +161,7 @@ const Settings = () => {
               <SettingsIcon className="h-8 w-8" style={{ color: currentTheme.colors.primary }} />
             </div>
             <div>
-              <h1 className="text-3xl font-bold gradient-text">FUTALYST Settings</h1>
+              <h1 className="text-3xl font-bold text-white">FUTALYST Settings</h1>
               <p className="text-gray-400 mt-1">Customize your analytics experience</p>
             </div>
           </div>
@@ -241,12 +242,12 @@ const Settings = () => {
                     <SelectTrigger style={{ backgroundColor: currentTheme.colors.surface, borderColor: currentTheme.colors.border }}>
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="4-3-3">4-3-3</SelectItem>
-                      <SelectItem value="4-4-2">4-4-2</SelectItem>
-                      <SelectItem value="3-5-2">3-5-2</SelectItem>
-                      <SelectItem value="4-2-3-1">4-2-3-1</SelectItem>
-                      <SelectItem value="4-1-2-1-2">4-1-2-1-2</SelectItem>
+                    <SelectContent className="max-h-60 overflow-y-auto">
+                      {FORMATIONS.map((formation) => (
+                        <SelectItem key={formation.name} value={formation.name}>
+                          {formation.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>

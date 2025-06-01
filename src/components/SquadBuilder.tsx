@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Squad, PlayerCard, SquadPosition, FORMATIONS, Formation } from '@/types/squads';
 import { useSquadData } from '@/hooks/useSquadData';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { UserSettings } from '@/types/futChampions';
 import PlayerSearchModal from './PlayerSearchModal';
 import { Plus, Users, Save, Star, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -19,16 +21,71 @@ interface SquadBuilderProps {
 
 const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
   const { toast } = useToast();
+  const { squads, getDefaultSquad } = useSquadData();
+  const [settings] = useLocalStorage<UserSettings>('futChampions_settings', {
+    preferredFormation: '4-3-3',
+    trackingStartDate: new Date().toISOString().split('T')[0],
+    gameplayStyle: 'balanced',
+    notifications: true,
+    gamesPerWeek: 15,
+    theme: 'futvisionary',
+    dashboardSettings: {
+      showTopPerformers: true,
+      showXGAnalysis: true,
+      showAIInsights: true,
+      showFormAnalysis: true,
+      showWeaknesses: true,
+      showOpponentAnalysis: true,
+      showPositionalAnalysis: true,
+      showRecentTrends: true,
+      showAchievements: true,
+      showTargetProgress: true,
+      showTimeAnalysis: true,
+      showStressAnalysis: true,
+    },
+    currentWeekSettings: {
+      showTopPerformers: true,
+      showXGAnalysis: true,
+      showAIInsights: true,
+      showFormAnalysis: true,
+      showWeaknesses: true,
+      showOpponentAnalysis: true,
+      showPositionalAnalysis: true,
+      showRecentTrends: true,
+      showAchievements: true,
+      showTargetProgress: true,
+      showTimeAnalysis: true,
+      showStressAnalysis: true,
+    },
+    qualifierSettings: {
+      totalGames: 5,
+      winsRequired: 2,
+    },
+    targetSettings: {
+      autoSetTargets: false,
+      adaptiveTargets: true,
+      notifyOnTarget: true,
+    },
+    analyticsPreferences: {
+      detailedPlayerStats: true,
+      opponentTracking: true,
+      timeTracking: true,
+      stressTracking: true,
+      showAnimations: true,
+      dynamicFeedback: true,
+    }
+  });
   
   const [squadData, setSquadData] = useState<Squad>(() => {
     if (squad) return squad;
     
-    const defaultFormation = FORMATIONS[0];
+    // Use preferred formation from settings
+    const preferredFormation = FORMATIONS.find(f => f.name === settings.preferredFormation) || FORMATIONS[0];
     return {
       id: `squad-${Date.now()}`,
       name: 'New Squad',
-      formation: defaultFormation.name,
-      startingXI: defaultFormation.positions.map((pos, index) => ({
+      formation: preferredFormation.name,
+      startingXI: preferredFormation.positions.map((pos, index) => ({
         id: `starting-${index}`,
         position: pos.position,
         player: undefined,
@@ -59,6 +116,14 @@ const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
 
   const [selectedPosition, setSelectedPosition] = useState<SquadPosition | null>(null);
   const [showPlayerModal, setShowPlayerModal] = useState(false);
+
+  // Auto-select default squad for game recording
+  useEffect(() => {
+    const defaultSquad = getDefaultSquad();
+    if (defaultSquad && !squad) {
+      setSquadData(defaultSquad);
+    }
+  }, [getDefaultSquad, squad]);
 
   const handleFormationChange = (formation: Formation) => {
     const formationData = FORMATIONS.find(f => f.name === formation);
@@ -210,9 +275,9 @@ const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
                 <SelectTrigger className="modern-input">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="max-h-60 overflow-y-auto">
+                <SelectContent className="max-h-60 overflow-y-auto bg-gray-900 border-gray-700">
                   {FORMATIONS.map((formation) => (
-                    <SelectItem key={formation.name} value={formation.name}>
+                    <SelectItem key={formation.name} value={formation.name} className="text-white hover:bg-gray-800">
                       {formation.name}
                     </SelectItem>
                   ))}
@@ -273,7 +338,7 @@ const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
                 {squadData.substitutes.map((position) => (
                   <div
                     key={position.id}
-                    className="flex items-center gap-3 p-3 bg-white/5 rounded-lg hover:bg-white/10 cursor-pointer transition-colors group"
+                    className="flex items-center gap-3 p-3 bg-white/5 rounded-lg cursor-pointer transition-colors group"
                     onClick={() => handlePositionClick(position)}
                   >
                     {position.player ? (
@@ -310,7 +375,7 @@ const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
                 {squadData.reserves.map((position) => (
                   <div
                     key={position.id}
-                    className="flex items-center gap-3 p-3 bg-white/5 rounded-lg hover:bg-white/10 cursor-pointer transition-colors group"
+                    className="flex items-center gap-3 p-3 bg-white/5 rounded-lg cursor-pointer transition-colors group"
                     onClick={() => handlePositionClick(position)}
                   >
                     {position.player ? (
