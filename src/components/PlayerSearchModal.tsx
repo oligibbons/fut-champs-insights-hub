@@ -1,10 +1,12 @@
+
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { PlayerCard } from '@/types/squads';
 import { useSquadData } from '@/hooks/useSquadData';
-import { Search, Star, Plus } from 'lucide-react';
+import { Search, Star, Plus, UserPlus } from 'lucide-react';
 
 interface PlayerSearchModalProps {
   isOpen: boolean;
@@ -16,6 +18,12 @@ interface PlayerSearchModalProps {
 const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position }: PlayerSearchModalProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCardType, setSelectedCardType] = useState<string>('all');
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [newPlayerData, setNewPlayerData] = useState({
+    name: '',
+    cardType: 'gold' as const,
+    rating: 75
+  });
   const { players, savePlayer } = useSquadData();
 
   // Sample player database - in a real app this would come from an API
@@ -86,6 +94,32 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position }: Player
     onPlayerSelect(player);
   };
 
+  const handleCreatePlayer = () => {
+    if (!newPlayerData.name.trim()) return;
+
+    const newPlayer: PlayerCard = {
+      id: `custom-${Date.now()}`,
+      name: newPlayerData.name,
+      position: position || 'CM',
+      rating: newPlayerData.rating,
+      cardType: newPlayerData.cardType,
+      club: 'Custom Club',
+      league: 'Custom League',
+      nationality: 'Custom',
+      pace: Math.floor(Math.random() * 40) + 50,
+      shooting: Math.floor(Math.random() * 40) + 50,
+      passing: Math.floor(Math.random() * 40) + 50,
+      dribbling: Math.floor(Math.random() * 40) + 50,
+      defending: Math.floor(Math.random() * 40) + 50,
+      physical: Math.floor(Math.random() * 40) + 50,
+      price: newPlayerData.rating * 1000
+    };
+
+    handlePlayerSelect(newPlayer);
+    setShowCreateForm(false);
+    setNewPlayerData({ name: '', cardType: 'gold', rating: 75 });
+  };
+
   const getCardTypeColor = (cardType: PlayerCard['cardType']) => {
     switch (cardType) {
       case 'bronze': return 'bg-amber-700 text-white border-amber-600';
@@ -114,80 +148,145 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position }: Player
         </DialogHeader>
         
         <div className="space-y-4">
-          {/* Search and Filters */}
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <Input
-                type="text"
-                placeholder="Search by name, club, or position..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-400"
-              />
-            </div>
-            <select
-              value={selectedCardType}
-              onChange={(e) => setSelectedCardType(e.target.value)}
-              className="px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white"
-            >
-              {cardTypes.map(type => (
-                <option key={type} value={type} className="bg-gray-800">
-                  {type === 'all' ? 'All Cards' : type.toUpperCase()}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Results */}
-          <div className="max-h-96 overflow-y-auto space-y-2">
-            {filteredPlayers.length > 0 ? (
-              filteredPlayers.map((player) => (
-                <div
-                  key={player.id}
-                  className="flex items-center gap-4 p-3 bg-gray-800 rounded-lg border border-gray-700 cursor-pointer transition-colors"
-                  onClick={() => handlePlayerSelect(player)}
-                >
-                  <div className={`w-16 h-20 rounded border-2 flex flex-col items-center justify-center text-xs font-bold ${getCardTypeColor(player.cardType)}`}>
-                    <div className="text-lg font-bold">{player.rating}</div>
-                    <div className="text-xs">{player.position}</div>
-                    {player.cardType === 'icon' && <Star className="h-3 w-3 mt-1" />}
-                  </div>
-                  
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-white text-lg">{player.name}</h3>
-                    <p className="text-gray-400 text-sm">{player.club} • {player.league}</p>
-                    <p className="text-gray-500 text-xs">{player.nationality}</p>
-                    <div className="flex gap-2 mt-1">
-                      <Badge variant="outline" className="text-xs">
-                        PAC {player.pace}
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        SHO {player.shooting}
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        PAS {player.passing}
-                      </Badge>
-                    </div>
-                  </div>
-                  
-                  <div className="text-right">
-                    <div className="text-fifa-gold font-bold text-lg">
-                      {player.price ? `${(player.price / 1000)}K` : 'N/A'}
-                    </div>
-                    <div className="text-gray-400 text-sm">Coins</div>
-                  </div>
-                  
-                  <Plus className="h-5 w-5 text-fifa-blue" />
+          {!showCreateForm ? (
+            <>
+              {/* Search and Filters */}
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <Input
+                    type="text"
+                    placeholder="Search by name, club, or position..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-400"
+                  />
                 </div>
-              ))
-            ) : (
-              <div className="text-center py-8">
-                <Search className="h-16 w-16 mx-auto mb-4 text-gray-500" />
-                <h3 className="text-xl font-semibold text-white mb-2">No Players Found</h3>
-                <p className="text-gray-400">Try adjusting your search terms or filters</p>
+                <select
+                  value={selectedCardType}
+                  onChange={(e) => setSelectedCardType(e.target.value)}
+                  className="px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white"
+                >
+                  {cardTypes.map(type => (
+                    <option key={type} value={type} className="bg-gray-800">
+                      {type === 'all' ? 'All Cards' : type.toUpperCase()}
+                    </option>
+                  ))}
+                </select>
+                <Button
+                  onClick={() => setShowCreateForm(true)}
+                  className="bg-fifa-blue hover:bg-fifa-blue/80"
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Create Player
+                </Button>
               </div>
-            )}
-          </div>
+
+              {/* Results */}
+              <div className="max-h-96 overflow-y-auto space-y-2">
+                {filteredPlayers.length > 0 ? (
+                  filteredPlayers.map((player) => (
+                    <div
+                      key={player.id}
+                      className="flex items-center gap-4 p-3 bg-gray-800 rounded-lg border border-gray-700 cursor-pointer transition-colors hover:bg-gray-700"
+                      onClick={() => handlePlayerSelect(player)}
+                    >
+                      <div className={`w-16 h-20 rounded border-2 flex flex-col items-center justify-center text-xs font-bold ${getCardTypeColor(player.cardType)}`}>
+                        <div className="text-lg font-bold">{player.rating}</div>
+                        <div className="text-xs">{player.position}</div>
+                        {player.cardType === 'icon' && <Star className="h-3 w-3 mt-1" />}
+                      </div>
+                      
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-white text-lg">{player.name}</h3>
+                        <p className="text-gray-400 text-sm">{player.club} • {player.league}</p>
+                        <p className="text-gray-500 text-xs">{player.nationality}</p>
+                        <div className="flex gap-2 mt-1">
+                          <Badge variant="outline" className="text-xs">
+                            PAC {player.pace}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            SHO {player.shooting}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            PAS {player.passing}
+                          </Badge>
+                        </div>
+                      </div>
+                      
+                      <div className="text-right">
+                        <div className="text-fifa-gold font-bold text-lg">
+                          {player.price ? `${Math.round(player.price / 1000)}K` : 'N/A'}
+                        </div>
+                        <div className="text-gray-400 text-sm">Coins</div>
+                      </div>
+                      
+                      <Plus className="h-5 w-5 text-fifa-blue" />
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <Search className="h-16 w-16 mx-auto mb-4 text-gray-500" />
+                    <h3 className="text-xl font-semibold text-white mb-2">No Players Found</h3>
+                    <p className="text-gray-400">Try adjusting your search terms or filters</p>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            /* Create New Player Form */
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-white">Create New Player</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Player Name</label>
+                  <Input
+                    type="text"
+                    placeholder="Enter player name..."
+                    value={newPlayerData.name}
+                    onChange={(e) => setNewPlayerData({ ...newPlayerData, name: e.target.value })}
+                    className="bg-gray-800 border-gray-600 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Card Type</label>
+                  <select
+                    value={newPlayerData.cardType}
+                    onChange={(e) => setNewPlayerData({ ...newPlayerData, cardType: e.target.value as any })}
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white"
+                  >
+                    <option value="bronze">Bronze</option>
+                    <option value="silver">Silver</option>
+                    <option value="gold">Gold</option>
+                    <option value="inform">Inform</option>
+                    <option value="totw">TOTW</option>
+                    <option value="toty">TOTY</option>
+                    <option value="tots">TOTS</option>
+                    <option value="icon">Icon</option>
+                    <option value="hero">Hero</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Rating</label>
+                  <Input
+                    type="number"
+                    min="40"
+                    max="99"
+                    value={newPlayerData.rating}
+                    onChange={(e) => setNewPlayerData({ ...newPlayerData, rating: parseInt(e.target.value) || 75 })}
+                    className="bg-gray-800 border-gray-600 text-white"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={handleCreatePlayer} className="bg-fifa-blue hover:bg-fifa-blue/80">
+                  Create Player
+                </Button>
+                <Button onClick={() => setShowCreateForm(false)} variant="outline">
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

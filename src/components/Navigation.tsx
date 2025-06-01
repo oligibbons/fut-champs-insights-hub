@@ -49,6 +49,12 @@ const Navigation = () => {
     }
   };
 
+  const handleNavClick = () => {
+    setIsOpen(false);
+    // Scroll to top when navigating
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <>
       {/* Mobile Menu Button */}
@@ -79,7 +85,7 @@ const Navigation = () => {
           backgroundColor: currentTheme.colors.surface,
           borderColor: currentTheme.colors.border,
           backdropFilter: 'blur(12px)',
-          width: !isHovered && !isOpen ? '5rem' : '16rem'
+          width: !isHovered && !isOpen ? '5.5rem' : '16rem'
         }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -117,10 +123,10 @@ const Navigation = () => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  onClick={() => setIsOpen(false)}
+                  onClick={handleNavClick}
                   className={`
                     flex items-center px-4 py-3 rounded-lg transition-all duration-200
-                    ${!isHovered && !isOpen ? 'lg:justify-center lg:px-2' : 'space-x-3'}
+                    ${!isHovered && !isOpen ? 'lg:justify-center lg:px-3' : 'space-x-3'}
                     ${isActive 
                       ? 'shadow-lg' 
                       : 'hover:opacity-80'

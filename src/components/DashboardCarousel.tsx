@@ -40,11 +40,11 @@ const DashboardCarousel = ({ weeklyData, currentWeek }: DashboardCarouselProps) 
     }, 0);
 
     return {
-      avgPasses: Math.round(totalPasses / allGames.length),
+      avgPasses: totalPasses > 0 ? Math.round(totalPasses / allGames.length) : 0,
       avgPossession: Math.round(totalPossession / allGames.length),
       passAccuracy: Math.round(totalPassAccuracy / allGames.length),
       avgPlayerRating: +(totalPlayerRating / allGames.length).toFixed(1),
-      xgVsGoals: totalXG > 0 ? +(totalGoals / totalXG).toFixed(2) : 0
+      xgVsGoals: totalXG > 0 ? +(totalGoals / totalXG).toFixed(2) : totalGoals
     };
   };
 
@@ -227,7 +227,7 @@ const DashboardCarousel = ({ weeklyData, currentWeek }: DashboardCarouselProps) 
                 </div>
               </div>
               <div className="text-center p-2 rounded bg-white/5">
-                <p className="font-bold text-fifa-gold text-lg">{currentWeek.currentStreak}</p>
+                <p className="font-bold text-fifa-gold text-lg">{currentWeek.currentStreak || 0}</p>
                 <p className="text-xs text-gray-400">Current Streak</p>
               </div>
             </>
@@ -287,11 +287,11 @@ const DashboardCarousel = ({ weeklyData, currentWeek }: DashboardCarouselProps) 
     }
   ];
 
-  // Auto-scroll functionality
+  // Auto-scroll functionality with 12 seconds interval
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % carouselItems.length);
-    }, 8000); // 8 seconds
+    }, 12000); // 12 seconds
 
     return () => clearInterval(interval);
   }, [carouselItems.length]);

@@ -230,7 +230,7 @@ const CurrentWeek = () => {
                 <Calendar className="h-8 w-8" style={{ color: currentTheme.colors.primary }} />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-white">Week {currentWeek.weekNumber}</h1>
+                <h1 className="text-3xl font-bold text-white page-header">Week {currentWeek.weekNumber}</h1>
                 <p className="text-gray-400 mt-1">
                   {currentWeek.games.length}/{settings.gamesPerWeek} games completed
                 </p>
@@ -255,7 +255,7 @@ const CurrentWeek = () => {
 
           {/* Enhanced Content */}
           <Tabs defaultValue="games" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 glass-card">
+            <TabsList className="grid w-full grid-cols-3 glass-card static-element">
               <TabsTrigger value="games" className="data-[state=active]:bg-fifa-blue/20">
                 <Trophy className="h-4 w-4 mr-2" />
                 Games
@@ -271,16 +271,16 @@ const CurrentWeek = () => {
             </TabsList>
 
             <TabsContent value="games" className="space-y-4">
-              <Card className="glass-card">
+              <Card className="glass-card static-element">
                 <CardHeader>
-                  <CardTitle className="text-white">Recent Games</CardTitle>
+                  <CardTitle className="text-white page-header">Recent Games</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {currentWeek.games.length > 0 ? (
                     <div className="space-y-3">
                       {currentWeek.games.slice().reverse().map((game, index) => (
                         <div key={game.id} 
-                             className={`p-4 rounded-2xl border transition-all duration-300 hover:scale-105 ${
+                             className={`p-4 rounded-2xl border transition-colors duration-300 static-element ${
                                game.result === 'win' 
                                  ? 'bg-gradient-to-r from-green-500/20 to-green-600/10 border-green-500/30' 
                                  : 'bg-gradient-to-r from-red-500/20 to-red-600/10 border-red-500/30'
@@ -419,10 +419,10 @@ const CurrentWeek = () => {
         </div>
       </main>
 
-      {/* Game Recording Modal */}
+      {/* Game Recording Modal - Fixed width and removed hover effects */}
       {showGameForm && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-gray-900 rounded-xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-gray-900 rounded-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto static-element lg:ml-20">
             <GameRecordForm
               onSubmit={handleGameSubmit}
               gameNumber={currentWeek.games.length + 1}
@@ -430,7 +430,7 @@ const CurrentWeek = () => {
             <Button 
               onClick={() => setShowGameForm(false)}
               variant="outline"
-              className="mt-4 w-full"
+              className="mt-4 w-full static-element"
             >
               Cancel
             </Button>
