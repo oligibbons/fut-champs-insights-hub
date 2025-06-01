@@ -1,397 +1,133 @@
 
-import { Achievement, WeeklyPerformance, GameResult } from '@/types/futChampions';
+import { Achievement } from '@/types/futChampions';
 
-export const ACHIEVEMENTS: Achievement[] = [
-  // Basic Win Achievements
-  { id: 'first_win', title: 'First Victory', description: 'Win your first game', icon: '🏆', category: 'wins', target: 1, rarity: 'common' },
-  { id: 'wins_5', title: 'Getting Started', description: 'Win 5 games', icon: '🎯', category: 'wins', target: 5, rarity: 'common' },
-  { id: 'wins_10', title: 'Double Digits', description: 'Win 10 games', icon: '🔟', category: 'wins', target: 10, rarity: 'common' },
-  { id: 'wins_25', title: 'Quarter Century', description: 'Win 25 games', icon: '🥈', category: 'wins', target: 25, rarity: 'rare' },
-  { id: 'wins_50', title: 'Half Century', description: 'Win 50 games', icon: '🥇', category: 'wins', target: 50, rarity: 'rare' },
-  { id: 'wins_100', title: 'Centurion', description: 'Win 100 games', icon: '💯', category: 'wins', target: 100, rarity: 'epic' },
-  { id: 'wins_250', title: 'Elite Status', description: 'Win 250 games', icon: '👑', category: 'wins', target: 250, rarity: 'legendary' },
-  { id: 'wins_500', title: 'Living Mythic', description: 'Win 500 games', icon: '🌟', category: 'wins', target: 500, rarity: 'mythic' },
-  { id: 'wins_1000', title: 'Immortal', description: 'Win 1000 games', icon: '⚡', category: 'wins', target: 1000, rarity: 'mythic' },
+export const achievements: Achievement[] = [
+  // Beginner Achievements
+  { id: 'first-game', name: 'First Steps', description: 'Play your first FUT Champions game', category: 'games', threshold: 1, rarity: 'common', icon: '🎮', unlocked: false },
+  { id: 'early-bird', name: 'Early Bird', description: 'Win your first game', category: 'wins', threshold: 1, rarity: 'common', icon: '🏆', unlocked: false },
+  { id: 'hat-trick-hero', name: 'Hat-trick Hero', description: 'Score 3 goals in a single game', category: 'goals', threshold: 3, rarity: 'rare', icon: '⚽', unlocked: false },
+  { id: 'clean-sheet', name: 'Clean Sheet', description: 'Keep a clean sheet', category: 'cleanSheets', threshold: 1, rarity: 'common', icon: '🛡️', unlocked: false },
+  { id: 'assist-master', name: 'Assist Master', description: 'Get 5 assists in a game', category: 'assists', threshold: 5, rarity: 'epic', icon: '🎯', unlocked: false },
 
-  // Win Streak Achievements
-  { id: 'win_streak_3', title: 'Hat-trick of Wins', description: 'Win 3 games in a row', icon: '🔥', category: 'streaks', target: 3, rarity: 'common' },
-  { id: 'win_streak_5', title: 'Hot Streak', description: 'Win 5 games in a row', icon: '⚡', category: 'streaks', target: 5, rarity: 'rare' },
-  { id: 'win_streak_7', title: 'Magnificent Seven', description: 'Win 7 games in a row', icon: '🌟', category: 'streaks', target: 7, rarity: 'rare' },
-  { id: 'win_streak_10', title: 'Perfect Ten', description: 'Win 10 games in a row', icon: '💎', category: 'streaks', target: 10, rarity: 'epic' },
-  { id: 'win_streak_15', title: 'Unstoppable Force', description: 'Win 15 games in a row', icon: '🚀', category: 'streaks', target: 15, rarity: 'legendary' },
-  { id: 'win_streak_20', title: 'Godlike', description: 'Win 20 games in a row', icon: '👑', category: 'streaks', target: 20, rarity: 'mythic' },
-  { id: 'win_streak_25', title: 'Untouchable', description: 'Win 25 games in a row', icon: '💫', category: 'streaks', target: 25, rarity: 'mythic' },
+  // Win Streaks
+  { id: 'win-streak-3', name: 'Hot Streak', description: 'Win 3 games in a row', category: 'streaks', threshold: 3, rarity: 'rare', icon: '🔥', unlocked: false },
+  { id: 'win-streak-5', name: 'Unstoppable', description: 'Win 5 games in a row', category: 'streaks', threshold: 5, rarity: 'epic', icon: '⚡', unlocked: false },
+  { id: 'win-streak-10', name: 'Legendary', description: 'Win 10 games in a row', category: 'streaks', threshold: 10, rarity: 'legendary', icon: '👑', unlocked: false },
+  { id: 'win-streak-15', name: 'Mythical', description: 'Win 15 games in a row', category: 'streaks', threshold: 15, rarity: 'mythic', icon: '🌟', unlocked: false },
 
-  // Weekly Achievements
-  { id: 'perfect_week', title: 'Perfect Weekend', description: 'Win all 15 games in a week', icon: '💎', category: 'wins', target: 15, rarity: 'mythic' },
-  { id: 'rank_1_week', title: 'Elite Champion', description: 'Achieve Rank I (15 wins)', icon: '🥇', category: 'wins', target: 15, rarity: 'legendary' },
-  { id: 'rank_2_week', title: 'Almost Elite', description: 'Achieve Rank II (13 wins)', icon: '🥈', category: 'wins', target: 13, rarity: 'epic' },
-  { id: 'rank_3_week', title: 'Bronze Elite', description: 'Achieve Rank III (11 wins)', icon: '🥉', category: 'wins', target: 11, rarity: 'rare' },
-  { id: 'comeback_week', title: 'Comeback King', description: 'Win 11+ games after starting 0-5', icon: '🔄', category: 'special', target: 1, rarity: 'legendary' },
-  { id: 'clutch_week', title: 'Clutch Master', description: 'Reach Elite with exactly 15 wins in final game', icon: '🎯', category: 'special', target: 1, rarity: 'epic' },
+  // Game Milestones
+  { id: 'veteran', name: 'Veteran', description: 'Play 50 games', category: 'games', threshold: 50, rarity: 'rare', icon: '🎖️', unlocked: false },
+  { id: 'centurion', name: 'Centurion', description: 'Play 100 games', category: 'games', threshold: 100, rarity: 'epic', icon: '💯', unlocked: false },
+  { id: 'marathon-runner', name: 'Marathon Runner', description: 'Play 250 games', category: 'games', threshold: 250, rarity: 'legendary', icon: '🏃', unlocked: false },
+  { id: 'elite-competitor', name: 'Elite Competitor', description: 'Play 500 games', category: 'games', threshold: 500, rarity: 'mythic', icon: '🏅', unlocked: false },
 
   // Goal Achievements
-  { id: 'first_goal', title: 'Off the Mark', description: 'Score your first goal', icon: '⚽', category: 'goals', target: 1, rarity: 'common' },
-  { id: 'goals_10', title: 'Into Double Digits', description: 'Score 10 goals', icon: '🔟', category: 'goals', target: 10, rarity: 'common' },
-  { id: 'goals_50', title: 'Sharpshooter', description: 'Score 50 goals', icon: '🎯', category: 'goals', target: 50, rarity: 'rare' },
-  { id: 'goals_100', title: 'Century Maker', description: 'Score 100 goals', icon: '💯', category: 'goals', target: 100, rarity: 'epic' },
-  { id: 'goals_250', title: 'Goal Machine', description: 'Score 250 goals', icon: '🚀', category: 'goals', target: 250, rarity: 'legendary' },
-  { id: 'goals_500', title: 'Legendary Scorer', description: 'Score 500 goals', icon: '👑', category: 'goals', target: 500, rarity: 'mythic' },
-  { id: 'goals_1000', title: 'Goal God', description: 'Score 1000 goals', icon: '⚡', category: 'goals', target: 1000, rarity: 'mythic' },
-  { id: 'hat_trick', title: 'Hat-trick Hero', description: 'Score 3+ goals in one game', icon: '🎩', category: 'goals', target: 3, rarity: 'rare' },
-  { id: 'super_hat_trick', title: 'Super Hat-trick', description: 'Score 4+ goals in one game', icon: '⚡', category: 'goals', target: 4, rarity: 'epic' },
-  { id: 'perfect_hat_trick', title: 'Perfect Hat-trick', description: 'Score 5+ goals in one game', icon: '💎', category: 'goals', target: 5, rarity: 'legendary' },
-  { id: 'double_hat_trick', title: 'Double Hat-trick', description: 'Score 6+ goals in one game', icon: '🔥', category: 'goals', target: 6, rarity: 'mythic' },
-  { id: 'goal_fest_week', title: 'Goal Festival', description: 'Score 30+ goals in one week', icon: '🎊', category: 'goals', target: 30, rarity: 'epic' },
-  { id: 'goal_machine_week', title: 'Scoring Machine', description: 'Score 40+ goals in one week', icon: '🚀', category: 'goals', target: 40, rarity: 'legendary' },
-  { id: 'goal_tsunami', title: 'Goal Tsunami', description: 'Score 50+ goals in one week', icon: '🌊', category: 'goals', target: 50, rarity: 'mythic' },
+  { id: 'goal-machine', name: 'Goal Machine', description: 'Score 100 goals', category: 'goals', threshold: 100, rarity: 'epic', icon: '⚽', unlocked: false },
+  { id: 'prolific-scorer', name: 'Prolific Scorer', description: 'Score 250 goals', category: 'goals', threshold: 250, rarity: 'legendary', icon: '🎯', unlocked: false },
+  { id: 'goal-legend', name: 'Goal Legend', description: 'Score 500 goals', category: 'goals', threshold: 500, rarity: 'mythic', icon: '👑', unlocked: false },
 
-  // Performance Achievements
-  { id: 'clean_sheet', title: 'Solid Defense', description: 'Keep your first clean sheet', icon: '🛡️', category: 'performance', target: 1, rarity: 'common' },
-  { id: 'clean_sheets_5', title: 'Defensive Wall', description: 'Keep 5 clean sheets', icon: '🏰', category: 'performance', target: 5, rarity: 'rare' },
-  { id: 'clean_sheets_10', title: 'Fortress', description: 'Keep 10 clean sheets', icon: '🛡️', category: 'performance', target: 10, rarity: 'epic' },
-  { id: 'clean_sheets_25', title: 'Impenetrable', description: 'Keep 25 clean sheets', icon: '⚔️', category: 'performance', target: 25, rarity: 'legendary' },
-  { id: 'clean_sheet_week', title: 'Weekly Fortress', description: 'Keep 5+ clean sheets in one week', icon: '🏰', category: 'performance', target: 5, rarity: 'rare' },
-  { id: 'shutout_master', title: 'Shutout Master', description: 'Keep 8+ clean sheets in one week', icon: '🔒', category: 'performance', target: 8, rarity: 'legendary' },
-  { id: 'assist_master', title: 'Playmaker', description: 'Get 10 assists in one week', icon: '🎯', category: 'performance', target: 10, rarity: 'rare' },
-  { id: 'assist_king', title: 'Assist King', description: 'Get 15+ assists in one week', icon: '👑', category: 'performance', target: 15, rarity: 'epic' },
-  { id: 'assist_god', title: 'Assist God', description: 'Get 20+ assists in one week', icon: '⚡', category: 'performance', target: 20, rarity: 'legendary' },
-  { id: 'high_scorer_game', title: 'Man of the Match', description: 'Get a 9.0+ rating in a game', icon: '⭐', category: 'performance', target: 1, rarity: 'rare' },
-  { id: 'perfect_game', title: 'Perfect Performance', description: 'Get a 10.0 rating in a game', icon: '💎', category: 'performance', target: 1, rarity: 'legendary' },
-  { id: 'consistent_week', title: 'Mr. Consistent', description: 'Average 8.0+ rating for a week', icon: '📊', category: 'consistency', target: 1, rarity: 'epic' },
+  // Win Achievements
+  { id: 'winner', name: 'Winner', description: 'Win 25 games', category: 'wins', threshold: 25, rarity: 'rare', icon: '🏆', unlocked: false },
+  { id: 'champion', name: 'Champion', description: 'Win 50 games', category: 'wins', threshold: 50, rarity: 'epic', icon: '🥇', unlocked: false },
+  { id: 'elite-champion', name: 'Elite Champion', description: 'Win 100 games', category: 'wins', threshold: 100, rarity: 'legendary', icon: '👑', unlocked: false },
+  { id: 'fut-legend', name: 'FUT Legend', description: 'Win 200 games', category: 'wins', threshold: 200, rarity: 'mythic', icon: '🌟', unlocked: false },
 
-  // Special Game Context Achievements
-  { id: 'comeback_master', title: 'Comeback Master', description: 'Win after being 2+ goals down', icon: '🔄', category: 'special', target: 1, rarity: 'rare' },
-  { id: 'great_escape', title: 'The Great Escape', description: 'Win after being 3+ goals down', icon: '🎭', category: 'special', target: 1, rarity: 'legendary' },
-  { id: 'impossible_comeback', title: 'Impossible Comeback', description: 'Win after being 4+ goals down', icon: '🌟', category: 'special', target: 1, rarity: 'mythic' },
-  { id: 'penalty_hero', title: 'Penalty Hero', description: 'Win your first penalty shootout', icon: '🥅', category: 'special', target: 1, rarity: 'rare' },
-  { id: 'penalty_specialist', title: 'Penalty Specialist', description: 'Win 5 penalty shootouts', icon: '🎯', category: 'special', target: 5, rarity: 'epic' },
-  { id: 'penalty_master', title: 'Penalty Master', description: 'Win 10 penalty shootouts', icon: '👑', category: 'special', target: 10, rarity: 'legendary' },
-  { id: 'penalty_god', title: 'Penalty God', description: 'Win 20 penalty shootouts', icon: '⚡', category: 'special', target: 20, rarity: 'mythic' },
-  { id: 'extra_time_warrior', title: 'Extra Time Warrior', description: 'Win 5 games in extra time', icon: '⏰', category: 'special', target: 5, rarity: 'rare' },
-  { id: 'overtime_king', title: 'Overtime King', description: 'Win 15 games in extra time', icon: '👑', category: 'special', target: 15, rarity: 'legendary' },
-  { id: 'ragequit_victim', title: 'Rage Inducer', description: 'Make 5 opponents rage quit', icon: '😤', category: 'special', target: 5, rarity: 'rare' },
-  { id: 'ragequit_master', title: 'Tilt Master', description: 'Make 15 opponents rage quit', icon: '🎭', category: 'special', target: 15, rarity: 'epic' },
-  { id: 'ragequit_god', title: 'Rage God', description: 'Make 30 opponents rage quit', icon: '💀', category: 'special', target: 30, rarity: 'legendary' },
+  // Weekly Achievements
+  { id: 'perfect-week', name: 'Perfect Week', description: 'Win all 15 games in a week', category: 'weekly', threshold: 15, rarity: 'legendary', icon: '💎', unlocked: false },
+  { id: 'week-warrior', name: 'Week Warrior', description: 'Complete 10 weeks', category: 'weekly', threshold: 10, rarity: 'epic', icon: '⚔️', unlocked: false },
+  { id: 'consistency-king', name: 'Consistency King', description: 'Complete 25 weeks', category: 'weekly', threshold: 25, rarity: 'legendary', icon: '👑', unlocked: false },
 
-  // Milestone Achievements
-  { id: 'games_10', title: 'Getting Experience', description: 'Play 10 games', icon: '🎮', category: 'milestone', target: 10, rarity: 'common' },
-  { id: 'games_50', title: 'Veteran', description: 'Play 50 games', icon: '🏅', category: 'milestone', target: 50, rarity: 'common' },
-  { id: 'games_100', title: 'Experienced', description: 'Play 100 games', icon: '🎖️', category: 'milestone', target: 100, rarity: 'rare' },
-  { id: 'games_250', title: 'Seasoned Pro', description: 'Play 250 games', icon: '🏆', category: 'milestone', target: 250, rarity: 'epic' },
-  { id: 'games_500', title: 'Living Mythic', description: 'Play 500 games', icon: '👑', category: 'milestone', target: 500, rarity: 'legendary' },
-  { id: 'games_1000', title: 'Immortal', description: 'Play 1000 games', icon: '🌟', category: 'milestone', target: 1000, rarity: 'mythic' },
-  { id: 'games_2500', title: 'Eternal', description: 'Play 2500 games', icon: '⚡', category: 'milestone', target: 2500, rarity: 'mythic' },
-  { id: 'weeks_5', title: 'Regular Player', description: 'Complete 5 weeks', icon: '📅', category: 'milestone', target: 5, rarity: 'common' },
-  { id: 'weeks_10', title: 'Dedicated', description: 'Complete 10 weeks', icon: '🗓️', category: 'milestone', target: 10, rarity: 'rare' },
-  { id: 'weeks_25', title: 'Long Term Commitment', description: 'Complete 25 weeks', icon: '📆', category: 'milestone', target: 25, rarity: 'epic' },
-  { id: 'weeks_50', title: 'Addicted', description: 'Complete 50 weeks', icon: '🗓️', category: 'milestone', target: 50, rarity: 'legendary' },
-  { id: 'weeks_100', title: 'Lifelong Player', description: 'Complete 100 weeks', icon: '💎', category: 'milestone', target: 100, rarity: 'mythic' },
+  // Skill-based Achievements
+  { id: 'defensive-wall', name: 'Defensive Wall', description: 'Keep 10 clean sheets', category: 'cleanSheets', threshold: 10, rarity: 'rare', icon: '🛡️', unlocked: false },
+  { id: 'fortress', name: 'Fortress', description: 'Keep 25 clean sheets', category: 'cleanSheets', threshold: 25, rarity: 'epic', icon: '🏰', unlocked: false },
+  { id: 'impenetrable', name: 'Impenetrable', description: 'Keep 50 clean sheets', category: 'cleanSheets', threshold: 50, rarity: 'legendary', icon: '⛩️', unlocked: false },
 
-  // Creative and Fun Achievements
-  { id: 'friday_night_mythic', title: 'Friday Night Mythic', description: 'Win 10 games on Friday nights', icon: '🌙', category: 'special', target: 10, rarity: 'rare' },
-  { id: 'weekend_warrior', title: 'Weekend Warrior', description: 'Complete 10 weekend leagues', icon: '⚔️', category: 'milestone', target: 10, rarity: 'rare' },
-  { id: 'monday_blues', title: 'Monday Blues Beater', description: 'Win 5 games on Monday mornings', icon: '☕', category: 'special', target: 5, rarity: 'rare' },
-  { id: 'midnight_oil', title: 'Burning the Midnight Oil', description: 'Win 10 games after midnight', icon: '🕛', category: 'special', target: 10, rarity: 'rare' },
-  { id: 'early_bird', title: 'Early Bird', description: 'Win 10 games before 8 AM', icon: '🐦', category: 'special', target: 10, rarity: 'rare' },
-  { id: 'lucky_number_7', title: 'Lucky Number 7', description: 'Win with exactly 7 goals scored', icon: '🍀', category: 'special', target: 1, rarity: 'rare' },
-  { id: 'unlucky_13', title: 'Unlucky 13 Conqueror', description: 'Win your 13th game in a row', icon: '🔮', category: 'special', target: 1, rarity: 'epic' },
-  { id: 'perfectionist', title: 'Perfectionist', description: 'Win 5 games with perfect 10.0 ratings', icon: '💯', category: 'performance', target: 5, rarity: 'legendary' },
-  { id: 'underdog_hero', title: 'Underdog Hero', description: 'Beat 20 opponents with higher skill ratings', icon: '🥊', category: 'special', target: 20, rarity: 'epic' },
-  { id: 'giant_slayer', title: 'Giant Slayer', description: 'Beat 10 opponents rated 9+ skill', icon: '⚔️', category: 'special', target: 10, rarity: 'epic' },
-  { id: 'boss_battle', title: 'Boss Battle Victor', description: 'Beat 5 opponents rated 10/10 skill', icon: '👹', category: 'special', target: 5, rarity: 'legendary' },
-  { id: 'speed_demon', title: 'Speed Demon', description: 'Win 10 games in under 12 minutes', icon: '💨', category: 'special', target: 10, rarity: 'rare' },
-  { id: 'marathon_runner', title: 'Marathon Runner', description: 'Play a 30+ minute game', icon: '🏃', category: 'special', target: 1, rarity: 'rare' },
-  { id: 'efficiency_expert', title: 'Efficiency Expert', description: 'Win with 90%+ pass accuracy 10 times', icon: '🎯', category: 'performance', target: 10, rarity: 'epic' },
-  { id: 'possession_master', title: 'Possession Master', description: 'Win with 80%+ possession 5 times', icon: '⚽', category: 'performance', target: 5, rarity: 'rare' },
-  { id: 'defensive_masterclass', title: 'Defensive Masterclass', description: 'Win without conceding for 5 straight games', icon: '🛡️', category: 'performance', target: 1, rarity: 'epic' },
-  { id: 'counter_attack_king', title: 'Counter Attack King', description: 'Score 20 counter-attack goals', icon: '⚡', category: 'performance', target: 20, rarity: 'rare' },
-  { id: 'set_piece_specialist', title: 'Set Piece Specialist', description: 'Score 15 goals from set pieces', icon: '🥅', category: 'performance', target: 15, rarity: 'rare' },
-  { id: 'long_shot_mythic', title: 'Long Shot Mythic', description: 'Score 10 goals from outside the box', icon: '🚀', category: 'performance', target: 10, rarity: 'rare' },
-  { id: 'header_hero', title: 'Header Hero', description: 'Score 20 headed goals', icon: '🦅', category: 'performance', target: 20, rarity: 'rare' },
-  { id: 'volley_master', title: 'Volley Master', description: 'Score 10 volley goals', icon: '⚽', category: 'performance', target: 10, rarity: 'epic' },
-  { id: 'bicycle_kick_god', title: 'Bicycle Kick God', description: 'Score 3 bicycle kick goals', icon: '🚴', category: 'performance', target: 3, rarity: 'legendary' },
-  { id: 'free_kick_wizard', title: 'Free Kick Wizard', description: 'Score 15 free kick goals', icon: '🧙', category: 'performance', target: 15, rarity: 'epic' },
-  { id: 'penalty_perfectionist', title: 'Penalty Perfectionist', description: 'Score 25 penalties without missing', icon: '🎯', category: 'performance', target: 25, rarity: 'legendary' },
-  { id: 'skill_move_master', title: 'Skill Move Master', description: 'Complete 100 successful skill moves', icon: '🕺', category: 'performance', target: 100, rarity: 'epic' },
-  { id: 'nutmeg_king', title: 'Nutmeg King', description: 'Nutmeg opponents 50 times', icon: '🥜', category: 'performance', target: 50, rarity: 'rare' },
-  { id: 'crossbar_challenge', title: 'Crossbar Challenge', description: 'Hit the crossbar 10 times', icon: '🎯', category: 'special', target: 10, rarity: 'rare' },
-  { id: 'woodwork_warrior', title: 'Woodwork Warrior', description: 'Hit the post 15 times', icon: '🪵', category: 'special', target: 15, rarity: 'rare' },
-  { id: 'comeback_kid', title: 'Comeback Kid', description: 'Complete 10 successful comebacks', icon: '🔄', category: 'special', target: 10, rarity: 'epic' },
-  { id: 'choker', title: 'The Choker', description: 'Lose 5 games while leading at 90 minutes', icon: '😰', category: 'special', target: 5, rarity: 'rare' },
-  { id: 'last_minute_hero', title: 'Last Minute Hero', description: 'Score 10 goals after 90 minutes', icon: '⏱️', category: 'special', target: 10, rarity: 'epic' },
-  { id: 'stoppage_time_king', title: 'Stoppage Time King', description: 'Win 5 games with stoppage time goals', icon: '⏰', category: 'special', target: 5, rarity: 'rare' },
-  { id: 'injury_time_warrior', title: 'Injury Time Warrior', description: 'Score 20 goals in injury time', icon: '🩹', category: 'special', target: 20, rarity: 'epic' },
-  { id: 'first_minute_striker', title: 'First Minute Striker', description: 'Score in the first minute 10 times', icon: '⚡', category: 'performance', target: 10, rarity: 'rare' },
-  { id: 'own_goal_magnet', title: 'Own Goal Magnet', description: 'Benefit from 10 opponent own goals', icon: '🧲', category: 'special', target: 10, rarity: 'rare' },
-  { id: 'red_card_collector', title: 'Red Card Collector', description: 'Receive 5 red cards', icon: '🟥', category: 'special', target: 5, rarity: 'rare' },
-  { id: 'yellow_card_king', title: 'Yellow Card King', description: 'Accumulate 50 yellow cards', icon: '🟨', category: 'special', target: 50, rarity: 'rare' },
-  { id: 'clean_player', title: 'Clean Player', description: 'Play 25 games without any cards', icon: '😇', category: 'performance', target: 25, rarity: 'epic' },
-  { id: 'fair_play_award', title: 'Fair Play Award', description: 'Complete 100 games with minimal fouls', icon: '🤝', category: 'performance', target: 100, rarity: 'legendary' },
-  { id: 'substitution_genius', title: 'Substitution Genius', description: 'Win 10 games after making game-changing subs', icon: '🔄', category: 'performance', target: 10, rarity: 'epic' },
-  { id: 'formation_master', title: 'Formation Master', description: 'Win with 5 different formations', icon: '📋', category: 'performance', target: 5, rarity: 'rare' },
-  { id: 'tactical_genius', title: 'Tactical Genius', description: 'Win games with all formation types', icon: '🧠', category: 'performance', target: 1, rarity: 'legendary' },
-  { id: 'super_sub', title: 'Super Sub', description: 'Score 25 goals with substitutes', icon: '🔄', category: 'performance', target: 25, rarity: 'epic' },
-  { id: 'captain_fantastic', title: 'Captain Fantastic', description: 'Score 50 goals with your captain', icon: '👨‍✈️', category: 'performance', target: 50, rarity: 'epic' },
+  // Creative Achievements
+  { id: 'comeback-king', name: 'Comeback King', description: 'Win after being 2 goals down', category: 'special', threshold: 1, rarity: 'epic', icon: '🔄', unlocked: false },
+  { id: 'giant-killer', name: 'Giant Killer', description: 'Beat an opponent rated 9+ when you\'re rated 7 or below', category: 'special', threshold: 1, rarity: 'rare', icon: '🗡️', unlocked: false },
+  { id: 'david-vs-goliath', name: 'David vs Goliath', description: 'Beat 5 opponents rated 9+ when you\'re rated 7 or below', category: 'special', threshold: 5, rarity: 'legendary', icon: '🏹', unlocked: false },
+  
+  // Time-based Achievements
+  { id: 'lightning-fast', name: 'Lightning Fast', description: 'Win a game in under 10 minutes', category: 'time', threshold: 1, rarity: 'rare', icon: '⚡', unlocked: false },
+  { id: 'marathon-match', name: 'Marathon Match', description: 'Play a game longer than 30 minutes', category: 'time', threshold: 1, rarity: 'rare', icon: '⏰', unlocked: false },
+  { id: 'speed-demon', name: 'Speed Demon', description: 'Win 10 games in under 15 minutes each', category: 'time', threshold: 10, rarity: 'epic', icon: '🏃‍♂️', unlocked: false },
 
-  // Even More Creative Achievements
-  { id: 'pizza_time', title: 'Pizza Time Player', description: 'Win 10 games during dinner hours (6-8 PM)', icon: '🍕', category: 'special', target: 10, rarity: 'rare' },
-  { id: 'coffee_break_champion', title: 'Coffee Break Champion', description: 'Win 5 games during coffee hours (10-11 AM)', icon: '☕', category: 'special', target: 5, rarity: 'rare' },
-  { id: 'lunch_break_legend', title: 'Lunch Break Legend', description: 'Win 8 games during lunch time (12-1 PM)', icon: '🥪', category: 'special', target: 8, rarity: 'rare' },
-  { id: 'insomniac_gamer', title: 'Insomniac Gamer', description: 'Play 20 games between 2-5 AM', icon: '🦉', category: 'special', target: 20, rarity: 'epic' },
-  { id: 'sunshine_warrior', title: 'Sunshine Warrior', description: 'Win 15 games during peak daylight (12-3 PM)', icon: '☀️', category: 'special', target: 15, rarity: 'rare' },
-  { id: 'twilight_terror', title: 'Twilight Terror', description: 'Dominate 10 games during sunset hours (6-8 PM)', icon: '🌅', category: 'special', target: 10, rarity: 'rare' },
-  { id: 'dawn_destroyer', title: 'Dawn Destroyer', description: 'Crush 5 opponents at sunrise (5-7 AM)', icon: '🌄', category: 'special', target: 5, rarity: 'epic' },
-  { id: 'weekend_grinder', title: 'Weekend Grinder', description: 'Play 50 games on weekends', icon: '🔥', category: 'milestone', target: 50, rarity: 'rare' },
-  { id: 'weekday_warrior', title: 'Weekday Warrior', description: 'Win 30 games on weekdays', icon: '💼', category: 'special', target: 30, rarity: 'rare' },
-  { id: 'holiday_hero', title: 'Holiday Hero', description: 'Play on 5 different holidays', icon: '🎄', category: 'special', target: 5, rarity: 'epic' },
-  { id: 'birthday_baller', title: 'Birthday Baller', description: 'Win a game on your birthday', icon: '🎂', category: 'special', target: 1, rarity: 'legendary' },
-  { id: 'new_year_champion', title: 'New Year Champion', description: 'Win the first game of the year', icon: '🎊', category: 'special', target: 1, rarity: 'epic' },
-  { id: 'valentine_victory', title: 'Valentine Victory', description: 'Win a game on Valentine\'s Day', icon: '💖', category: 'special', target: 1, rarity: 'rare' },
-  { id: 'halloween_horror', title: 'Halloween Horror', description: 'Terrify opponents with 3 wins on Halloween', icon: '🎃', category: 'special', target: 3, rarity: 'epic' },
-  { id: 'christmas_crusher', title: 'Christmas Crusher', description: 'Dominate Christmas Day with 2 wins', icon: '🎅', category: 'special', target: 2, rarity: 'legendary' },
-  { id: 'score_twins', title: 'Score Twins', description: 'Win two consecutive games with identical scores', icon: '👯', category: 'special', target: 1, rarity: 'rare' },
-  { id: 'mirror_match', title: 'Mirror Match', description: 'Win a game 3-3 in penalties after 0-0 draw', icon: '🪞', category: 'special', target: 1, rarity: 'epic' },
-  { id: 'fibonacci_scorer', title: 'Fibonacci Scorer', description: 'Score goals following Fibonacci sequence (1,1,2,3,5)', icon: '🔢', category: 'special', target: 1, rarity: 'legendary' },
-  { id: 'binary_beast', title: 'Binary Beast', description: 'Win games with scores 1-0, 1-1, 10-0, 11-1', icon: '💻', category: 'special', target: 4, rarity: 'epic' },
-  { id: 'prime_time_player', title: 'Prime Time Player', description: 'Score exactly 2, 3, 5, 7, 11 goals in separate games', icon: '🔢', category: 'special', target: 5, rarity: 'legendary' },
-  { id: 'golden_ratio', title: 'Golden Ratio', description: 'Win with exactly 1.618 goals per game over 10 games', icon: '📐', category: 'special', target: 1, rarity: 'mythic' },
-  { id: 'century_break', title: 'Century Break', description: 'Score exactly 100 goals faster than anyone', icon: '💯', category: 'special', target: 1, rarity: 'legendary' },
-  { id: 'hat_trick_collector', title: 'Hat-trick Collector', description: 'Score hat-tricks in 10 different ways', icon: '🎩', category: 'performance', target: 10, rarity: 'epic' },
-  { id: 'assist_specialist', title: 'Assist Specialist', description: 'Get more assists than goals in 20 games', icon: '🤝', category: 'performance', target: 20, rarity: 'rare' },
-  { id: 'clean_sweep', title: 'Clean Sweep', description: 'Win 7 consecutive games without conceding', icon: '🧹', category: 'performance', target: 1, rarity: 'legendary' },
-  { id: 'comeback_artist', title: 'Comeback Artist', description: 'Complete 20 successful comebacks from losing positions', icon: '🎨', category: 'special', target: 20, rarity: 'legendary' },
-  { id: 'time_waster', title: 'Time Waster', description: 'Win by exactly 1 goal in injury time 5 times', icon: '⏲️', category: 'special', target: 5, rarity: 'epic' },
-  { id: 'keeper_killer', title: 'Keeper Killer', description: 'Score against the same goalkeeper 10 times', icon: '🥅', category: 'special', target: 10, rarity: 'rare' },
-  { id: 'formation_flipper', title: 'Formation Flipper', description: 'Win with 10 different formations', icon: '🔄', category: 'performance', target: 10, rarity: 'epic' },
-  { id: 'tactical_mastermind', title: 'Tactical Mastermind', description: 'Change formation mid-game and win 15 times', icon: '🧠', category: 'performance', target: 15, rarity: 'legendary' },
+  // Scoring Achievements
+  { id: 'sharpshooter', name: 'Sharpshooter', description: 'Score 5+ goals in 10 different games', category: 'goals', threshold: 10, rarity: 'epic', icon: '🎯', unlocked: false },
+  { id: 'goal-rush', name: 'Goal Rush', description: 'Score 7+ goals in a single game', category: 'goals', threshold: 7, rarity: 'legendary', icon: '🌪️', unlocked: false },
+  { id: 'record-breaker', name: 'Record Breaker', description: 'Score 10+ goals in a single game', category: 'goals', threshold: 10, rarity: 'mythic', icon: '📈', unlocked: false },
+
+  // Defensive Achievements
+  { id: 'brick-wall', name: 'Brick Wall', description: 'Concede 0 goals in 5 consecutive games', category: 'defense', threshold: 5, rarity: 'epic', icon: '🧱', unlocked: false },
+  { id: 'shut-out-specialist', name: 'Shut-out Specialist', description: 'Keep clean sheets in 75% of games over 20 games', category: 'defense', threshold: 15, rarity: 'legendary', icon: '🔒', unlocked: false },
+
+  // Squad Achievements
+  { id: 'squad-builder', name: 'Squad Builder', description: 'Create your first squad', category: 'squads', threshold: 1, rarity: 'common', icon: '👥', unlocked: false },
+  { id: 'tactical-genius', name: 'Tactical Genius', description: 'Create 5 different squads', category: 'squads', threshold: 5, rarity: 'rare', icon: '🧠', unlocked: false },
+  { id: 'formation-master', name: 'Formation Master', description: 'Try 10 different formations', category: 'formations', threshold: 10, rarity: 'epic', icon: '📐', unlocked: false },
+
+  // Streaks and Consistency
+  { id: 'consistent-performer', name: 'Consistent Performer', description: 'Play at least 1 game every day for 7 days', category: 'consistency', threshold: 7, rarity: 'rare', icon: '📅', unlocked: false },
+  { id: 'daily-grinder', name: 'Daily Grinder', description: 'Play at least 1 game every day for 30 days', category: 'consistency', threshold: 30, rarity: 'legendary', icon: '⚙️', unlocked: false },
+  { id: 'scoring-streak', name: 'Scoring Streak', description: 'Score in 10 consecutive games', category: 'streaks', threshold: 10, rarity: 'epic', icon: '🔥', unlocked: false },
+
+  // Special Moments
+  { id: 'last-minute-hero', name: 'Last Minute Hero', description: 'Score a winning goal in the 90th minute or later', category: 'special', threshold: 1, rarity: 'rare', icon: '⏱️', unlocked: false },
+  { id: 'penalty-specialist', name: 'Penalty Specialist', description: 'Score 10 penalties without missing', category: 'special', threshold: 10, rarity: 'epic', icon: '🎯', unlocked: false },
+  { id: 'free-kick-master', name: 'Free Kick Master', description: 'Score 5 free kicks', category: 'special', threshold: 5, rarity: 'rare', icon: '⚽', unlocked: false },
+
+  // Advanced Stats
+  { id: 'efficiency-expert', name: 'Efficiency Expert', description: 'Maintain 80%+ win rate over 25 games', category: 'efficiency', threshold: 20, rarity: 'legendary', icon: '📊', unlocked: false },
+  { id: 'possession-master', name: 'Possession Master', description: 'Have 70%+ possession in 10 games', category: 'stats', threshold: 10, rarity: 'rare', icon: '⚽', unlocked: false },
+  { id: 'clinical-finisher', name: 'Clinical Finisher', description: 'Score with 50%+ shot accuracy over 20 games', category: 'efficiency', threshold: 20, rarity: 'epic', icon: '🎯', unlocked: false },
+
+  // Opponent-based
+  { id: 'elite-slayer', name: 'Elite Slayer', description: 'Beat 10 opponents rated 8 or higher', category: 'opponents', threshold: 10, rarity: 'epic', icon: '⚔️', unlocked: false },
+  { id: 'underdog-king', name: 'Underdog King', description: 'Win 20 games against higher-rated opponents', category: 'opponents', threshold: 20, rarity: 'legendary', icon: '👑', unlocked: false },
+
+  // Team Performance
+  { id: 'team-player', name: 'Team Player', description: 'Get 50 assists total', category: 'assists', threshold: 50, rarity: 'rare', icon: '🤝', unlocked: false },
+  { id: 'playmaker', name: 'Playmaker', description: 'Get 100 assists total', category: 'assists', threshold: 100, rarity: 'epic', icon: '🎭', unlocked: false },
+  { id: 'assist-legend', name: 'Assist Legend', description: 'Get 200 assists total', category: 'assists', threshold: 200, rarity: 'legendary', icon: '🌟', unlocked: false },
+
+  // Milestone Celebrations
+  { id: 'first-week-complete', name: 'First Week Complete', description: 'Complete your first FUT Champions week', category: 'weekly', threshold: 1, rarity: 'common', icon: '🎉', unlocked: false },
+  { id: 'month-veteran', name: 'Month Veteran', description: 'Play for 30 consecutive days', category: 'time', threshold: 30, rarity: 'epic', icon: '📅', unlocked: false },
+  { id: 'season-warrior', name: 'Season Warrior', description: 'Complete 50 weeks', category: 'weekly', threshold: 50, rarity: 'mythic', icon: '⚔️', unlocked: false },
+
+  // Fun Achievements
+  { id: 'lucky-seven', name: 'Lucky Seven', description: 'Score exactly 7 goals in a game', category: 'special', threshold: 1, rarity: 'rare', icon: '🍀', unlocked: false },
+  { id: 'perfectionist', name: 'Perfectionist', description: 'Win a game 5-0', category: 'special', threshold: 1, rarity: 'rare', icon: '💎', unlocked: false },
+  { id: 'thriller', name: 'Thriller', description: 'Win a game 6-5', category: 'special', threshold: 1, rarity: 'epic', icon: '🎢', unlocked: false },
+  { id: 'demolition', name: 'Demolition', description: 'Win a game by 5+ goals', category: 'special', threshold: 1, rarity: 'epic', icon: '💥', unlocked: false },
+
+  // Analytics Achievements
+  { id: 'data-driven', name: 'Data Driven', description: 'View analytics page 10 times', category: 'engagement', threshold: 10, rarity: 'common', icon: '📈', unlocked: false },
+  { id: 'insights-seeker', name: 'Insights Seeker', description: 'Check AI insights 25 times', category: 'engagement', threshold: 25, rarity: 'rare', icon: '🔍', unlocked: false },
+  { id: 'strategy-master', name: 'Strategy Master', description: 'Use formation analysis 50 times', category: 'engagement', threshold: 50, rarity: 'epic', icon: '🎯', unlocked: false },
+
+  // Social & Competitive
+  { id: 'friendly-competitor', name: 'Friendly Competitor', description: 'Add 5 friends', category: 'social', threshold: 5, rarity: 'rare', icon: '👫', unlocked: false },
+  { id: 'leaderboard-climber', name: 'Leaderboard Climber', description: 'Reach top 10 in any leaderboard', category: 'competitive', threshold: 1, rarity: 'epic', icon: '🏆', unlocked: false },
+  { id: 'community-champion', name: 'Community Champion', description: 'Be #1 in any leaderboard', category: 'competitive', threshold: 1, rarity: 'legendary', icon: '👑', unlocked: false },
+
+  // Ultimate Achievements
+  { id: 'fut-master', name: 'FUT Master', description: 'Unlock 50 other achievements', category: 'meta', threshold: 50, rarity: 'mythic', icon: '🏆', unlocked: false },
+  { id: 'completionist', name: 'Completionist', description: 'Unlock all achievements', category: 'meta', threshold: 79, rarity: 'mythic', icon: '💎', unlocked: false },
+  { id: 'legend-status', name: 'Legend Status', description: 'Reach 1000 total games with 70%+ win rate', category: 'ultimate', threshold: 1, rarity: 'mythic', icon: '⭐', unlocked: false },
+
+  // Hidden Achievements
+  { id: 'easter-egg', name: 'Easter Egg Hunter', description: 'Find the hidden feature in settings', category: 'hidden', threshold: 1, rarity: 'epic', icon: '🥚', unlocked: false },
+  { id: 'night-owl', name: 'Night Owl', description: 'Play a game between 2-4 AM', category: 'time', threshold: 1, rarity: 'rare', icon: '🦉', unlocked: false },
+  { id: 'early-bird-special', name: 'Early Bird Special', description: 'Play a game between 5-7 AM', category: 'time', threshold: 1, rarity: 'rare', icon: '🐦', unlocked: false },
+
+  // Performance Milestones
+  { id: 'rating-climber', name: 'Rating Climber', description: 'Improve your average rating by 1.0 over 20 games', category: 'improvement', threshold: 1, rarity: 'epic', icon: '📈', unlocked: false },
+  { id: 'comeback-specialist', name: 'Comeback Specialist', description: 'Win 5 games after being behind', category: 'special', threshold: 5, rarity: 'epic', icon: '🔄', unlocked: false },
+  { id: 'clutch-performer', name: 'Clutch Performer', description: 'Score 10 goals in the 80th minute or later', category: 'special', threshold: 10, rarity: 'legendary', icon: '⏰', unlocked: false },
+
+  // Skill Variety
+  { id: 'versatile-scorer', name: 'Versatile Scorer', description: 'Score with 5 different players in one game', category: 'variety', threshold: 1, rarity: 'rare', icon: '🎭', unlocked: false },
+  { id: 'formation-experimenter', name: 'Formation Experimenter', description: 'Win with 15 different formations', category: 'variety', threshold: 15, rarity: 'legendary', icon: '🔬', unlocked: false },
+  { id: 'tactical-chameleon', name: 'Tactical Chameleon', description: 'Use every formation at least once', category: 'variety', threshold: 29, rarity: 'mythic', icon: '🦎', unlocked: false }
 ];
-
-export function checkAchievements(weeklyData: WeeklyPerformance[], currentWeek: WeeklyPerformance | null): Achievement[] {
-  const unlockedAchievements: Achievement[] = [];
-  
-  // Calculate comprehensive stats
-  const allGames = weeklyData.flatMap(week => week.games);
-  const totalGames = allGames.length;
-  const totalWins = weeklyData.reduce((sum, week) => sum + week.totalWins, 0);
-  const totalGoals = weeklyData.reduce((sum, week) => sum + week.totalGoals, 0);
-  const completedWeeks = weeklyData.filter(week => week.isCompleted).length;
-  
-  // Check each achievement
-  ACHIEVEMENTS.forEach(achievement => {
-    const progress = calculateAchievementProgress(achievement, weeklyData, currentWeek);
-    if (progress >= achievement.target! && !achievement.unlockedAt) {
-      unlockedAchievements.push({
-        ...achievement,
-        unlockedAt: new Date().toISOString(),
-        progress: achievement.target
-      });
-    }
-  });
-  
-  return unlockedAchievements;
-}
-
-export function calculateAchievementProgress(achievement: Achievement, weeklyData: WeeklyPerformance[], currentWeek: WeeklyPerformance | null): number {
-  const allGames = weeklyData.flatMap(week => week.games);
-  const totalWins = weeklyData.reduce((sum, week) => sum + week.totalWins, 0);
-  const totalGoals = weeklyData.reduce((sum, week) => sum + week.totalGoals, 0);
-  const completedWeeks = weeklyData.filter(week => week.isCompleted).length;
-  
-  switch (achievement.id) {
-    // Win-based achievements
-    case 'first_win':
-    case 'wins_5':
-    case 'wins_10':
-    case 'wins_25':
-    case 'wins_50':
-    case 'wins_100':
-    case 'wins_250':
-    case 'wins_500':
-    case 'wins_1000':
-      return totalWins;
-    
-    // Goal achievements
-    case 'first_goal':
-    case 'goals_10':
-    case 'goals_50':
-    case 'goals_100':
-    case 'goals_250':
-    case 'goals_500':
-    case 'goals_1000':
-      return totalGoals;
-    
-    // Game milestone achievements
-    case 'games_10':
-    case 'games_50':
-    case 'games_100':
-    case 'games_250':
-    case 'games_500':
-    case 'games_1000':
-    case 'games_2500':
-      return allGames.length;
-    
-    // Week milestone achievements
-    case 'weeks_5':
-    case 'weeks_10':
-    case 'weeks_25':
-    case 'weeks_50':
-    case 'weeks_100':
-      return completedWeeks;
-    
-    // Win streak achievements
-    case 'win_streak_3':
-    case 'win_streak_5':
-    case 'win_streak_7':
-    case 'win_streak_10':
-    case 'win_streak_15':
-    case 'win_streak_20':
-    case 'win_streak_25':
-      return calculateWinStreak(allGames);
-    
-    // Weekly performance achievements
-    case 'perfect_week':
-      return weeklyData.some(week => week.totalWins === 15 && week.isCompleted) ? 15 : 0;
-    
-    case 'rank_1_week':
-      return weeklyData.some(week => week.totalWins >= 15 && week.isCompleted) ? 15 : 0;
-    
-    case 'rank_2_week':
-      return weeklyData.some(week => week.totalWins >= 13 && week.isCompleted) ? 13 : 0;
-    
-    case 'rank_3_week':
-      return weeklyData.some(week => week.totalWins >= 11 && week.isCompleted) ? 11 : 0;
-    
-    // Special achievements
-    case 'hat_trick':
-      return allGames.some(game => {
-        const [goalsFor] = game.scoreLine.split('-').map(Number);
-        return goalsFor >= 3;
-      }) ? 3 : 0;
-    
-    case 'super_hat_trick':
-      return allGames.some(game => {
-        const [goalsFor] = game.scoreLine.split('-').map(Number);
-        return goalsFor >= 4;
-      }) ? 4 : 0;
-    
-    case 'perfect_hat_trick':
-      return allGames.some(game => {
-        const [goalsFor] = game.scoreLine.split('-').map(Number);
-        return goalsFor >= 5;
-      }) ? 5 : 0;
-    
-    case 'double_hat_trick':
-      return allGames.some(game => {
-        const [goalsFor] = game.scoreLine.split('-').map(Number);
-        return goalsFor >= 6;
-      }) ? 6 : 0;
-    
-    case 'penalty_hero':
-      return allGames.filter(game => game.penaltyShootout?.userWon).length > 0 ? 1 : 0;
-    
-    case 'penalty_specialist':
-      return allGames.filter(game => game.penaltyShootout?.userWon).length;
-    
-    case 'penalty_master':
-      return allGames.filter(game => game.penaltyShootout?.userWon).length;
-    
-    case 'penalty_god':
-      return allGames.filter(game => game.penaltyShootout?.userWon).length;
-    
-    case 'ragequit_victim':
-      return allGames.filter(game => game.gameContext === 'rage_quit').length;
-    
-    case 'ragequit_master':
-      return allGames.filter(game => game.gameContext === 'rage_quit').length;
-    
-    case 'ragequit_god':
-      return allGames.filter(game => game.gameContext === 'rage_quit').length;
-    
-    case 'clean_sheet':
-      return allGames.filter(game => {
-        const [, goalsAgainst] = game.scoreLine.split('-').map(Number);
-        return goalsAgainst === 0 && game.result === 'win';
-      }).length > 0 ? 1 : 0;
-    
-    case 'clean_sheets_5':
-    case 'clean_sheets_10':
-    case 'clean_sheets_25':
-      return allGames.filter(game => {
-        const [, goalsAgainst] = game.scoreLine.split('-').map(Number);
-        return goalsAgainst === 0 && game.result === 'win';
-      }).length;
-    
-    case 'comeback_master':
-      return allGames.filter(game => {
-        const [goalsFor, goalsAgainst] = game.scoreLine.split('-').map(Number);
-        return game.result === 'win' && goalsFor > goalsAgainst && goalsAgainst >= 2;
-      }).length;
-    
-    case 'great_escape':
-      return allGames.filter(game => {
-        const [goalsFor, goalsAgainst] = game.scoreLine.split('-').map(Number);
-        return game.result === 'win' && goalsFor > goalsAgainst && goalsAgainst >= 3;
-      }).length;
-    
-    case 'impossible_comeback':
-      return allGames.filter(game => {
-        const [goalsFor, goalsAgainst] = game.scoreLine.split('-').map(Number);
-        return game.result === 'win' && goalsFor > goalsAgainst && goalsAgainst >= 4;
-      }).length;
-    
-    case 'goal_fest_week':
-      return weeklyData.some(week => week.totalGoals >= 30) ? 30 : 0;
-    
-    case 'goal_machine_week':
-      return weeklyData.some(week => week.totalGoals >= 40) ? 40 : 0;
-    
-    case 'goal_tsunami':
-      return weeklyData.some(week => week.totalGoals >= 50) ? 50 : 0;
-    
-    case 'extra_time_warrior':
-      return allGames.filter(game => game.gameContext === 'extra_time').length;
-    
-    case 'overtime_king':
-      return allGames.filter(game => game.gameContext === 'extra_time').length;
-    
-    // Time-based achievements (would need additional date/time tracking)
-    case 'friday_night_mythic':
-    case 'monday_blues':
-    case 'midnight_oil':
-    case 'early_bird':
-    case 'pizza_time':
-    case 'coffee_break_champion':
-    case 'lunch_break_legend':
-    case 'insomniac_gamer':
-    case 'sunshine_warrior':
-    case 'twilight_terror':
-    case 'dawn_destroyer':
-      return 0;
-    
-    case 'weekend_warrior':
-      return completedWeeks;
-    
-    default:
-      return 0;
-  }
-}
-
-function calculateWinStreak(games: GameResult[]): number {
-  let maxStreak = 0;
-  let currentStreak = 0;
-  
-  // Sort games by date to get chronological order
-  const sortedGames = [...games].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  
-  sortedGames.forEach(game => {
-    if (game.result === 'win') {
-      currentStreak++;
-      maxStreak = Math.max(maxStreak, currentStreak);
-    } else {
-      currentStreak = 0;
-    }
-  });
-  
-  return maxStreak;
-}

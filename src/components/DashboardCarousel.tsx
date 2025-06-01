@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -49,12 +49,60 @@ const DashboardCarousel = ({ title, weeklyData, currentWeek, enabledTiles }: Das
   const recentWins = recentGames.filter(game => game.result === 'win').length;
   const recentForm = recentGames.length > 0 ? (recentWins / recentGames.length) * 100 : 0;
 
-  // Top performers (mock data for now)
-  const topPerformers = [
-    { name: "Mbappe", goals: 15, rating: 8.2 },
-    { name: "Bellingham", assists: 8, rating: 7.9 },
-    { name: "Donnarumma", cleanSheets: 6, rating: 7.7 }
-  ];
+  // Calculate real top performers from actual game data
+  const getTopPerformers = () => {
+    const playerStats = new Map();
+    
+    weeklyData.forEach(week => {
+      week.games.forEach(game => {
+        if (game.playerStats && game.playerStats.length > 0) {
+          game.playerStats.forEach(player => {
+            const key = player.name.toLowerCase();
+            if (!playerStats.has(key)) {
+              playerStats.set(key, {
+                name: player.name,
+                gamesPlayed: 0,
+                totalGoals: 0,
+                totalAssists: 0,
+                totalRating: 0,
+                averageRating: 0,
+                cleanSheets: 0
+              });
+            }
+            
+            const stats = playerStats.get(key);
+            stats.gamesPlayed += 1;
+            stats.totalGoals += player.goals || 0;
+            stats.totalAssists += player.assists || 0;
+            stats.totalRating += player.rating || 7.0;
+            stats.averageRating = stats.totalRating / stats.gamesPlayed;
+            if ((player.goals || 0) === 0 && player.position?.includes('GK')) {
+              stats.cleanSheets += 1;
+            }
+          });
+        }
+      });
+    });
+
+    const playersArray = Array.from(playerStats.values()).filter(p => p.gamesPlayed >= 1);
+    return playersArray
+      .sort((a, b) => b.averageRating - a.averageRating)
+      .slice(0, 3);
+  };
+
+  const topPerformers = getTopPerformers();
+
+  // Auto-scroll functionality
+  useEffect(() => {
+    const enabledTilesData = tiles.filter(tile => tile.enabled);
+    if (enabledTilesData.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % enabledTilesData.length);
+    }, 12000); // 12 seconds
+
+    return () => clearInterval(interval);
+  }, [enabledTiles]);
 
   const tiles = [
     {
@@ -69,20 +117,27 @@ const DashboardCarousel = ({ title, weeklyData, currentWeek, enabledTiles }: Das
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {topPerformers.map((player, index) => (
-              <div key={player.name} className="flex items-center justify-between p-3 bg-white/5 rounded-xl">
-                <div className="flex items-center gap-3">
-                  <Badge className="bg-fifa-gold/20 text-fifa-gold border-fifa-gold/30 w-8 h-8 flex items-center justify-center rounded-full">
-                    {index + 1}
-                  </Badge>
-                  <span className="text-white font-medium">{player.name}</span>
+            {topPerformers.length > 0 ? (
+              topPerformers.map((player, index) => (
+                <div key={player.name} className="flex items-center justify-between p-3 bg-white/5 rounded-xl">
+                  <div className="flex items-center gap-3">
+                    <Badge className="bg-fifa-gold/20 text-fifa-gold border-fifa-gold/30 w-8 h-8 flex items-center justify-center rounded-full">
+                      {index + 1}
+                    </Badge>
+                    <span className="text-white font-medium">{player.name}</span>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-fifa-gold font-bold">{player.averageRating.toFixed(1)}</p>
+                    <p className="text-xs text-gray-400">{player.gamesPlayed} games</p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-fifa-gold font-bold">{player.rating}</p>
-                  <p className="text-xs text-gray-400">Avg Rating</p>
-                </div>
+              ))
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-gray-400 text-sm">No player data available</p>
+                <p className="text-xs text-gray-500">Record games with player stats to see top performers</p>
               </div>
-            ))}
+            )}
           </CardContent>
         </Card>
       )
@@ -255,7 +310,11 @@ const DashboardCarousel = ({ title, weeklyData, currentWeek, enabledTiles }: Das
         <CardTitle className="text-white">{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <Carousel className="w-full">
+        <Carousel className="w-full" setApi={(api) => {
+          if (api) {
+            api.scrollTo(currentSlide);
+          }
+        }}>
           <CarouselContent className="-ml-2">
             {enabledTilesData.map((tile, index) => (
               <CarouselItem key={tile.id} className="pl-2 md:basis-1/2 lg:basis-1/3">

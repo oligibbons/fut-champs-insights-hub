@@ -1,14 +1,14 @@
-import { useState, useEffect } from 'react';
+
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
 import { Squad, PlayerCard, SquadPosition, FORMATIONS } from '@/types/squads';
 import { useSquadData } from '@/hooks/useSquadData';
-import { Plus, Users, Save, Copy, Edit, Trash2, Star } from 'lucide-react';
+import PlayerSearchModal from './PlayerSearchModal';
+import { Plus, Users, Save, Star, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface SquadBuilderProps {
@@ -18,7 +18,6 @@ interface SquadBuilderProps {
 }
 
 const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
-  const { getPlayerSuggestions, savePlayer } = useSquadData();
   const { toast } = useToast();
   
   const [squadData, setSquadData] = useState<Squad>(() => {
@@ -59,17 +58,7 @@ const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
   });
 
   const [selectedPosition, setSelectedPosition] = useState<SquadPosition | null>(null);
-  const [playerSearch, setPlayerSearch] = useState('');
-  const [suggestions, setSuggestions] = useState<PlayerCard[]>([]);
-  const [showPlayerDialog, setShowPlayerDialog] = useState(false);
-
-  useEffect(() => {
-    if (playerSearch.length >= 2) {
-      setSuggestions(getPlayerSuggestions(playerSearch));
-    } else {
-      setSuggestions([]);
-    }
-  }, [playerSearch, getPlayerSuggestions]);
+  const [showPlayerModal, setShowPlayerModal] = useState(false);
 
   const handleFormationChange = (formation: string) => {
     const formationData = FORMATIONS.find(f => f.name === formation);
@@ -97,8 +86,6 @@ const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
       lastUsed: new Date().toISOString()
     };
 
-    savePlayer(updatedPlayer);
-
     if (selectedPosition.id.startsWith('starting')) {
       setSquadData(prev => ({
         ...prev,
@@ -125,28 +112,46 @@ const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
       }));
     }
 
-    setShowPlayerDialog(false);
     setSelectedPosition(null);
-    setPlayerSearch('');
+  };
+
+  const handleRemovePlayer = (positionId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (positionId.startsWith('starting')) {
+      setSquadData(prev => ({
+        ...prev,
+        startingXI: prev.startingXI.map(pos => 
+          pos.id === positionId ? { ...pos, player: undefined } : pos
+        ),
+        lastModified: new Date().toISOString()
+      }));
+    } else if (positionId.startsWith('sub')) {
+      setSquadData(prev => ({
+        ...prev,
+        substitutes: prev.substitutes.map(pos => 
+          pos.id === positionId ? { ...pos, player: undefined } : pos
+        ),
+        lastModified: new Date().toISOString()
+      }));
+    } else if (positionId.startsWith('res')) {
+      setSquadData(prev => ({
+        ...prev,
+        reserves: prev.reserves.map(pos => 
+          pos.id === positionId ? { ...pos, player: undefined } : pos
+        ),
+        lastModified: new Date().toISOString()
+      }));
+    }
   };
 
   const handleSave = () => {
     const startingCount = squadData.startingXI.filter(pos => pos.player).length;
-    const subCount = squadData.substitutes.filter(pos => pos.player).length;
 
     if (startingCount < 11) {
       toast({
         title: "Incomplete Squad",
         description: "Please fill all 11 starting positions.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (subCount < 7) {
-      toast({
-        title: "Incomplete Squad", 
-        description: "Please select all 7 substitutes.",
         variant: "destructive"
       });
       return;
@@ -174,10 +179,10 @@ const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
               />
               <div className="flex items-center gap-4">
                 <Select value={squadData.formation} onValueChange={handleFormationChange}>
-                  <SelectTrigger className="w-32 modern-input border-fifa-blue/30">
+                  <SelectTrigger className="w-40 modern-input border-fifa-blue/30">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="glass-card border-fifa-blue/30">
+                  <SelectContent className="glass-card border-fifa-blue/30 max-h-60">
                     {FORMATIONS.map(formation => (
                       <SelectItem key={formation.name} value={formation.name}>
                         {formation.name}
@@ -224,31 +229,40 @@ const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
                 style={{ left: `${position.x}%`, top: `${position.y}%` }}
                 onClick={() => {
                   setSelectedPosition(position);
-                  setShowPlayerDialog(true);
+                  setShowPlayerModal(true);
                 }}
               >
                 <div className="relative">
-                  <div className={`w-16 h-16 rounded-2xl border-2 flex items-center justify-center text-xs font-bold transition-all duration-300 group-hover:scale-110 shadow-lg ${
+                  <div className={`w-20 h-20 rounded-2xl border-2 flex flex-col items-center justify-center text-xs font-bold transition-all duration-300 group-hover:scale-110 shadow-lg ${
                     position.player 
                       ? 'bg-fifa-blue/90 border-fifa-blue text-white shadow-fifa-blue/50' 
                       : 'bg-white/10 border-white/30 text-white/70 hover:bg-white/20'
                   }`}>
                     {position.player ? (
-                      <div className="text-center">
-                        <div className="text-[10px] leading-none">{position.player.name.split(' ').slice(-1)[0]}</div>
+                      <div className="text-center p-1">
+                        <div className="text-[10px] leading-none font-bold">{position.player.name.split(' ').slice(-1)[0]}</div>
                         <div className="text-[8px] opacity-75">{position.player.rating}</div>
+                        <div className="text-[7px] opacity-50">{position.position}</div>
                       </div>
                     ) : (
                       <div className="text-center">
-                        <Plus className="h-4 w-4 mx-auto mb-0.5" />
+                        <Plus className="h-5 w-5 mx-auto mb-1" />
                         <div className="text-[8px]">{position.position}</div>
                       </div>
                     )}
                   </div>
                   {position.player && (
-                    <div className="absolute -top-2 -right-2 w-5 h-5 bg-fifa-gold rounded-full flex items-center justify-center">
-                      <Star className="h-3 w-3 text-white" />
-                    </div>
+                    <>
+                      <div className="absolute -top-2 -right-2 w-6 h-6 bg-fifa-gold rounded-full flex items-center justify-center">
+                        <Star className="h-3 w-3 text-white" />
+                      </div>
+                      <button
+                        onClick={(e) => handleRemovePlayer(position.id, e)}
+                        className="absolute -bottom-2 -left-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:scale-110"
+                      >
+                        <Trash2 className="h-3 w-3 text-white" />
+                      </button>
+                    </>
                   )}
                 </div>
               </div>
@@ -273,18 +287,18 @@ const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
                 className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/10 cursor-pointer hover:bg-white/10 transition-all duration-300 group"
                 onClick={() => {
                   setSelectedPosition(position);
-                  setShowPlayerDialog(true);
+                  setShowPlayerModal(true);
                 }}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-fifa-purple/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <div className="w-12 h-12 bg-fifa-purple/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
                     {position.player ? (
                       <span className="text-sm font-bold text-fifa-purple">{position.player.rating}</span>
                     ) : (
-                      <Plus className="h-4 w-4 text-fifa-purple/60" />
+                      <Plus className="h-5 w-5 text-fifa-purple/60" />
                     )}
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <p className="text-white font-medium">
                       {position.player ? position.player.name : `Substitute ${index + 1}`}
                     </p>
@@ -293,11 +307,21 @@ const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
                     )}
                   </div>
                 </div>
-                {!position.player && (
-                  <Badge variant="outline" className="text-fifa-purple border-fifa-purple/40 bg-fifa-purple/10 rounded-xl">
-                    Add Player
-                  </Badge>
-                )}
+                <div className="flex items-center gap-2">
+                  {position.player && (
+                    <button
+                      onClick={(e) => handleRemovePlayer(position.id, e)}
+                      className="w-8 h-8 bg-red-500/20 hover:bg-red-500 rounded-lg flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
+                    >
+                      <Trash2 className="h-3 w-3 text-red-400 hover:text-white" />
+                    </button>
+                  )}
+                  {!position.player && (
+                    <Badge variant="outline" className="text-fifa-purple border-fifa-purple/40 bg-fifa-purple/10 rounded-xl">
+                      Add Player
+                    </Badge>
+                  )}
+                </div>
               </div>
             ))}
           </CardContent>
@@ -317,18 +341,18 @@ const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
                 className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/10 cursor-pointer hover:bg-white/10 transition-all duration-300 group"
                 onClick={() => {
                   setSelectedPosition(position);
-                  setShowPlayerDialog(true);
+                  setShowPlayerModal(true);
                 }}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-fifa-green/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <div className="w-12 h-12 bg-fifa-green/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
                     {position.player ? (
                       <span className="text-sm font-bold text-fifa-green">{position.player.rating}</span>
                     ) : (
-                      <Plus className="h-4 w-4 text-fifa-green/60" />
+                      <Plus className="h-5 w-5 text-fifa-green/60" />
                     )}
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <p className="text-white font-medium">
                       {position.player ? position.player.name : `Reserve ${index + 1}`}
                     </p>
@@ -337,92 +361,37 @@ const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
                     )}
                   </div>
                 </div>
-                {!position.player && (
-                  <Badge variant="outline" className="text-fifa-green border-fifa-green/40 bg-fifa-green/10 rounded-xl">
-                    Optional
-                  </Badge>
-                )}
+                <div className="flex items-center gap-2">
+                  {position.player && (
+                    <button
+                      onClick={(e) => handleRemovePlayer(position.id, e)}
+                      className="w-8 h-8 bg-red-500/20 hover:bg-red-500 rounded-lg flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
+                    >
+                      <Trash2 className="h-3 w-3 text-red-400 hover:text-white" />
+                    </button>
+                  )}
+                  {!position.player && (
+                    <Badge variant="outline" className="text-fifa-green border-fifa-green/40 bg-fifa-green/10 rounded-xl">
+                      Optional
+                    </Badge>
+                  )}
+                </div>
               </div>
             ))}
           </CardContent>
         </Card>
       </div>
 
-      {/* Player Selection Dialog */}
-      <Dialog open={showPlayerDialog} onOpenChange={setShowPlayerDialog}>
-        <DialogContent className="glass-card border-fifa-blue/30 rounded-3xl shadow-3xl max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-white text-xl">
-              Add Player to {selectedPosition?.position}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Input
-              placeholder="Search or type player name..."
-              value={playerSearch}
-              onChange={(e) => setPlayerSearch(e.target.value)}
-              className="modern-input border-fifa-blue/30"
-            />
-            
-            {suggestions.length > 0 && (
-              <div className="space-y-2 max-h-60 overflow-y-auto">
-                {suggestions.map((player) => (
-                  <div
-                    key={`${player.id}-${player.cardType}`}
-                    className="p-3 bg-white/5 rounded-2xl border border-white/10 cursor-pointer hover:bg-white/10 transition-all duration-300 group"
-                    onClick={() => handlePlayerSelect(player)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-white">{player.name}</p>
-                        <p className="text-xs text-gray-400">{player.cardType} • {player.position} • {player.rating}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm text-fifa-blue font-bold">{player.averageRating.toFixed(1)}</p>
-                        <p className="text-xs text-gray-400">{player.gamesPlayed} games</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {playerSearch.length >= 2 && suggestions.length === 0 && (
-              <Button 
-                onClick={() => {
-                  const newPlayer: PlayerCard = {
-                    id: `player-${Date.now()}`,
-                    name: playerSearch,
-                    position: selectedPosition?.position || 'ST',
-                    rating: 85,
-                    cardType: 'gold',
-                    club: '',
-                    nationality: '',
-                    league: '',
-                    gamesPlayed: 0,
-                    goals: 0,
-                    assists: 0,
-                    cleanSheets: 0,
-                    averageRating: 6.0,
-                    yellowCards: 0,
-                    redCards: 0,
-                    ownGoals: 0,
-                    minutesPlayed: 0,
-                    wins: 0,
-                    losses: 0,
-                    lastUsed: new Date().toISOString()
-                  };
-                  handlePlayerSelect(newPlayer);
-                }}
-                className="w-full modern-button-primary rounded-2xl"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Create "{playerSearch}"
-              </Button>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Player Search Modal */}
+      <PlayerSearchModal
+        isOpen={showPlayerModal}
+        onClose={() => {
+          setShowPlayerModal(false);
+          setSelectedPosition(null);
+        }}
+        onPlayerSelect={handlePlayerSelect}
+        position={selectedPosition}
+      />
     </div>
   );
 };

@@ -230,6 +230,24 @@
   ::-webkit-scrollbar-thumb:hover {
     background: linear-gradient(to bottom, var(--fifa-purple), var(--fifa-blue));
   }
+
+  /* Fix for text visibility - remove problematic text effects */
+  h1, h2, h3, h4, h5, h6 {
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Remove any text shadow or glow effects that might be blocking text */
+  .text-glow, .glow-text {
+    text-shadow: none !important;
+  }
+
+  /* Ensure text is always visible */
+  .settings-title, .page-title {
+    color: white !important;
+    text-shadow: none !important;
+    background: transparent !important;
+  }
 }
 
 /* Enhanced shadow utilities */
