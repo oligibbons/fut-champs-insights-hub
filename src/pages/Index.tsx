@@ -71,7 +71,7 @@ const Index = () => {
     }
   });
 
-  const getCurrentWeek = (): WeeklyPerformance | undefined => {
+  const getCurrentRun = (): WeeklyPerformance | undefined => {
     return weeklyData.find(week => !week.isCompleted);
   };
 
@@ -103,7 +103,7 @@ const Index = () => {
     };
   };
 
-  const currentWeek = getCurrentWeek();
+  const currentRun = getCurrentRun();
   const allTimeStats = calculateStats();
 
   useEffect(() => {
@@ -134,7 +134,7 @@ const Index = () => {
           {/* Dashboard Carousel */}
           <DashboardCarousel
             weeklyData={weeklyData}
-            currentWeek={currentWeek}
+            currentWeek={currentRun}
             enabledTiles={Object.keys(settings.dashboardSettings).filter(key => 
               settings.dashboardSettings[key as keyof typeof settings.dashboardSettings]
             )}
@@ -177,7 +177,7 @@ const Index = () => {
             {/* Win Streak */}
             <Card className="glass-card static-element">
               <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-fifa-red mb-1">{currentWeek?.currentStreak || 0}</div>
+                <div className="text-2xl font-bold text-fifa-red mb-1">{currentRun?.currentStreak || 0}</div>
                 <div className="text-sm text-gray-400">Win Streak</div>
               </CardContent>
             </Card>
@@ -223,7 +223,7 @@ const Index = () => {
               <CardTitle className="text-white">Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Button onClick={() => navigate('/CurrentWeek')} className="modern-button-primary">
+              <Button onClick={() => navigate('/CurrentRun')} className="modern-button-primary">
                 <Calendar className="h-4 w-4 mr-2" />
                 Record New Game
               </Button>

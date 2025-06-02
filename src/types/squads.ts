@@ -1,6 +1,8 @@
 
 export type PlayerCardType = 'bronze' | 'silver' | 'gold' | 'inform' | 'totw' | 'toty' | 'tots' | 'icon' | 'hero';
 
+export const CARD_TYPES: PlayerCardType[] = ['bronze', 'silver', 'gold', 'inform', 'totw', 'toty', 'tots', 'icon', 'hero'];
+
 export interface PlayerCard {
   id: string;
   name: string;
@@ -17,6 +19,16 @@ export interface PlayerCard {
   defending: number;
   physical: number;
   price?: number;
+  goals: number;
+  assists: number;
+  averageRating: number;
+  yellowCards: number;
+  redCards: number;
+  minutesPlayed: number;
+  wins: number;
+  losses: number;
+  cleanSheets: number;
+  imageUrl: string;
   lastUsed?: string;
 }
 
