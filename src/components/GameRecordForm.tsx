@@ -9,24 +9,27 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
 import { GameResult, TeamStats, PlayerPerformance } from '@/types/futChampions';
 import { Squad } from '@/types/squads';
 import { useSquadData } from '@/hooks/useSquadData';
 import { useToast } from '@/hooks/use-toast';
-import { Trophy, Target, Clock, MessageSquare, Users } from 'lucide-react';
+import { Trophy, Target, Clock, MessageSquare, Users, Gamepad2 } from 'lucide-react';
 import PlayerPerformanceInput from './PlayerPerformanceInput';
 
 interface GameRecordFormProps {
   onSubmit: (gameData: Partial<GameResult>) => void;
   gameNumber: number;
   existingGame?: GameResult;
+  defaultCrossPlay?: boolean;
 }
 
-const GameRecordForm = ({ onSubmit, gameNumber, existingGame }: GameRecordFormProps) => {
+const GameRecordForm = ({ onSubmit, gameNumber, existingGame, defaultCrossPlay = false }: GameRecordFormProps) => {
   const { squads } = useSquadData();
   const [gameContext, setGameContext] = useState<string>(existingGame?.gameContext || 'normal');
   const [selectedSquad, setSelectedSquad] = useState<Squad | null>(null);
   const [playerPerformances, setPlayerPerformances] = useState<PlayerPerformance[]>(existingGame?.playerStats || []);
+  const [crossPlayEnabled, setCrossPlayEnabled] = useState<boolean>(existingGame?.crossPlayEnabled ?? defaultCrossPlay);
   
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
     defaultValues: existingGame ? {
@@ -175,13 +178,14 @@ const GameRecordForm = ({ onSubmit, gameNumber, existingGame }: GameRecordFormPr
       teamStats,
       playerStats: playerPerformances,
       duration: parseInt(data.duration) || 90,
-      date: existingGame?.date || new Date().toISOString()
+      date: existingGame?.date || new Date().toISOString(),
+      crossPlayEnabled: crossPlayEnabled
     };
 
     // Success toast
     toast({
       title: gameResult === 'win' ? "Victory Recorded!" : "Loss Recorded",
-      description: `Game ${gameNumber} saved with result: ${data.goalsFor}-${data.goalsAgainst}`,
+      description: `Game ${gameNumber} saved with result: ${data.goalsFor}-${data.goalsAgainst}${crossPlayEnabled ? ' (Cross-Play)' : ''}`,
     });
 
     onSubmit(gameData);
@@ -299,6 +303,22 @@ const GameRecordForm = ({ onSubmit, gameNumber, existingGame }: GameRecordFormPr
                             ))}
                           </SelectContent>
                         </Select>
+                      </div>
+
+                      {/* Cross-Play Toggle */}
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10">
+                        <div className="flex items-center gap-3">
+                          <Gamepad2 className="h-5 w-5 text-fifa-blue" />
+                          <div>
+                            <Label htmlFor="crossPlay" className="text-gray-300 font-medium">Cross-Play Enabled</Label>
+                            <p className="text-xs text-gray-500">Was cross-platform play enabled for this match?</p>
+                          </div>
+                        </div>
+                        <Switch
+                          id="crossPlay"
+                          checked={crossPlayEnabled}
+                          onCheckedChange={setCrossPlayEnabled}
+                        />
                       </div>
 
                       <div>

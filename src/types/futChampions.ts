@@ -71,27 +71,17 @@ export interface PenaltyShootout {
 
 export interface GameResult {
   id: string;
-  weekId: string;
   gameNumber: number;
   result: 'win' | 'loss';
   scoreLine: string;
-  penaltyShootout?: PenaltyShootout;
-  opponentSkill: number; // 1-10
-  gameContext: 'normal' | 'rage_quit' | 'extra_time' | 'penalties' | 'disconnect' | 'hacker' | 'free_win';
-  comments: string;
-  playerStats: PlayerPerformance[];
-  teamStats: TeamStats;
-  opponentAnalysis?: OpponentAnalysis;
   date: string;
-  time?: string;
+  opponentSkill: number;
   duration: number; // in minutes
-  actualGameTime?: number; // Time actually playing vs paused
-  rageMoments?: number; // How many times you wanted to rage quit
-  stressLevel?: number; // 1-10 how stressful the game was
-  squadUsed?: string; // Squad ID
-  serverQuality?: number; // 1-10 rating of gameplay/server quality
-  gameRating?: string; // F, D, C, B, A, S
-  gameScore?: number; // 0-100
+  gameContext: 'normal' | 'rage_quit' | 'extra_time' | 'penalties' | 'disconnect' | 'hacker' | 'free_win';
+  comments?: string;
+  teamStats: TeamStats;
+  playerStats: PlayerPerformance[];
+  crossPlayEnabled?: boolean;
 }
 
 export interface Squad {
@@ -232,6 +222,7 @@ export interface UserSettings {
   gamesPerWeek: number;
   theme: string;
   carouselSpeed: number;
+  defaultCrossPlay?: boolean;
   dashboardSettings: {
     showTopPerformers: boolean;
     showXGAnalysis: boolean;

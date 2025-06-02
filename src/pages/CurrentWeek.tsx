@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,11 +13,13 @@ import WeekProgress from '@/components/WeekProgress';
 import GameCompletionModal from '@/components/GameCompletionModal';
 import { Calendar, Plus, BarChart3, Trophy, Target, TrendingUp } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
+import { useAccountData } from '@/hooks/useAccountData';
 
 const CurrentWeek = () => {
   const { currentTheme } = useTheme();
-  const [weeklyData, setWeeklyData] = useLocalStorage<WeeklyPerformance[]>('futChampions_weeks', []);
-  const [settings] = useLocalStorage<UserSettings>('futChampions_settings', {
+  const { activeAccount } = useAccountData();
+  const [weeklyData, setWeeklyData] = useLocalStorage<WeeklyPerformance[]>(`futChampions_weeks_${activeAccount}`, []);
+  const [settings, setSettings] = useLocalStorage<UserSettings>('futChampions_settings', {
     preferredFormation: '4-3-3',
     trackingStartDate: new Date().toISOString().split('T')[0],
     gameplayStyle: 'balanced',
@@ -24,6 +27,7 @@ const CurrentWeek = () => {
     gamesPerWeek: 15,
     theme: 'futvisionary',
     carouselSpeed: 12,
+    defaultCrossPlay: false,
     dashboardSettings: {
       showTopPerformers: true,
       showXGAnalysis: true,
@@ -134,6 +138,7 @@ const CurrentWeek = () => {
       id: `game-${Date.now()}`,
       date: new Date().toISOString(),
       gameNumber: currentWeek.games.length + 1,
+      crossPlayEnabled: gameData.crossPlayEnabled || settings.defaultCrossPlay || false,
     };
 
     const updatedGames = [...currentWeek.games, newGame];
@@ -181,14 +186,7 @@ const CurrentWeek = () => {
 
     // Check achievements and provide feedback
     checkAndNotifyAchievements(updatedWeeklyData, updatedWeek);
-    
-    const allTimeStats = {
-      totalGames: updatedWeeklyData.reduce((sum, week) => sum + week.games.length, 0),
-      totalWins: updatedWeeklyData.reduce((sum, week) => sum + week.totalWins, 0),
-      totalGoals: updatedWeeklyData.reduce((sum, week) => sum + week.totalGoals, 0)
-    };
-    
-    notifyGameFeedback(newGame, updatedWeek, allTimeStats);
+    notifyGameFeedback(newGame, updatedWeek);
 
     setShowGameForm(false);
   };
@@ -218,6 +216,18 @@ const CurrentWeek = () => {
   // Generate AI insights for current week
   const weekInsights = generateAIInsights(weeklyData, currentWeek, currentWeek.games.slice(-10));
 
+  // Calculate cross-play analytics
+  const crossPlayAnalytics = currentWeek.games.reduce((acc, game) => {
+    if (game.crossPlayEnabled) {
+      acc.crossPlayGames++;
+      if (game.result === 'win') acc.crossPlayWins++;
+    } else {
+      acc.nonCrossPlayGames++;
+      if (game.result === 'win') acc.nonCrossPlayWins++;
+    }
+    return acc;
+  }, { crossPlayGames: 0, crossPlayWins: 0, nonCrossPlayGames: 0, nonCrossPlayWins: 0 });
+
   return (
     <div className="min-h-screen">
       <Navigation />
@@ -231,7 +241,7 @@ const CurrentWeek = () => {
                 <Calendar className="h-8 w-8" style={{ color: currentTheme.colors.primary }} />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-white page-header">Week {currentWeek.weekNumber}</h1>
+                <h1 className="text-3xl font-bold text-white page-header">Run {currentWeek.weekNumber}</h1>
                 <p className="text-gray-400 mt-1">
                   {currentWeek.games.length}/{settings.gamesPerWeek} games completed
                 </p>
@@ -253,6 +263,43 @@ const CurrentWeek = () => {
             weekData={currentWeek}
             onNewWeek={handleNewWeek}
           />
+
+          {/* Cross-Play Analytics */}
+          {currentWeek.games.length > 0 && (
+            <Card className="glass-card static-element">
+              <CardHeader>
+                <CardTitle className="text-white">Cross-Play Analytics</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-fifa-blue">{crossPlayAnalytics.crossPlayGames}</div>
+                    <div className="text-sm text-gray-400">Cross-Play Games</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-fifa-green">
+                      {crossPlayAnalytics.crossPlayGames > 0 
+                        ? Math.round((crossPlayAnalytics.crossPlayWins / crossPlayAnalytics.crossPlayGames) * 100) 
+                        : 0}%
+                    </div>
+                    <div className="text-sm text-gray-400">Cross-Play Win Rate</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-fifa-purple">{crossPlayAnalytics.nonCrossPlayGames}</div>
+                    <div className="text-sm text-gray-400">Same Platform Games</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-fifa-gold">
+                      {crossPlayAnalytics.nonCrossPlayGames > 0 
+                        ? Math.round((crossPlayAnalytics.nonCrossPlayWins / crossPlayAnalytics.nonCrossPlayGames) * 100) 
+                        : 0}%
+                    </div>
+                    <div className="text-sm text-gray-400">Same Platform Win Rate</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Enhanced Content */}
           <Tabs defaultValue="games" className="w-full">
@@ -297,7 +344,10 @@ const CurrentWeek = () => {
                               </div>
                               <div>
                                 <p className="text-lg font-bold text-white">{game.scoreLine}</p>
-                                <p className="text-sm text-gray-400">Game {game.gameNumber}</p>
+                                <p className="text-sm text-gray-400">
+                                  Game {game.gameNumber} 
+                                  {game.crossPlayEnabled && <span className="ml-2 text-fifa-blue">• Cross-Play</span>}
+                                </p>
                               </div>
                             </div>
                             <div className="text-right">
@@ -312,7 +362,7 @@ const CurrentWeek = () => {
                     <div className="text-center py-12">
                       <Calendar className="h-16 w-16 mx-auto mb-4 text-gray-500" />
                       <h3 className="text-xl font-semibold text-white mb-2">No Games Yet</h3>
-                      <p className="text-gray-400 mb-4">Start your week by recording your first game</p>
+                      <p className="text-gray-400 mb-4">Start your run by recording your first game</p>
                       <Button onClick={() => setShowGameForm(true)} className="modern-button-primary">
                         <Plus className="h-4 w-4 mr-2" />
                         Record First Game
@@ -427,6 +477,7 @@ const CurrentWeek = () => {
             <GameRecordForm
               onSubmit={handleGameSubmit}
               gameNumber={currentWeek.games.length + 1}
+              defaultCrossPlay={settings.defaultCrossPlay}
             />
             <Button 
               onClick={() => setShowGameForm(false)}
