@@ -1,79 +1,21 @@
 
 import { useState, useEffect } from 'react';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { WeeklyPerformance, UserSettings } from '@/types/futChampions';
-import { useAccountData } from '@/hooks/useAccountData';
+import { useDataSync } from '@/hooks/useDataSync';
 import Navigation from '@/components/Navigation';
 import DashboardCarousel from '@/components/DashboardCarousel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, Trophy, Target, Users, Calendar, BarChart3 } from 'lucide-react';
+import { TrendingUp, Trophy, Target, Users, Calendar, BarChart3, Zap, Award, Clock, Star } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 import { useNavigate } from 'react-router-dom';
 
 const Index = () => {
   const { currentTheme } = useTheme();
   const navigate = useNavigate();
-  const { activeAccount } = useAccountData();
-  const [weeklyData] = useLocalStorage<WeeklyPerformance[]>(`futChampions_weeks_${activeAccount}`, []);
-  const [settings] = useLocalStorage<UserSettings>('futChampions_settings', {
-    preferredFormation: '4-3-3',
-    trackingStartDate: new Date().toISOString().split('T')[0],
-    gameplayStyle: 'balanced',
-    notifications: true,
-    gamesPerWeek: 15,
-    theme: 'futvisionary',
-    carouselSpeed: 12,
-    dashboardSettings: {
-      showTopPerformers: true,
-      showXGAnalysis: true,
-      showAIInsights: true,
-      showFormAnalysis: true,
-      showWeaknesses: true,
-      showOpponentAnalysis: true,
-      showPositionalAnalysis: true,
-      showRecentTrends: true,
-      showAchievements: true,
-      showTargetProgress: true,
-      showTimeAnalysis: true,
-      showStressAnalysis: true,
-    },
-    currentWeekSettings: {
-      showTopPerformers: true,
-      showXGAnalysis: true,
-      showAIInsights: true,
-      showFormAnalysis: true,
-      showWeaknesses: true,
-      showOpponentAnalysis: true,
-      showPositionalAnalysis: true,
-      showRecentTrends: true,
-      showAchievements: true,
-      showTargetProgress: true,
-      showTimeAnalysis: true,
-      showStressAnalysis: true,
-    },
-    qualifierSettings: {
-      totalGames: 5,
-      winsRequired: 2,
-    },
-    targetSettings: {
-      autoSetTargets: false,
-      adaptiveTargets: true,
-      notifyOnTarget: true,
-    },
-    analyticsPreferences: {
-      detailedPlayerStats: true,
-      opponentTracking: true,
-      timeTracking: true,
-      stressTracking: true,
-      showAnimations: true,
-      dynamicFeedback: true,
-    }
-  });
+  const { weeklyData, getCurrentWeek, calculatePlayerStats, settings } = useDataSync();
 
-  const getCurrentRun = (): WeeklyPerformance | undefined => {
-    return weeklyData.find(week => !week.isCompleted);
-  };
+  const currentRun = getCurrentWeek();
+  const playerStats = calculatePlayerStats();
 
   const calculateStats = () => {
     const allGames = weeklyData.flatMap(week => week.games || []);
@@ -103,14 +45,8 @@ const Index = () => {
     };
   };
 
-  const currentRun = getCurrentRun();
   const allTimeStats = calculateStats();
-
-  useEffect(() => {
-    if (!activeAccount) {
-      navigate('/Login');
-    }
-  }, [activeAccount, navigate]);
+  const topPerformers = playerStats.sort((a, b) => b.averageRating - a.averageRating).slice(0, 3);
 
   return (
     <div className="min-h-screen">
@@ -140,79 +76,121 @@ const Index = () => {
             )}
           />
 
-          {/* Quick Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            {/* Total Games */}
-            <Card className="glass-card static-element">
-              <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-fifa-blue mb-1">{allTimeStats.totalGames}</div>
-                <div className="text-sm text-gray-400">Total Games</div>
-              </CardContent>
-            </Card>
-
-            {/* Total Wins */}
-            <Card className="glass-card static-element">
-              <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-fifa-green mb-1">{allTimeStats.totalWins}</div>
-                <div className="text-sm text-gray-400">Total Wins</div>
-              </CardContent>
-            </Card>
-
-            {/* Total Goals */}
-            <Card className="glass-card static-element">
-              <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-fifa-gold mb-1">{allTimeStats.totalGoals}</div>
-                <div className="text-sm text-gray-400">Total Goals</div>
-              </CardContent>
-            </Card>
-
-            {/* Avg Rating */}
-            <Card className="glass-card static-element">
-              <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-fifa-purple mb-1">{allTimeStats.avgRating}</div>
-                <div className="text-sm text-gray-400">Avg Rating</div>
-              </CardContent>
-            </Card>
-
-            {/* Win Streak */}
-            <Card className="glass-card static-element">
-              <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-fifa-red mb-1">{currentRun?.currentStreak || 0}</div>
-                <div className="text-sm text-gray-400">Win Streak</div>
-              </CardContent>
-            </Card>
-
-            {/* Win Rate */}
-            <Card className="glass-card static-element">
-              <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-fifa-blue mb-1">{allTimeStats.winRate}%</div>
-                <div className="text-sm text-gray-400">Win Rate</div>
-              </CardContent>
-            </Card>
-
-            {/* Goals For */}
-            <Card className="glass-card static-element">
-              <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-fifa-green mb-1">{allTimeStats.totalGoals}</div>
-                <div className="text-sm text-gray-400">Goals For</div>
-              </CardContent>
-            </Card>
-
-            {/* Goal Difference */}
-            <Card className="glass-card static-element">
-              <CardContent className="p-4 text-center">
-                <div className={`text-2xl font-bold mb-1 ${allTimeStats.goalDifference >= 0 ? 'text-fifa-green' : 'text-fifa-red'}`}>
-                  {allTimeStats.goalDifference >= 0 ? '+' : ''}{allTimeStats.goalDifference}
+          {/* Enhanced Analytics Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Performance Overview */}
+            <Card className="glass-card static-element col-span-2">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <Trophy className="h-5 w-5 text-fifa-gold" />
+                  Performance Overview
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="text-center p-3 bg-white/5 rounded-xl">
+                    <div className="text-2xl font-bold text-fifa-blue mb-1">{allTimeStats.totalGames}</div>
+                    <div className="text-sm text-gray-400">Total Games</div>
+                  </div>
+                  <div className="text-center p-3 bg-white/5 rounded-xl">
+                    <div className="text-2xl font-bold text-fifa-green mb-1">{allTimeStats.winRate}%</div>
+                    <div className="text-sm text-gray-400">Win Rate</div>
+                  </div>
+                  <div className="text-center p-3 bg-white/5 rounded-xl">
+                    <div className="text-2xl font-bold text-fifa-gold mb-1">{allTimeStats.totalGoals}</div>
+                    <div className="text-sm text-gray-400">Total Goals</div>
+                  </div>
+                  <div className="text-center p-3 bg-white/5 rounded-xl">
+                    <div className="text-2xl font-bold text-fifa-purple mb-1">{allTimeStats.avgRating}</div>
+                    <div className="text-sm text-gray-400">Avg Rating</div>
+                  </div>
                 </div>
-                <div className="text-sm text-gray-400">Goal Difference</div>
               </CardContent>
             </Card>
 
-            {/* Avg Opponent Skill */}
+            {/* Top Performers */}
+            <Card className="glass-card static-element col-span-2">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <Star className="h-5 w-5 text-fifa-gold" />
+                  Top Performers (Per 90)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {topPerformers.length > 0 ? topPerformers.map((player, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-white/5 rounded-xl">
+                      <div>
+                        <p className="font-medium text-white">{player.name}</p>
+                        <p className="text-xs text-gray-400">{player.position} • {player.gamesPlayed} games</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-fifa-gold">{player.goalInvolvementsPer90.toFixed(1)}</p>
+                        <p className="text-xs text-gray-400">G+A/90</p>
+                      </div>
+                    </div>
+                  )) : (
+                    <div className="text-center py-4">
+                      <Users className="h-8 w-8 mx-auto mb-2 text-gray-500" />
+                      <p className="text-gray-400 text-sm">No player data available</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Current Run Status */}
             <Card className="glass-card static-element">
-              <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-fifa-gold mb-1">{allTimeStats.avgOpponentSkill}</div>
-                <div className="text-sm text-gray-400">Avg Opponent Skill</div>
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <Zap className="h-5 w-5 text-fifa-blue" />
+                  Current Run
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {currentRun ? (
+                  <div className="space-y-3">
+                    <div className="text-center p-3 bg-white/5 rounded-xl">
+                      <div className="text-2xl font-bold text-fifa-green mb-1">{currentRun.totalWins}</div>
+                      <div className="text-sm text-gray-400">Wins</div>
+                    </div>
+                    <div className="text-center p-3 bg-white/5 rounded-xl">
+                      <div className="text-2xl font-bold text-fifa-blue mb-1">{currentRun.games.length}/15</div>
+                      <div className="text-sm text-gray-400">Games</div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-4">
+                    <Calendar className="h-8 w-8 mx-auto mb-2 text-gray-500" />
+                    <p className="text-gray-400 text-sm">No active run</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Recent Achievements */}
+            <Card className="glass-card static-element">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <Award className="h-5 w-5 text-fifa-purple" />
+                  Recent Activity
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="p-3 bg-fifa-green/10 border border-fifa-green/20 rounded-xl">
+                    <p className="text-fifa-green font-medium text-sm">🎯 Target Progress</p>
+                    <p className="text-white text-xs">
+                      {currentRun ? `${currentRun.totalWins}/${currentRun.targetWins || 11} wins` : 'No active target'}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-fifa-blue/10 border border-fifa-blue/20 rounded-xl">
+                    <p className="text-fifa-blue font-medium text-sm">📊 Data Tracking</p>
+                    <p className="text-white text-xs">
+                      {weeklyData.length} weeks tracked
+                    </p>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -223,19 +201,19 @@ const Index = () => {
               <CardTitle className="text-white">Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Button onClick={() => navigate('/CurrentRun')} className="modern-button-primary">
+              <Button onClick={() => navigate('/current-week')} className="modern-button-primary">
                 <Calendar className="h-4 w-4 mr-2" />
                 Record New Game
               </Button>
-              <Button onClick={() => navigate('/Squads')} className="modern-button-secondary">
+              <Button onClick={() => navigate('/squads')} className="modern-button-secondary">
                 <Users className="h-4 w-4 mr-2" />
                 Manage Squads
               </Button>
-              <Button onClick={() => navigate('/Achievements')} className="modern-button-secondary">
+              <Button onClick={() => navigate('/achievements')} className="modern-button-secondary">
                 <Trophy className="h-4 w-4 mr-2" />
                 View Achievements
               </Button>
-              <Button onClick={() => navigate('/Settings')} className="modern-button-secondary">
+              <Button onClick={() => navigate('/settings')} className="modern-button-secondary">
                 <Target className="h-4 w-4 mr-2" />
                 Adjust Settings
               </Button>

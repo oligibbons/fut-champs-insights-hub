@@ -1,19 +1,18 @@
 
-import { useLocalStorage } from './useLocalStorage';
-import { WeeklyPerformance } from '@/types/futChampions';
+import { useDataSync } from './useDataSync';
 
 export function useAccountData() {
-  const [activeAccount] = useLocalStorage<string>('fc25-active-account', 'Main Account');
-  const [weeks, setWeeks] = useLocalStorage<WeeklyPerformance[]>(`fc25-weeks-${activeAccount}`, []);
+  const { 
+    activeAccount, 
+    weeklyData, 
+    setWeeklyData, 
+    getCurrentWeek, 
+    getStorageKey 
+  } = useDataSync();
   
-  const getCurrentWeek = (): WeeklyPerformance | null => {
-    const currentWeek = weeks.find(week => !week.isCompleted);
-    return currentWeek || null;
-  };
-
-  const addNewWeek = (): WeeklyPerformance => {
-    const newWeekNumber = weeks.length + 1;
-    const newWeek: WeeklyPerformance = {
+  const addNewWeek = () => {
+    const newWeekNumber = weeklyData.length + 1;
+    const newWeek = {
       id: `week-${newWeekNumber}-${Date.now()}`,
       weekNumber: newWeekNumber,
       startDate: new Date().toISOString(),
@@ -28,25 +27,27 @@ export function useAccountData() {
       averageOpponentSkill: 0,
       squadUsed: '',
       weeklyRating: 0,
-      isCompleted: false
+      isCompleted: false,
+      currentStreak: 0,
+      gamesPlayed: 0
     };
     
-    const updatedWeeks = [...weeks, newWeek];
-    setWeeks(updatedWeeks);
+    const updatedWeeks = [...weeklyData, newWeek];
+    setWeeklyData(updatedWeeks);
     return newWeek;
   };
 
-  const updateWeek = (weekId: string, updatedWeek: WeeklyPerformance) => {
-    const updatedWeeks = weeks.map(week => 
+  const updateWeek = (weekId: string, updatedWeek: any) => {
+    const updatedWeeks = weeklyData.map(week => 
       week.id === weekId ? updatedWeek : week
     );
-    setWeeks(updatedWeeks);
+    setWeeklyData(updatedWeeks);
   };
 
   return {
     activeAccount,
-    weeks,
-    setWeeks,
+    weeks: weeklyData,
+    setWeeks: setWeeklyData,
     getCurrentWeek,
     addNewWeek,
     updateWeek

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { UserSettings } from '@/types/futChampions';
@@ -19,7 +20,7 @@ const Settings = () => {
   const { currentTheme } = useTheme();
   const { toast } = useToast();
   const { user } = useAuth();
-  const [settings, setSettings] = useLocalStorage<UserSettings>('futChampions_settings', {
+  const [settings, setSettings] = useLocalStorage<UserSettings>('fc25-settings', {
     preferredFormation: '4-3-3',
     trackingStartDate: new Date().toISOString().split('T')[0],
     gameplayStyle: 'balanced',
@@ -150,7 +151,7 @@ const Settings = () => {
     if (window.confirm('Are you sure you want to delete ALL data? This cannot be undone!')) {
       const keys = Object.keys(localStorage);
       keys.forEach(key => {
-        if (key.startsWith('futChampions_') || key.startsWith('fc25-')) {
+        if (key.startsWith('fc25-')) {
           localStorage.removeItem(key);
         }
       });
@@ -218,16 +219,21 @@ const Settings = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="preferredFormation" className="text-gray-300">Preferred Formation</Label>
-                      <select
-                        id="preferredFormation"
-                        value={settings.preferredFormation}
-                        onChange={(e) => setSettings({ ...settings, preferredFormation: e.target.value })}
-                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white"
+                      <Select 
+                        value={settings.preferredFormation} 
+                        onValueChange={(value) => setSettings({ ...settings, preferredFormation: value })}
                       >
-                        {FORMATIONS.map(formation => (
-                          <option key={formation.name} value={formation.name}>{formation.name}</option>
-                        ))}
-                      </select>
+                        <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-gray-800 border-gray-600">
+                          {FORMATIONS.map(formation => (
+                            <SelectItem key={formation.name} value={formation.name} className="text-white">
+                              {formation.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <div className="space-y-2">
@@ -245,18 +251,21 @@ const Settings = () => {
 
                     <div className="space-y-2">
                       <Label htmlFor="gameplayStyle" className="text-gray-300">Gameplay Style</Label>
-                      <select
-                        id="gameplayStyle"
-                        value={settings.gameplayStyle}
-                        onChange={(e) => setSettings({ ...settings, gameplayStyle: e.target.value as any })}
-                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white"
+                      <Select 
+                        value={settings.gameplayStyle} 
+                        onValueChange={(value: any) => setSettings({ ...settings, gameplayStyle: value })}
                       >
-                        <option value="attacking">Attacking</option>
-                        <option value="balanced">Balanced</option>
-                        <option value="defensive">Defensive</option>
-                        <option value="possession">Possession</option>
-                        <option value="counter">Counter-Attack</option>
-                      </select>
+                        <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-gray-800 border-gray-600">
+                          <SelectItem value="attacking" className="text-white">Attacking</SelectItem>
+                          <SelectItem value="balanced" className="text-white">Balanced</SelectItem>
+                          <SelectItem value="defensive" className="text-white">Defensive</SelectItem>
+                          <SelectItem value="possession" className="text-white">Possession</SelectItem>
+                          <SelectItem value="counter" className="text-white">Counter-Attack</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <div className="space-y-2">
@@ -274,7 +283,7 @@ const Settings = () => {
                   </div>
 
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg">
                       <div>
                         <Label htmlFor="notifications" className="text-gray-300">Enable Notifications</Label>
                         <p className="text-sm text-gray-500">Get notified about achievements and milestones</p>
@@ -286,7 +295,7 @@ const Settings = () => {
                       />
                     </div>
 
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg">
                       <div>
                         <Label htmlFor="defaultCrossPlay" className="text-gray-300">Default Cross-Play Setting</Label>
                         <p className="text-sm text-gray-500">Default state for cross-play when recording games</p>
@@ -311,7 +320,7 @@ const Settings = () => {
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {Object.entries(settings.dashboardSettings).map(([key, value]) => (
-                      <div key={key} className="flex items-center justify-between">
+                      <div key={key} className="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg">
                         <Label htmlFor={key} className="text-gray-300 capitalize">
                           {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
                         </Label>
@@ -339,7 +348,7 @@ const Settings = () => {
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {Object.entries(settings.analyticsPreferences).map(([key, value]) => (
-                      <div key={key} className="flex items-center justify-between">
+                      <div key={key} className="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg">
                         <Label htmlFor={key} className="text-gray-300 capitalize">
                           {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
                         </Label>
@@ -349,6 +358,31 @@ const Settings = () => {
                           onCheckedChange={(checked) => setSettings({
                             ...settings,
                             analyticsPreferences: { ...settings.analyticsPreferences, [key]: checked }
+                          })}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="glass-card static-element">
+                <CardHeader>
+                  <CardTitle className="text-white">Target Settings</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 gap-4">
+                    {Object.entries(settings.targetSettings).map(([key, value]) => (
+                      <div key={key} className="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg">
+                        <Label htmlFor={key} className="text-gray-300 capitalize">
+                          {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                        </Label>
+                        <Switch
+                          id={key}
+                          checked={value}
+                          onCheckedChange={(checked) => setSettings({
+                            ...settings,
+                            targetSettings: { ...settings.targetSettings, [key]: checked }
                           })}
                         />
                       </div>
