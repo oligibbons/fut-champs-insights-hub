@@ -3,12 +3,11 @@ import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { PlayerCard } from '@/types/squads';
+import { PlayerCard, CARD_TYPES } from '@/types/squads';
 import { useSquadData } from '@/hooks/useSquadData';
-import { Search, Plus, Star } from 'lucide-react';
+import { Search, Plus, User, Edit } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface PlayerSearchModalProps {
@@ -19,30 +18,34 @@ interface PlayerSearchModalProps {
 }
 
 const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position }: PlayerSearchModalProps) => {
+  const { players, savePlayer, getPlayerSuggestions } = useSquadData();
   const { toast } = useToast();
-  const { players, getPlayerSuggestions, savePlayer } = useSquadData();
   const [searchTerm, setSearchTerm] = useState('');
   const [suggestions, setSuggestions] = useState<PlayerCard[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [editingPlayer, setEditingPlayer] = useState<PlayerCard | null>(null);
+  const [customCardTypes, setCustomCardTypes] = useState<string[]>([]);
+  
+  // New player form state
   const [newPlayer, setNewPlayer] = useState<Partial<PlayerCard>>({
     name: '',
-    position: position || 'ST',
-    rating: 85,
+    position: position || 'CM',
+    rating: 75,
     cardType: 'gold',
     club: '',
     nationality: '',
     league: '',
-    pace: 80,
-    shooting: 80,
-    passing: 80,
-    dribbling: 80,
-    defending: 50,
-    physical: 80,
+    pace: 75,
+    shooting: 75,
+    passing: 75,
+    dribbling: 75,
+    defending: 75,
+    physical: 75,
     price: 0
   });
 
   useEffect(() => {
-    if (searchTerm.length >= 2) {
+    if (searchTerm) {
       const playerSuggestions = getPlayerSuggestions(searchTerm);
       setSuggestions(playerSuggestions);
     } else {
@@ -50,11 +53,19 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position }: Player
     }
   }, [searchTerm, getPlayerSuggestions]);
 
+  useEffect(() => {
+    // Load custom card types from localStorage
+    const saved = localStorage.getItem('futChampions_customCardTypes');
+    if (saved) {
+      setCustomCardTypes(JSON.parse(saved));
+    }
+  }, []);
+
   const handleCreatePlayer = () => {
-    if (!newPlayer.name || !newPlayer.position || !newPlayer.rating) {
+    if (!newPlayer.name?.trim()) {
       toast({
         title: "Error",
-        description: "Please fill in all required fields",
+        description: "Player name is required",
         variant: "destructive"
       });
       return;
@@ -65,69 +76,91 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position }: Player
       name: newPlayer.name!,
       position: newPlayer.position!,
       rating: newPlayer.rating!,
-      cardType: newPlayer.cardType || 'gold',
+      cardType: newPlayer.cardType as PlayerCard['cardType'],
       club: newPlayer.club || 'Unknown',
       nationality: newPlayer.nationality || 'Unknown',
       league: newPlayer.league || 'Unknown',
-      pace: newPlayer.pace || 80,
-      shooting: newPlayer.shooting || 80,
-      passing: newPlayer.passing || 80,
-      dribbling: newPlayer.dribbling || 80,
-      defending: newPlayer.defending || 50,
-      physical: newPlayer.physical || 80,
+      pace: newPlayer.pace || 75,
+      shooting: newPlayer.shooting || 75,
+      passing: newPlayer.passing || 75,
+      dribbling: newPlayer.dribbling || 75,
+      defending: newPlayer.defending || 75,
+      physical: newPlayer.physical || 75,
       price: newPlayer.price || 0,
-      gamesPlayed: 0,
       goals: 0,
       assists: 0,
       averageRating: 0,
       yellowCards: 0,
       redCards: 0,
+      minutesPlayed: 0,
       wins: 0,
       losses: 0,
       cleanSheets: 0,
-      minutesPlayed: 0,
-      ownGoals: 0,
+      imageUrl: '',
       lastUsed: new Date().toISOString()
     };
 
-    // Save player to database
     savePlayer(player);
-    
-    // Select the new player
     onPlayerSelect(player);
-    
-    toast({
-      title: "Player Created",
-      description: `${player.name} has been created and added to your squad`,
-    });
-
-    // Reset form
+    setShowCreateForm(false);
     setNewPlayer({
       name: '',
-      position: position || 'ST',
-      rating: 85,
+      position: position || 'CM',
+      rating: 75,
       cardType: 'gold',
       club: '',
       nationality: '',
       league: '',
-      pace: 80,
-      shooting: 80,
-      passing: 80,
-      dribbling: 80,
-      defending: 50,
-      physical: 80,
+      pace: 75,
+      shooting: 75,
+      passing: 75,
+      dribbling: 75,
+      defending: 75,
+      physical: 75,
       price: 0
     });
-    setShowCreateForm(false);
-    setSearchTerm('');
-    onClose();
+    
+    toast({
+      title: "Player Created",
+      description: `${player.name} has been added to your database.`
+    });
   };
 
-  const handlePlayerClick = (player: PlayerCard) => {
-    onPlayerSelect(player);
-    setSearchTerm('');
-    setSuggestions([]);
-    onClose();
+  const handleEditPlayer = (player: PlayerCard) => {
+    setEditingPlayer(player);
+    setNewPlayer(player);
+    setShowCreateForm(true);
+  };
+
+  const handleUpdatePlayer = () => {
+    if (!editingPlayer || !newPlayer.name?.trim()) return;
+
+    const updatedPlayer: PlayerCard = {
+      ...editingPlayer,
+      ...newPlayer,
+      id: editingPlayer.id,
+      lastUsed: new Date().toISOString()
+    };
+
+    savePlayer(updatedPlayer);
+    onPlayerSelect(updatedPlayer);
+    setShowCreateForm(false);
+    setEditingPlayer(null);
+    
+    toast({
+      title: "Player Updated",
+      description: `${updatedPlayer.name} has been updated.`
+    });
+  };
+
+  const addCustomCardType = () => {
+    const customType = prompt('Enter custom card type:');
+    if (customType && customType.trim()) {
+      const newCustomTypes = [...customCardTypes, customType.trim().toLowerCase()];
+      setCustomCardTypes(newCustomTypes);
+      localStorage.setItem('futChampions_customCardTypes', JSON.stringify(newCustomTypes));
+      setNewPlayer(prev => ({ ...prev, cardType: customType.trim().toLowerCase() as PlayerCard['cardType'] }));
+    }
   };
 
   const getCardTypeColor = (cardType: PlayerCard['cardType']) => {
@@ -141,7 +174,7 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position }: Player
       case 'tots': return 'bg-green-600 text-white';
       case 'icon': return 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black';
       case 'hero': return 'bg-purple-600 text-white';
-      default: return 'bg-yellow-500 text-black';
+      default: return 'bg-purple-500 text-white';
     }
   };
 
@@ -150,7 +183,7 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position }: Player
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-gray-900 border-gray-700">
         <DialogHeader>
           <DialogTitle className="text-white">
-            {showCreateForm ? 'Create New Player' : `Search Players${position ? ` - ${position}` : ''}`}
+            {showCreateForm ? (editingPlayer ? 'Edit Player' : 'Create New Player') : 'Search Players'}
           </DialogTitle>
         </DialogHeader>
 
@@ -158,9 +191,9 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position }: Player
           <div className="space-y-4">
             {/* Search Input */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Search for a player..."
+                placeholder="Search for players..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 bg-gray-800 border-gray-600 text-white"
@@ -170,137 +203,163 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position }: Player
             {/* Create New Player Button */}
             <Button
               onClick={() => setShowCreateForm(true)}
-              className="w-full modern-button-secondary"
+              className="w-full modern-button-primary"
             >
               <Plus className="h-4 w-4 mr-2" />
               Create New Player
             </Button>
 
             {/* Search Results */}
-            <div className="space-y-2 max-h-96 overflow-y-auto">
-              {suggestions.length > 0 ? (
-                suggestions.map((player) => (
-                  <div
-                    key={player.id}
-                    onClick={() => handlePlayerClick(player)}
-                    className="flex items-center gap-3 p-3 bg-gray-800/50 rounded-lg hover:bg-gray-700/50 cursor-pointer transition-colors"
-                  >
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {suggestions.map((player) => (
+                <div
+                  key={player.id}
+                  className="flex items-center justify-between p-3 bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-700 group"
+                >
+                  <div className="flex items-center gap-3" onClick={() => onPlayerSelect(player)}>
                     <Badge className={`${getCardTypeColor(player.cardType)} text-xs`}>
                       {player.rating}
                     </Badge>
-                    <div className="flex-1">
+                    <div>
                       <p className="text-white font-medium">{player.name}</p>
                       <p className="text-gray-400 text-sm">{player.position} • {player.club}</p>
                     </div>
-                    {player.lastUsed && (
-                      <Star className="h-4 w-4 text-yellow-500" />
-                    )}
                   </div>
-                ))
-              ) : searchTerm.length >= 2 ? (
-                <div className="text-center py-8 text-gray-400">
-                  No players found. Try creating a new player.
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleEditPlayer(player)}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity bg-gray-700 border-gray-600 text-white"
+                  >
+                    <Edit className="h-3 w-3" />
+                  </Button>
                 </div>
-              ) : (
-                <div className="text-center py-8 text-gray-400">
-                  Start typing to search for players...
+              ))}
+              {searchTerm && suggestions.length === 0 && (
+                <div className="text-center py-4 text-gray-400">
+                  <User className="h-8 w-8 mx-auto mb-2" />
+                  <p>No players found. Create a new one?</p>
                 </div>
               )}
             </div>
           </div>
         ) : (
           <div className="space-y-4">
-            {/* Create Player Form */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="playerName" className="text-gray-300">Player Name *</Label>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-white text-sm font-medium mb-2">Player Name</label>
                 <Input
-                  id="playerName"
-                  placeholder="Enter player name"
-                  value={newPlayer.name}
-                  onChange={(e) => setNewPlayer({ ...newPlayer, name: e.target.value })}
+                  value={newPlayer.name || ''}
+                  onChange={(e) => setNewPlayer(prev => ({ ...prev, name: e.target.value }))}
                   className="bg-gray-800 border-gray-600 text-white"
+                  placeholder="Enter player name"
                 />
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="playerPosition" className="text-gray-300">Position *</Label>
-                <Select value={newPlayer.position} onValueChange={(value) => setNewPlayer({ ...newPlayer, position: value })}>
+              <div>
+                <label className="block text-white text-sm font-medium mb-2">Position</label>
+                <Select
+                  value={newPlayer.position}
+                  onValueChange={(value) => setNewPlayer(prev => ({ ...prev, position: value }))}
+                >
                   <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-gray-900 border-gray-700">
-                    {['GK', 'CB', 'LB', 'RB', 'CDM', 'CM', 'CAM', 'LM', 'RM', 'LW', 'RW', 'ST', 'CF'].map(pos => (
+                    {['GK', 'CB', 'LB', 'RB', 'LWB', 'RWB', 'CDM', 'CM', 'CAM', 'LM', 'RM', 'LW', 'RW', 'CF', 'ST'].map(pos => (
                       <SelectItem key={pos} value={pos} className="text-white hover:bg-gray-800">{pos}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="playerRating" className="text-gray-300">Rating *</Label>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-white text-sm font-medium mb-2">Rating</label>
                 <Input
-                  id="playerRating"
                   type="number"
                   min="1"
                   max="99"
-                  value={newPlayer.rating}
-                  onChange={(e) => setNewPlayer({ ...newPlayer, rating: parseInt(e.target.value) || 85 })}
+                  value={newPlayer.rating || 75}
+                  onChange={(e) => setNewPlayer(prev => ({ ...prev, rating: parseInt(e.target.value) || 75 }))}
                   className="bg-gray-800 border-gray-600 text-white"
                 />
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="playerCardType" className="text-gray-300">Card Type</Label>
-                <Select value={newPlayer.cardType} onValueChange={(value: PlayerCard['cardType']) => setNewPlayer({ ...newPlayer, cardType: value })}>
-                  <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-900 border-gray-700">
-                    {['bronze', 'silver', 'gold', 'inform', 'totw', 'toty', 'tots', 'icon', 'hero'].map(type => (
-                      <SelectItem key={type} value={type} className="text-white hover:bg-gray-800 capitalize">{type}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div>
+                <label className="block text-white text-sm font-medium mb-2">Card Type</label>
+                <div className="flex gap-2">
+                  <Select
+                    value={newPlayer.cardType}
+                    onValueChange={(value) => setNewPlayer(prev => ({ ...prev, cardType: value as PlayerCard['cardType'] }))}
+                  >
+                    <SelectTrigger className="bg-gray-800 border-gray-600 text-white flex-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-900 border-gray-700">
+                      {[...CARD_TYPES, ...customCardTypes].map(type => (
+                        <SelectItem key={type} value={type} className="text-white hover:bg-gray-800">{type}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    type="button"
+                    onClick={addCustomCardType}
+                    size="sm"
+                    variant="outline"
+                    className="bg-gray-700 border-gray-600 text-white"
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                </div>
               </div>
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="playerClub" className="text-gray-300">Club</Label>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label className="block text-white text-sm font-medium mb-2">Club</label>
                 <Input
-                  id="playerClub"
-                  placeholder="Enter club name"
-                  value={newPlayer.club}
-                  onChange={(e) => setNewPlayer({ ...newPlayer, club: e.target.value })}
+                  value={newPlayer.club || ''}
+                  onChange={(e) => setNewPlayer(prev => ({ ...prev, club: e.target.value }))}
                   className="bg-gray-800 border-gray-600 text-white"
+                  placeholder="Club name"
                 />
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="playerNationality" className="text-gray-300">Nationality</Label>
+              <div>
+                <label className="block text-white text-sm font-medium mb-2">Nationality</label>
                 <Input
-                  id="playerNationality"
-                  placeholder="Enter nationality"
-                  value={newPlayer.nationality}
-                  onChange={(e) => setNewPlayer({ ...newPlayer, nationality: e.target.value })}
+                  value={newPlayer.nationality || ''}
+                  onChange={(e) => setNewPlayer(prev => ({ ...prev, nationality: e.target.value }))}
                   className="bg-gray-800 border-gray-600 text-white"
+                  placeholder="Country"
+                />
+              </div>
+              <div>
+                <label className="block text-white text-sm font-medium mb-2">League</label>
+                <Input
+                  value={newPlayer.league || ''}
+                  onChange={(e) => setNewPlayer(prev => ({ ...prev, league: e.target.value }))}
+                  className="bg-gray-800 border-gray-600 text-white"
+                  placeholder="League name"
                 />
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex gap-3 pt-4">
+            <div className="flex gap-4">
               <Button
-                onClick={() => setShowCreateForm(false)}
+                onClick={() => {
+                  setShowCreateForm(false);
+                  setEditingPlayer(null);
+                }}
                 variant="outline"
-                className="flex-1 modern-button-secondary"
+                className="flex-1 bg-gray-700 border-gray-600 text-white"
               >
-                Back to Search
+                Cancel
               </Button>
               <Button
-                onClick={handleCreatePlayer}
+                onClick={editingPlayer ? handleUpdatePlayer : handleCreatePlayer}
                 className="flex-1 modern-button-primary"
               >
-                Create Player
+                {editingPlayer ? 'Update Player' : 'Create Player'}
               </Button>
             </div>
           </div>

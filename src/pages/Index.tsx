@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { WeeklyPerformance, UserSettings } from '@/types/futChampions';
@@ -111,9 +112,6 @@ const Index = () => {
     }
   }, [activeAccount, navigate]);
 
-  // Enhanced styling for stat cards
-  const statCardStyle = "bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:border-fifa-blue/30 transition-all duration-300";
-
   return (
     <div className="min-h-screen">
       <Navigation />
@@ -122,12 +120,12 @@ const Index = () => {
         <div className="max-w-7xl mx-auto space-y-8">
           {/* Header */}
           <div className="flex items-center gap-4 mb-8">
-            <div className="p-3 rounded-2xl" style={{ backgroundColor: `${currentTheme.colors.primary}20` }}>
-              <BarChart3 className="h-8 w-8" style={{ color: currentTheme.colors.primary }} />
+            <div className="p-3 rounded-2xl bg-gradient-to-r from-fifa-blue/20 to-fifa-purple/20">
+              <BarChart3 className="h-8 w-8 text-fifa-blue" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent">
-                FUT Champions Dashboard
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-fifa-blue via-fifa-purple to-fifa-gold bg-clip-text text-transparent">
+                FUTALYST Analytics Hub
               </h1>
               <p className="text-gray-400 mt-1">Welcome back! Here's your performance overview</p>
             </div>
@@ -145,7 +143,7 @@ const Index = () => {
           {/* Quick Stats Grid */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             {/* Total Games */}
-            <Card className={statCardStyle}>
+            <Card className="glass-card static-element">
               <CardContent className="p-4 text-center">
                 <div className="text-2xl font-bold text-fifa-blue mb-1">{allTimeStats.totalGames}</div>
                 <div className="text-sm text-gray-400">Total Games</div>
@@ -153,7 +151,7 @@ const Index = () => {
             </Card>
 
             {/* Total Wins */}
-            <Card className={statCardStyle}>
+            <Card className="glass-card static-element">
               <CardContent className="p-4 text-center">
                 <div className="text-2xl font-bold text-fifa-green mb-1">{allTimeStats.totalWins}</div>
                 <div className="text-sm text-gray-400">Total Wins</div>
@@ -161,7 +159,7 @@ const Index = () => {
             </Card>
 
             {/* Total Goals */}
-            <Card className={statCardStyle}>
+            <Card className="glass-card static-element">
               <CardContent className="p-4 text-center">
                 <div className="text-2xl font-bold text-fifa-gold mb-1">{allTimeStats.totalGoals}</div>
                 <div className="text-sm text-gray-400">Total Goals</div>
@@ -169,7 +167,7 @@ const Index = () => {
             </Card>
 
             {/* Avg Rating */}
-            <Card className={statCardStyle}>
+            <Card className="glass-card static-element">
               <CardContent className="p-4 text-center">
                 <div className="text-2xl font-bold text-fifa-purple mb-1">{allTimeStats.avgRating}</div>
                 <div className="text-sm text-gray-400">Avg Rating</div>
@@ -177,7 +175,7 @@ const Index = () => {
             </Card>
 
             {/* Win Streak */}
-            <Card className={statCardStyle}>
+            <Card className="glass-card static-element">
               <CardContent className="p-4 text-center">
                 <div className="text-2xl font-bold text-fifa-red mb-1">{currentWeek?.currentStreak || 0}</div>
                 <div className="text-sm text-gray-400">Win Streak</div>
@@ -185,7 +183,7 @@ const Index = () => {
             </Card>
 
             {/* Win Rate */}
-            <Card className={statCardStyle}>
+            <Card className="glass-card static-element">
               <CardContent className="p-4 text-center">
                 <div className="text-2xl font-bold text-fifa-blue mb-1">{allTimeStats.winRate}%</div>
                 <div className="text-sm text-gray-400">Win Rate</div>
@@ -193,7 +191,7 @@ const Index = () => {
             </Card>
 
             {/* Goals For */}
-            <Card className={statCardStyle}>
+            <Card className="glass-card static-element">
               <CardContent className="p-4 text-center">
                 <div className="text-2xl font-bold text-fifa-green mb-1">{allTimeStats.totalGoals}</div>
                 <div className="text-sm text-gray-400">Goals For</div>
@@ -201,7 +199,7 @@ const Index = () => {
             </Card>
 
             {/* Goal Difference */}
-            <Card className={statCardStyle}>
+            <Card className="glass-card static-element">
               <CardContent className="p-4 text-center">
                 <div className={`text-2xl font-bold mb-1 ${allTimeStats.goalDifference >= 0 ? 'text-fifa-green' : 'text-fifa-red'}`}>
                   {allTimeStats.goalDifference >= 0 ? '+' : ''}{allTimeStats.goalDifference}
@@ -211,7 +209,7 @@ const Index = () => {
             </Card>
 
             {/* Avg Opponent Skill */}
-            <Card className={statCardStyle}>
+            <Card className="glass-card static-element">
               <CardContent className="p-4 text-center">
                 <div className="text-2xl font-bold text-fifa-gold mb-1">{allTimeStats.avgOpponentSkill}</div>
                 <div className="text-sm text-gray-400">Avg Opponent Skill</div>
@@ -220,7 +218,7 @@ const Index = () => {
           </div>
 
           {/* Quick Actions */}
-          <Card className="glass-card">
+          <Card className="glass-card static-element">
             <CardHeader>
               <CardTitle className="text-white">Quick Actions</CardTitle>
             </CardHeader>

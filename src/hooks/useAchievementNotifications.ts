@@ -3,7 +3,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { WeeklyPerformance, GameResult, Achievement } from '@/types/futChampions';
 import { checkAchievements } from '@/utils/achievements';
-import { generateGameFeedback } from '@/utils/feedback';
+import { generateMatchFeedback } from '@/utils/feedback';
 
 export function useAchievementNotifications() {
   const { toast } = useToast();
@@ -15,7 +15,7 @@ export function useAchievementNotifications() {
       totalGames: weeklyData.reduce((sum, week) => sum + week.games.length, 0),
       totalWins: weeklyData.reduce((sum, week) => sum + week.totalWins, 0),
       totalGoals: weeklyData.reduce((sum, week) => sum + week.totalGoals, 0),
-      totalCleanSheets: 0, // This would need to be calculated from game data
+      totalCleanSheets: 0,
       longestWinStreak: Math.max(...weeklyData.map(week => week.bestStreak || 0)),
       completedWeeks: weeklyData.filter(week => week.isCompleted).length,
       averageOpponentSkill: weeklyData.length > 0 ? 
@@ -26,10 +26,8 @@ export function useAchievementNotifications() {
     const newAchievements = checkAchievements(allTimeStats, currentWeek, achievements);
     
     if (newAchievements.length > 0) {
-      // Update achievements in storage
       setAchievements(newAchievements);
       
-      // Show notifications for newly unlocked achievements
       newAchievements
         .filter(achievement => achievement.unlocked && !achievements.find(a => a.id === achievement.id)?.unlocked)
         .forEach(achievement => {
@@ -42,8 +40,8 @@ export function useAchievementNotifications() {
     }
   };
 
-  const notifyGameFeedback = (game: GameResult, weekData: WeeklyPerformance, allTimeStats: any) => {
-    const feedback = generateGameFeedback(game, weekData, allTimeStats);
+  const notifyGameFeedback = (game: GameResult, weekData: WeeklyPerformance) => {
+    const feedback = generateMatchFeedback(game, weekData);
     
     if (feedback) {
       toast({
