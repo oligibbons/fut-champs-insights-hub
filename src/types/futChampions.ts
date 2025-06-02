@@ -82,6 +82,12 @@ export interface GameResult {
   teamStats: TeamStats;
   playerStats: PlayerPerformance[];
   crossPlayEnabled?: boolean;
+  penaltyShootout?: PenaltyShootout;
+  time?: string; // Time of day the game was played
+  actualGameTime?: number; // Actual game duration in minutes
+  stressLevel?: number; // 1-10 stress level
+  serverQuality?: number; // 1-10 server quality rating
+  gameRating?: string; // A-F rating for the game
 }
 
 export interface Squad {

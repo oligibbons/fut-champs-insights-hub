@@ -6,16 +6,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { UserSettings } from '@/types/futChampions';
 import { useTheme } from '@/hooks/useTheme';
-import { Settings as SettingsIcon, Save, RefreshCw, Trash2 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { Settings as SettingsIcon, Save, RefreshCw, Trash2, User, Shield, Eye, Gamepad2, Database } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { FORMATIONS } from '@/types/squads';
 
 const Settings = () => {
   const { currentTheme } = useTheme();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [settings, setSettings] = useLocalStorage<UserSettings>('futChampions_settings', {
     preferredFormation: '4-3-3',
     trackingStartDate: new Date().toISOString().split('T')[0],
@@ -24,6 +27,7 @@ const Settings = () => {
     gamesPerWeek: 15,
     theme: 'futvisionary',
     carouselSpeed: 12,
+    defaultCrossPlay: false,
     dashboardSettings: {
       showTopPerformers: true,
       showXGAnalysis: true,
@@ -88,6 +92,7 @@ const Settings = () => {
       gamesPerWeek: 15,
       theme: 'futvisionary',
       carouselSpeed: 12,
+      defaultCrossPlay: false,
       dashboardSettings: {
         showTopPerformers: true,
         showXGAnalysis: true,
@@ -143,7 +148,6 @@ const Settings = () => {
 
   const handleDeleteAllData = () => {
     if (window.confirm('Are you sure you want to delete ALL data? This cannot be undone!')) {
-      // Clear all localStorage data
       const keys = Object.keys(localStorage);
       keys.forEach(key => {
         if (key.startsWith('futChampions_') || key.startsWith('fc25-')) {
@@ -151,7 +155,6 @@ const Settings = () => {
         }
       });
       
-      // Reset settings to default
       handleReset();
       
       toast({
@@ -167,7 +170,7 @@ const Settings = () => {
       <Navigation />
       
       <main className="lg:ml-20 lg:hover:ml-64 transition-all duration-500 p-4 lg:p-6">
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="max-w-6xl mx-auto space-y-6">
           {/* Header */}
           <div className="flex items-center gap-4 mb-8">
             <div className="p-3 rounded-2xl" style={{ backgroundColor: `${currentTheme.colors.primary}20` }}>
@@ -177,165 +180,249 @@ const Settings = () => {
               <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent">
                 Settings
               </h1>
-              <p className="text-gray-400 mt-1">Customize your FUT Champions experience</p>
+              <p className="text-gray-400 mt-1">Customize your FUTALYST experience</p>
             </div>
           </div>
 
-          {/* General Settings */}
-          <Card className="glass-card static-element">
-            <CardHeader>
-              <CardTitle className="text-white">General Settings</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="preferredFormation" className="text-gray-300">Preferred Formation</Label>
-                  <select
-                    id="preferredFormation"
-                    value={settings.preferredFormation}
-                    onChange={(e) => setSettings({ ...settings, preferredFormation: e.target.value })}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white"
-                  >
-                    {FORMATIONS.map(formation => (
-                      <option key={formation.name} value={formation.name}>{formation.name}</option>
+          <Tabs defaultValue="general" className="w-full">
+            <TabsList className="grid w-full grid-cols-5 glass-card static-element">
+              <TabsTrigger value="general" className="data-[state=active]:bg-fifa-blue/20">
+                <Gamepad2 className="h-4 w-4 mr-2" />
+                General
+              </TabsTrigger>
+              <TabsTrigger value="display" className="data-[state=active]:bg-fifa-blue/20">
+                <Eye className="h-4 w-4 mr-2" />
+                Display
+              </TabsTrigger>
+              <TabsTrigger value="analytics" className="data-[state=active]:bg-fifa-blue/20">
+                <Database className="h-4 w-4 mr-2" />
+                Analytics
+              </TabsTrigger>
+              <TabsTrigger value="account" className="data-[state=active]:bg-fifa-blue/20">
+                <User className="h-4 w-4 mr-2" />
+                Account
+              </TabsTrigger>
+              <TabsTrigger value="data" className="data-[state=active]:bg-fifa-blue/20">
+                <Shield className="h-4 w-4 mr-2" />
+                Data
+              </TabsTrigger>
+            </TabsList>
+
+            {/* General Settings */}
+            <TabsContent value="general" className="space-y-6">
+              <Card className="glass-card static-element">
+                <CardHeader>
+                  <CardTitle className="text-white">Game Settings</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="preferredFormation" className="text-gray-300">Preferred Formation</Label>
+                      <select
+                        id="preferredFormation"
+                        value={settings.preferredFormation}
+                        onChange={(e) => setSettings({ ...settings, preferredFormation: e.target.value })}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white"
+                      >
+                        {FORMATIONS.map(formation => (
+                          <option key={formation.name} value={formation.name}>{formation.name}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="gamesPerWeek" className="text-gray-300">Games Per Run</Label>
+                      <Input
+                        id="gamesPerWeek"
+                        type="number"
+                        min="1"
+                        max="30"
+                        value={settings.gamesPerWeek}
+                        onChange={(e) => setSettings({ ...settings, gamesPerWeek: parseInt(e.target.value) || 15 })}
+                        className="bg-gray-800 border-gray-600 text-white"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="gameplayStyle" className="text-gray-300">Gameplay Style</Label>
+                      <select
+                        id="gameplayStyle"
+                        value={settings.gameplayStyle}
+                        onChange={(e) => setSettings({ ...settings, gameplayStyle: e.target.value as any })}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white"
+                      >
+                        <option value="attacking">Attacking</option>
+                        <option value="balanced">Balanced</option>
+                        <option value="defensive">Defensive</option>
+                        <option value="possession">Possession</option>
+                        <option value="counter">Counter-Attack</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="carouselSpeed" className="text-gray-300">Dashboard Carousel Speed (seconds)</Label>
+                      <Input
+                        id="carouselSpeed"
+                        type="number"
+                        min="3"
+                        max="30"
+                        value={settings.carouselSpeed || 12}
+                        onChange={(e) => setSettings({ ...settings, carouselSpeed: parseInt(e.target.value) || 12 })}
+                        className="bg-gray-800 border-gray-600 text-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label htmlFor="notifications" className="text-gray-300">Enable Notifications</Label>
+                        <p className="text-sm text-gray-500">Get notified about achievements and milestones</p>
+                      </div>
+                      <Switch
+                        id="notifications"
+                        checked={settings.notifications}
+                        onCheckedChange={(checked) => setSettings({ ...settings, notifications: checked })}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label htmlFor="defaultCrossPlay" className="text-gray-300">Default Cross-Play Setting</Label>
+                        <p className="text-sm text-gray-500">Default state for cross-play when recording games</p>
+                      </div>
+                      <Switch
+                        id="defaultCrossPlay"
+                        checked={settings.defaultCrossPlay || false}
+                        onCheckedChange={(checked) => setSettings({ ...settings, defaultCrossPlay: checked })}
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Display Settings */}
+            <TabsContent value="display" className="space-y-6">
+              <Card className="glass-card static-element">
+                <CardHeader>
+                  <CardTitle className="text-white">Dashboard Display</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {Object.entries(settings.dashboardSettings).map(([key, value]) => (
+                      <div key={key} className="flex items-center justify-between">
+                        <Label htmlFor={key} className="text-gray-300 capitalize">
+                          {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                        </Label>
+                        <Switch
+                          id={key}
+                          checked={value}
+                          onCheckedChange={(checked) => setSettings({
+                            ...settings,
+                            dashboardSettings: { ...settings.dashboardSettings, [key]: checked }
+                          })}
+                        />
+                      </div>
                     ))}
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="gamesPerWeek" className="text-gray-300">Games Per Week</Label>
-                  <Input
-                    id="gamesPerWeek"
-                    type="number"
-                    min="1"
-                    max="30"
-                    value={settings.gamesPerWeek}
-                    onChange={(e) => setSettings({ ...settings, gamesPerWeek: parseInt(e.target.value) || 15 })}
-                    className="bg-gray-800 border-gray-600 text-white"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="gameplayStyle" className="text-gray-300">Gameplay Style</Label>
-                  <select
-                    id="gameplayStyle"
-                    value={settings.gameplayStyle}
-                    onChange={(e) => setSettings({ ...settings, gameplayStyle: e.target.value as any })}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white"
-                  >
-                    <option value="attacking">Attacking</option>
-                    <option value="balanced">Balanced</option>
-                    <option value="defensive">Defensive</option>
-                    <option value="possession">Possession</option>
-                    <option value="counter">Counter-Attack</option>
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="carouselSpeed" className="text-gray-300">Dashboard Carousel Speed (seconds)</Label>
-                  <Input
-                    id="carouselSpeed"
-                    type="number"
-                    min="3"
-                    max="30"
-                    value={settings.carouselSpeed || 12}
-                    onChange={(e) => setSettings({ ...settings, carouselSpeed: parseInt(e.target.value) || 12 })}
-                    className="bg-gray-800 border-gray-600 text-white"
-                  />
-                  <p className="text-xs text-gray-500">How long each slide shows before auto-advancing</p>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="notifications" className="text-gray-300">Enable Notifications</Label>
-                  <p className="text-sm text-gray-500">Get notified about achievements and milestones</p>
-                </div>
-                <Switch
-                  id="notifications"
-                  checked={settings.notifications}
-                  onCheckedChange={(checked) => setSettings({ ...settings, notifications: checked })}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Dashboard Display Settings */}
-          <Card className="glass-card static-element">
-            <CardHeader>
-              <CardTitle className="text-white">Dashboard Display</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {Object.entries(settings.dashboardSettings).map(([key, value]) => (
-                  <div key={key} className="flex items-center justify-between">
-                    <Label htmlFor={key} className="text-gray-300 capitalize">
-                      {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                    </Label>
-                    <Switch
-                      id={key}
-                      checked={value}
-                      onCheckedChange={(checked) => setSettings({
-                        ...settings,
-                        dashboardSettings: { ...settings.dashboardSettings, [key]: checked }
-                      })}
-                    />
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-          {/* Analytics Preferences */}
-          <Card className="glass-card static-element">
-            <CardHeader>
-              <CardTitle className="text-white">Analytics Preferences</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {Object.entries(settings.analyticsPreferences).map(([key, value]) => (
-                  <div key={key} className="flex items-center justify-between">
-                    <Label htmlFor={key} className="text-gray-300 capitalize">
-                      {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                    </Label>
-                    <Switch
-                      id={key}
-                      checked={value}
-                      onCheckedChange={(checked) => setSettings({
-                        ...settings,
-                        analyticsPreferences: { ...settings.analyticsPreferences, [key]: checked }
-                      })}
-                    />
+            {/* Analytics Settings */}
+            <TabsContent value="analytics" className="space-y-6">
+              <Card className="glass-card static-element">
+                <CardHeader>
+                  <CardTitle className="text-white">Analytics Preferences</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {Object.entries(settings.analyticsPreferences).map(([key, value]) => (
+                      <div key={key} className="flex items-center justify-between">
+                        <Label htmlFor={key} className="text-gray-300 capitalize">
+                          {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                        </Label>
+                        <Switch
+                          id={key}
+                          checked={value}
+                          onCheckedChange={(checked) => setSettings({
+                            ...settings,
+                            analyticsPreferences: { ...settings.analyticsPreferences, [key]: checked }
+                          })}
+                        />
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-          {/* Data Management */}
-          <Card className="glass-card static-element">
-            <CardHeader>
-              <CardTitle className="text-white">Data Management</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
-                  <h4 className="text-red-400 font-semibold mb-2">Danger Zone</h4>
-                  <p className="text-gray-300 text-sm mb-4">
-                    This will permanently delete all your FUT Champions data including games, squads, players, and achievements. This action cannot be undone.
+            {/* Account Management */}
+            <TabsContent value="account" className="space-y-6">
+              <Card className="glass-card static-element">
+                <CardHeader>
+                  <CardTitle className="text-white">Account Information</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-gray-300">Email</Label>
+                      <p className="text-white">{user?.email || 'Not available'}</p>
+                    </div>
+                    <div>
+                      <Label className="text-gray-300">Account Created</Label>
+                      <p className="text-white">
+                        {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'Not available'}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="glass-card static-element">
+                <CardHeader>
+                  <CardTitle className="text-white">FC25 Account Management</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-gray-400">
+                    Manage multiple FC25 accounts to track different profiles separately.
+                    Coming soon - ability to create, switch between, and manage multiple FC25 accounts.
                   </p>
-                  <Button 
-                    onClick={handleDeleteAllData}
-                    variant="destructive"
-                    className="bg-red-600 hover:bg-red-700"
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete All Data
+                  <Button disabled className="w-full" variant="outline">
+                    Manage FC25 Accounts (Coming Soon)
                   </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Data Management */}
+            <TabsContent value="data" className="space-y-6">
+              <Card className="glass-card static-element">
+                <CardHeader>
+                  <CardTitle className="text-white">Data Management</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+                      <h4 className="text-red-400 font-semibold mb-2">Danger Zone</h4>
+                      <p className="text-gray-300 text-sm mb-4">
+                        This will permanently delete all your FUTALYST data including games, squads, players, and achievements. This action cannot be undone.
+                      </p>
+                      <Button 
+                        onClick={handleDeleteAllData}
+                        variant="destructive"
+                        className="bg-red-600 hover:bg-red-700"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete All Data
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
 
           {/* Action Buttons */}
           <div className="flex gap-4">

@@ -29,7 +29,7 @@ const Navigation = () => {
 
   const navigationItems = [
     { name: 'Dashboard', path: '/', icon: Home },
-    { name: 'Current Week', path: '/current-week', icon: Calendar },
+    { name: 'Current Run', path: '/current-week', icon: Calendar },
     { name: 'History', path: '/history', icon: History },
     { name: 'Squads', path: '/squads', icon: Users },
     { name: 'Players', path: '/players', icon: TrendingUp },
