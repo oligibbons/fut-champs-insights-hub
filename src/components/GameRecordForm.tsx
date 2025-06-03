@@ -29,7 +29,7 @@ const GameRecordForm = ({ onGameSaved, gameNumber }: GameRecordFormProps) => {
   const [scoreLine, setScoreLine] = useState('');
   const [opponentSkill, setOpponentSkill] = useState<number>(5);
   const [duration, setDuration] = useState<number>(90);
-  const [gameContext, setGameContext] = useState<'normal' | 'qualifier' | 'playoffs'>('normal');
+  const [gameContext, setGameContext] = useState<'normal' | 'rage_quit' | 'extra_time' | 'penalties' | 'disconnect' | 'hacker' | 'free_win'>('normal');
   const [comments, setComments] = useState('');
   const [crossPlay, setCrossPlay] = useState(settings.defaultCrossPlay || false);
   const [gameRating, setGameRating] = useState<string>('');
@@ -52,6 +52,9 @@ const GameRecordForm = ({ onGameSaved, gameNumber }: GameRecordFormProps) => {
     redCards: 0,
     offsides: 2,
     expectedGoals: 1.5,
+    actualGoals: 0,
+    expectedGoalsAgainst: 1.0,
+    actualGoalsAgainst: 0,
     distanceCovered: 105
   });
 
@@ -59,10 +62,11 @@ const GameRecordForm = ({ onGameSaved, gameNumber }: GameRecordFormProps) => {
 
   // Auto-populate squad players when default squad is available
   useEffect(() => {
-    if (defaultSquad && playerStats.length === 0) {
+    if (defaultSquad && defaultSquad.startingXI && playerStats.length === 0) {
       const startingPlayers = defaultSquad.startingXI
         .filter(pos => pos.player)
         .map(pos => ({
+          id: `${pos.player!.id}-${Date.now()}`,
           name: pos.player!.name,
           position: pos.player!.position,
           rating: 6.5,
@@ -70,7 +74,9 @@ const GameRecordForm = ({ onGameSaved, gameNumber }: GameRecordFormProps) => {
           assists: 0,
           minutesPlayed: 90,
           yellowCards: 0,
-          redCards: 0
+          redCards: 0,
+          ownGoals: 0,
+          wasSubstituted: false
         }));
       
       setPlayerStats(startingPlayers);
@@ -106,9 +112,11 @@ const GameRecordForm = ({ onGameSaved, gameNumber }: GameRecordFormProps) => {
       stressLevel,
       serverQuality,
       datePlayed: new Date().toISOString(),
+      date: new Date().toISOString(),
       playerStats,
       teamStats,
-      gameScore: calculateGameScore()
+      gameScore: calculateGameScore(),
+      crossPlayEnabled: crossPlay
     };
 
     onGameSaved(newGame);
@@ -162,6 +170,9 @@ const GameRecordForm = ({ onGameSaved, gameNumber }: GameRecordFormProps) => {
       redCards: 0,
       offsides: 2,
       expectedGoals: 1.5,
+      actualGoals: 0,
+      expectedGoalsAgainst: 1.0,
+      actualGoalsAgainst: 0,
       distanceCovered: 105
     });
   };
@@ -253,8 +264,12 @@ const GameRecordForm = ({ onGameSaved, gameNumber }: GameRecordFormProps) => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="normal">Normal Game</SelectItem>
-                      <SelectItem value="qualifier">Qualifier</SelectItem>
-                      <SelectItem value="playoffs">Playoffs</SelectItem>
+                      <SelectItem value="rage_quit">Rage Quit</SelectItem>
+                      <SelectItem value="extra_time">Extra Time</SelectItem>
+                      <SelectItem value="penalties">Penalties</SelectItem>
+                      <SelectItem value="disconnect">Disconnect</SelectItem>
+                      <SelectItem value="hacker">Hacker</SelectItem>
+                      <SelectItem value="free_win">Free Win</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

@@ -47,10 +47,13 @@ export interface TeamStats {
   passAccuracy: number;
   corners: number;
   fouls: number;
+  yellowCards: number;
+  redCards: number;
   offsides?: number;
   crosses?: number;
   duelsWon?: number;
   tacklesSuccessful?: number;
+  distanceCovered: number;
 }
 
 export interface OpponentAnalysis {
@@ -88,6 +91,11 @@ export interface GameResult {
   stressLevel?: number; // 1-10 stress level
   serverQuality?: number; // 1-10 server quality rating
   gameRating?: string; // A-F rating for the game
+  datePlayed?: string;
+  gameScore?: number;
+  rageQuits?: number;
+  timePlayed?: string;
+  crossPlay?: boolean;
 }
 
 export interface Squad {
@@ -97,6 +105,11 @@ export interface Squad {
   players: Player[];
   created: string;
   lastUsed: string;
+  isDefault?: boolean;
+  startingXI?: Array<{
+    position: string;
+    player?: Player;
+  }>;
 }
 
 export interface WeeklyTarget {

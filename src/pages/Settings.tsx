@@ -108,14 +108,17 @@ const Settings = () => {
     setSettings({ ...settings, [key]: value });
   };
 
-  const updateNestedSettings = (section: string, key: string, value: any) => {
-    setSettings({
-      ...settings,
-      [section]: {
-        ...settings[section as keyof UserSettings],
-        [key]: value
-      }
-    });
+  const updateNestedSettings = (section: keyof UserSettings, key: string, value: any) => {
+    const currentSection = settings[section];
+    if (typeof currentSection === 'object' && currentSection !== null) {
+      setSettings({
+        ...settings,
+        [section]: {
+          ...currentSection,
+          [key]: value
+        }
+      });
+    }
   };
 
   return (

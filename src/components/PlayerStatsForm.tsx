@@ -4,15 +4,15 @@ import { PlayerPerformance } from '@/types/futChampions';
 import PlayerPerformanceInput from './PlayerPerformanceInput';
 
 interface PlayerStatsFormProps {
-  playerPerformances: PlayerPerformance[];
-  setPlayerPerformances: (players: PlayerPerformance[]) => void;
+  playerStats: PlayerPerformance[];
+  onPlayerStatsChange: (players: PlayerPerformance[]) => void;
 }
 
-const PlayerStatsForm = ({ playerPerformances, setPlayerPerformances }: PlayerStatsFormProps) => {
+const PlayerStatsForm = ({ playerStats, onPlayerStatsChange }: PlayerStatsFormProps) => {
   return (
     <PlayerPerformanceInput 
-      players={playerPerformances} 
-      onChange={setPlayerPerformances}
+      players={playerStats} 
+      onChange={onPlayerStatsChange}
     />
   );
 };

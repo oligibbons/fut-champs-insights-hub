@@ -1,4 +1,3 @@
-
 import { useLocalStorage } from './useLocalStorage';
 import { WeeklyPerformance, Player, Squad, UserSettings } from '@/types/futChampions';
 
@@ -112,7 +111,7 @@ export function useDataSync() {
   };
 
   const getDefaultSquad = () => {
-    return squads.find(squad => squad.isDefault) || null;
+    return squads.find(squad => squad.isDefault === true) || null;
   };
 
   const deleteAllData = () => {
