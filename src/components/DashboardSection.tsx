@@ -18,6 +18,11 @@ const DashboardSection = ({
   const sectionSettings = settings[settingsSection] || {};
   const isEnabled = sectionSettings[settingKey as keyof typeof sectionSettings];
   
+  // Default to true if setting doesn't exist
+  if (isEnabled === undefined) {
+    return <>{children}</>;
+  }
+  
   if (!isEnabled) {
     return null;
   }
