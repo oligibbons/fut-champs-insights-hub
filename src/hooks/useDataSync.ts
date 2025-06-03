@@ -1,5 +1,6 @@
+
 import { useLocalStorage } from './useLocalStorage';
-import { WeeklyPerformance, Player, Squad, UserSettings } from '@/types/futChampions';
+import { WeeklyPerformance, Player, Squad, UserSettings, GameResult } from '@/types/futChampions';
 
 export function useDataSync() {
   const [activeAccount] = useLocalStorage<string>('fc25-active-account', 'Main Account');
@@ -68,6 +69,35 @@ export function useDataSync() {
 
   const getCurrentWeek = (): WeeklyPerformance | null => {
     return weeklyData.find(week => !week.isCompleted) || null;
+  };
+
+  const addGameToWeek = (weekId: string, game: GameResult) => {
+    const updatedWeeks = weeklyData.map(week => {
+      if (week.id === weekId) {
+        const updatedGames = [...week.games, game];
+        return {
+          ...week,
+          games: updatedGames,
+          totalWins: updatedGames.filter(g => g.result === 'win').length,
+          totalLosses: updatedGames.filter(g => g.result === 'loss').length,
+          totalGoals: updatedGames.reduce((sum, g) => {
+            const [goals] = g.scoreLine.split('-').map(Number);
+            return sum + goals;
+          }, 0),
+          totalConceded: updatedGames.reduce((sum, g) => {
+            const [, conceded] = g.scoreLine.split('-').map(Number);
+            return sum + conceded;
+          }, 0),
+          averageOpponentSkill: updatedGames.reduce((sum, g) => sum + g.opponentSkill, 0) / updatedGames.length,
+          totalPlayTime: updatedGames.reduce((sum, g) => sum + g.duration, 0),
+          averageGameDuration: updatedGames.reduce((sum, g) => sum + g.duration, 0) / updatedGames.length,
+          isCompleted: updatedGames.length >= settings.gamesPerWeek,
+          gamesPlayed: updatedGames.length,
+        };
+      }
+      return week;
+    });
+    setWeeklyData(updatedWeeks);
   };
 
   const calculatePlayerStats = () => {
@@ -197,6 +227,7 @@ export function useDataSync() {
     settings,
     setSettings,
     getCurrentWeek,
+    addGameToWeek,
     calculatePlayerStats,
     getStorageKey,
     getDefaultSquad,
