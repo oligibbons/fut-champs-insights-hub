@@ -3,14 +3,13 @@ import { useMemo } from 'react';
 import Navigation from '@/components/Navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { WeeklyPerformance } from '@/types/futChampions';
+import { useDataSync } from '@/hooks/useDataSync';
 import { Trophy, Target, TrendingUp, Star, Users, Award, Clock, BarChart3 } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 
 const Players = () => {
   const { currentTheme } = useTheme();
-  const [weeklyData] = useLocalStorage<WeeklyPerformance[]>('futChampions_weeks', []);
+  const { weeklyData } = useDataSync();
 
   const playerStats = useMemo(() => {
     // Extract all players from all games across all weeks
