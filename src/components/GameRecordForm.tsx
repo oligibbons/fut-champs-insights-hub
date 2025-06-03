@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,18 +11,23 @@ import PlayerStatsForm from './PlayerStatsForm';
 import { useAccountData } from '@/hooks/useAccountData';
 import { useDataSync } from '@/hooks/useDataSync';
 import { GameResult, PlayerPerformance, TeamStats } from '@/types/futChampions';
-import { Play, Trophy, Users, BarChart3, AlertCircle, Wifi, WifiOff } from 'lucide-react';
+import { Play, Trophy, Users, BarChart3, AlertCircle, Wifi, WifiOff, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface GameRecordFormProps {
-  onGameSaved: (game: GameResult) => void;
-  gameNumber: number;
+  onGameSaved?: (game: GameResult) => void;
+  onClose?: () => void;
+  gameNumber?: number;
+  weekId?: string;
 }
 
-const GameRecordForm = ({ onGameSaved, gameNumber }: GameRecordFormProps) => {
+const GameRecordForm = ({ onGameSaved, onClose, gameNumber, weekId }: GameRecordFormProps) => {
   const { toast } = useToast();
   const { getDefaultSquad } = useAccountData();
-  const { settings } = useDataSync();
+  const { settings, addGameToWeek, getCurrentWeek } = useDataSync();
+  
+  const currentWeek = getCurrentWeek();
+  const actualGameNumber = gameNumber || (currentWeek ? currentWeek.games.length + 1 : 1);
   
   const [result, setResult] = useState<'win' | 'loss'>('win');
   const [scoreLine, setScoreLine] = useState('');
@@ -96,8 +100,8 @@ const GameRecordForm = ({ onGameSaved, gameNumber }: GameRecordFormProps) => {
     }
 
     const newGame: GameResult = {
-      id: `game-${gameNumber}-${Date.now()}`,
-      gameNumber,
+      id: `game-${actualGameNumber}-${Date.now()}`,
+      gameNumber: actualGameNumber,
       result,
       scoreLine,
       opponentSkill,
@@ -119,8 +123,26 @@ const GameRecordForm = ({ onGameSaved, gameNumber }: GameRecordFormProps) => {
       crossPlayEnabled: crossPlay
     };
 
-    onGameSaved(newGame);
-    resetForm();
+    // Add game to the current week if we have access to the data sync
+    if (currentWeek) {
+      addGameToWeek(currentWeek.id, newGame);
+      toast({
+        title: "Game Saved!",
+        description: `Game ${actualGameNumber} has been recorded successfully.`,
+      });
+    }
+
+    // Call the onGameSaved prop if provided (for external handling)
+    if (onGameSaved) {
+      onGameSaved(newGame);
+    }
+
+    // Close the form if onClose is provided
+    if (onClose) {
+      onClose();
+    } else {
+      resetForm();
+    }
   };
 
   const calculateGameScore = (): number => {
@@ -180,15 +202,22 @@ const GameRecordForm = ({ onGameSaved, gameNumber }: GameRecordFormProps) => {
   return (
     <Card className="glass-card static-element">
       <CardHeader>
-        <CardTitle className="text-white flex items-center gap-2">
-          <Play className="h-5 w-5 text-fifa-blue" />
-          Record Game {gameNumber}
-          {defaultSquad && (
-            <Badge variant="outline" className="ml-2 text-fifa-green border-fifa-green">
-              Using: {defaultSquad.name}
-            </Badge>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-white flex items-center gap-2">
+            <Play className="h-5 w-5 text-fifa-blue" />
+            Record Game {actualGameNumber}
+            {defaultSquad && (
+              <Badge variant="outline" className="ml-2 text-fifa-green border-fifa-green">
+                Using: {defaultSquad.name}
+              </Badge>
+            )}
+          </CardTitle>
+          {onClose && (
+            <Button variant="ghost" size="sm" onClick={onClose} className="text-gray-400 hover:text-white">
+              <X className="h-4 w-4" />
+            </Button>
           )}
-        </CardTitle>
+        </div>
       </CardHeader>
       
       <CardContent>
