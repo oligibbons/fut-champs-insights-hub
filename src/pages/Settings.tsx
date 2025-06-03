@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -37,13 +36,18 @@ const SettingsPage = () => {
   };
 
   const handleNestedSettingChange = (section: string, key: string, value: any) => {
-    setSettings(prev => ({
-      ...prev,
-      [section]: {
-        ...(prev[section as keyof typeof prev] || {}),
-        [key]: value
-      }
-    }));
+    setSettings(prev => {
+      const currentSection = prev[section as keyof typeof prev];
+      const sectionObject = typeof currentSection === 'object' && currentSection !== null ? currentSection : {};
+      
+      return {
+        ...prev,
+        [section]: {
+          ...sectionObject,
+          [key]: value
+        }
+      };
+    });
   };
 
   const handleExportData = () => {
