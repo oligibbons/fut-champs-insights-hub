@@ -40,7 +40,7 @@ const SettingsPage = () => {
     setSettings(prev => ({
       ...prev,
       [section]: {
-        ...prev[section as keyof typeof prev],
+        ...(prev[section as keyof typeof prev] || {}),
         [key]: value
       }
     }));
