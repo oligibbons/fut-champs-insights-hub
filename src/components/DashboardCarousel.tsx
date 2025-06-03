@@ -3,15 +3,17 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChevronLeft, ChevronRight, Trophy, Target, TrendingUp, Users, BarChart3, Star, Award, Clock } from 'lucide-react';
 import { WeeklyPerformance } from '@/types/futChampions';
+import { useDataSync } from '@/hooks/useDataSync';
 
 interface DashboardCarouselProps {
   weeklyData: WeeklyPerformance[];
-  currentWeek: WeeklyPerformance;
+  currentWeek: WeeklyPerformance | null;
   enabledTiles: string[];
 }
 
 const DashboardCarousel = ({ weeklyData, currentWeek }: DashboardCarouselProps) => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const { settings } = useDataSync();
 
   // Calculate real statistics from weekly data
   const calculateStats = () => {
@@ -80,33 +82,69 @@ const DashboardCarousel = ({ weeklyData, currentWeek }: DashboardCarouselProps) 
   const stats = calculateStats();
   const weekScore = calculateWeekScore();
 
+  // Calculate per-90 stats for top performers
+  const calculateTopPerformers = () => {
+    if (!currentWeek?.games.length) return [];
+    
+    const playerStats = new Map();
+    
+    currentWeek.games.forEach(game => {
+      game.playerStats?.forEach(player => {
+        const existing = playerStats.get(player.name) || {
+          name: player.name,
+          position: player.position,
+          totalMinutes: 0,
+          goals: 0,
+          assists: 0,
+          totalRating: 0,
+          gamesPlayed: 0
+        };
+        
+        existing.totalMinutes += player.minutesPlayed;
+        existing.goals += player.goals;
+        existing.assists += player.assists;
+        existing.totalRating += player.rating;
+        existing.gamesPlayed += 1;
+        
+        playerStats.set(player.name, existing);
+      });
+    });
+    
+    return Array.from(playerStats.values())
+      .map(player => ({
+        ...player,
+        goalsPer90: player.totalMinutes > 0 ? (player.goals * 90) / player.totalMinutes : 0,
+        assistsPer90: player.totalMinutes > 0 ? (player.assists * 90) / player.totalMinutes : 0,
+        goalInvolvementsPer90: player.totalMinutes > 0 ? ((player.goals + player.assists) * 90) / player.totalMinutes : 0,
+        averageRating: player.gamesPlayed > 0 ? player.totalRating / player.gamesPlayed : 0
+      }))
+      .filter(player => player.goalInvolvementsPer90 > 0 || player.averageRating >= 7.0)
+      .sort((a, b) => b.goalInvolvementsPer90 - a.goalInvolvementsPer90)
+      .slice(0, 3);
+  };
+
+  const topPerformers = calculateTopPerformers();
+
   const carouselItems = [
     {
       id: 'top-performers',
-      title: 'Top Performers',
+      title: 'Top Performers (Per 90)',
       icon: Trophy,
       content: (
         <div className="space-y-3">
-          {currentWeek?.games.length ? (
-            currentWeek.games
-              .slice(-3)
-              .flatMap(game => game.playerStats || [])
-              .filter(player => player.rating >= 7.5)
-              .sort((a, b) => b.rating - a.rating)
-              .slice(0, 3)
-              .map((player, index) => (
-                <div key={`${player.name}-${index}`} className="flex items-center justify-between p-2 rounded bg-white/5">
-                  <div>
-                    <p className="font-medium text-white text-sm">{player.name}</p>
-                    <p className="text-xs text-gray-400">{player.position}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-fifa-gold">{player.rating.toFixed(1)}</p>
-                    <p className="text-xs text-gray-400">Rating</p>
-                  </div>
-                </div>
-              ))
-          ) : (
+          {topPerformers.length > 0 ? topPerformers.map((player, index) => (
+            <div key={`${player.name}-${index}`} className="flex items-center justify-between p-2 rounded bg-white/5">
+              <div>
+                <p className="font-medium text-white text-sm">{player.name}</p>
+                <p className="text-xs text-gray-400">{player.position} • {player.totalMinutes} mins</p>
+              </div>
+              <div className="text-right">
+                <p className="font-bold text-fifa-gold">{player.goalInvolvementsPer90.toFixed(1)}</p>
+                <p className="text-xs text-gray-400">G+A/90</p>
+                <p className="text-xs text-gray-300">{player.goalsPer90.toFixed(1)}G {player.assistsPer90.toFixed(1)}A</p>
+              </div>
+            </div>
+          )) : (
             <div className="text-center py-4">
               <Users className="h-8 w-8 mx-auto mb-2 text-gray-500" />
               <p className="text-gray-400 text-sm">No recent games</p>
@@ -288,14 +326,14 @@ const DashboardCarousel = ({ weeklyData, currentWeek }: DashboardCarouselProps) 
     }
   ];
 
-  // Auto-scroll functionality with 12 seconds interval
+  // Auto-scroll functionality with user-defined interval
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % carouselItems.length);
-    }, 12000); // 12 seconds
+    }, (settings.carouselSpeed || 12) * 1000);
 
     return () => clearInterval(interval);
-  }, [carouselItems.length]);
+  }, [carouselItems.length, settings.carouselSpeed]);
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % carouselItems.length);

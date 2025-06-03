@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { useDataSync } from '@/hooks/useDataSync';
 import { UserSettings } from '@/types/futChampions';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
@@ -20,64 +20,9 @@ const Settings = () => {
   const { currentTheme } = useTheme();
   const { toast } = useToast();
   const { user } = useAuth();
-  const [settings, setSettings] = useLocalStorage<UserSettings>('fc25-settings', {
-    preferredFormation: '4-3-3',
-    trackingStartDate: new Date().toISOString().split('T')[0],
-    gameplayStyle: 'balanced',
-    notifications: true,
-    gamesPerWeek: 15,
-    theme: 'futvisionary',
-    carouselSpeed: 12,
-    defaultCrossPlay: false,
-    dashboardSettings: {
-      showTopPerformers: true,
-      showXGAnalysis: true,
-      showAIInsights: true,
-      showFormAnalysis: true,
-      showWeaknesses: true,
-      showOpponentAnalysis: true,
-      showPositionalAnalysis: true,
-      showRecentTrends: true,
-      showAchievements: true,
-      showTargetProgress: true,
-      showTimeAnalysis: true,
-      showStressAnalysis: true,
-    },
-    currentWeekSettings: {
-      showTopPerformers: true,
-      showXGAnalysis: true,
-      showAIInsights: true,
-      showFormAnalysis: true,
-      showWeaknesses: true,
-      showOpponentAnalysis: true,
-      showPositionalAnalysis: true,
-      showRecentTrends: true,
-      showAchievements: true,
-      showTargetProgress: true,
-      showTimeAnalysis: true,
-      showStressAnalysis: true,
-    },
-    qualifierSettings: {
-      totalGames: 5,
-      winsRequired: 2,
-    },
-    targetSettings: {
-      autoSetTargets: false,
-      adaptiveTargets: true,
-      notifyOnTarget: true,
-    },
-    analyticsPreferences: {
-      detailedPlayerStats: true,
-      opponentTracking: true,
-      timeTracking: true,
-      stressTracking: true,
-      showAnimations: true,
-      dynamicFeedback: true,
-    }
-  });
+  const { settings, setSettings, deleteAllData } = useDataSync();
 
   const handleSave = () => {
-    setSettings({ ...settings });
     toast({
       title: "Settings Saved",
       description: "Your preferences have been updated successfully.",
@@ -149,14 +94,7 @@ const Settings = () => {
 
   const handleDeleteAllData = () => {
     if (window.confirm('Are you sure you want to delete ALL data? This cannot be undone!')) {
-      const keys = Object.keys(localStorage);
-      keys.forEach(key => {
-        if (key.startsWith('fc25-')) {
-          localStorage.removeItem(key);
-        }
-      });
-      
-      handleReset();
+      deleteAllData();
       
       toast({
         title: "All Data Deleted",
@@ -164,6 +102,20 @@ const Settings = () => {
         variant: "destructive"
       });
     }
+  };
+
+  const updateSettings = (key: string, value: any) => {
+    setSettings({ ...settings, [key]: value });
+  };
+
+  const updateNestedSettings = (section: string, key: string, value: any) => {
+    setSettings({
+      ...settings,
+      [section]: {
+        ...settings[section as keyof UserSettings],
+        [key]: value
+      }
+    });
   };
 
   return (
@@ -221,7 +173,7 @@ const Settings = () => {
                       <Label htmlFor="preferredFormation" className="text-gray-300">Preferred Formation</Label>
                       <Select 
                         value={settings.preferredFormation} 
-                        onValueChange={(value) => setSettings({ ...settings, preferredFormation: value })}
+                        onValueChange={(value) => updateSettings('preferredFormation', value)}
                       >
                         <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
                           <SelectValue />
@@ -244,7 +196,7 @@ const Settings = () => {
                         min="1"
                         max="30"
                         value={settings.gamesPerWeek}
-                        onChange={(e) => setSettings({ ...settings, gamesPerWeek: parseInt(e.target.value) || 15 })}
+                        onChange={(e) => updateSettings('gamesPerWeek', parseInt(e.target.value) || 15)}
                         className="bg-gray-800 border-gray-600 text-white"
                       />
                     </div>
@@ -253,7 +205,7 @@ const Settings = () => {
                       <Label htmlFor="gameplayStyle" className="text-gray-300">Gameplay Style</Label>
                       <Select 
                         value={settings.gameplayStyle} 
-                        onValueChange={(value: any) => setSettings({ ...settings, gameplayStyle: value })}
+                        onValueChange={(value: any) => updateSettings('gameplayStyle', value)}
                       >
                         <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
                           <SelectValue />
@@ -276,7 +228,7 @@ const Settings = () => {
                         min="3"
                         max="30"
                         value={settings.carouselSpeed || 12}
-                        onChange={(e) => setSettings({ ...settings, carouselSpeed: parseInt(e.target.value) || 12 })}
+                        onChange={(e) => updateSettings('carouselSpeed', parseInt(e.target.value) || 12)}
                         className="bg-gray-800 border-gray-600 text-white"
                       />
                     </div>
@@ -291,7 +243,7 @@ const Settings = () => {
                       <Switch
                         id="notifications"
                         checked={settings.notifications}
-                        onCheckedChange={(checked) => setSettings({ ...settings, notifications: checked })}
+                        onCheckedChange={(checked) => updateSettings('notifications', checked)}
                       />
                     </div>
 
@@ -303,10 +255,15 @@ const Settings = () => {
                       <Switch
                         id="defaultCrossPlay"
                         checked={settings.defaultCrossPlay || false}
-                        onCheckedChange={(checked) => setSettings({ ...settings, defaultCrossPlay: checked })}
+                        onCheckedChange={(checked) => updateSettings('defaultCrossPlay', checked)}
                       />
                     </div>
                   </div>
+
+                  <Button onClick={handleSave} className="modern-button-primary">
+                    <Save className="h-4 w-4 mr-2" />
+                    Save General Settings
+                  </Button>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -327,14 +284,15 @@ const Settings = () => {
                         <Switch
                           id={key}
                           checked={value}
-                          onCheckedChange={(checked) => setSettings({
-                            ...settings,
-                            dashboardSettings: { ...settings.dashboardSettings, [key]: checked }
-                          })}
+                          onCheckedChange={(checked) => updateNestedSettings('dashboardSettings', key, checked)}
                         />
                       </div>
                     ))}
                   </div>
+                  <Button onClick={handleSave} className="modern-button-primary">
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Display Settings
+                  </Button>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -355,14 +313,15 @@ const Settings = () => {
                         <Switch
                           id={key}
                           checked={value}
-                          onCheckedChange={(checked) => setSettings({
-                            ...settings,
-                            analyticsPreferences: { ...settings.analyticsPreferences, [key]: checked }
-                          })}
+                          onCheckedChange={(checked) => updateNestedSettings('analyticsPreferences', key, checked)}
                         />
                       </div>
                     ))}
                   </div>
+                  <Button onClick={handleSave} className="modern-button-primary">
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Analytics Settings
+                  </Button>
                 </CardContent>
               </Card>
 
@@ -380,14 +339,15 @@ const Settings = () => {
                         <Switch
                           id={key}
                           checked={value}
-                          onCheckedChange={(checked) => setSettings({
-                            ...settings,
-                            targetSettings: { ...settings.targetSettings, [key]: checked }
-                          })}
+                          onCheckedChange={(checked) => updateNestedSettings('targetSettings', key, checked)}
                         />
                       </div>
                     ))}
                   </div>
+                  <Button onClick={handleSave} className="modern-button-primary">
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Target Settings
+                  </Button>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -460,10 +420,6 @@ const Settings = () => {
 
           {/* Action Buttons */}
           <div className="flex gap-4">
-            <Button onClick={handleSave} className="modern-button-primary">
-              <Save className="h-4 w-4 mr-2" />
-              Save Settings
-            </Button>
             <Button onClick={handleReset} variant="outline" className="modern-button-secondary">
               <RefreshCw className="h-4 w-4 mr-2" />
               Reset to Default

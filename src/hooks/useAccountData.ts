@@ -7,7 +7,8 @@ export function useAccountData() {
     weeklyData, 
     setWeeklyData, 
     getCurrentWeek, 
-    getStorageKey 
+    getStorageKey,
+    getDefaultSquad
   } = useDataSync();
   
   const addNewWeek = () => {
@@ -25,7 +26,7 @@ export function useAccountData() {
       totalExpectedGoals: 0,
       totalExpectedGoalsAgainst: 0,
       averageOpponentSkill: 0,
-      squadUsed: '',
+      squadUsed: getDefaultSquad()?.name || '',
       weeklyRating: 0,
       isCompleted: false,
       currentStreak: 0,
@@ -50,6 +51,7 @@ export function useAccountData() {
     setWeeks: setWeeklyData,
     getCurrentWeek,
     addNewWeek,
-    updateWeek
+    updateWeek,
+    getDefaultSquad
   };
 }

@@ -11,7 +11,7 @@ export function useDataSync() {
   const [weeklyData, setWeeklyData] = useLocalStorage<WeeklyPerformance[]>(getStorageKey('weeks'), []);
   const [players, setPlayers] = useLocalStorage<Player[]>(getStorageKey('players'), []);
   const [squads, setSquads] = useLocalStorage<Squad[]>(getStorageKey('squads'), []);
-  const [settings] = useLocalStorage<UserSettings>('fc25-settings', {
+  const [settings, setSettings] = useLocalStorage<UserSettings>('fc25-settings', {
     preferredFormation: '4-3-3',
     trackingStartDate: new Date().toISOString().split('T')[0],
     gameplayStyle: 'balanced',
@@ -111,6 +111,82 @@ export function useDataSync() {
     }));
   };
 
+  const getDefaultSquad = () => {
+    return squads.find(squad => squad.isDefault) || null;
+  };
+
+  const deleteAllData = () => {
+    // Clear all FC25 data from localStorage
+    const keys = Object.keys(localStorage);
+    keys.forEach(key => {
+      if (key.startsWith('fc25-')) {
+        localStorage.removeItem(key);
+      }
+    });
+    
+    // Reset state to empty arrays/defaults
+    setWeeklyData([]);
+    setPlayers([]);
+    setSquads([]);
+    
+    // Reset settings to defaults
+    setSettings({
+      preferredFormation: '4-3-3',
+      trackingStartDate: new Date().toISOString().split('T')[0],
+      gameplayStyle: 'balanced',
+      notifications: true,
+      gamesPerWeek: 15,
+      theme: 'futvisionary',
+      carouselSpeed: 12,
+      defaultCrossPlay: false,
+      dashboardSettings: {
+        showTopPerformers: true,
+        showXGAnalysis: true,
+        showAIInsights: true,
+        showFormAnalysis: true,
+        showWeaknesses: true,
+        showOpponentAnalysis: true,
+        showPositionalAnalysis: true,
+        showRecentTrends: true,
+        showAchievements: true,
+        showTargetProgress: true,
+        showTimeAnalysis: true,
+        showStressAnalysis: true,
+      },
+      currentWeekSettings: {
+        showTopPerformers: true,
+        showXGAnalysis: true,
+        showAIInsights: true,
+        showFormAnalysis: true,
+        showWeaknesses: true,
+        showOpponentAnalysis: true,
+        showPositionalAnalysis: true,
+        showRecentTrends: true,
+        showAchievements: true,
+        showTargetProgress: true,
+        showTimeAnalysis: true,
+        showStressAnalysis: true,
+      },
+      qualifierSettings: {
+        totalGames: 5,
+        winsRequired: 2,
+      },
+      targetSettings: {
+        autoSetTargets: false,
+        adaptiveTargets: true,
+        notifyOnTarget: true,
+      },
+      analyticsPreferences: {
+        detailedPlayerStats: true,
+        opponentTracking: true,
+        timeTracking: true,
+        stressTracking: true,
+        showAnimations: true,
+        dynamicFeedback: true,
+      }
+    });
+  };
+
   return {
     activeAccount,
     weeklyData,
@@ -120,8 +196,11 @@ export function useDataSync() {
     squads,
     setSquads,
     settings,
+    setSettings,
     getCurrentWeek,
     calculatePlayerStats,
-    getStorageKey
+    getStorageKey,
+    getDefaultSquad,
+    deleteAllData
   };
 }
