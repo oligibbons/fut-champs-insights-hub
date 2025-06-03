@@ -33,6 +33,10 @@ const SettingsPage = () => {
       ...prev,
       [key]: value
     }));
+    toast({
+      title: "Setting Updated",
+      description: `${key} has been updated.`,
+    });
   };
 
   const handleNestedSettingChange = (section: string, key: string, value: any) => {
@@ -47,6 +51,11 @@ const SettingsPage = () => {
           [key]: value
         }
       };
+    });
+    
+    toast({
+      title: "Display Setting Updated",
+      description: `${key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} has been ${value ? 'enabled' : 'disabled'}.`,
     });
   };
 
