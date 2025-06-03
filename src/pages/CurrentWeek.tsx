@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -475,9 +474,8 @@ const CurrentWeek = () => {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-gray-900 rounded-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <GameRecordForm
-              onSubmit={handleGameSubmit}
+              onGameSaved={handleGameSubmit}
               gameNumber={currentWeek.games.length + 1}
-              defaultCrossPlay={settings.defaultCrossPlay}
             />
             <Button 
               onClick={() => setShowGameForm(false)}
