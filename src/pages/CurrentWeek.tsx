@@ -1,8 +1,8 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { WeeklyPerformance, GameResult, UserSettings } from '@/types/futChampions';
 import { useAchievementNotifications } from '@/hooks/useAchievementNotifications';
 import { generateAIInsights } from '@/utils/aiInsights';
@@ -12,67 +12,17 @@ import WeekProgress from '@/components/WeekProgress';
 import GameCompletionModal from '@/components/GameCompletionModal';
 import { Calendar, Plus, BarChart3, Trophy, Target, TrendingUp } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
-import { useAccountData } from '@/hooks/useAccountData';
+import { useDataSync } from '@/hooks/useDataSync';
 
 const CurrentWeek = () => {
   const { currentTheme } = useTheme();
-  const { activeAccount } = useAccountData();
-  const [weeklyData, setWeeklyData] = useLocalStorage<WeeklyPerformance[]>(`futChampions_weeks_${activeAccount}`, []);
-  const [settings, setSettings] = useLocalStorage<UserSettings>('futChampions_settings', {
-    preferredFormation: '4-3-3',
-    trackingStartDate: new Date().toISOString().split('T')[0],
-    gameplayStyle: 'balanced',
-    notifications: true,
-    gamesPerWeek: 15,
-    theme: 'futvisionary',
-    carouselSpeed: 12,
-    defaultCrossPlay: false,
-    dashboardSettings: {
-      showTopPerformers: true,
-      showXGAnalysis: true,
-      showAIInsights: true,
-      showFormAnalysis: true,
-      showWeaknesses: true,
-      showOpponentAnalysis: true,
-      showPositionalAnalysis: true,
-      showRecentTrends: true,
-      showAchievements: true,
-      showTargetProgress: true,
-      showTimeAnalysis: true,
-      showStressAnalysis: true,
-    },
-    currentWeekSettings: {
-      showTopPerformers: true,
-      showXGAnalysis: true,
-      showAIInsights: true,
-      showFormAnalysis: true,
-      showWeaknesses: true,
-      showOpponentAnalysis: true,
-      showPositionalAnalysis: true,
-      showRecentTrends: true,
-      showAchievements: true,
-      showTargetProgress: true,
-      showTimeAnalysis: true,
-      showStressAnalysis: true,
-    },
-    qualifierSettings: {
-      totalGames: 5,
-      winsRequired: 2,
-    },
-    targetSettings: {
-      autoSetTargets: false,
-      adaptiveTargets: true,
-      notifyOnTarget: true,
-    },
-    analyticsPreferences: {
-      detailedPlayerStats: true,
-      opponentTracking: true,
-      timeTracking: true,
-      stressTracking: true,
-      showAnimations: true,
-      dynamicFeedback: true,
-    }
-  });
+  const { 
+    weeklyData, 
+    setWeeklyData, 
+    settings, 
+    setSettings,
+    getCurrentWeek 
+  } = useDataSync();
 
   const [showGameForm, setShowGameForm] = useState(false);
   const [gameCompletionModal, setGameCompletionModal] = useState<{
@@ -94,8 +44,8 @@ const CurrentWeek = () => {
   const { checkAndNotifyAchievements, notifyGameFeedback } = useAchievementNotifications();
 
   // Get or create current week
-  const getCurrentWeek = (): WeeklyPerformance => {
-    const existingWeek = weeklyData.find(week => !week.isCompleted);
+  const getCurrentWeekData = (): WeeklyPerformance => {
+    const existingWeek = getCurrentWeek();
     if (existingWeek) {
       return existingWeek;
     }
@@ -129,7 +79,7 @@ const CurrentWeek = () => {
     return newWeek;
   };
 
-  const currentWeek = getCurrentWeek();
+  const currentWeek = getCurrentWeekData();
 
   const handleGameSubmit = (gameData: any) => {
     const newGame: GameResult = {

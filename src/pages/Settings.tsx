@@ -1,36 +1,99 @@
 
 import { useState } from 'react';
-import Navigation from '@/components/Navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { Slider } from '@/components/ui/slider';
+import { Separator } from '@/components/ui/separator';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import Navigation from '@/components/Navigation';
 import { useDataSync } from '@/hooks/useDataSync';
-import { UserSettings } from '@/types/futChampions';
-import { useTheme } from '@/hooks/useTheme';
-import { useAuth } from '@/contexts/AuthContext';
-import { Settings as SettingsIcon, Save, RefreshCw, Trash2, User, Shield, Eye, Gamepad2, Database } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { FORMATIONS } from '@/types/squads';
+import { toast } from '@/hooks/use-toast';
+import { Settings, Trash2, Download, Upload, Save, RotateCcw } from 'lucide-react';
+import { exportData, importData } from '@/hooks/useLocalStorage';
 
-const Settings = () => {
-  const { currentTheme } = useTheme();
-  const { toast } = useToast();
-  const { user } = useAuth();
-  const { settings, setSettings, deleteAllData } = useDataSync();
+const SettingsPage = () => {
+  const { settings, setSettings, deleteAllData, weeklyData, players, squads } = useDataSync();
+  const [importFile, setImportFile] = useState<File | null>(null);
 
-  const handleSave = () => {
+  const handleSettingChange = (key: string, value: any) => {
+    setSettings(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+
+  const handleNestedSettingChange = (section: string, key: string, value: any) => {
+    setSettings(prev => ({
+      ...prev,
+      [section]: {
+        ...prev[section as keyof typeof prev],
+        [key]: value
+      }
+    }));
+  };
+
+  const handleExportData = () => {
+    const allData = {
+      settings,
+      weeklyData,
+      players,
+      squads,
+      exportDate: new Date().toISOString()
+    };
+    exportData(allData, 'fc25-champions-data');
     toast({
-      title: "Settings Saved",
-      description: "Your preferences have been updated successfully.",
+      title: "Data Exported",
+      description: "Your data has been exported successfully.",
     });
   };
 
-  const handleReset = () => {
-    const defaultSettings: UserSettings = {
+  const handleImportData = async () => {
+    if (!importFile) return;
+    
+    try {
+      const data = await importData(importFile);
+      
+      if (data.settings) setSettings(data.settings);
+      // Note: weeklyData, players, squads would need to be imported via useDataSync
+      
+      toast({
+        title: "Data Imported",
+        description: "Your data has been imported successfully.",
+      });
+      setImportFile(null);
+    } catch (error) {
+      toast({
+        title: "Import Failed",
+        description: "Failed to import data. Please check the file format.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteAllData = () => {
+    deleteAllData();
+    toast({
+      title: "All Data Deleted",
+      description: "All your data has been permanently deleted.",
+    });
+  };
+
+  const resetSettings = () => {
+    setSettings({
       preferredFormation: '4-3-3',
       trackingStartDate: new Date().toISOString().split('T')[0],
       gameplayStyle: 'balanced',
@@ -84,354 +147,266 @@ const Settings = () => {
         showAnimations: true,
         dynamicFeedback: true,
       }
-    };
-    setSettings(defaultSettings);
+    });
     toast({
       title: "Settings Reset",
-      description: "All settings have been reset to default values.",
+      description: "All settings have been reset to defaults.",
     });
-  };
-
-  const handleDeleteAllData = () => {
-    if (window.confirm('Are you sure you want to delete ALL data? This cannot be undone!')) {
-      deleteAllData();
-      
-      toast({
-        title: "All Data Deleted",
-        description: "All FUT Champions data has been permanently deleted.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const updateSettings = (key: string, value: any) => {
-    setSettings({ ...settings, [key]: value });
-  };
-
-  const updateNestedSettings = (section: keyof UserSettings, key: string, value: any) => {
-    const currentSection = settings[section];
-    if (typeof currentSection === 'object' && currentSection !== null) {
-      setSettings({
-        ...settings,
-        [section]: {
-          ...currentSection,
-          [key]: value
-        }
-      });
-    }
   };
 
   return (
     <div className="min-h-screen">
       <Navigation />
       
-      <main className="lg:ml-20 lg:hover:ml-64 transition-all duration-500 p-4 lg:p-6">
-        <div className="max-w-6xl mx-auto space-y-6">
+      <main className="lg:ml-64 p-4 lg:p-6">
+        <div className="max-w-4xl mx-auto space-y-6">
           {/* Header */}
           <div className="flex items-center gap-4 mb-8">
-            <div className="p-3 rounded-2xl" style={{ backgroundColor: `${currentTheme.colors.primary}20` }}>
-              <SettingsIcon className="h-8 w-8" style={{ color: currentTheme.colors.primary }} />
+            <div className="p-3 rounded-2xl bg-fifa-blue/20">
+              <Settings className="h-8 w-8 text-fifa-blue" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent">
-                Settings
-              </h1>
-              <p className="text-gray-400 mt-1">Customize your FUTALYST experience</p>
+              <h1 className="text-3xl font-bold text-white page-header">Settings</h1>
+              <p className="text-gray-400 mt-1">Customize your FC25 Champions experience</p>
             </div>
           </div>
 
-          <Tabs defaultValue="general" className="w-full">
-            <TabsList className="grid w-full grid-cols-5 glass-card static-element">
-              <TabsTrigger value="general" className="data-[state=active]:bg-fifa-blue/20">
-                <Gamepad2 className="h-4 w-4 mr-2" />
-                General
-              </TabsTrigger>
-              <TabsTrigger value="display" className="data-[state=active]:bg-fifa-blue/20">
-                <Eye className="h-4 w-4 mr-2" />
-                Display
-              </TabsTrigger>
-              <TabsTrigger value="analytics" className="data-[state=active]:bg-fifa-blue/20">
-                <Database className="h-4 w-4 mr-2" />
-                Analytics
-              </TabsTrigger>
-              <TabsTrigger value="account" className="data-[state=active]:bg-fifa-blue/20">
-                <User className="h-4 w-4 mr-2" />
-                Account
-              </TabsTrigger>
-              <TabsTrigger value="data" className="data-[state=active]:bg-fifa-blue/20">
-                <Shield className="h-4 w-4 mr-2" />
-                Data
-              </TabsTrigger>
-            </TabsList>
+          {/* Basic Settings */}
+          <Card className="glass-card">
+            <CardHeader>
+              <CardTitle className="text-white">Basic Settings</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label className="text-white">Preferred Formation</Label>
+                  <Select value={settings.preferredFormation} onValueChange={(value) => handleSettingChange('preferredFormation', value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="3-4-3">3-4-3</SelectItem>
+                      <SelectItem value="3-5-2">3-5-2</SelectItem>
+                      <SelectItem value="4-2-3-1">4-2-3-1</SelectItem>
+                      <SelectItem value="4-3-3">4-3-3</SelectItem>
+                      <SelectItem value="4-4-2">4-4-2</SelectItem>
+                      <SelectItem value="4-5-1">4-5-1</SelectItem>
+                      <SelectItem value="5-3-2">5-3-2</SelectItem>
+                      <SelectItem value="5-4-1">5-4-1</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            {/* General Settings */}
-            <TabsContent value="general" className="space-y-6">
-              <Card className="glass-card static-element">
-                <CardHeader>
-                  <CardTitle className="text-white">Game Settings</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="preferredFormation" className="text-gray-300">Preferred Formation</Label>
-                      <Select 
-                        value={settings.preferredFormation} 
-                        onValueChange={(value) => updateSettings('preferredFormation', value)}
-                      >
-                        <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-gray-800 border-gray-600">
-                          {FORMATIONS.map(formation => (
-                            <SelectItem key={formation.name} value={formation.name} className="text-white">
-                              {formation.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                <div className="space-y-2">
+                  <Label className="text-white">Gameplay Style</Label>
+                  <Select value={settings.gameplayStyle} onValueChange={(value) => handleSettingChange('gameplayStyle', value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="attacking">Attacking</SelectItem>
+                      <SelectItem value="balanced">Balanced</SelectItem>
+                      <SelectItem value="defensive">Defensive</SelectItem>
+                      <SelectItem value="possession">Possession</SelectItem>
+                      <SelectItem value="counter">Counter-Attack</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="gamesPerWeek" className="text-gray-300">Games Per Run</Label>
-                      <Input
-                        id="gamesPerWeek"
-                        type="number"
-                        min="1"
-                        max="30"
-                        value={settings.gamesPerWeek}
-                        onChange={(e) => updateSettings('gamesPerWeek', parseInt(e.target.value) || 15)}
-                        className="bg-gray-800 border-gray-600 text-white"
-                      />
-                    </div>
+                <div className="space-y-2">
+                  <Label className="text-white">Games Per Week</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="50"
+                    value={settings.gamesPerWeek}
+                    onChange={(e) => handleSettingChange('gamesPerWeek', parseInt(e.target.value) || 15)}
+                  />
+                </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="gameplayStyle" className="text-gray-300">Gameplay Style</Label>
-                      <Select 
-                        value={settings.gameplayStyle} 
-                        onValueChange={(value: any) => updateSettings('gameplayStyle', value)}
-                      >
-                        <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-gray-800 border-gray-600">
-                          <SelectItem value="attacking" className="text-white">Attacking</SelectItem>
-                          <SelectItem value="balanced" className="text-white">Balanced</SelectItem>
-                          <SelectItem value="defensive" className="text-white">Defensive</SelectItem>
-                          <SelectItem value="possession" className="text-white">Possession</SelectItem>
-                          <SelectItem value="counter" className="text-white">Counter-Attack</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                <div className="space-y-2">
+                  <Label className="text-white">Theme</Label>
+                  <Select value={settings.theme} onValueChange={(value) => handleSettingChange('theme', value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="futvisionary">FUT Visionary</SelectItem>
+                      <SelectItem value="dark">Dark</SelectItem>
+                      <SelectItem value="light">Light</SelectItem>
+                      <SelectItem value="champions">Champions</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="carouselSpeed" className="text-gray-300">Dashboard Carousel Speed (seconds)</Label>
-                      <Input
-                        id="carouselSpeed"
-                        type="number"
-                        min="3"
-                        max="30"
-                        value={settings.carouselSpeed || 12}
-                        onChange={(e) => updateSettings('carouselSpeed', parseInt(e.target.value) || 12)}
-                        className="bg-gray-800 border-gray-600 text-white"
-                      />
-                    </div>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-white">Carousel Speed (seconds)</Label>
+                  <Slider
+                    value={[settings.carouselSpeed || 12]}
+                    onValueChange={([value]) => handleSettingChange('carouselSpeed', value)}
+                    max={30}
+                    min={3}
+                    step={1}
+                    className="w-full"
+                  />
+                  <p className="text-sm text-gray-400">{settings.carouselSpeed || 12} seconds</p>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <Label className="text-white">Enable Notifications</Label>
+                  <Switch
+                    checked={settings.notifications}
+                    onCheckedChange={(checked) => handleSettingChange('notifications', checked)}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <Label className="text-white">Default Cross-Play Enabled</Label>
+                  <Switch
+                    checked={settings.defaultCrossPlay}
+                    onCheckedChange={(checked) => handleSettingChange('defaultCrossPlay', checked)}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Dashboard Settings */}
+          <Card className="glass-card">
+            <CardHeader>
+              <CardTitle className="text-white">Dashboard Display Settings</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Object.entries(settings.dashboardSettings || {}).map(([key, value]) => (
+                  <div key={key} className="flex items-center justify-between">
+                    <Label className="text-white">
+                      {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                    </Label>
+                    <Switch
+                      checked={value as boolean}
+                      onCheckedChange={(checked) => handleNestedSettingChange('dashboardSettings', key, checked)}
+                    />
                   </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg">
-                      <div>
-                        <Label htmlFor="notifications" className="text-gray-300">Enable Notifications</Label>
-                        <p className="text-sm text-gray-500">Get notified about achievements and milestones</p>
-                      </div>
-                      <Switch
-                        id="notifications"
-                        checked={settings.notifications}
-                        onCheckedChange={(checked) => updateSettings('notifications', checked)}
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg">
-                      <div>
-                        <Label htmlFor="defaultCrossPlay" className="text-gray-300">Default Cross-Play Setting</Label>
-                        <p className="text-sm text-gray-500">Default state for cross-play when recording games</p>
-                      </div>
-                      <Switch
-                        id="defaultCrossPlay"
-                        checked={settings.defaultCrossPlay || false}
-                        onCheckedChange={(checked) => updateSettings('defaultCrossPlay', checked)}
-                      />
-                    </div>
+          {/* Current Week Settings */}
+          <Card className="glass-card">
+            <CardHeader>
+              <CardTitle className="text-white">Current Week Display Settings</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Object.entries(settings.currentWeekSettings || {}).map(([key, value]) => (
+                  <div key={key} className="flex items-center justify-between">
+                    <Label className="text-white">
+                      {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                    </Label>
+                    <Switch
+                      checked={value as boolean}
+                      onCheckedChange={(checked) => handleNestedSettingChange('currentWeekSettings', key, checked)}
+                    />
                   </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
-                  <Button onClick={handleSave} className="modern-button-primary">
-                    <Save className="h-4 w-4 mr-2" />
-                    Save General Settings
+          {/* Analytics Preferences */}
+          <Card className="glass-card">
+            <CardHeader>
+              <CardTitle className="text-white">Analytics Preferences</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Object.entries(settings.analyticsPreferences || {}).map(([key, value]) => (
+                  <div key={key} className="flex items-center justify-between">
+                    <Label className="text-white">
+                      {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                    </Label>
+                    <Switch
+                      checked={value as boolean}
+                      onCheckedChange={(checked) => handleNestedSettingChange('analyticsPreferences', key, checked)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Data Management */}
+          <Card className="glass-card">
+            <CardHeader>
+              <CardTitle className="text-white">Data Management</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-col gap-4">
+                <Button onClick={handleExportData} variant="outline" className="w-full">
+                  <Download className="h-4 w-4 mr-2" />
+                  Export Data
+                </Button>
+
+                <div className="flex gap-2">
+                  <Input
+                    type="file"
+                    accept=".json"
+                    onChange={(e) => setImportFile(e.target.files?.[0] || null)}
+                    className="flex-1"
+                  />
+                  <Button 
+                    onClick={handleImportData} 
+                    disabled={!importFile}
+                    variant="outline"
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    Import
                   </Button>
-                </CardContent>
-              </Card>
-            </TabsContent>
+                </div>
 
-            {/* Display Settings */}
-            <TabsContent value="display" className="space-y-6">
-              <Card className="glass-card static-element">
-                <CardHeader>
-                  <CardTitle className="text-white">Dashboard Display</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {Object.entries(settings.dashboardSettings).map(([key, value]) => (
-                      <div key={key} className="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg">
-                        <Label htmlFor={key} className="text-gray-300 capitalize">
-                          {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                        </Label>
-                        <Switch
-                          id={key}
-                          checked={value}
-                          onCheckedChange={(checked) => updateNestedSettings('dashboardSettings', key, checked)}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                  <Button onClick={handleSave} className="modern-button-primary">
-                    <Save className="h-4 w-4 mr-2" />
-                    Save Display Settings
+                <Separator />
+
+                <div className="flex gap-2">
+                  <Button onClick={resetSettings} variant="outline" className="flex-1">
+                    <RotateCcw className="h-4 w-4 mr-2" />
+                    Reset Settings
                   </Button>
-                </CardContent>
-              </Card>
-            </TabsContent>
 
-            {/* Analytics Settings */}
-            <TabsContent value="analytics" className="space-y-6">
-              <Card className="glass-card static-element">
-                <CardHeader>
-                  <CardTitle className="text-white">Analytics Preferences</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {Object.entries(settings.analyticsPreferences).map(([key, value]) => (
-                      <div key={key} className="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg">
-                        <Label htmlFor={key} className="text-gray-300 capitalize">
-                          {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                        </Label>
-                        <Switch
-                          id={key}
-                          checked={value}
-                          onCheckedChange={(checked) => updateNestedSettings('analyticsPreferences', key, checked)}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                  <Button onClick={handleSave} className="modern-button-primary">
-                    <Save className="h-4 w-4 mr-2" />
-                    Save Analytics Settings
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card className="glass-card static-element">
-                <CardHeader>
-                  <CardTitle className="text-white">Target Settings</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 gap-4">
-                    {Object.entries(settings.targetSettings).map(([key, value]) => (
-                      <div key={key} className="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg">
-                        <Label htmlFor={key} className="text-gray-300 capitalize">
-                          {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                        </Label>
-                        <Switch
-                          id={key}
-                          checked={value}
-                          onCheckedChange={(checked) => updateNestedSettings('targetSettings', key, checked)}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                  <Button onClick={handleSave} className="modern-button-primary">
-                    <Save className="h-4 w-4 mr-2" />
-                    Save Target Settings
-                  </Button>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Account Management */}
-            <TabsContent value="account" className="space-y-6">
-              <Card className="glass-card static-element">
-                <CardHeader>
-                  <CardTitle className="text-white">Account Information</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-4">
-                    <div>
-                      <Label className="text-gray-300">Email</Label>
-                      <p className="text-white">{user?.email || 'Not available'}</p>
-                    </div>
-                    <div>
-                      <Label className="text-gray-300">Account Created</Label>
-                      <p className="text-white">
-                        {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'Not available'}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="glass-card static-element">
-                <CardHeader>
-                  <CardTitle className="text-white">FC25 Account Management</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-gray-400">
-                    Manage multiple FC25 accounts to track different profiles separately.
-                    Coming soon - ability to create, switch between, and manage multiple FC25 accounts.
-                  </p>
-                  <Button disabled className="w-full" variant="outline">
-                    Manage FC25 Accounts (Coming Soon)
-                  </Button>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Data Management */}
-            <TabsContent value="data" className="space-y-6">
-              <Card className="glass-card static-element">
-                <CardHeader>
-                  <CardTitle className="text-white">Data Management</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
-                      <h4 className="text-red-400 font-semibold mb-2">Danger Zone</h4>
-                      <p className="text-gray-300 text-sm mb-4">
-                        This will permanently delete all your FUTALYST data including games, squads, players, and achievements. This action cannot be undone.
-                      </p>
-                      <Button 
-                        onClick={handleDeleteAllData}
-                        variant="destructive"
-                        className="bg-red-600 hover:bg-red-700"
-                      >
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" className="flex-1">
                         <Trash2 className="h-4 w-4 mr-2" />
                         Delete All Data
                       </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-
-          {/* Action Buttons */}
-          <div className="flex gap-4">
-            <Button onClick={handleReset} variant="outline" className="modern-button-secondary">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Reset to Default
-            </Button>
-          </div>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete All Data</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will permanently delete all your data including weeks, games, players, and squads. 
+                          This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeleteAllData}>
+                          Delete Everything
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </main>
     </div>
   );
 };
 
-export default Settings;
+export default SettingsPage;

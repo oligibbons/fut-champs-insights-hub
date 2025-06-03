@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChevronLeft, ChevronRight, Trophy, Target, TrendingUp, Users, BarChart3, Star, Award, Clock } from 'lucide-react';
@@ -15,7 +14,6 @@ const DashboardCarousel = ({ weeklyData, currentWeek }: DashboardCarouselProps) 
   const [currentSlide, setCurrentSlide] = useState(0);
   const { settings } = useDataSync();
 
-  // Calculate real statistics from weekly data
   const calculateStats = () => {
     if (!weeklyData.length && !currentWeek) return null;
     
@@ -28,7 +26,6 @@ const DashboardCarousel = ({ weeklyData, currentWeek }: DashboardCarouselProps) 
     
     if (allGames.length === 0) return null;
 
-    // Calculate averages from actual game data
     const totalPasses = allGames.reduce((sum, game) => sum + (game.teamStats?.passes || 0), 0);
     const totalPossession = allGames.reduce((sum, game) => sum + (game.teamStats?.possession || 50), 0);
     const totalPassAccuracy = allGames.reduce((sum, game) => sum + (game.teamStats?.passAccuracy || 75), 0);
@@ -51,7 +48,6 @@ const DashboardCarousel = ({ weeklyData, currentWeek }: DashboardCarouselProps) 
     };
   };
 
-  // Calculate current week performance score
   const calculateWeekScore = () => {
     if (!currentWeek || !currentWeek.games.length) return { grade: 'F', score: 0 };
     
@@ -60,12 +56,11 @@ const DashboardCarousel = ({ weeklyData, currentWeek }: DashboardCarouselProps) 
     const avgOpponentSkill = games.reduce((sum, game) => sum + game.opponentSkill, 0) / games.length;
     const goalRatio = currentWeek.totalConceded > 0 ? currentWeek.totalGoals / currentWeek.totalConceded : currentWeek.totalGoals;
     
-    // Scoring algorithm
     let score = 0;
-    score += winRate * 0.5; // Win rate contributes 50%
-    score += (avgOpponentSkill - 5) * 5; // Opponent difficulty adjustment
-    score += Math.min(goalRatio * 10, 25); // Goal ratio (capped at 25)
-    score += currentWeek.currentStreak * 2; // Streak bonus
+    score += winRate * 0.5;
+    score += (avgOpponentSkill - 5) * 5;
+    score += Math.min(goalRatio * 10, 25);
+    score += currentWeek.currentStreak * 2;
     
     score = Math.max(0, Math.min(100, score));
     
@@ -82,7 +77,6 @@ const DashboardCarousel = ({ weeklyData, currentWeek }: DashboardCarouselProps) 
   const stats = calculateStats();
   const weekScore = calculateWeekScore();
 
-  // Calculate per-90 stats for top performers
   const calculateTopPerformers = () => {
     if (!currentWeek?.games.length) return [];
     
@@ -326,7 +320,6 @@ const DashboardCarousel = ({ weeklyData, currentWeek }: DashboardCarouselProps) 
     }
   ];
 
-  // Auto-scroll functionality with user-defined interval
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % carouselItems.length);
@@ -366,7 +359,6 @@ const DashboardCarousel = ({ weeklyData, currentWeek }: DashboardCarouselProps) 
           ))}
         </div>
 
-        {/* Navigation Buttons */}
         <button
           onClick={prevSlide}
           className="absolute left-2 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors"
@@ -381,7 +373,6 @@ const DashboardCarousel = ({ weeklyData, currentWeek }: DashboardCarouselProps) 
           <ChevronRight className="h-4 w-4 text-white" />
         </button>
 
-        {/* Dots Indicator */}
         <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
           {carouselItems.map((_, index) => (
             <button

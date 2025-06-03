@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import Navigation from '@/components/Navigation';
 import PlayerHistoryTable from '@/components/PlayerHistoryTable';
@@ -7,18 +6,37 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { WeeklyPerformance, GameResult } from '@/types/futChampions';
-import { Search, Calendar, Trophy, Target, Clock, Star, Filter, Users } from 'lucide-react';
+import { Search, Calendar, Trophy, Target, Clock, Star, Filter, Users, Trash2, StopCircle } from 'lucide-react';
 import { calculateWeekRating, calculateGameRating } from '@/utils/gameRating';
+import { useDataSync } from '@/hooks/useDataSync';
+import { toast } from '@/hooks/use-toast';
 
 const History = () => {
-  const [weeklyData] = useLocalStorage<WeeklyPerformance[]>('futChampions_weeks', []);
+  const { weeklyData, setWeeklyData } = useDataSync();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterResult, setFilterResult] = useState<'all' | 'win' | 'loss'>('all');
   const [filterWeek, setFilterWeek] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'date' | 'rating' | 'score'>('date');
   const [viewMode, setViewMode] = useState<'weeks' | 'games' | 'players'>('weeks');
+  const [deleteWeekDialog, setDeleteWeekDialog] = useState<{ isOpen: boolean; weekId: string | null }>({
+    isOpen: false,
+    weekId: null
+  });
+  const [endWeekDialog, setEndWeekDialog] = useState<{ isOpen: boolean; weekId: string | null }>({
+    isOpen: false,
+    weekId: null
+  });
 
   const filteredWeeks = weeklyData.filter(week => {
     if (filterWeek !== 'all' && week.id !== filterWeek) return false;
@@ -59,6 +77,42 @@ const History = () => {
         return 0;
     }
   });
+
+  const handleDeleteWeek = (weekId: string) => {
+    setDeleteWeekDialog({ isOpen: true, weekId });
+  };
+
+  const confirmDeleteWeek = () => {
+    if (deleteWeekDialog.weekId) {
+      const updatedWeeks = weeklyData.filter(week => week.id !== deleteWeekDialog.weekId);
+      setWeeklyData(updatedWeeks);
+      toast({
+        title: "Week Deleted",
+        description: "The week and all its games have been permanently deleted.",
+      });
+    }
+    setDeleteWeekDialog({ isOpen: false, weekId: null });
+  };
+
+  const handleEndWeek = (weekId: string) => {
+    setEndWeekDialog({ isOpen: true, weekId });
+  };
+
+  const confirmEndWeek = () => {
+    if (endWeekDialog.weekId) {
+      const updatedWeeks = weeklyData.map(week => 
+        week.id === endWeekDialog.weekId 
+          ? { ...week, isCompleted: true, endDate: new Date().toISOString() }
+          : week
+      );
+      setWeeklyData(updatedWeeks);
+      toast({
+        title: "Week Ended",
+        description: "The week has been marked as completed.",
+      });
+    }
+    setEndWeekDialog({ isOpen: false, weekId: null });
+  };
 
   return (
     <div className="min-h-screen">
@@ -191,6 +245,28 @@ const History = () => {
                             </p>
                           </div>
                           <div className="flex items-center gap-4">
+                            <div className="flex gap-2">
+                              {!week.isCompleted && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleEndWeek(week.id)}
+                                  className="text-yellow-400 border-yellow-400 hover:bg-yellow-400/10"
+                                >
+                                  <StopCircle className="h-4 w-4 mr-1" />
+                                  End Week
+                                </Button>
+                              )}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDeleteWeek(week.id)}
+                                className="text-red-400 border-red-400 hover:bg-red-400/10"
+                              >
+                                <Trash2 className="h-4 w-4 mr-1" />
+                                Delete
+                              </Button>
+                            </div>
                             <div className="text-right">
                               <div className="flex items-center gap-2">
                                 <span 
@@ -330,6 +406,42 @@ const History = () => {
           )}
         </div>
       </main>
+
+      {/* Delete Week Confirmation Dialog */}
+      <AlertDialog open={deleteWeekDialog.isOpen} onOpenChange={(open) => setDeleteWeekDialog({ isOpen: open, weekId: null })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Week</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this week and all its games? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteWeek} className="bg-red-600 hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* End Week Confirmation Dialog */}
+      <AlertDialog open={endWeekDialog.isOpen} onOpenChange={(open) => setEndWeekDialog({ isOpen: open, weekId: null })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>End Week</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to end this week? This will mark it as completed and you won't be able to add more games to it.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmEndWeek} className="bg-yellow-600 hover:bg-yellow-700">
+              End Week
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogFooter>
+      </AlertDialog>
     </div>
   );
 };
