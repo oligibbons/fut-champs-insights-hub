@@ -17,9 +17,10 @@ interface GameRecordFormProps {
   onGameSaved: (gameData: Omit<GameResult, 'id'>) => void;
   gameNumber: number;
   onClose?: () => void;
+  weekId?: string;
 }
 
-const GameRecordForm = ({ onGameSaved, gameNumber, onClose }: GameRecordFormProps) => {
+const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecordFormProps) => {
   const { toast } = useToast();
   const { getDefaultSquad } = useSquadData();
   
