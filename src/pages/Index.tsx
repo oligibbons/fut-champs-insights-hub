@@ -4,6 +4,8 @@ import { useDataSync } from '@/hooks/useDataSync';
 import Navigation from '@/components/Navigation';
 import DashboardCarousel from '@/components/DashboardCarousel';
 import AnalyticsDashboard from '@/components/AnalyticsDashboard';
+import PositionalHeatMap from '@/components/PositionalHeatMap';
+import AnalyticsTooltip from '@/components/AnalyticsTooltip';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { TrendingUp, Trophy, Target, Users, Calendar, BarChart3, Zap, Award, Clock, Star, Activity, PieChart, LineChart } from 'lucide-react';
@@ -80,21 +82,36 @@ const Index = () => {
           </div>
 
           {/* Dashboard Carousel */}
-          <DashboardCarousel
-            weeklyData={weeklyData}
-            currentWeek={currentRun}
-            enabledTiles={Object.keys(settings.dashboardSettings).filter(key => 
-              settings.dashboardSettings[key as keyof typeof settings.dashboardSettings]
-            )}
-          />
+          <AnalyticsTooltip
+            title="Performance Overview Carousel"
+            description="Rotating dashboard showing key metrics including top performers, match facts, weekly scores, recent form, and progress towards targets. Auto-rotates every 12 seconds."
+            showIcon={false}
+          >
+            <DashboardCarousel
+              weeklyData={weeklyData}
+              currentWeek={currentRun}
+              enabledTiles={Object.keys(settings.dashboardSettings).filter(key => 
+                settings.dashboardSettings[key as keyof typeof settings.dashboardSettings]
+              )}
+            />
+          </AnalyticsTooltip>
+
+          {/* Positional Heat Map */}
+          <PositionalHeatMap />
 
           {/* Comprehensive Analytics Dashboard */}
           <Card className="glass-card">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <BarChart3 className="h-6 w-6 text-fifa-blue" />
-                Performance Analytics
-              </CardTitle>
+              <AnalyticsTooltip
+                title="Performance Analytics Dashboard"
+                description="Comprehensive analysis including performance charts, AI-generated insights based on your gameplay patterns, and personalized tips to improve your FIFA Champions performance."
+                showIcon={false}
+              >
+                <CardTitle className="text-white flex items-center gap-2">
+                  <BarChart3 className="h-6 w-6 text-fifa-blue" />
+                  Performance Analytics
+                </CardTitle>
+              </AnalyticsTooltip>
             </CardHeader>
             <CardContent>
               <AnalyticsDashboard />
@@ -104,25 +121,58 @@ const Index = () => {
           {/* Quick Actions */}
           <Card className="glass-card static-element">
             <CardHeader>
-              <CardTitle className="text-white">Quick Actions</CardTitle>
+              <AnalyticsTooltip
+                title="Quick Actions"
+                description="Fast access to key features: record new games, manage your squad setups, view achievements, and adjust application settings."
+                showIcon={false}
+              >
+                <CardTitle className="text-white">Quick Actions</CardTitle>
+              </AnalyticsTooltip>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Button onClick={() => navigate('/current-week')} className="modern-button-primary">
-                <Calendar className="h-4 w-4 mr-2" />
-                Record New Game
-              </Button>
-              <Button onClick={() => navigate('/squads')} className="modern-button-secondary">
-                <Users className="h-4 w-4 mr-2" />
-                Manage Squads
-              </Button>
-              <Button onClick={() => navigate('/achievements')} className="modern-button-secondary">
-                <Trophy className="h-4 w-4 mr-2" />
-                View Achievements
-              </Button>
-              <Button onClick={() => navigate('/settings')} className="modern-button-secondary">
-                <Target className="h-4 w-4 mr-2" />
-                Adjust Settings
-              </Button>
+              <AnalyticsTooltip
+                title="Record New Game"
+                description="Start recording a new FIFA Champions match. Input scores, opponent details, player performance, and detailed match statistics."
+                showIcon={false}
+              >
+                <Button onClick={() => navigate('/current-week')} className="modern-button-primary">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Record New Game
+                </Button>
+              </AnalyticsTooltip>
+              
+              <AnalyticsTooltip
+                title="Manage Squads"
+                description="Create, edit, and organize your FIFA Ultimate Team squads. Track performance by formation and analyze which setups work best."
+                showIcon={false}
+              >
+                <Button onClick={() => navigate('/squads')} className="modern-button-secondary">
+                  <Users className="h-4 w-4 mr-2" />
+                  Manage Squads
+                </Button>
+              </AnalyticsTooltip>
+              
+              <AnalyticsTooltip
+                title="View Achievements"
+                description="Track your progress through various milestones and achievements. See what goals you've completed and what challenges await."
+                showIcon={false}
+              >
+                <Button onClick={() => navigate('/achievements')} className="modern-button-secondary">
+                  <Trophy className="h-4 w-4 mr-2" />
+                  View Achievements
+                </Button>
+              </AnalyticsTooltip>
+              
+              <AnalyticsTooltip
+                title="Adjust Settings"
+                description="Customize your tracking preferences, dashboard layout, notification settings, and analytical display options."
+                showIcon={false}
+              >
+                <Button onClick={() => navigate('/settings')} className="modern-button-secondary">
+                  <Target className="h-4 w-4 mr-2" />
+                  Adjust Settings
+                </Button>
+              </AnalyticsTooltip>
             </CardContent>
           </Card>
         </div>
