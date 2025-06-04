@@ -5,333 +5,197 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import PlayerStatsForm from './PlayerStatsForm';
-import { useAccountData } from '@/hooks/useAccountData';
-import { useDataSync } from '@/hooks/useDataSync';
-import { GameResult, PlayerPerformance, TeamStats } from '@/types/futChampions';
-import { Play, Trophy, Users, BarChart3, AlertCircle, Wifi, WifiOff, X } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { GameResult, PlayerPerformance, TeamStats } from '@/types/futChampions';
+import { useSquadData } from '@/hooks/useSquadData';
+import { Save, Users, BarChart3, MessageSquare } from 'lucide-react';
+import PlayerStatsForm from './PlayerStatsForm';
 
 interface GameRecordFormProps {
-  onGameSaved?: (game: GameResult) => void;
-  onClose?: () => void;
-  gameNumber?: number;
-  weekId?: string;
+  onGameSaved: (gameData: Omit<GameResult, 'id'>) => void;
+  gameNumber: number;
 }
 
-const GameRecordForm = ({ onGameSaved, onClose, gameNumber, weekId }: GameRecordFormProps) => {
+const GameRecordForm = ({ onGameSaved, gameNumber }: GameRecordFormProps) => {
   const { toast } = useToast();
-  const { getDefaultSquad } = useAccountData();
-  const { settings, addGameToWeek, getCurrentWeek } = useDataSync();
+  const { getDefaultSquad } = useSquadData();
   
-  const currentWeek = getCurrentWeek();
-  const actualGameNumber = gameNumber || (currentWeek ? currentWeek.games.length + 1 : 1);
-  
-  const [result, setResult] = useState<'win' | 'loss'>('win');
+  // Basic game info
   const [userGoals, setUserGoals] = useState('');
   const [opponentGoals, setOpponentGoals] = useState('');
-  const [opponentSkill, setOpponentSkill] = useState<number>(5);
-  const [duration, setDuration] = useState<number>(90);
-  const [gameContext, setGameContext] = useState<'normal' | 'rage_quit' | 'extra_time' | 'penalties' | 'disconnect' | 'hacker' | 'free_win'>('normal');
+  const [result, setResult] = useState<'win' | 'loss'>('win');
+  const [opponentSkill, setOpponentSkill] = useState(5);
+  const [duration, setDuration] = useState(90);
+  const [gameContext, setGameContext] = useState<string>('normal');
+  const [crossPlayEnabled, setCrossPlayEnabled] = useState(false);
   const [comments, setComments] = useState('');
-  const [crossPlay, setCrossPlay] = useState(settings.defaultCrossPlay || false);
-  const [gameRating, setGameRating] = useState<string>('');
-  const [timePlayed, setTimePlayed] = useState<string>('');
-  const [actualGameTime, setActualGameTime] = useState<number | undefined>();
-  const [rageQuits, setRageQuits] = useState<number>(0);
-  const [stressLevel, setStressLevel] = useState<number | undefined>();
-  const [serverQuality, setServerQuality] = useState<number | undefined>();
-  
-  const [playerStats, setPlayerStats] = useState<PlayerPerformance[]>([]);
+
+  // Team stats with better defaults
   const [teamStats, setTeamStats] = useState<TeamStats>({
-    possession: 50,
-    passes: 100, // Updated default
-    passAccuracy: 80,
-    shots: 10,
-    shotsOnTarget: 5,
-    corners: 3,
+    shots: 12,
+    shotsOnTarget: 6,
+    possession: 55,
+    expectedGoals: 1.8,
+    actualGoals: 0,
+    expectedGoalsAgainst: 1.2,
+    actualGoalsAgainst: 0,
+    passes: 320,
+    passAccuracy: 82,
+    corners: 4,
     fouls: 8,
     yellowCards: 1,
     redCards: 0,
-    offsides: 2,
-    expectedGoals: 1.5,
-    actualGoals: 0,
-    expectedGoalsAgainst: 1.0,
-    actualGoalsAgainst: 0,
-    distanceCovered: 105
+    distanceCovered: 0
   });
 
-  const defaultSquad = getDefaultSquad();
+  // Player stats
+  const [playerStats, setPlayerStats] = useState<PlayerPerformance[]>([]);
 
-  // Auto-populate squad players when default squad is available
+  // Auto-populate starting XI when component loads
   useEffect(() => {
-    if (defaultSquad && defaultSquad.startingXI && playerStats.length === 0) {
-      const startingPlayers = defaultSquad.startingXI
+    const defaultSquad = getDefaultSquad();
+    if (defaultSquad && defaultSquad.startingXI) {
+      const startingPlayers: PlayerPerformance[] = defaultSquad.startingXI
         .filter(pos => pos.player)
-        .map(pos => ({
-          id: `${pos.player!.id}-${Date.now()}`,
+        .map((pos, index) => ({
+          id: `${pos.player!.id}-${index}`,
           name: pos.player!.name,
-          position: pos.player!.position,
-          rating: 6.5,
+          position: pos.position,
+          rating: 7.0,
           goals: 0,
           assists: 0,
-          minutesPlayed: duration, // Auto-apply duration
           yellowCards: 0,
           redCards: 0,
           ownGoals: 0,
+          minutesPlayed: duration, // Auto-apply duration
           wasSubstituted: false
         }));
-      
+
       // Add bench players with 0 minutes by default
-      const benchPlayers = Array.from({ length: 7 }, (_, i) => ({
-        id: `bench-${i}-${Date.now()}`,
-        name: `Substitute ${i + 1}`,
-        position: 'SUB',
-        rating: 6.0,
-        goals: 0,
-        assists: 0,
-        minutesPlayed: 0, // Bench players start with 0 minutes
-        yellowCards: 0,
-        redCards: 0,
-        ownGoals: 0,
-        wasSubstituted: false
-      }));
-      
+      const benchPlayers: PlayerPerformance[] = [
+        { id: 'bench-1', name: 'Substitute 1', position: 'SUB', rating: 6.5, goals: 0, assists: 0, yellowCards: 0, redCards: 0, ownGoals: 0, minutesPlayed: 0, wasSubstituted: false },
+        { id: 'bench-2', name: 'Substitute 2', position: 'SUB', rating: 6.5, goals: 0, assists: 0, yellowCards: 0, redCards: 0, ownGoals: 0, minutesPlayed: 0, wasSubstituted: false },
+        { id: 'bench-3', name: 'Substitute 3', position: 'SUB', rating: 6.5, goals: 0, assists: 0, yellowCards: 0, redCards: 0, ownGoals: 0, minutesPlayed: 0, wasSubstituted: false }
+      ];
+
       setPlayerStats([...startingPlayers, ...benchPlayers]);
     }
-  }, [defaultSquad, duration]);
+  }, [getDefaultSquad, duration]);
 
-  // Update player minutes when duration changes
+  // Update all player minutes when duration changes
   useEffect(() => {
-    setPlayerStats(prev => prev.map(player => 
-      player.position !== 'SUB' ? { ...player, minutesPlayed: duration } : player
-    ));
+    setPlayerStats(prev => prev.map(player => ({
+      ...player,
+      minutesPlayed: player.position === 'SUB' ? 0 : duration
+    })));
   }, [duration]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  // Update actual goals when user/opponent goals change
+  useEffect(() => {
+    const userG = parseInt(userGoals) || 0;
+    const oppG = parseInt(opponentGoals) || 0;
     
+    setTeamStats(prev => ({
+      ...prev,
+      actualGoals: userG,
+      actualGoalsAgainst: oppG
+    }));
+
+    // Auto-determine result
+    if (userGoals && opponentGoals) {
+      setResult(userG > oppG ? 'win' : 'loss');
+    }
+  }, [userGoals, opponentGoals]);
+
+  const handleSubmit = () => {
     if (!userGoals || !opponentGoals) {
       toast({
-        title: "Missing Score",
-        description: "Please enter both your goals and opponent's goals.",
+        title: "Missing Information",
+        description: "Please enter both user and opponent goals.",
         variant: "destructive"
       });
       return;
     }
 
-    const scoreLine = `${userGoals}-${opponentGoals}`;
-
-    const newGame: GameResult = {
-      id: `game-${actualGameNumber}-${Date.now()}`,
-      gameNumber: actualGameNumber,
+    const gameData: Omit<GameResult, 'id'> = {
+      gameNumber,
       result,
-      scoreLine,
+      scoreLine: `${userGoals}-${opponentGoals}`,
+      date: new Date().toISOString(),
       opponentSkill,
       duration,
-      gameContext,
-      comments,
-      crossPlay,
-      gameRating,
-      timePlayed,
-      actualGameTime,
-      rageQuits,
-      stressLevel,
-      serverQuality,
-      datePlayed: new Date().toISOString(),
-      date: new Date().toISOString(),
-      playerStats,
-      teamStats: {
-        ...teamStats,
-        actualGoals: parseInt(userGoals),
-        actualGoalsAgainst: parseInt(opponentGoals)
-      },
-      gameScore: calculateGameScore(),
-      crossPlayEnabled: crossPlay
+      gameContext: gameContext as any,
+      comments: comments || undefined,
+      crossPlayEnabled,
+      teamStats,
+      playerStats
     };
 
-    // Add game to the current week if we have access to the data sync
-    if (currentWeek) {
-      addGameToWeek(currentWeek.id, newGame);
-      toast({
-        title: "Game Saved!",
-        description: `Game ${actualGameNumber} has been recorded successfully.`,
-      });
-    }
-
-    // Call the onGameSaved prop if provided (for external handling)
-    if (onGameSaved) {
-      onGameSaved(newGame);
-    }
-
-    // Close the form if onClose is provided
-    if (onClose) {
-      onClose();
-    } else {
-      resetForm();
-    }
-  };
-
-  const calculateGameScore = (): number => {
-    const ourGoals = parseInt(userGoals) || 0;
-    const theirGoals = parseInt(opponentGoals) || 0;
-    let score = 0;
+    onGameSaved(gameData);
     
-    // Base score from result
-    if (result === 'win') score += 50;
-    
-    // Goal difference
-    score += (ourGoals - theirGoals) * 5;
-    
-    // Opponent skill multiplier
-    score += opponentSkill * 2;
-    
-    // Performance bonuses
-    if (teamStats.possession > 60) score += 5;
-    if (teamStats.passAccuracy > 85) score += 5;
-    if ((teamStats.expectedGoals || 0) < ourGoals) score += 10; // Overperformed xG
-    
-    return Math.max(0, Math.min(100, score));
-  };
-
-  const resetForm = () => {
-    setResult('win');
-    setUserGoals('');
-    setOpponentGoals('');
-    setOpponentSkill(5);
-    setDuration(90);
-    setGameContext('normal');
-    setComments('');
-    setGameRating('');
-    setTimePlayed('');
-    setActualGameTime(undefined);
-    setRageQuits(0);
-    setStressLevel(undefined);
-    setServerQuality(undefined);
-    setPlayerStats([]);
-    setTeamStats({
-      possession: 50,
-      passes: 100, // Updated default
-      passAccuracy: 80,
-      shots: 10,
-      shotsOnTarget: 5,
-      corners: 3,
-      fouls: 8,
-      yellowCards: 1,
-      redCards: 0,
-      offsides: 2,
-      expectedGoals: 1.5,
-      actualGoals: 0,
-      expectedGoalsAgainst: 1.0,
-      actualGoalsAgainst: 0,
-      distanceCovered: 105
+    toast({
+      title: "Game Recorded",
+      description: `Game ${gameNumber} has been successfully recorded.`,
     });
   };
 
   return (
-    <Card className="glass-card static-element">
-      <CardHeader>
-        <div className="flex items-center justify-between">
+    <div className="w-full max-w-4xl mx-auto">
+      <Card className="glass-card">
+        <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
-            <Play className="h-5 w-5 text-fifa-blue" />
-            Record Game {actualGameNumber}
-            {defaultSquad && (
-              <Badge variant="outline" className="ml-2 text-fifa-green border-fifa-green">
-                Using: {defaultSquad.name}
-              </Badge>
-            )}
+            <Save className="h-5 w-5" />
+            Record Game {gameNumber}
           </CardTitle>
-          {onClose && (
-            <Button variant="ghost" size="sm" onClick={onClose} className="text-gray-400 hover:text-white">
-              <X className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
-      </CardHeader>
-      
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
+        </CardHeader>
+        <CardContent>
           <Tabs defaultValue="basic" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4 glass-card">
               <TabsTrigger value="basic">Basic Info</TabsTrigger>
+              <TabsTrigger value="team">Team Stats</TabsTrigger>
               <TabsTrigger value="players">
                 <Users className="h-4 w-4 mr-2" />
-                Players ({playerStats.length})
+                Players
               </TabsTrigger>
-              <TabsTrigger value="team">
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Team Stats
+              <TabsTrigger value="notes">
+                <MessageSquare className="h-4 w-4 mr-2" />
+                Notes
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="basic" className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <TabsContent value="basic" className="space-y-4 mt-6">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="result">Result</Label>
-                  <Select value={result} onValueChange={(value: 'win' | 'loss') => setResult(value)}>
-                    <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-gray-600 z-50">
-                      <SelectItem value="win">Win</SelectItem>
-                      <SelectItem value="loss">Loss</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="gameContext">Game Context</Label>
-                  <Select value={gameContext} onValueChange={(value: any) => setGameContext(value)}>
-                    <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-gray-600 z-50">
-                      <SelectItem value="normal">Normal Game</SelectItem>
-                      <SelectItem value="rage_quit">Rage Quit</SelectItem>
-                      <SelectItem value="extra_time">Extra Time</SelectItem>
-                      <SelectItem value="penalties">Penalties</SelectItem>
-                      <SelectItem value="disconnect">Disconnect</SelectItem>
-                      <SelectItem value="hacker">Hacker</SelectItem>
-                      <SelectItem value="free_win">Free Win</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="userGoals">Your Goals</Label>
+                  <Label className="text-white">Your Goals</Label>
                   <Input
-                    id="userGoals"
                     type="number"
                     min="0"
                     value={userGoals}
                     onChange={(e) => setUserGoals(e.target.value)}
                     placeholder="0"
-                    required
                     className="bg-gray-800 border-gray-600 text-white"
                   />
                 </div>
-
                 <div>
-                  <Label htmlFor="opponentGoals">Opponent Goals</Label>
+                  <Label className="text-white">Opponent Goals</Label>
                   <Input
-                    id="opponentGoals"
                     type="number"
                     min="0"
                     value={opponentGoals}
                     onChange={(e) => setOpponentGoals(e.target.value)}
                     placeholder="0"
-                    required
                     className="bg-gray-800 border-gray-600 text-white"
                   />
                 </div>
+              </div>
 
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="opponentSkill">Opponent Skill (1-10)</Label>
+                  <Label className="text-white">Opponent Skill (1-10)</Label>
                   <Input
-                    id="opponentSkill"
                     type="number"
                     min="1"
                     max="10"
@@ -340,11 +204,9 @@ const GameRecordForm = ({ onGameSaved, onClose, gameNumber, weekId }: GameRecord
                     className="bg-gray-800 border-gray-600 text-white"
                   />
                 </div>
-
                 <div>
-                  <Label htmlFor="duration">Game Duration (minutes)</Label>
+                  <Label className="text-white">Game Duration (minutes)</Label>
                   <Input
-                    id="duration"
                     type="number"
                     min="1"
                     max="120"
@@ -355,199 +217,163 @@ const GameRecordForm = ({ onGameSaved, onClose, gameNumber, weekId }: GameRecord
                 </div>
               </div>
 
-              {/* Cross-play Toggle */}
-              <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
-                <div className="flex items-center gap-3">
-                  {crossPlay ? (
-                    <Wifi className="h-5 w-5 text-fifa-blue" />
-                  ) : (
-                    <WifiOff className="h-5 w-5 text-gray-400" />
-                  )}
-                  <div>
-                    <Label htmlFor="crossPlay" className="text-white">Cross-play Enabled</Label>
-                    <p className="text-sm text-gray-400">Playing against other platforms</p>
-                  </div>
-                </div>
-                <Switch
-                  id="crossPlay"
-                  checked={crossPlay}
-                  onCheckedChange={setCrossPlay}
-                />
-              </div>
-
-              {/* Optional Advanced Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="stressLevel">Stress Level (1-10)</Label>
-                  <Input
-                    id="stressLevel"
-                    type="number"
-                    min="1"
-                    max="10"
-                    value={stressLevel || ''}
-                    onChange={(e) => setStressLevel(e.target.value ? parseInt(e.target.value) : undefined)}
-                    placeholder="Optional"
-                    className="bg-gray-800 border-gray-600 text-white"
-                  />
+                  <Label className="text-white">Game Context</Label>
+                  <Select value={gameContext} onValueChange={setGameContext}>
+                    <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-800 border-gray-600 z-50">
+                      <SelectItem value="normal">Normal Game</SelectItem>
+                      <SelectItem value="rage_quit">Rage Quit</SelectItem>
+                      <SelectItem value="extra_time">Extra Time</SelectItem>
+                      <SelectItem value="penalties">Penalties</SelectItem>
+                      <SelectItem value="disconnect">Disconnect</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-
-                <div>
-                  <Label htmlFor="rageQuits">Rage Moments</Label>
-                  <Input
-                    id="rageQuits"
-                    type="number"
-                    min="0"
-                    max="20"
-                    value={rageQuits}
-                    onChange={(e) => setRageQuits(parseInt(e.target.value) || 0)}
-                    className="bg-gray-800 border-gray-600 text-white"
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="crossplay"
+                    checked={crossPlayEnabled}
+                    onCheckedChange={setCrossPlayEnabled}
                   />
+                  <Label htmlFor="crossplay" className="text-white">Cross-Play Enabled</Label>
                 </div>
-
-                <div>
-                  <Label htmlFor="serverQuality">Server Quality (1-10)</Label>
-                  <Input
-                    id="serverQuality"
-                    type="number"
-                    min="1"
-                    max="10"
-                    value={serverQuality || ''}
-                    onChange={(e) => setServerQuality(e.target.value ? parseInt(e.target.value) : undefined)}
-                    placeholder="Optional"
-                    className="bg-gray-800 border-gray-600 text-white"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="comments">Comments</Label>
-                <textarea
-                  id="comments"
-                  className="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white resize-none"
-                  rows={3}
-                  value={comments}
-                  onChange={(e) => setComments(e.target.value)}
-                  placeholder="Any notes about this game..."
-                />
               </div>
             </TabsContent>
 
-            <TabsContent value="players" className="space-y-4">
-              {!defaultSquad && (
-                <div className="flex items-center gap-2 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-                  <AlertCircle className="h-4 w-4 text-yellow-400" />
-                  <p className="text-yellow-400 text-sm">
-                    No default squad selected. Go to Squads page to set a default squad for automatic player population.
-                  </p>
-                </div>
-              )}
-              
-              <PlayerStatsForm
-                playerStats={playerStats}
-                onPlayerStatsChange={setPlayerStats}
-              />
-            </TabsContent>
-
-            <TabsContent value="team" className="space-y-4">
+            <TabsContent value="team" className="space-y-4 mt-6">
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="possession">Possession %</Label>
+                  <Label className="text-white">Possession (%)</Label>
                   <Input
-                    id="possession"
                     type="number"
                     min="0"
                     max="100"
                     value={teamStats.possession}
-                    onChange={(e) => setTeamStats({ ...teamStats, possession: parseInt(e.target.value) })}
+                    onChange={(e) => setTeamStats(prev => ({ ...prev, possession: parseInt(e.target.value) }))}
                     className="bg-gray-800 border-gray-600 text-white"
                   />
                 </div>
-
                 <div>
-                  <Label htmlFor="passes">Total Passes</Label>
+                  <Label className="text-white">Total Passes</Label>
                   <Input
-                    id="passes"
                     type="number"
                     min="0"
                     value={teamStats.passes}
-                    onChange={(e) => setTeamStats({ ...teamStats, passes: parseInt(e.target.value) })}
+                    onChange={(e) => setTeamStats(prev => ({ ...prev, passes: parseInt(e.target.value) }))}
                     className="bg-gray-800 border-gray-600 text-white"
                   />
                 </div>
-
                 <div>
-                  <Label htmlFor="passAccuracy">Pass Accuracy %</Label>
+                  <Label className="text-white">Pass Accuracy (%)</Label>
                   <Input
-                    id="passAccuracy"
                     type="number"
                     min="0"
                     max="100"
                     value={teamStats.passAccuracy}
-                    onChange={(e) => setTeamStats({ ...teamStats, passAccuracy: parseInt(e.target.value) })}
+                    onChange={(e) => setTeamStats(prev => ({ ...prev, passAccuracy: parseInt(e.target.value) }))}
                     className="bg-gray-800 border-gray-600 text-white"
                   />
                 </div>
-
                 <div>
-                  <Label htmlFor="shots">Total Shots</Label>
+                  <Label className="text-white">Shots</Label>
                   <Input
-                    id="shots"
                     type="number"
                     min="0"
                     value={teamStats.shots}
-                    onChange={(e) => setTeamStats({ ...teamStats, shots: parseInt(e.target.value) })}
+                    onChange={(e) => setTeamStats(prev => ({ ...prev, shots: parseInt(e.target.value) }))}
                     className="bg-gray-800 border-gray-600 text-white"
                   />
                 </div>
-
                 <div>
-                  <Label htmlFor="shotsOnTarget">Shots on Target</Label>
+                  <Label className="text-white">Shots on Target</Label>
                   <Input
-                    id="shotsOnTarget"
                     type="number"
                     min="0"
                     value={teamStats.shotsOnTarget}
-                    onChange={(e) => setTeamStats({ ...teamStats, shotsOnTarget: parseInt(e.target.value) })}
+                    onChange={(e) => setTeamStats(prev => ({ ...prev, shotsOnTarget: parseInt(e.target.value) }))}
                     className="bg-gray-800 border-gray-600 text-white"
                   />
                 </div>
-
                 <div>
-                  <Label htmlFor="expectedGoals">Expected Goals (xG)</Label>
+                  <Label className="text-white">Corners</Label>
                   <Input
-                    id="expectedGoals"
+                    type="number"
+                    min="0"
+                    value={teamStats.corners}
+                    onChange={(e) => setTeamStats(prev => ({ ...prev, corners: parseInt(e.target.value) }))}
+                    className="bg-gray-800 border-gray-600 text-white"
+                  />
+                </div>
+                <div>
+                  <Label className="text-white">Expected Goals (xG)</Label>
+                  <Input
                     type="number"
                     step="0.1"
                     min="0"
                     value={teamStats.expectedGoals}
-                    onChange={(e) => setTeamStats({ ...teamStats, expectedGoals: parseFloat(e.target.value) })}
+                    onChange={(e) => setTeamStats(prev => ({ ...prev, expectedGoals: parseFloat(e.target.value) }))}
                     className="bg-gray-800 border-gray-600 text-white"
                   />
                 </div>
-
                 <div>
-                  <Label htmlFor="expectedGoalsAgainst">Expected Goals Against (XGa)</Label>
+                  <Label className="text-white">Opponent xG (xGa)</Label>
                   <Input
-                    id="expectedGoalsAgainst"
                     type="number"
                     step="0.1"
                     min="0"
                     value={teamStats.expectedGoalsAgainst}
-                    onChange={(e) => setTeamStats({ ...teamStats, expectedGoalsAgainst: parseFloat(e.target.value) })}
+                    onChange={(e) => setTeamStats(prev => ({ ...prev, expectedGoalsAgainst: parseFloat(e.target.value) }))}
+                    className="bg-gray-800 border-gray-600 text-white"
+                  />
+                </div>
+                <div>
+                  <Label className="text-white">Fouls</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={teamStats.fouls}
+                    onChange={(e) => setTeamStats(prev => ({ ...prev, fouls: parseInt(e.target.value) }))}
                     className="bg-gray-800 border-gray-600 text-white"
                   />
                 </div>
               </div>
             </TabsContent>
+
+            <TabsContent value="players" className="mt-6">
+              <PlayerStatsForm 
+                playerStats={playerStats}
+                onPlayerStatsChange={setPlayerStats}
+                gameDuration={duration}
+              />
+            </TabsContent>
+
+            <TabsContent value="notes" className="space-y-4 mt-6">
+              <div>
+                <Label className="text-white">Game Comments</Label>
+                <Textarea
+                  value={comments}
+                  onChange={(e) => setComments(e.target.value)}
+                  placeholder="Add any notes about this game..."
+                  className="bg-gray-800 border-gray-600 text-white"
+                  rows={4}
+                />
+              </div>
+            </TabsContent>
           </Tabs>
 
-          <Button type="submit" className="w-full modern-button-primary">
-            <Trophy className="h-4 w-4 mr-2" />
-            Save Game
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+          <div className="flex gap-4 mt-6">
+            <Button onClick={handleSubmit} className="flex-1 modern-button-primary">
+              <Save className="h-4 w-4 mr-2" />
+              Save Game
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

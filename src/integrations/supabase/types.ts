@@ -100,6 +100,7 @@ export type Database = {
           actual_game_time: number | null
           comments: string | null
           created_at: string
+          cross_play_enabled: boolean | null
           date_played: string
           duration: number
           game_context: string
@@ -107,7 +108,9 @@ export type Database = {
           game_rating: string | null
           game_score: number | null
           id: string
+          opponent_goals: number | null
           opponent_skill: number
+          opponent_xg: number | null
           rage_moments: number | null
           result: string
           score_line: string
@@ -115,6 +118,7 @@ export type Database = {
           squad_used: string | null
           stress_level: number | null
           time_played: string | null
+          user_goals: number | null
           user_id: string
           week_id: string
         }
@@ -122,6 +126,7 @@ export type Database = {
           actual_game_time?: number | null
           comments?: string | null
           created_at?: string
+          cross_play_enabled?: boolean | null
           date_played?: string
           duration: number
           game_context?: string
@@ -129,7 +134,9 @@ export type Database = {
           game_rating?: string | null
           game_score?: number | null
           id?: string
+          opponent_goals?: number | null
           opponent_skill: number
+          opponent_xg?: number | null
           rage_moments?: number | null
           result: string
           score_line: string
@@ -137,6 +144,7 @@ export type Database = {
           squad_used?: string | null
           stress_level?: number | null
           time_played?: string | null
+          user_goals?: number | null
           user_id: string
           week_id: string
         }
@@ -144,6 +152,7 @@ export type Database = {
           actual_game_time?: number | null
           comments?: string | null
           created_at?: string
+          cross_play_enabled?: boolean | null
           date_played?: string
           duration?: number
           game_context?: string
@@ -151,7 +160,9 @@ export type Database = {
           game_rating?: string | null
           game_score?: number | null
           id?: string
+          opponent_goals?: number | null
           opponent_skill?: number
+          opponent_xg?: number | null
           rage_moments?: number | null
           result?: string
           score_line?: string
@@ -159,6 +170,7 @@ export type Database = {
           squad_used?: string | null
           stress_level?: number | null
           time_played?: string | null
+          user_goals?: number | null
           user_id?: string
           week_id?: string
         }
@@ -175,6 +187,59 @@ export type Database = {
             columns: ["week_id"]
             isOneToOne: false
             referencedRelation: "weekly_performances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      player_performances: {
+        Row: {
+          assists: number | null
+          created_at: string | null
+          game_id: string | null
+          goals: number | null
+          id: string
+          minutes_played: number | null
+          player_name: string
+          position: string
+          rating: number | null
+          red_cards: number | null
+          user_id: string
+          yellow_cards: number | null
+        }
+        Insert: {
+          assists?: number | null
+          created_at?: string | null
+          game_id?: string | null
+          goals?: number | null
+          id?: string
+          minutes_played?: number | null
+          player_name: string
+          position: string
+          rating?: number | null
+          red_cards?: number | null
+          user_id: string
+          yellow_cards?: number | null
+        }
+        Update: {
+          assists?: number | null
+          created_at?: string | null
+          game_id?: string | null
+          goals?: number | null
+          id?: string
+          minutes_played?: number | null
+          player_name?: string
+          position?: string
+          rating?: number | null
+          red_cards?: number | null
+          user_id?: string
+          yellow_cards?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_performances_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "game_results"
             referencedColumns: ["id"]
           },
         ]
@@ -399,6 +464,68 @@ export type Database = {
           },
         ]
       }
+      team_statistics: {
+        Row: {
+          corners: number | null
+          created_at: string | null
+          expected_goals: number | null
+          expected_goals_against: number | null
+          fouls: number | null
+          game_id: string | null
+          id: string
+          pass_accuracy: number | null
+          passes: number | null
+          possession: number | null
+          red_cards: number | null
+          shots: number | null
+          shots_on_target: number | null
+          user_id: string
+          yellow_cards: number | null
+        }
+        Insert: {
+          corners?: number | null
+          created_at?: string | null
+          expected_goals?: number | null
+          expected_goals_against?: number | null
+          fouls?: number | null
+          game_id?: string | null
+          id?: string
+          pass_accuracy?: number | null
+          passes?: number | null
+          possession?: number | null
+          red_cards?: number | null
+          shots?: number | null
+          shots_on_target?: number | null
+          user_id: string
+          yellow_cards?: number | null
+        }
+        Update: {
+          corners?: number | null
+          created_at?: string | null
+          expected_goals?: number | null
+          expected_goals_against?: number | null
+          fouls?: number | null
+          game_id?: string | null
+          id?: string
+          pass_accuracy?: number | null
+          passes?: number | null
+          possession?: number | null
+          red_cards?: number | null
+          shots?: number | null
+          shots_on_target?: number | null
+          user_id?: string
+          yellow_cards?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_statistics_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "game_results"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       weekly_performances: {
         Row: {
           average_game_duration: number | null
@@ -411,10 +538,13 @@ export type Database = {
           end_date: string | null
           id: string
           is_completed: boolean | null
+          minimum_rank: string | null
           personal_notes: string | null
           squad_used: string | null
           start_date: string
           starting_rank: string | null
+          target_clean_sheets: number | null
+          target_goals: number | null
           target_rank: string | null
           target_wins: number | null
           total_conceded: number | null
@@ -443,10 +573,13 @@ export type Database = {
           end_date?: string | null
           id?: string
           is_completed?: boolean | null
+          minimum_rank?: string | null
           personal_notes?: string | null
           squad_used?: string | null
           start_date: string
           starting_rank?: string | null
+          target_clean_sheets?: number | null
+          target_goals?: number | null
           target_rank?: string | null
           target_wins?: number | null
           total_conceded?: number | null
@@ -475,10 +608,13 @@ export type Database = {
           end_date?: string | null
           id?: string
           is_completed?: boolean | null
+          minimum_rank?: string | null
           personal_notes?: string | null
           squad_used?: string | null
           start_date?: string
           starting_rank?: string | null
+          target_clean_sheets?: number | null
+          target_goals?: number | null
           target_rank?: string | null
           target_wins?: number | null
           total_conceded?: number | null

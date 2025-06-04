@@ -3,28 +3,36 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { WeeklyPerformance, GameResult, UserSettings } from '@/types/futChampions';
-import { useAchievementNotifications } from '@/hooks/useAchievementNotifications';
-import { generateAIInsights } from '@/utils/aiInsights';
+import { useSupabaseData } from '@/hooks/useSupabaseData';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { GameResult, WeeklyTarget } from '@/types/futChampions';
 import Navigation from '@/components/Navigation';
 import GameRecordForm from '@/components/GameRecordForm';
-import WeekProgress from '@/components/WeekProgress';
 import GameCompletionModal from '@/components/GameCompletionModal';
-import { Calendar, Plus, BarChart3, Trophy, Target, TrendingUp } from 'lucide-react';
-import { useTheme } from '@/hooks/useTheme';
-import { useDataSync } from '@/hooks/useDataSync';
+import GameEditModal from '@/components/GameEditModal';
+import RunNamingModal from '@/components/RunNamingModal';
+import TargetEditModal from '@/components/TargetEditModal';
+import CurrentRunStats from '@/components/CurrentRunStats';
+import { Calendar, Plus, Edit, Target, Trophy, Settings } from 'lucide-react';
 
 const CurrentWeek = () => {
-  const { currentTheme } = useTheme();
+  const { user } = useAuth();
+  const { toast } = useToast();
   const { 
     weeklyData, 
-    setWeeklyData, 
-    settings, 
-    setSettings,
+    loading, 
+    saveGame, 
+    createWeek, 
+    updateWeek,
+    updateGame,
     getCurrentWeek 
-  } = useDataSync();
+  } = useSupabaseData();
 
   const [showGameForm, setShowGameForm] = useState(false);
+  const [editingGame, setEditingGame] = useState<GameResult | null>(null);
+  const [showRunNaming, setShowRunNaming] = useState(false);
+  const [showTargetEdit, setShowTargetEdit] = useState(false);
   const [gameCompletionModal, setGameCompletionModal] = useState<{
     isOpen: boolean;
     game: GameResult | null;
@@ -40,142 +48,169 @@ const CurrentWeek = () => {
     game: null,
     weekStats: null
   });
-  
-  const { checkAndNotifyAchievements, notifyGameFeedback } = useAchievementNotifications();
 
   // Get or create current week
-  const getCurrentWeekData = (): WeeklyPerformance => {
-    const existingWeek = getCurrentWeek();
-    if (existingWeek) {
-      return existingWeek;
+  const currentWeek = getCurrentWeek();
+
+  // Create initial week if none exists
+  useEffect(() => {
+    if (!loading && user && weeklyData.length === 0) {
+      const newWeek = {
+        weekNumber: 1,
+        startDate: new Date().toISOString(),
+        winTarget: {
+          wins: 10,
+          goalsScored: undefined,
+          cleanSheets: undefined,
+          minimumRank: undefined
+        }
+      };
+      createWeek(newWeek);
+    }
+  }, [loading, user, weeklyData.length, createWeek]);
+
+  const handleGameSubmit = async (gameData: Omit<GameResult, 'id'>) => {
+    if (!currentWeek) {
+      toast({
+        title: "Error",
+        description: "No active run found. Please create a new run first.",
+        variant: "destructive"
+      });
+      return;
     }
 
-    const newWeek: WeeklyPerformance = {
-      id: `week-${Date.now()}`,
-      weekNumber: weeklyData.length + 1,
-      startDate: new Date().toISOString(),
-      endDate: '',
-      games: [],
-      totalWins: 0,
-      totalLosses: 0,
-      totalGoals: 0,
-      totalConceded: 0,
-      totalExpectedGoals: 0,
-      totalExpectedGoalsAgainst: 0,
-      averageOpponentSkill: 0,
-      squadUsed: '',
-      weeklyRating: 0,
-      isCompleted: false,
-      bestStreak: 0,
-      worstStreak: 0,
-      currentStreak: 0,
-      gamesPlayed: 0,
-      weekScore: 0,
-      totalPlayTime: 0,
-      averageGameDuration: 0
-    };
+    try {
+      await saveGame(currentWeek.id, gameData);
+      
+      // Calculate updated stats
+      const updatedGames = currentWeek.games.length + 1;
+      const wins = currentWeek.totalWins + (gameData.result === 'win' ? 1 : 0);
+      const losses = currentWeek.totalLosses + (gameData.result === 'loss' ? 1 : 0);
+      
+      // Show completion modal
+      setGameCompletionModal({
+        isOpen: true,
+        game: { ...gameData, id: `temp-${Date.now()}` } as GameResult,
+        weekStats: {
+          totalGames: updatedGames,
+          wins,
+          losses,
+          winRate: updatedGames > 0 ? (wins / updatedGames) * 100 : 0,
+          currentStreak: gameData.result === 'win' ? 1 : 0 // Simplified for now
+        }
+      });
 
-    setWeeklyData([...weeklyData, newWeek]);
-    return newWeek;
+      setShowGameForm(false);
+      
+      toast({
+        title: "Game Recorded",
+        description: "Your game has been successfully recorded!",
+      });
+    } catch (error) {
+      console.error('Error saving game:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save game. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const currentWeek = getCurrentWeekData();
+  const handleEditGame = async (updatedGame: GameResult) => {
+    try {
+      await updateGame(updatedGame.id, updatedGame);
+      setEditingGame(null);
+      
+      toast({
+        title: "Game Updated",
+        description: "Game has been successfully updated!",
+      });
+    } catch (error) {
+      console.error('Error updating game:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update game. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
 
-  const handleGameSubmit = (gameData: any) => {
-    const newGame: GameResult = {
-      ...gameData,
-      id: `game-${Date.now()}`,
-      date: new Date().toISOString(),
-      gameNumber: currentWeek.games.length + 1,
-      crossPlayEnabled: gameData.crossPlayEnabled || settings.defaultCrossPlay || false,
-    };
+  const handleRunNameSave = async (name: string) => {
+    if (!currentWeek) return;
+    
+    try {
+      await updateWeek(currentWeek.id, { customName: name });
+      toast({
+        title: "Run Named",
+        description: `Run renamed to "${name}"`,
+      });
+    } catch (error) {
+      console.error('Error updating run name:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update run name. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
 
-    const updatedGames = [...currentWeek.games, newGame];
-    const updatedWeek: WeeklyPerformance = {
-      ...currentWeek,
-      games: updatedGames,
-      totalWins: updatedGames.filter(g => g.result === 'win').length,
-      totalLosses: updatedGames.filter(g => g.result === 'loss').length,
-      totalGoals: updatedGames.reduce((sum, g) => {
-        const [goals] = g.scoreLine.split('-').map(Number);
-        return sum + goals;
-      }, 0),
-      totalConceded: updatedGames.reduce((sum, g) => {
-        const [, conceded] = g.scoreLine.split('-').map(Number);
-        return sum + conceded;
-      }, 0),
-      averageOpponentSkill: updatedGames.reduce((sum, g) => sum + g.opponentSkill, 0) / updatedGames.length,
-      totalPlayTime: updatedGames.reduce((sum, g) => sum + g.duration, 0),
-      averageGameDuration: updatedGames.reduce((sum, g) => sum + g.duration, 0) / updatedGames.length,
-      isCompleted: updatedGames.length >= settings.gamesPerWeek,
-      gamesPlayed: updatedGames.length,
-      currentStreak: calculateCurrentStreak(updatedGames)
-    };
+  const handleTargetSave = async (target: WeeklyTarget) => {
+    if (!currentWeek) return;
+    
+    try {
+      await updateWeek(currentWeek.id, { winTarget: target });
+      toast({
+        title: "Targets Updated",
+        description: "Your targets have been successfully updated!",
+      });
+    } catch (error) {
+      console.error('Error updating targets:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update targets. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
 
-    const updatedWeeklyData = weeklyData.map(week => 
-      week.id === currentWeek.id ? updatedWeek : week
+  const generateDefaultName = () => {
+    const now = new Date();
+    const month = now.toLocaleString('default', { month: 'long' });
+    const year = now.getFullYear();
+    const week = Math.ceil(now.getDate() / 7);
+    return `${month} ${year} - Week ${week}`;
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen">
+        <Navigation />
+        <main className="lg:ml-20 lg:hover:ml-64 transition-all duration-500 p-4 lg:p-6">
+          <div className="max-w-6xl mx-auto space-y-6">
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-fifa-blue mx-auto"></div>
+              <p className="text-white mt-4">Loading your run data...</p>
+            </div>
+          </div>
+        </main>
+      </div>
     );
+  }
 
-    setWeeklyData(updatedWeeklyData);
-
-    // Show completion modal with enhanced stats
-    const weekStats = {
-      totalGames: updatedWeek.games.length,
-      wins: updatedWeek.totalWins,
-      losses: updatedWeek.totalLosses,
-      winRate: updatedWeek.games.length > 0 ? (updatedWeek.totalWins / updatedWeek.games.length) * 100 : 0,
-      currentStreak: calculateCurrentStreak(updatedWeek.games)
-    };
-
-    setGameCompletionModal({
-      isOpen: true,
-      game: newGame,
-      weekStats: weekStats
-    });
-
-    // Check achievements and provide feedback
-    checkAndNotifyAchievements(updatedWeeklyData, updatedWeek);
-    notifyGameFeedback(newGame, updatedWeek);
-
-    setShowGameForm(false);
-  };
-
-  const calculateCurrentStreak = (games: GameResult[]): number => {
-    if (games.length === 0) return 0;
-    
-    let streak = 0;
-    const sortedGames = [...games].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    
-    for (const game of sortedGames) {
-      if (game.result === 'win') {
-        streak++;
-      } else {
-        break;
-      }
-    }
-    
-    return streak;
-  };
-
-  const handleNewWeek = () => {
-    // This function will be implemented when needed
-    console.log('New week requested');
-  };
-
-  // Generate AI insights for current week
-  const weekInsights = generateAIInsights(weeklyData, currentWeek, currentWeek.games.slice(-10));
-
-  // Calculate cross-play analytics
-  const crossPlayAnalytics = currentWeek.games.reduce((acc, game) => {
-    if (game.crossPlayEnabled) {
-      acc.crossPlayGames++;
-      if (game.result === 'win') acc.crossPlayWins++;
-    } else {
-      acc.nonCrossPlayGames++;
-      if (game.result === 'win') acc.nonCrossPlayWins++;
-    }
-    return acc;
-  }, { crossPlayGames: 0, crossPlayWins: 0, nonCrossPlayGames: 0, nonCrossPlayWins: 0 });
+  if (!user) {
+    return (
+      <div className="min-h-screen">
+        <Navigation />
+        <main className="lg:ml-20 lg:hover:ml-64 transition-all duration-500 p-4 lg:p-6">
+          <div className="max-w-6xl mx-auto space-y-6">
+            <div className="text-center py-12">
+              <p className="text-white">Please log in to access your FUT Champions data.</p>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
@@ -186,86 +221,69 @@ const CurrentWeek = () => {
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-2xl" style={{ backgroundColor: `${currentTheme.colors.primary}20` }}>
-                <Calendar className="h-8 w-8" style={{ color: currentTheme.colors.primary }} />
+              <div className="p-3 rounded-2xl bg-fifa-blue/20">
+                <Calendar className="h-8 w-8 text-fifa-blue" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-white page-header">Run {currentWeek.weekNumber}</h1>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-3xl font-bold text-white page-header">
+                    {currentWeek?.customName || `Run ${currentWeek?.weekNumber || 1}`}
+                  </h1>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowRunNaming(true)}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                </div>
                 <p className="text-gray-400 mt-1">
-                  {currentWeek.games.length}/{settings.gamesPerWeek} games completed
+                  {currentWeek?.games?.length || 0}/15 games completed
                 </p>
               </div>
             </div>
             
-            <Button 
-              onClick={() => setShowGameForm(true)}
-              className="modern-button-primary group"
-              disabled={currentWeek.isCompleted}
-            >
-              <Plus className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
-              Record Game
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowTargetEdit(true)}
+                className="flex items-center gap-2"
+              >
+                <Target className="h-4 w-4" />
+                Edit Targets
+              </Button>
+              <Button 
+                onClick={() => setShowGameForm(true)}
+                className="modern-button-primary group"
+                disabled={currentWeek?.isCompleted}
+              >
+                <Plus className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
+                Record Game
+              </Button>
+            </div>
           </div>
 
-          {/* Week Progress */}
-          <WeekProgress 
-            weekData={currentWeek}
-            onNewWeek={handleNewWeek}
-          />
-
-          {/* Cross-Play Analytics */}
-          {currentWeek.games.length > 0 && (
-            <Card className="glass-card static-element">
-              <CardHeader>
-                <CardTitle className="text-white">Cross-Play Analytics</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-fifa-blue">{crossPlayAnalytics.crossPlayGames}</div>
-                    <div className="text-sm text-gray-400">Cross-Play Games</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-fifa-green">
-                      {crossPlayAnalytics.crossPlayGames > 0 
-                        ? Math.round((crossPlayAnalytics.crossPlayWins / crossPlayAnalytics.crossPlayGames) * 100) 
-                        : 0}%
-                    </div>
-                    <div className="text-sm text-gray-400">Cross-Play Win Rate</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-fifa-purple">{crossPlayAnalytics.nonCrossPlayGames}</div>
-                    <div className="text-sm text-gray-400">Same Platform Games</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-fifa-gold">
-                      {crossPlayAnalytics.nonCrossPlayGames > 0 
-                        ? Math.round((crossPlayAnalytics.nonCrossPlayWins / crossPlayAnalytics.nonCrossPlayGames) * 100) 
-                        : 0}%
-                    </div>
-                    <div className="text-sm text-gray-400">Same Platform Win Rate</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Enhanced Content */}
-          <Tabs defaultValue="games" className="w-full">
+          {/* Main Content */}
+          <Tabs defaultValue="stats" className="w-full">
             <TabsList className="grid w-full grid-cols-3 glass-card static-element">
-              <TabsTrigger value="games" className="data-[state=active]:bg-fifa-blue/20">
+              <TabsTrigger value="stats" className="data-[state=active]:bg-fifa-blue/20">
                 <Trophy className="h-4 w-4 mr-2" />
-                Games
+                Current Run Stats
               </TabsTrigger>
-              <TabsTrigger value="analytics" className="data-[state=active]:bg-fifa-blue/20">
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Analytics
+              <TabsTrigger value="games" className="data-[state=active]:bg-fifa-blue/20">
+                <Calendar className="h-4 w-4 mr-2" />
+                Recent Games
               </TabsTrigger>
-              <TabsTrigger value="insights" className="data-[state=active]:bg-fifa-blue/20">
+              <TabsTrigger value="targets" className="data-[state=active]:bg-fifa-blue/20">
                 <Target className="h-4 w-4 mr-2" />
-                AI Insights
+                Targets & Progress
               </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="stats" className="space-y-4">
+              <CurrentRunStats />
+            </TabsContent>
 
             <TabsContent value="games" className="space-y-4">
               <Card className="glass-card static-element">
@@ -273,7 +291,7 @@ const CurrentWeek = () => {
                   <CardTitle className="text-white page-header">Recent Games</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {currentWeek.games.length > 0 ? (
+                  {currentWeek?.games && currentWeek.games.length > 0 ? (
                     <div className="space-y-3">
                       {currentWeek.games.slice().reverse().map((game, index) => (
                         <div key={game.id} 
@@ -299,9 +317,19 @@ const CurrentWeek = () => {
                                 </p>
                               </div>
                             </div>
-                            <div className="text-right">
-                              <p className="text-sm text-gray-400">Opponent Skill</p>
-                              <p className="text-lg font-bold text-white">{game.opponentSkill}/10</p>
+                            <div className="flex items-center gap-3">
+                              <div className="text-right">
+                                <p className="text-sm text-gray-400">Opponent Skill</p>
+                                <p className="text-lg font-bold text-white">{game.opponentSkill}/10</p>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setEditingGame(game)}
+                                className="text-gray-400 hover:text-white"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
                             </div>
                           </div>
                         </div>
@@ -322,96 +350,44 @@ const CurrentWeek = () => {
               </Card>
             </TabsContent>
 
-            <TabsContent value="analytics" className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="metric-card">
-                  <CardContent className="p-6 text-center">
-                    <div className="text-3xl font-bold text-blue-400 mb-2">{currentWeek.totalWins}</div>
-                    <div className="text-sm text-gray-400">Wins</div>
-                  </CardContent>
-                </Card>
-                
-                <Card className="metric-card">
-                  <CardContent className="p-6 text-center">
-                    <div className="text-3xl font-bold text-red-400 mb-2">{currentWeek.totalLosses}</div>
-                    <div className="text-sm text-gray-400">Losses</div>
-                  </CardContent>
-                </Card>
-                
-                <Card className="metric-card">
-                  <CardContent className="p-6 text-center">
-                    <div className="text-3xl font-bold text-green-400 mb-2">{currentWeek.totalGoals}</div>
-                    <div className="text-sm text-gray-400">Goals Scored</div>
-                  </CardContent>
-                </Card>
-                
-                <Card className="metric-card">
-                  <CardContent className="p-6 text-center">
-                    <div className="text-3xl font-bold text-yellow-400 mb-2">
-                      {currentWeek.games.length > 0 ? currentWeek.averageOpponentSkill.toFixed(1) : '0.0'}
-                    </div>
-                    <div className="text-sm text-gray-400">Avg Opponent</div>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="insights" className="space-y-4">
-              <Card className="glass-card">
+            <TabsContent value="targets" className="space-y-4">
+              <Card className="glass-card static-element">
                 <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5" />
-                    AI Performance Insights
-                  </CardTitle>
+                  <CardTitle className="text-white page-header">Weekly Targets</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {weekInsights.length > 0 ? (
-                    <div className="space-y-4">
-                      {weekInsights.slice(0, 10).map((insight, index) => (
-                        <div key={insight.id} 
-                             className={`p-4 rounded-2xl border transition-all duration-500 hover:scale-105 ${
-                               insight.category === 'strength' 
-                                 ? 'bg-gradient-to-r from-green-500/20 to-green-600/10 border-green-500/30'
-                                 : insight.category === 'weakness'
-                                 ? 'bg-gradient-to-r from-red-500/20 to-red-600/10 border-red-500/30'
-                                 : 'bg-gradient-to-r from-blue-500/20 to-blue-600/10 border-blue-500/30'
-                             }`}
-                             style={{ animationDelay: `${index * 100}ms` }}>
-                          <div className="flex items-start gap-3">
-                            <div className={`p-2 rounded-lg ${
-                              insight.category === 'strength' ? 'bg-green-500/30' :
-                              insight.category === 'weakness' ? 'bg-red-500/30' : 'bg-blue-500/30'
-                            }`}>
-                              {insight.category === 'strength' ? '💪' : 
-                               insight.category === 'weakness' ? '⚠️' : '📊'}
-                            </div>
-                            <div className="flex-1">
-                              <h4 className="font-semibold text-white mb-1">{insight.title}</h4>
-                              <p className="text-gray-300 text-sm">{insight.description}</p>
-                              <div className="flex items-center gap-2 mt-2">
-                                <span className={`text-xs px-2 py-1 rounded-full ${
-                                  insight.priority === 'high' ? 'bg-red-500/30 text-red-300' :
-                                  insight.priority === 'medium' ? 'bg-yellow-500/30 text-yellow-300' :
-                                  'bg-green-500/30 text-green-300'
-                                }`}>
-                                  {insight.priority}
-                                </span>
-                                <span className="text-xs text-gray-400">
-                                  {insight.confidence}% confidence
-                                </span>
-                              </div>
-                            </div>
-                          </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="text-center p-4 bg-white/5 rounded-lg">
+                      <div className="text-2xl font-bold text-fifa-blue">
+                        {currentWeek?.totalWins || 0}/{currentWeek?.winTarget?.wins || 10}
+                      </div>
+                      <div className="text-sm text-gray-400">Target Wins</div>
+                    </div>
+                    {currentWeek?.winTarget?.goalsScored && (
+                      <div className="text-center p-4 bg-white/5 rounded-lg">
+                        <div className="text-2xl font-bold text-fifa-green">
+                          {currentWeek?.totalGoals || 0}/{currentWeek.winTarget.goalsScored}
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12">
-                      <TrendingUp className="h-16 w-16 mx-auto mb-4 text-gray-500" />
-                      <h3 className="text-xl font-semibold text-white mb-2">No Insights Yet</h3>
-                      <p className="text-gray-400">Play some games to receive AI-powered insights</p>
-                    </div>
-                  )}
+                        <div className="text-sm text-gray-400">Target Goals</div>
+                      </div>
+                    )}
+                    {currentWeek?.winTarget?.cleanSheets && (
+                      <div className="text-center p-4 bg-white/5 rounded-lg">
+                        <div className="text-2xl font-bold text-fifa-purple">
+                          0/{currentWeek.winTarget.cleanSheets}
+                        </div>
+                        <div className="text-sm text-gray-400">Clean Sheets</div>
+                      </div>
+                    )}
+                    {currentWeek?.winTarget?.minimumRank && (
+                      <div className="text-center p-4 bg-white/5 rounded-lg">
+                        <div className="text-lg font-bold text-fifa-gold">
+                          {currentWeek.winTarget.minimumRank}
+                        </div>
+                        <div className="text-sm text-gray-400">Target Rank</div>
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -419,13 +395,13 @@ const CurrentWeek = () => {
         </div>
       </main>
 
-      {/* Game Recording Modal - Fixed width and removed hover effects */}
+      {/* Modals */}
       {showGameForm && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-gray-900 rounded-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <GameRecordForm
               onGameSaved={handleGameSubmit}
-              gameNumber={currentWeek.games.length + 1}
+              gameNumber={(currentWeek?.games?.length || 0) + 1}
             />
             <Button 
               onClick={() => setShowGameForm(false)}
@@ -438,12 +414,32 @@ const CurrentWeek = () => {
         </div>
       )}
 
-      {/* Enhanced Game Completion Modal */}
       <GameCompletionModal
         isOpen={gameCompletionModal.isOpen}
         onClose={() => setGameCompletionModal({ isOpen: false, game: null, weekStats: null })}
         game={gameCompletionModal.game}
         weekStats={gameCompletionModal.weekStats}
+      />
+
+      <GameEditModal
+        game={editingGame}
+        isOpen={!!editingGame}
+        onClose={() => setEditingGame(null)}
+        onSave={handleEditGame}
+      />
+
+      <RunNamingModal
+        isOpen={showRunNaming}
+        onClose={() => setShowRunNaming(false)}
+        onSave={handleRunNameSave}
+        currentName={currentWeek?.customName}
+      />
+
+      <TargetEditModal
+        isOpen={showTargetEdit}
+        onClose={() => setShowTargetEdit(false)}
+        onSave={handleTargetSave}
+        currentTarget={currentWeek?.winTarget}
       />
     </div>
   );
