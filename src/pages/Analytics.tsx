@@ -1,15 +1,25 @@
-
 import Navigation from '@/components/Navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAccountData } from '@/hooks/useAccountData';
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { TrendingUp, Target, Trophy, Users, Calendar, BarChart3 } from 'lucide-react';
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
+import { TrendingUp, Target, Trophy, Users, Calendar, BarChart3, Brain, Lightbulb } from 'lucide-react';
 import StatCard from '@/components/StatCard';
+import { generateEnhancedAIInsights } from '@/utils/enhancedAiInsights';
+import { useState, useEffect } from 'react';
 
 const Analytics = () => {
   const { weeks, activeAccount } = useAccountData();
+  const [aiInsights, setAiInsights] = useState<any[]>([]);
   const completedWeeks = weeks.filter(week => week.isCompleted);
+  const currentWeek = weeks.find(week => !week.isCompleted);
+
+  useEffect(() => {
+    if (completedWeeks.length > 0) {
+      const insights = generateEnhancedAIInsights(completedWeeks, currentWeek);
+      setAiInsights(insights);
+    }
+  }, [completedWeeks, currentWeek]);
 
   // Weekly Performance Data
   const weeklyData = completedWeeks.map(week => ({
@@ -73,7 +83,7 @@ const Analytics = () => {
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">
             <h1 className="text-3xl font-bold gradient-text mb-2">Performance Analytics</h1>
-            <p className="text-gray-400">Detailed performance metrics for {activeAccount}</p>
+            <p className="text-gray-400">Detailed performance metrics and AI insights for {activeAccount}</p>
           </div>
 
           {completedWeeks.length === 0 ? (
@@ -119,6 +129,10 @@ const Analytics = () => {
                   <TabsTrigger value="performance" className="rounded-xl">Weekly Performance</TabsTrigger>
                   <TabsTrigger value="distribution" className="rounded-xl">Game Distribution</TabsTrigger>
                   <TabsTrigger value="trends" className="rounded-xl">Trends</TabsTrigger>
+                  <TabsTrigger value="ai-insights" className="rounded-xl">
+                    <Brain className="h-4 w-4 mr-2" />
+                    AI Insights
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="performance" className="space-y-6">
@@ -274,6 +288,76 @@ const Analytics = () => {
                       </ResponsiveContainer>
                     </CardContent>
                   </Card>
+                </TabsContent>
+
+                <TabsContent value="ai-insights" className="space-y-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {aiInsights.length > 0 ? aiInsights.map((insight, index) => (
+                      <Card key={insight.id} className="glass-card rounded-2xl shadow-2xl border-0">
+                        <CardHeader>
+                          <CardTitle className={`flex items-center gap-2 text-lg ${
+                            insight.category === 'strength' ? 'text-fifa-green' :
+                            insight.category === 'weakness' ? 'text-fifa-red' :
+                            insight.category === 'opportunity' ? 'text-fifa-blue' :
+                            'text-fifa-gold'
+                          }`}>
+                            {insight.category === 'strength' ? <Trophy className="h-5 w-5" /> :
+                             insight.category === 'weakness' ? <Target className="h-5 w-5" /> :
+                             insight.category === 'opportunity' ? <TrendingUp className="h-5 w-5" /> :
+                             <Lightbulb className="h-5 w-5" />}
+                            {insight.title}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <p className="text-white">{insight.description}</p>
+                          
+                          <div className="p-3 bg-fifa-blue/10 border border-fifa-blue/20 rounded-xl">
+                            <p className="text-fifa-blue font-medium text-sm mb-1">💡 Actionable Advice:</p>
+                            <p className="text-white text-sm">{insight.actionableAdvice}</p>
+                          </div>
+                          
+                          <div className="flex items-center justify-between">
+                            <div className="flex gap-2">
+                              <span className={`text-xs px-2 py-1 rounded-full ${
+                                insight.priority === 'high' ? 'bg-red-500/20 text-red-400' :
+                                insight.priority === 'medium' ? 'bg-yellow-500/20 text-yellow-400' :
+                                'bg-green-500/20 text-green-400'
+                              }`}>
+                                {insight.priority} priority
+                              </span>
+                              <span className={`text-xs px-2 py-1 rounded-full ${
+                                insight.type === 'performance' ? 'bg-blue-500/20 text-blue-400' :
+                                insight.type === 'tactical' ? 'bg-purple-500/20 text-purple-400' :
+                                insight.type === 'mental' ? 'bg-pink-500/20 text-pink-400' :
+                                insight.type === 'technical' ? 'bg-orange-500/20 text-orange-400' :
+                                'bg-gray-500/20 text-gray-400'
+                              }`}>
+                                {insight.type}
+                              </span>
+                            </div>
+                            <span className="text-xs text-gray-400">{insight.confidence}% confidence</span>
+                          </div>
+                          
+                          {insight.dataPoints && insight.dataPoints.length > 0 && (
+                            <div className="space-y-1">
+                              <p className="text-xs text-gray-400">Data Points:</p>
+                              {insight.dataPoints.map((point: string, idx: number) => (
+                                <p key={idx} className="text-xs text-gray-300">• {point}</p>
+                              ))}
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    )) : (
+                      <Card className="glass-card rounded-2xl shadow-2xl border-0 col-span-2">
+                        <CardContent className="text-center py-8">
+                          <Brain className="h-16 w-16 mx-auto mb-4 text-gray-500" />
+                          <h3 className="text-xl font-semibold text-white mb-2">Generating AI Insights</h3>
+                          <p className="text-gray-400">AI insights will appear as you complete more weeks and games.</p>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
                 </TabsContent>
               </Tabs>
             </>
