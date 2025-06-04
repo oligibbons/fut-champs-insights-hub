@@ -6,9 +6,10 @@ import PlayerPerformanceInput from './PlayerPerformanceInput';
 interface PlayerStatsFormProps {
   playerStats: PlayerPerformance[];
   onPlayerStatsChange: (players: PlayerPerformance[]) => void;
+  gameDuration?: number;
 }
 
-const PlayerStatsForm = ({ playerStats, onPlayerStatsChange }: PlayerStatsFormProps) => {
+const PlayerStatsForm = ({ playerStats, onPlayerStatsChange, gameDuration }: PlayerStatsFormProps) => {
   return (
     <PlayerPerformanceInput 
       players={playerStats} 

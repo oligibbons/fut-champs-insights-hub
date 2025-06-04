@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,9 +16,10 @@ import PlayerStatsForm from './PlayerStatsForm';
 interface GameRecordFormProps {
   onGameSaved: (gameData: Omit<GameResult, 'id'>) => void;
   gameNumber: number;
+  onClose?: () => void;
 }
 
-const GameRecordForm = ({ onGameSaved, gameNumber }: GameRecordFormProps) => {
+const GameRecordForm = ({ onGameSaved, gameNumber, onClose }: GameRecordFormProps) => {
   const { toast } = useToast();
   const { getDefaultSquad } = useSquadData();
   
@@ -70,11 +70,10 @@ const GameRecordForm = ({ onGameSaved, gameNumber }: GameRecordFormProps) => {
           yellowCards: 0,
           redCards: 0,
           ownGoals: 0,
-          minutesPlayed: duration, // Auto-apply duration
+          minutesPlayed: duration,
           wasSubstituted: false
         }));
 
-      // Add bench players with 0 minutes by default
       const benchPlayers: PlayerPerformance[] = [
         { id: 'bench-1', name: 'Substitute 1', position: 'SUB', rating: 6.5, goals: 0, assists: 0, yellowCards: 0, redCards: 0, ownGoals: 0, minutesPlayed: 0, wasSubstituted: false },
         { id: 'bench-2', name: 'Substitute 2', position: 'SUB', rating: 6.5, goals: 0, assists: 0, yellowCards: 0, redCards: 0, ownGoals: 0, minutesPlayed: 0, wasSubstituted: false },
@@ -104,7 +103,6 @@ const GameRecordForm = ({ onGameSaved, gameNumber }: GameRecordFormProps) => {
       actualGoalsAgainst: oppG
     }));
 
-    // Auto-determine result
     if (userGoals && opponentGoals) {
       setResult(userG > oppG ? 'win' : 'loss');
     }
@@ -224,7 +222,7 @@ const GameRecordForm = ({ onGameSaved, gameNumber }: GameRecordFormProps) => {
                     <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-gray-600 z-50">
+                    <SelectContent>
                       <SelectItem value="normal">Normal Game</SelectItem>
                       <SelectItem value="rage_quit">Rage Quit</SelectItem>
                       <SelectItem value="extra_time">Extra Time</SelectItem>
