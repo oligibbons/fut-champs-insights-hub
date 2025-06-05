@@ -1,8 +1,9 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useDataSync } from '@/hooks/useDataSync';
-import { Trophy, Target, TrendingUp, Calendar, Award, Zap, BarChart3, Users } from 'lucide-react';
+import { Trophy, Target, TrendingUp, Calendar, Award, Zap, BarChart3, Users, Shield, Flame, Clock, Star } from 'lucide-react';
 import AnalyticsTooltip from './AnalyticsTooltip';
+import { Progress } from '@/components/ui/progress';
 
 const DashboardOverview = () => {
   const { weeklyData, calculatePlayerStats } = useDataSync();
@@ -14,16 +15,21 @@ const DashboardOverview = () => {
     totalGoals: weeklyData.reduce((sum, week) => sum + week.totalGoals, 0),
     totalConceded: weeklyData.reduce((sum, week) => sum + week.totalConceded, 0),
     completedWeeks: weeklyData.filter(week => week.isCompleted).length,
+    totalCleanSheets: weeklyData.reduce((sum, week) => 
+      sum + week.games.filter(game => parseInt(game.scoreLine.split('-')[1]) === 0).length, 0
+    ),
     avgGoalsPerGame: 0,
     avgConcededPerGame: 0,
     winRate: 0,
-    goalDifference: 0
+    goalDifference: 0,
+    cleanSheetRate: 0
   };
 
   allTimeStats.avgGoalsPerGame = allTimeStats.totalGames > 0 ? allTimeStats.totalGoals / allTimeStats.totalGames : 0;
   allTimeStats.avgConcededPerGame = allTimeStats.totalGames > 0 ? allTimeStats.totalConceded / allTimeStats.totalGames : 0;
   allTimeStats.winRate = allTimeStats.totalGames > 0 ? (allTimeStats.totalWins / allTimeStats.totalGames) * 100 : 0;
   allTimeStats.goalDifference = allTimeStats.totalGoals - allTimeStats.totalConceded;
+  allTimeStats.cleanSheetRate = allTimeStats.totalGames > 0 ? (allTimeStats.totalCleanSheets / allTimeStats.totalGames) * 100 : 0;
 
   // Personal records
   const personalRecords = {
@@ -34,7 +40,29 @@ const DashboardOverview = () => {
     ), 0),
     longestWinStreak: Math.max(...weeklyData.map(week => week.bestStreak || 0), 0),
     bestGoalDifference: Math.max(...weeklyData.map(week => week.totalGoals - week.totalConceded), 0),
-    highestWeeklyRating: Math.max(...weeklyData.map(week => week.weeklyRating || 0), 0)
+    highestWeeklyRating: Math.max(...weeklyData.map(week => week.weeklyRating || 0), 0),
+    mostGoalsInGame: Math.max(...weeklyData.flatMap(week => 
+      week.games.map(game => parseInt(game.scoreLine.split('-')[0]))
+    ), 0),
+    biggestWin: Math.max(...weeklyData.flatMap(week => 
+      week.games.map(game => {
+        const [goals, conceded] = game.scoreLine.split('-').map(Number);
+        return game.result === 'win' ? goals - conceded : 0;
+      })
+    ), 0)
+  };
+
+  // Performance trends (last 5 weeks)
+  const recentWeeks = weeklyData.filter(week => week.isCompleted).slice(-5);
+  const recentPerformance = {
+    avgWinRate: recentWeeks.length > 0 ? 
+      recentWeeks.reduce((sum, week) => sum + (week.games.length > 0 ? (week.totalWins / week.games.length) * 100 : 0), 0) / recentWeeks.length : 0,
+    avgGoalsPerWeek: recentWeeks.length > 0 ? 
+      recentWeeks.reduce((sum, week) => sum + week.totalGoals, 0) / recentWeeks.length : 0,
+    avgConcededPerWeek: recentWeeks.length > 0 ? 
+      recentWeeks.reduce((sum, week) => sum + week.totalConceded, 0) / recentWeeks.length : 0,
+    isImproving: recentWeeks.length >= 2 ? 
+      recentWeeks[recentWeeks.length - 1].totalWins > recentWeeks[recentWeeks.length - 2].totalWins : false
   };
 
   // Current/Recent run summary
@@ -50,7 +78,10 @@ const DashboardOverview = () => {
     goals: activeWeek.totalGoals,
     conceded: activeWeek.totalConceded,
     winRate: activeWeek.games.length > 0 ? (activeWeek.totalWins / activeWeek.games.length) * 100 : 0,
-    isActive: !activeWeek.isCompleted
+    isActive: !activeWeek.isCompleted,
+    progressToTarget: activeWeek.winTarget ? 
+      Math.min(100, (activeWeek.totalWins / activeWeek.winTarget.wins) * 100) : 0,
+    gamesRemaining: 15 - activeWeek.games.length
   } : null;
 
   return (
@@ -117,20 +148,18 @@ const DashboardOverview = () => {
           </AnalyticsTooltip>
 
           <AnalyticsTooltip
-            title="Goal Difference"
-            description="Total goals scored minus total goals conceded. Positive values indicate balanced attacking and defensive play."
+            title="Clean Sheet Rate"
+            description="Percentage of games where you didn't concede any goals. Shows defensive strength."
           >
             <Card className="glass-card">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-400">Goal Difference</p>
-                    <p className={`text-2xl font-bold ${allTimeStats.goalDifference >= 0 ? 'text-fifa-green' : 'text-fifa-red'}`}>
-                      {allTimeStats.goalDifference > 0 ? '+' : ''}{allTimeStats.goalDifference}
-                    </p>
-                    <p className="text-xs text-gray-500">vs {allTimeStats.avgConcededPerGame.toFixed(1)} conceded/game</p>
+                    <p className="text-sm text-gray-400">Clean Sheets</p>
+                    <p className="text-2xl font-bold text-fifa-blue">{allTimeStats.cleanSheetRate.toFixed(1)}%</p>
+                    <p className="text-xs text-gray-500">{allTimeStats.totalCleanSheets} clean sheets</p>
                   </div>
-                  <TrendingUp className="h-8 w-8 text-fifa-purple" />
+                  <Shield className="h-8 w-8 text-fifa-blue" />
                 </div>
               </CardContent>
             </Card>
@@ -144,7 +173,7 @@ const DashboardOverview = () => {
           <Award className="h-6 w-6 text-fifa-gold" />
           Personal Records
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <AnalyticsTooltip
             title="Best Weekly Performance"
             description="Highest number of wins achieved in a single FIFA Champions week."
@@ -153,29 +182,11 @@ const DashboardOverview = () => {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-400">Best Week (Wins)</p>
-                    <p className="text-xl font-bold text-fifa-blue">{personalRecords.bestWeekWins}</p>
-                    <p className="text-xs text-gray-500">wins in one week</p>
+                    <p className="text-sm text-gray-400">Best Week</p>
+                    <p className="text-xl font-bold text-fifa-blue">{personalRecords.bestWeekWins} wins</p>
+                    <p className="text-xs text-gray-500">in one week</p>
                   </div>
                   <Trophy className="h-6 w-6 text-fifa-blue" />
-                </div>
-              </CardContent>
-            </Card>
-          </AnalyticsTooltip>
-
-          <AnalyticsTooltip
-            title="Most Goals in One Week"
-            description="Highest number of goals scored in a single FIFA Champions week."
-          >
-            <Card className="glass-card">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-400">Best Week (Goals)</p>
-                    <p className="text-xl font-bold text-fifa-green">{personalRecords.bestWeekGoals}</p>
-                    <p className="text-xs text-gray-500">goals in one week</p>
-                  </div>
-                  <Target className="h-6 w-6 text-fifa-green" />
                 </div>
               </CardContent>
             </Card>
@@ -189,69 +200,99 @@ const DashboardOverview = () => {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-400">Longest Streak</p>
+                    <p className="text-sm text-gray-400">Win Streak</p>
                     <p className="text-xl font-bold text-fifa-purple">{personalRecords.longestWinStreak}</p>
                     <p className="text-xs text-gray-500">consecutive wins</p>
                   </div>
-                  <Zap className="h-6 w-6 text-fifa-purple" />
+                  <Flame className="h-6 w-6 text-fifa-purple" />
                 </div>
               </CardContent>
             </Card>
           </AnalyticsTooltip>
 
           <AnalyticsTooltip
-            title="Best Clean Sheet Week"
-            description="Most clean sheets (games with 0 goals conceded) achieved in one week."
+            title="Most Goals in One Game"
+            description="Highest number of goals scored in a single match."
           >
             <Card className="glass-card">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-400">Best Clean Sheets</p>
-                    <p className="text-xl font-bold text-fifa-blue">{personalRecords.bestWeekCleanSheets}</p>
-                    <p className="text-xs text-gray-500">in one week</p>
+                    <p className="text-sm text-gray-400">Most Goals</p>
+                    <p className="text-xl font-bold text-fifa-green">{personalRecords.mostGoalsInGame}</p>
+                    <p className="text-xs text-gray-500">in one game</p>
                   </div>
-                  <Award className="h-6 w-6 text-fifa-blue" />
+                  <Star className="h-6 w-6 text-fifa-green" />
                 </div>
               </CardContent>
             </Card>
           </AnalyticsTooltip>
 
           <AnalyticsTooltip
-            title="Best Goal Difference Week"
-            description="Highest goal difference (goals scored minus conceded) achieved in one week."
+            title="Biggest Victory Margin"
+            description="Largest goal difference in a winning match."
           >
             <Card className="glass-card">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-400">Best Goal Diff</p>
-                    <p className="text-xl font-bold text-fifa-green">+{personalRecords.bestGoalDifference}</p>
-                    <p className="text-xs text-gray-500">in one week</p>
+                    <p className="text-sm text-gray-400">Biggest Win</p>
+                    <p className="text-xl font-bold text-fifa-gold">+{personalRecords.biggestWin}</p>
+                    <p className="text-xs text-gray-500">goal difference</p>
                   </div>
-                  <TrendingUp className="h-6 w-6 text-fifa-green" />
+                  <Zap className="h-6 w-6 text-fifa-gold" />
                 </div>
               </CardContent>
             </Card>
           </AnalyticsTooltip>
+        </div>
+      </div>
 
-          <AnalyticsTooltip
-            title="Highest Weekly Rating"
-            description="Best overall weekly performance rating achieved based on wins, goals, and opposition quality."
-          >
-            <Card className="glass-card">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-400">Highest Rating</p>
-                    <p className="text-xl font-bold text-fifa-gold">{personalRecords.highestWeeklyRating.toFixed(1)}</p>
-                    <p className="text-xs text-gray-500">weekly rating</p>
-                  </div>
-                  <Users className="h-6 w-6 text-fifa-gold" />
-                </div>
-              </CardContent>
-            </Card>
-          </AnalyticsTooltip>
+      {/* Recent Performance Trends */}
+      <div>
+        <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+          <TrendingUp className="h-6 w-6 text-fifa-green" />
+          Recent Performance (Last 5 Weeks)
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className="glass-card">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm text-gray-400">Recent Win Rate</p>
+                {recentPerformance.isImproving ? (
+                  <TrendingUp className="h-4 w-4 text-fifa-green" />
+                ) : (
+                  <TrendingDown className="h-4 w-4 text-fifa-red" />
+                )}
+              </div>
+              <p className="text-2xl font-bold text-white">{recentPerformance.avgWinRate.toFixed(1)}%</p>
+              <p className="text-xs text-gray-500">
+                {recentPerformance.isImproving ? 'Trending up' : 'Room for improvement'}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="glass-card">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm text-gray-400">Avg Goals/Week</p>
+                <Target className="h-4 w-4 text-fifa-green" />
+              </div>
+              <p className="text-2xl font-bold text-fifa-green">{recentPerformance.avgGoalsPerWeek.toFixed(1)}</p>
+              <p className="text-xs text-gray-500">Recent average</p>
+            </CardContent>
+          </Card>
+
+          <Card className="glass-card">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm text-gray-400">Avg Conceded/Week</p>
+                <Shield className="h-4 w-4 text-fifa-red" />
+              </div>
+              <p className="text-2xl font-bold text-fifa-red">{recentPerformance.avgConcededPerWeek.toFixed(1)}</p>
+              <p className="text-xs text-gray-500">Recent average</p>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
@@ -270,16 +311,23 @@ const DashboardOverview = () => {
               >
                 <CardTitle className="text-white flex items-center justify-between">
                   <span>{currentRunStats.name}</span>
-                  {currentRunStats.isActive && (
-                    <span className="text-sm bg-fifa-green/20 text-fifa-green px-2 py-1 rounded-full">
-                      Active
-                    </span>
-                  )}
+                  <div className="flex gap-2">
+                    {currentRunStats.isActive && (
+                      <span className="text-sm bg-fifa-green/20 text-fifa-green px-2 py-1 rounded-full">
+                        Active
+                      </span>
+                    )}
+                    {currentRunStats.gamesRemaining > 0 && (
+                      <span className="text-sm bg-fifa-blue/20 text-fifa-blue px-2 py-1 rounded-full">
+                        {currentRunStats.gamesRemaining} games left
+                      </span>
+                    )}
+                  </div>
                 </CardTitle>
               </AnalyticsTooltip>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <div className="text-center">
                   <p className="text-2xl font-bold text-fifa-blue">{currentRunStats.gamesPlayed}</p>
                   <p className="text-sm text-gray-400">Games Played</p>
@@ -299,6 +347,16 @@ const DashboardOverview = () => {
                   <p className="text-sm text-gray-400">Goal Difference</p>
                 </div>
               </div>
+              
+              {currentRunStats.isActive && currentRunStats.progressToTarget > 0 && (
+                <div>
+                  <div className="flex justify-between text-sm text-gray-400 mb-2">
+                    <span>Progress to Target</span>
+                    <span>{currentRunStats.progressToTarget.toFixed(1)}%</span>
+                  </div>
+                  <Progress value={currentRunStats.progressToTarget} className="h-2" />
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

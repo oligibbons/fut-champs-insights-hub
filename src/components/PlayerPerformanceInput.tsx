@@ -42,26 +42,37 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
   };
 
   const incrementValue = (index: number, field: keyof PlayerPerformance, increment: number) => {
-    const currentValue = players[index][field] as number;
-    const newValue = Math.max(0, currentValue + increment);
+    const player = players[index];
+    const currentValue = player[field] as number;
+    let newValue = currentValue + increment;
+    
+    // Apply constraints based on field type
+    if (field === 'rating') {
+      newValue = Math.max(1, Math.min(10, newValue));
+      newValue = Math.round(newValue * 10) / 10; // Round to 1 decimal place
+    } else if (field === 'minutesPlayed') {
+      newValue = Math.max(0, Math.min(120, newValue));
+    } else {
+      newValue = Math.max(0, newValue);
+    }
+    
     updatePlayer(index, field, newValue);
   };
 
-  const incrementRating = (index: number, increment: number) => {
-    const currentRating = players[index].rating as number;
-    const newRating = Math.max(1, Math.min(10, currentRating + increment));
-    updatePlayer(index, 'rating', parseFloat(newRating.toFixed(1)));
-  };
-
-  const handleInputChange = (index: number, field: keyof PlayerPerformance, value: string) => {
+  const handleDirectInput = (index: number, field: keyof PlayerPerformance, value: string) => {
     let parsedValue: any = value;
     
     if (field === 'rating') {
-      parsedValue = parseFloat(value) || 6.0;
+      parsedValue = parseFloat(value);
+      if (isNaN(parsedValue)) parsedValue = 6.0;
       parsedValue = Math.max(1, Math.min(10, parsedValue));
-    } else if (field === 'minutesPlayed' || field === 'goals' || field === 'assists' || field === 'yellowCards' || field === 'redCards') {
-      parsedValue = parseInt(value) || 0;
+    } else if (['minutesPlayed', 'goals', 'assists', 'yellowCards', 'redCards', 'ownGoals'].includes(field)) {
+      parsedValue = parseInt(value);
+      if (isNaN(parsedValue)) parsedValue = 0;
       parsedValue = Math.max(0, parsedValue);
+      if (field === 'minutesPlayed') {
+        parsedValue = Math.min(120, parsedValue);
+      }
     }
     
     updatePlayer(index, field, parsedValue);
@@ -121,10 +132,7 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      incrementValue(index, 'minutesPlayed', -5);
-                    }}
+                    onClick={() => incrementValue(index, 'minutesPlayed', -5)}
                     className="h-8 w-8 p-0 text-fifa-red hover:bg-fifa-red/10"
                   >
                     <Minus className="h-3 w-3" />
@@ -134,17 +142,14 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                     min="0"
                     max="120"
                     value={player.minutesPlayed}
-                    onChange={(e) => handleInputChange(index, 'minutesPlayed', e.target.value)}
+                    onChange={(e) => handleDirectInput(index, 'minutesPlayed', e.target.value)}
                     className="bg-gray-800 border-gray-600 text-white text-center text-sm"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      incrementValue(index, 'minutesPlayed', 5);
-                    }}
+                    onClick={() => incrementValue(index, 'minutesPlayed', 5)}
                     className="h-8 w-8 p-0 text-fifa-green hover:bg-fifa-green/10"
                   >
                     <Plus className="h-3 w-3" />
@@ -159,10 +164,7 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      incrementRating(index, -0.1);
-                    }}
+                    onClick={() => incrementValue(index, 'rating', -0.1)}
                     className="h-8 w-8 p-0 text-fifa-red hover:bg-fifa-red/10"
                   >
                     <Minus className="h-3 w-3" />
@@ -172,18 +174,15 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                     min="1"
                     max="10"
                     step="0.1"
-                    value={player.rating}
-                    onChange={(e) => handleInputChange(index, 'rating', e.target.value)}
+                    value={player.rating.toFixed(1)}
+                    onChange={(e) => handleDirectInput(index, 'rating', e.target.value)}
                     className="bg-gray-800 border-gray-600 text-white text-center text-sm"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      incrementRating(index, 0.1);
-                    }}
+                    onClick={() => incrementValue(index, 'rating', 0.1)}
                     className="h-8 w-8 p-0 text-fifa-green hover:bg-fifa-green/10"
                   >
                     <Plus className="h-3 w-3" />
@@ -198,10 +197,7 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      incrementValue(index, 'goals', -1);
-                    }}
+                    onClick={() => incrementValue(index, 'goals', -1)}
                     className="h-8 w-8 p-0 text-fifa-red hover:bg-fifa-red/10"
                   >
                     <Minus className="h-3 w-3" />
@@ -210,17 +206,14 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                     type="number"
                     min="0"
                     value={player.goals}
-                    onChange={(e) => handleInputChange(index, 'goals', e.target.value)}
+                    onChange={(e) => handleDirectInput(index, 'goals', e.target.value)}
                     className="bg-gray-800 border-gray-600 text-white text-center text-sm"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      incrementValue(index, 'goals', 1);
-                    }}
+                    onClick={() => incrementValue(index, 'goals', 1)}
                     className="h-8 w-8 p-0 text-fifa-green hover:bg-fifa-green/10"
                   >
                     <Plus className="h-3 w-3" />
@@ -235,10 +228,7 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      incrementValue(index, 'assists', -1);
-                    }}
+                    onClick={() => incrementValue(index, 'assists', -1)}
                     className="h-8 w-8 p-0 text-fifa-red hover:bg-fifa-red/10"
                   >
                     <Minus className="h-3 w-3" />
@@ -247,17 +237,14 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                     type="number"
                     min="0"
                     value={player.assists}
-                    onChange={(e) => handleInputChange(index, 'assists', e.target.value)}
+                    onChange={(e) => handleDirectInput(index, 'assists', e.target.value)}
                     className="bg-gray-800 border-gray-600 text-white text-center text-sm"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      incrementValue(index, 'assists', 1);
-                    }}
+                    onClick={() => incrementValue(index, 'assists', 1)}
                     className="h-8 w-8 p-0 text-fifa-green hover:bg-fifa-green/10"
                   >
                     <Plus className="h-3 w-3" />
@@ -272,10 +259,7 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      incrementValue(index, 'yellowCards', -1);
-                    }}
+                    onClick={() => incrementValue(index, 'yellowCards', -1)}
                     className="h-8 w-8 p-0 text-fifa-red hover:bg-fifa-red/10"
                   >
                     <Minus className="h-3 w-3" />
@@ -284,17 +268,14 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                     type="number"
                     min="0"
                     value={player.yellowCards}
-                    onChange={(e) => handleInputChange(index, 'yellowCards', e.target.value)}
+                    onChange={(e) => handleDirectInput(index, 'yellowCards', e.target.value)}
                     className="bg-gray-800 border-gray-600 text-white text-center text-sm"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      incrementValue(index, 'yellowCards', 1);
-                    }}
+                    onClick={() => incrementValue(index, 'yellowCards', 1)}
                     className="h-8 w-8 p-0 text-fifa-green hover:bg-fifa-green/10"
                   >
                     <Plus className="h-3 w-3" />
@@ -309,10 +290,7 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      incrementValue(index, 'redCards', -1);
-                    }}
+                    onClick={() => incrementValue(index, 'redCards', -1)}
                     className="h-8 w-8 p-0 text-fifa-red hover:bg-fifa-red/10"
                   >
                     <Minus className="h-3 w-3" />
@@ -321,17 +299,14 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                     type="number"
                     min="0"
                     value={player.redCards}
-                    onChange={(e) => handleInputChange(index, 'redCards', e.target.value)}
+                    onChange={(e) => handleDirectInput(index, 'redCards', e.target.value)}
                     className="bg-gray-800 border-gray-600 text-white text-center text-sm"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      incrementValue(index, 'redCards', 1);
-                    }}
+                    onClick={() => incrementValue(index, 'redCards', 1)}
                     className="h-8 w-8 p-0 text-fifa-green hover:bg-fifa-green/10"
                   >
                     <Plus className="h-3 w-3" />

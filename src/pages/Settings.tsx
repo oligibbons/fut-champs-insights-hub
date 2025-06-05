@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,9 +23,11 @@ import { useDataSync } from '@/hooks/useDataSync';
 import { toast } from '@/hooks/use-toast';
 import { Settings, Trash2, Download, Upload, Save, RotateCcw } from 'lucide-react';
 import { exportData, importData } from '@/hooks/useLocalStorage';
+import { useTheme } from '@/hooks/useTheme';
 
 const SettingsPage = () => {
   const { settings, setSettings, deleteAllData, weeklyData, players, squads } = useDataSync();
+  const { currentTheme, setTheme, themes, themeData } = useTheme();
   const [importFile, setImportFile] = useState<File | null>(null);
 
   const handleSettingChange = (key: string, value: any) => {
@@ -34,6 +35,12 @@ const SettingsPage = () => {
       ...prev,
       [key]: value
     }));
+    
+    // Handle theme changes specifically
+    if (key === 'theme') {
+      setTheme(value);
+    }
+    
     toast({
       title: "Setting Updated",
       description: `${key} has been updated.`,
@@ -166,6 +173,7 @@ const SettingsPage = () => {
         dynamicFeedback: true,
       }
     });
+    setTheme('futvisionary');
     toast({
       title: "Settings Reset",
       description: "All settings have been reset to defaults.",
@@ -249,10 +257,11 @@ const SettingsPage = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="futvisionary">FUT Visionary</SelectItem>
-                      <SelectItem value="dark">Dark</SelectItem>
-                      <SelectItem value="light">Light</SelectItem>
-                      <SelectItem value="champions">Champions</SelectItem>
+                      {themes.map(themeName => (
+                        <SelectItem key={themeName} value={themeName}>
+                          {themeData[themeName].name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
