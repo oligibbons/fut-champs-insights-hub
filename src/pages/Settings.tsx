@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -128,8 +129,12 @@ const SettingsPage = () => {
         showTargetProgress: true,
         showTimeAnalysis: true,
         showStressAnalysis: true,
+        showMatchFacts: true,
+        showWeeklyScores: true,
+        showRecentForm: true,
       },
       currentWeekSettings: {
+        showCurrentRunStats: true,
         showTopPerformers: true,
         showXGAnalysis: true,
         showAIInsights: true,
