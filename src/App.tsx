@@ -34,7 +34,10 @@ function App() {
         >
           {/* Brand Header - visible on all pages */}
           <div className="fixed top-0 left-0 right-0 z-20 backdrop-blur-md border-b" 
-               style={{ borderColor: currentTheme.colors.border, backgroundColor: `${currentTheme.colors.cardBg}80` }}>
+               style={{ 
+                 borderColor: currentTheme.colors.border, 
+                 backgroundColor: `${currentTheme.colors.cardBg}80` 
+               }}>
             <div className="px-4 py-2 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <img 
@@ -43,7 +46,7 @@ function App() {
                   className="w-10 h-10 object-contain"
                 />
                 <div>
-                  <h1 className="text-lg font-bold text-white">FUTALYST</h1>
+                  <h1 className="text-lg font-bold" style={{ color: currentTheme.colors.text }}>FUTALYST</h1>
                   <p className="text-xs" style={{ color: currentTheme.colors.muted }}>AI-Powered FUT Analytics</p>
                 </div>
               </div>
@@ -52,6 +55,54 @@ function App() {
               </div>
             </div>
           </div>
+
+          {/* Add theme-aware CSS custom properties to root */}
+          <style>
+            {`
+              :root {
+                --color-primary: ${currentTheme.colors.primary};
+                --color-secondary: ${currentTheme.colors.secondary};
+                --color-accent: ${currentTheme.colors.accent};
+                --color-surface: ${currentTheme.colors.surface};
+                --color-card-bg: ${currentTheme.colors.cardBg};
+                --color-text: ${currentTheme.colors.text};
+                --color-muted: ${currentTheme.colors.muted};
+                --color-border: ${currentTheme.colors.border};
+                --color-success: ${currentTheme.colors.success};
+                --color-warning: ${currentTheme.colors.warning};
+                --color-error: ${currentTheme.colors.error};
+                --fifa-blue: ${currentTheme.colors.fifa.blue};
+                --fifa-green: ${currentTheme.colors.fifa.green};
+                --fifa-gold: ${currentTheme.colors.fifa.gold};
+                --fifa-red: ${currentTheme.colors.fifa.red};
+                --fifa-purple: ${currentTheme.colors.fifa.purple};
+              }
+              
+              .glass-card {
+                background: ${currentTheme.colors.cardBg} !important;
+                border: 1px solid ${currentTheme.colors.border} !important;
+                color: ${currentTheme.colors.text} !important;
+              }
+              
+              .static-element {
+                background: ${currentTheme.colors.surface} !important;
+                border-color: ${currentTheme.colors.border} !important;
+              }
+              
+              .modern-button-primary {
+                background: ${currentTheme.colors.fifa.blue} !important;
+                color: white !important;
+              }
+              
+              .modern-button-primary:hover {
+                background: ${currentTheme.colors.fifa.blue}dd !important;
+              }
+              
+              .page-header {
+                color: ${currentTheme.colors.text} !important;
+              }
+            `}
+          </style>
 
           <div className="pt-16">
             <Routes>

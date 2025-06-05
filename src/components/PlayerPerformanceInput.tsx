@@ -97,7 +97,11 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => removePlayer(index)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  removePlayer(index);
+                }}
                 className="text-fifa-red hover:text-fifa-red hover:bg-fifa-red/10"
               >
                 <Trash2 className="h-4 w-4" />
@@ -132,7 +136,11 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => incrementValue(index, 'minutesPlayed', -5)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      incrementValue(index, 'minutesPlayed', -5);
+                    }}
                     className="h-8 w-8 p-0 text-fifa-red hover:bg-fifa-red/10"
                   >
                     <Minus className="h-3 w-3" />
@@ -149,7 +157,11 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => incrementValue(index, 'minutesPlayed', 5)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      incrementValue(index, 'minutesPlayed', 5);
+                    }}
                     className="h-8 w-8 p-0 text-fifa-green hover:bg-fifa-green/10"
                   >
                     <Plus className="h-3 w-3" />
@@ -164,7 +176,11 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => incrementValue(index, 'rating', -0.1)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      incrementValue(index, 'rating', -0.1);
+                    }}
                     className="h-8 w-8 p-0 text-fifa-red hover:bg-fifa-red/10"
                   >
                     <Minus className="h-3 w-3" />
@@ -182,7 +198,11 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => incrementValue(index, 'rating', 0.1)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      incrementValue(index, 'rating', 0.1);
+                    }}
                     className="h-8 w-8 p-0 text-fifa-green hover:bg-fifa-green/10"
                   >
                     <Plus className="h-3 w-3" />
@@ -197,7 +217,11 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => incrementValue(index, 'goals', -1)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      incrementValue(index, 'goals', -1);
+                    }}
                     className="h-8 w-8 p-0 text-fifa-red hover:bg-fifa-red/10"
                   >
                     <Minus className="h-3 w-3" />
@@ -213,7 +237,11 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => incrementValue(index, 'goals', 1)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      incrementValue(index, 'goals', 1);
+                    }}
                     className="h-8 w-8 p-0 text-fifa-green hover:bg-fifa-green/10"
                   >
                     <Plus className="h-3 w-3" />
@@ -228,7 +256,11 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => incrementValue(index, 'assists', -1)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      incrementValue(index, 'assists', -1);
+                    }}
                     className="h-8 w-8 p-0 text-fifa-red hover:bg-fifa-red/10"
                   >
                     <Minus className="h-3 w-3" />
@@ -244,7 +276,11 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => incrementValue(index, 'assists', 1)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      incrementValue(index, 'assists', 1);
+                    }}
                     className="h-8 w-8 p-0 text-fifa-green hover:bg-fifa-green/10"
                   >
                     <Plus className="h-3 w-3" />
@@ -259,7 +295,11 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => incrementValue(index, 'yellowCards', -1)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      incrementValue(index, 'yellowCards', -1);
+                    }}
                     className="h-8 w-8 p-0 text-fifa-red hover:bg-fifa-red/10"
                   >
                     <Minus className="h-3 w-3" />
@@ -275,7 +315,11 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => incrementValue(index, 'yellowCards', 1)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      incrementValue(index, 'yellowCards', 1);
+                    }}
                     className="h-8 w-8 p-0 text-fifa-green hover:bg-fifa-green/10"
                   >
                     <Plus className="h-3 w-3" />
@@ -290,7 +334,11 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => incrementValue(index, 'redCards', -1)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      incrementValue(index, 'redCards', -1);
+                    }}
                     className="h-8 w-8 p-0 text-fifa-red hover:bg-fifa-red/10"
                   >
                     <Minus className="h-3 w-3" />
@@ -306,7 +354,11 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => incrementValue(index, 'redCards', 1)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      incrementValue(index, 'redCards', 1);
+                    }}
                     className="h-8 w-8 p-0 text-fifa-green hover:bg-fifa-green/10"
                   >
                     <Plus className="h-3 w-3" />

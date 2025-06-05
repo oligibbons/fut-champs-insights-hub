@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +12,7 @@ import GameCompletionModal from '@/components/GameCompletionModal';
 import GameEditModal from '@/components/GameEditModal';
 import RunNamingModal from '@/components/RunNamingModal';
 import TargetEditModal from '@/components/TargetEditModal';
+import WeeklyTargets from '@/components/WeeklyTargets';
 import CurrentRunStats from '@/components/CurrentRunStats';
 import { Calendar, Plus, Edit, Target, Trophy, Settings } from 'lucide-react';
 
@@ -351,45 +351,7 @@ const CurrentWeek = () => {
             </TabsContent>
 
             <TabsContent value="targets" className="space-y-4">
-              <Card className="glass-card static-element">
-                <CardHeader>
-                  <CardTitle className="text-white page-header">Weekly Targets</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="text-center p-4 bg-white/5 rounded-lg">
-                      <div className="text-2xl font-bold text-fifa-blue">
-                        {currentWeek?.totalWins || 0}/{currentWeek?.winTarget?.wins || 10}
-                      </div>
-                      <div className="text-sm text-gray-400">Target Wins</div>
-                    </div>
-                    {currentWeek?.winTarget?.goalsScored && (
-                      <div className="text-center p-4 bg-white/5 rounded-lg">
-                        <div className="text-2xl font-bold text-fifa-green">
-                          {currentWeek?.totalGoals || 0}/{currentWeek.winTarget.goalsScored}
-                        </div>
-                        <div className="text-sm text-gray-400">Target Goals</div>
-                      </div>
-                    )}
-                    {currentWeek?.winTarget?.cleanSheets && (
-                      <div className="text-center p-4 bg-white/5 rounded-lg">
-                        <div className="text-2xl font-bold text-fifa-purple">
-                          0/{currentWeek.winTarget.cleanSheets}
-                        </div>
-                        <div className="text-sm text-gray-400">Clean Sheets</div>
-                      </div>
-                    )}
-                    {currentWeek?.winTarget?.minimumRank && (
-                      <div className="text-center p-4 bg-white/5 rounded-lg">
-                        <div className="text-lg font-bold text-fifa-gold">
-                          {currentWeek.winTarget.minimumRank}
-                        </div>
-                        <div className="text-sm text-gray-400">Target Rank</div>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+              <WeeklyTargets />
             </TabsContent>
           </Tabs>
         </div>
