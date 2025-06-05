@@ -10,27 +10,105 @@ interface DashboardSettings {
   showWeeklyScores: boolean;
   showRecentForm: boolean;
   showTargetProgress: boolean;
+  showXGAnalysis: boolean;
+  showAIInsights: boolean;
+  showFormAnalysis: boolean;
+  showWeaknesses: boolean;
+  showOpponentAnalysis: boolean;
+  showPositionalAnalysis: boolean;
+  showRecentTrends: boolean;
+  showAchievements: boolean;
+  showTimeAnalysis: boolean;
+  showStressAnalysis: boolean;
 }
 
 interface CurrentWeekSettings {
   showCurrentRunStats: boolean;
+  showTopPerformers: boolean;
+  showXGAnalysis: boolean;
+  showAIInsights: boolean;
+  showFormAnalysis: boolean;
+  showWeaknesses: boolean;
+  showOpponentAnalysis: boolean;
+  showPositionalAnalysis: boolean;
+  showRecentTrends: boolean;
+  showAchievements: boolean;
+  showTargetProgress: boolean;
+  showTimeAnalysis: boolean;
+  showStressAnalysis: boolean;
+}
+
+interface AnalyticsPreferences {
+  detailedPlayerStats: boolean;
+  opponentTracking: boolean;
+  timeTracking: boolean;
+  stressTracking: boolean;
+  showAnimations: boolean;
+  dynamicFeedback: boolean;
 }
 
 interface Settings {
+  preferredFormation: string;
+  trackingStartDate: string;
+  gameplayStyle: string;
+  notifications: boolean;
+  gamesPerWeek: number;
+  theme: string;
+  carouselSpeed: number;
+  defaultCrossPlay: boolean;
   dashboardSettings: DashboardSettings;
   currentWeekSettings: CurrentWeekSettings;
+  analyticsPreferences: AnalyticsPreferences;
 }
 
 const defaultSettings: Settings = {
+  preferredFormation: '4-3-3',
+  trackingStartDate: new Date().toISOString().split('T')[0],
+  gameplayStyle: 'balanced',
+  notifications: true,
+  gamesPerWeek: 15,
+  theme: 'futvisionary',
+  carouselSpeed: 12,
+  defaultCrossPlay: false,
   dashboardSettings: {
     showTopPerformers: true,
     showMatchFacts: true,
     showWeeklyScores: true,
     showRecentForm: true,
     showTargetProgress: true,
+    showXGAnalysis: true,
+    showAIInsights: true,
+    showFormAnalysis: true,
+    showWeaknesses: true,
+    showOpponentAnalysis: true,
+    showPositionalAnalysis: true,
+    showRecentTrends: true,
+    showAchievements: true,
+    showTimeAnalysis: true,
+    showStressAnalysis: true,
   },
   currentWeekSettings: {
     showCurrentRunStats: true,
+    showTopPerformers: true,
+    showXGAnalysis: true,
+    showAIInsights: true,
+    showFormAnalysis: true,
+    showWeaknesses: true,
+    showOpponentAnalysis: true,
+    showPositionalAnalysis: true,
+    showRecentTrends: true,
+    showAchievements: true,
+    showTargetProgress: true,
+    showTimeAnalysis: true,
+    showStressAnalysis: true,
+  },
+  analyticsPreferences: {
+    detailedPlayerStats: true,
+    opponentTracking: true,
+    timeTracking: true,
+    stressTracking: true,
+    showAnimations: true,
+    dynamicFeedback: true,
   }
 };
 
@@ -90,6 +168,11 @@ export const useDataSync = () => {
     }));
   };
 
+  // Mock functions for compatibility
+  const deleteAllData = () => {
+    console.log('Delete all data functionality not implemented with Supabase');
+  };
+
   return {
     // Supabase data
     weeklyData: supabaseData.weeklyData,
@@ -116,5 +199,10 @@ export const useDataSync = () => {
     // Settings
     settings,
     setSettings,
+    
+    // Mock data for Settings page compatibility
+    players: [], // Mock empty array
+    squads: [], // Mock empty array
+    deleteAllData,
   };
 };

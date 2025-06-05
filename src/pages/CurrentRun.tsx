@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useDataSync } from '@/hooks/useDataSync';
 import Navigation from '@/components/Navigation';
@@ -17,7 +16,7 @@ import { GameResult, WeeklyTarget } from '@/types/futChampions';
 
 const CurrentRun = () => {
   const { toast } = useToast();
-  const { getCurrentWeek, weeklyData, setWeeklyData, settings } = useDataSync();
+  const { getCurrentWeek, weeklyData, updateWeek, settings } = useDataSync();
   const currentWeek = getCurrentWeek();
   
   const [showGameForm, setShowGameForm] = useState(false);
@@ -33,49 +32,68 @@ const CurrentRun = () => {
     });
   };
 
-  const handleGameEdit = (updatedGame: GameResult) => {
+  const handleGameEdit = async (updatedGame: GameResult) => {
     if (!currentWeek) return;
     
-    const updatedWeeks = weeklyData.map(week => {
-      if (week.id === currentWeek.id) {
-        const updatedGames = week.games.map(game =>
-          game.id === updatedGame.id ? updatedGame : game
-        );
-        return { ...week, games: updatedGames };
-      }
-      return week;
-    });
-    
-    setWeeklyData(updatedWeeks);
-    setEditingGame(null);
+    try {
+      // Use updateWeek to update the game within the week
+      const updatedGames = currentWeek.games.map(game =>
+        game.id === updatedGame.id ? updatedGame : game
+      );
+      
+      await updateWeek(currentWeek.id, { games: updatedGames });
+      setEditingGame(null);
+      
+      toast({
+        title: "Game Updated",
+        description: "Your game has been successfully updated.",
+      });
+    } catch (error) {
+      console.error('Error updating game:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update game. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleRunNameSave = (name: string) => {
+  const handleRunNameSave = async (name: string) => {
     if (!currentWeek) return;
     
-    const updatedWeeks = weeklyData.map(week =>
-      week.id === currentWeek.id ? { ...week, customName: name } : week
-    );
-    
-    setWeeklyData(updatedWeeks);
-    toast({
-      title: "Run Named",
-      description: `Your run has been named: ${name}`,
-    });
+    try {
+      await updateWeek(currentWeek.id, { customName: name });
+      toast({
+        title: "Run Named",
+        description: `Your run has been named: ${name}`,
+      });
+    } catch (error) {
+      console.error('Error updating run name:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update run name. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleTargetSave = (target: WeeklyTarget) => {
+  const handleTargetSave = async (target: WeeklyTarget) => {
     if (!currentWeek) return;
     
-    const updatedWeeks = weeklyData.map(week =>
-      week.id === currentWeek.id ? { ...week, winTarget: target } : week
-    );
-    
-    setWeeklyData(updatedWeeks);
-    toast({
-      title: "Targets Updated",
-      description: "Your weekly targets have been updated.",
-    });
+    try {
+      await updateWeek(currentWeek.id, { winTarget: target });
+      toast({
+        title: "Targets Updated",
+        description: "Your weekly targets have been updated.",
+      });
+    } catch (error) {
+      console.error('Error updating targets:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update targets. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const getRunDisplayName = () => {
