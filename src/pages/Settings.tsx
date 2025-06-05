@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import Navigation from '@/components/Navigation';
 import AccountManager from '@/components/AccountManager';
 import UserAccountSettings from '@/components/UserAccountSettings';
-import { Settings as SettingsIcon, Palette, Gamepad2, User, BarChart3, Target } from 'lucide-react';
+import { Settings as SettingsIcon, Palette, Gamepad2, User, BarChart3, Target, Sparkles } from 'lucide-react';
 
 interface DashboardSettings {
   showTopPerformers: boolean;
@@ -156,39 +156,48 @@ const Settings = () => {
       <Navigation />
       
       <main className="lg:ml-20 lg:hover:ml-64 transition-all duration-500 p-4 lg:p-6">
-        <div className="max-w-4xl mx-auto space-y-6">
-          {/* Header */}
-          <div className="flex items-center gap-4 mb-8">
-            <div className="p-3 rounded-2xl" style={{ backgroundColor: `${currentTheme.colors.fifa.purple}20` }}>
-              <SettingsIcon className="h-8 w-8" style={{ color: currentTheme.colors.fifa.purple }} />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold" style={{ color: currentTheme.colors.text }}>Settings</h1>
-              <p className="text-gray-400 mt-1">Customize your FUTALYST experience</p>
+        <div className="max-w-6xl mx-auto space-y-8">
+          {/* Enhanced Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-8">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-2xl bg-gradient-to-br from-fifa-purple/20 to-fifa-blue/20 border border-fifa-purple/30">
+                <SettingsIcon className="h-8 w-8 text-fifa-purple" />
+              </div>
+              <div>
+                <h1 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-fifa-purple via-fifa-blue to-fifa-gold bg-clip-text text-transparent">
+                  Settings
+                </h1>
+                <p className="text-gray-400 mt-1">Customize your FUTALYST experience</p>
+              </div>
             </div>
           </div>
 
           <Tabs defaultValue="account" className="w-full">
-            <TabsList className="grid w-full grid-cols-5 glass-card">
-              <TabsTrigger value="account">
-                <User className="h-4 w-4 mr-2" />
-                Account
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 glass-card">
+              <TabsTrigger value="account" className="text-xs sm:text-sm">
+                <User className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Account</span>
+                <span className="sm:hidden">User</span>
               </TabsTrigger>
-              <TabsTrigger value="fc25-accounts">
-                <Gamepad2 className="h-4 w-4 mr-2" />
-                FC25 Accounts
+              <TabsTrigger value="fc25-accounts" className="text-xs sm:text-sm">
+                <Gamepad2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">FC25 Accounts</span>
+                <span className="sm:hidden">FC25</span>
               </TabsTrigger>
-              <TabsTrigger value="appearance">
-                <Palette className="h-4 w-4 mr-2" />
-                Appearance
+              <TabsTrigger value="appearance" className="text-xs sm:text-sm">
+                <Palette className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Appearance</span>
+                <span className="sm:hidden">Theme</span>
               </TabsTrigger>
-              <TabsTrigger value="dashboard">
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Dashboard
+              <TabsTrigger value="dashboard" className="text-xs sm:text-sm">
+                <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <span className="hidden lg:inline">Dashboard</span>
+                <span className="lg:hidden">Dash</span>
               </TabsTrigger>
-              <TabsTrigger value="targets">
-                <Target className="h-4 w-4 mr-2" />
-                Targets
+              <TabsTrigger value="targets" className="text-xs sm:text-sm">
+                <Target className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <span className="hidden lg:inline">Targets</span>
+                <span className="lg:hidden">Goals</span>
               </TabsTrigger>
             </TabsList>
 
@@ -203,48 +212,58 @@ const Settings = () => {
             <TabsContent value="appearance" className="space-y-4">
               <Card className="glass-card">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2" style={{ color: currentTheme.colors.text }}>
-                    <Palette className="h-5 w-5" style={{ color: currentTheme.colors.fifa.gold }} />
-                    Theme Selection
+                  <CardTitle className="flex items-center gap-2 text-white">
+                    <Palette className="h-5 w-5 text-fifa-gold" />
+                    Theme & Appearance
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label style={{ color: currentTheme.colors.text }}>Choose Theme</Label>
-                    <Select value={currentThemeName} onValueChange={handleThemeChange}>
-                      <SelectTrigger className="bg-gray-800 border-gray-600" style={{ color: currentTheme.colors.text }}>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {themes.map((themeName) => (
-                          <SelectItem key={themeName} value={themeName}>
-                            {themeData[themeName]?.name || themeName}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <CardContent className="space-y-6">
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-white font-medium">Choose Theme</Label>
+                      <Select value={currentThemeName} onValueChange={handleThemeChange}>
+                        <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {themes.map((themeName) => (
+                            <SelectItem key={themeName} value={themeName}>
+                              <div className="flex items-center gap-2">
+                                <Sparkles className="h-4 w-4" />
+                                {themeData[themeName]?.name || themeName}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                  {/* Theme Preview */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                    <div className="p-4 rounded-xl border" style={{ 
-                      background: currentTheme.colors.cardBg,
+                    {/* Enhanced Theme Preview */}
+                    <div className="p-6 rounded-xl border bg-gradient-to-br from-white/5 to-white/10" style={{ 
                       borderColor: currentTheme.colors.border 
                     }}>
-                      <h4 className="font-semibold mb-2" style={{ color: currentTheme.colors.text }}>
-                        Preview
+                      <h4 className="font-semibold mb-4 text-white flex items-center gap-2">
+                        <Sparkles className="h-4 w-4 text-fifa-gold" />
+                        Theme Preview
                       </h4>
-                      <div className="space-y-2">
-                        <div className="flex gap-2">
-                          <div className="w-4 h-4 rounded" style={{ backgroundColor: currentTheme.colors.fifa.blue }}></div>
-                          <div className="w-4 h-4 rounded" style={{ backgroundColor: currentTheme.colors.fifa.green }}></div>
-                          <div className="w-4 h-4 rounded" style={{ backgroundColor: currentTheme.colors.fifa.gold }}></div>
-                          <div className="w-4 h-4 rounded" style={{ backgroundColor: currentTheme.colors.fifa.red }}></div>
-                          <div className="w-4 h-4 rounded" style={{ backgroundColor: currentTheme.colors.fifa.purple }}></div>
+                      <div className="space-y-4">
+                        <div className="flex flex-wrap gap-3">
+                          {Object.entries(currentTheme.colors.fifa).map(([name, color]) => (
+                            <div key={name} className="flex items-center gap-2">
+                              <div 
+                                className="w-6 h-6 rounded-full border-2 border-white/20" 
+                                style={{ backgroundColor: color }}
+                              />
+                              <span className="text-sm text-gray-300 capitalize">{name}</span>
+                            </div>
+                          ))}
                         </div>
-                        <p className="text-sm" style={{ color: currentTheme.colors.muted }}>
-                          Current theme: {themeData[currentThemeName]?.name}
-                        </p>
+                        <div className="p-4 rounded-lg" style={{ backgroundColor: currentTheme.colors.cardBg }}>
+                          <p className="text-white font-medium">Sample Card</p>
+                          <p className="text-gray-400 text-sm mt-1">
+                            Current theme: {themeData[currentThemeName]?.name}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -255,30 +274,41 @@ const Settings = () => {
             <TabsContent value="dashboard" className="space-y-4">
               <Card className="glass-card">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2" style={{ color: currentTheme.colors.text }}>
-                    <BarChart3 className="h-5 w-5" style={{ color: currentTheme.colors.fifa.blue }} />
-                    Dashboard Settings
+                  <CardTitle className="flex items-center gap-2 text-white">
+                    <BarChart3 className="h-5 w-5 text-fifa-blue" />
+                    Dashboard Display Settings
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {Object.entries(dashboardSettings).map(([key, value]) => (
-                    <div key={key} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
-                      <div>
-                        <p className="text-white font-medium">
-                          {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                        </p>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {Object.entries(dashboardSettings).map(([key, value]) => (
+                      <div key={key} className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-gray-700/50 hover:bg-white/10 transition-colors">
+                        <div>
+                          <p className="text-white font-medium">
+                            {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                          </p>
+                          <p className="text-gray-400 text-sm">
+                            {value ? 'Visible on dashboard' : 'Hidden from dashboard'}
+                          </p>
+                        </div>
+                        <Switch
+                          checked={value}
+                          onCheckedChange={(checked) =>
+                            saveDashboardSettings({ ...dashboardSettings, [key]: checked })
+                          }
+                        />
                       </div>
-                      <Switch
-                        checked={value}
-                        onCheckedChange={(checked) =>
-                          saveDashboardSettings({ ...dashboardSettings, [key]: checked })
-                        }
-                      />
-                    </div>
-                  ))}
-                  <Button onClick={resetSettings} variant="outline">
-                    Reset to Defaults
-                  </Button>
+                    ))}
+                  </div>
+                  <div className="pt-4 border-t border-gray-700">
+                    <Button 
+                      onClick={resetSettings} 
+                      variant="outline"
+                      className="w-full sm:w-auto border-gray-600 text-gray-400 hover:text-white hover:border-gray-500"
+                    >
+                      Reset to Defaults
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -286,30 +316,41 @@ const Settings = () => {
             <TabsContent value="targets" className="space-y-4">
               <Card className="glass-card">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2" style={{ color: currentTheme.colors.text }}>
-                    <Target className="h-5 w-5" style={{ color: currentTheme.colors.fifa.green }} />
-                    Targets Settings
+                  <CardTitle className="flex items-center gap-2 text-white">
+                    <Target className="h-5 w-5 text-fifa-green" />
+                    Target & Goal Settings
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {Object.entries(currentWeekSettings).map(([key, value]) => (
-                    <div key={key} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
-                      <div>
-                        <p className="text-white font-medium">
-                          {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                        </p>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {Object.entries(currentWeekSettings).map(([key, value]) => (
+                      <div key={key} className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-gray-700/50 hover:bg-white/10 transition-colors">
+                        <div>
+                          <p className="text-white font-medium">
+                            {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                          </p>
+                          <p className="text-gray-400 text-sm">
+                            {value ? 'Enabled in current week view' : 'Disabled in current week view'}
+                          </p>
+                        </div>
+                        <Switch
+                          checked={value}
+                          onCheckedChange={(checked) =>
+                            saveCurrentWeekSettings({ ...currentWeekSettings, [key]: checked })
+                          }
+                        />
                       </div>
-                      <Switch
-                        checked={value}
-                        onCheckedChange={(checked) =>
-                          saveCurrentWeekSettings({ ...currentWeekSettings, [key]: checked })
-                        }
-                      />
-                    </div>
-                  ))}
-                  <Button onClick={resetSettings} variant="outline">
-                    Reset to Defaults
-                  </Button>
+                    ))}
+                  </div>
+                  <div className="pt-4 border-t border-gray-700">
+                    <Button 
+                      onClick={resetSettings} 
+                      variant="outline"
+                      className="w-full sm:w-auto border-gray-600 text-gray-400 hover:text-white hover:border-gray-500"
+                    >
+                      Reset to Defaults
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
