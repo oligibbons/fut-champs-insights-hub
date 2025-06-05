@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, GameController, User } from 'lucide-react';
+import { Plus, Edit, Trash2, Gamepad2, User } from 'lucide-react';
 
 interface FC25Account {
   id: string;
@@ -141,7 +140,7 @@ const AccountManager = () => {
     <Card className="glass-card">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-white">
-          <GameController className="h-5 w-5 text-fifa-blue" />
+          <Gamepad2 className="h-5 w-5 text-fifa-blue" />
           FC25 Accounts
         </CardTitle>
       </CardHeader>

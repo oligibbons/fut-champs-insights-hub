@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import Navigation from '@/components/Navigation';
 import AccountManager from '@/components/AccountManager';
 import UserAccountSettings from '@/components/UserAccountSettings';
-import { Settings as SettingsIcon, Palette, GameController, User, BarChart3, Target } from 'lucide-react';
+import { Settings as SettingsIcon, Palette, Gamepad2, User, BarChart3, Target } from 'lucide-react';
 
 interface DashboardSettings {
   showTopPerformers: boolean;
@@ -175,7 +175,7 @@ const Settings = () => {
                 Account
               </TabsTrigger>
               <TabsTrigger value="fc25-accounts">
-                <GameController className="h-4 w-4 mr-2" />
+                <Gamepad2 className="h-4 w-4 mr-2" />
                 FC25 Accounts
               </TabsTrigger>
               <TabsTrigger value="appearance">

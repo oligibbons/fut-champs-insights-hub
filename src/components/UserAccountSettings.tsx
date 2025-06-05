@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { User, Mail, Shield, Bell, Download, Trash2, Eye, EyeOff } from 'lucide-react';
 
 const UserAccountSettings = () => {
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const { toast } = useToast();
   
   const [profile, setProfile] = useState({
@@ -128,7 +127,7 @@ const UserAccountSettings = () => {
     localStorage.clear();
     
     // Logout user
-    logout();
+    signOut();
     
     toast({
       title: "Account Deleted",
