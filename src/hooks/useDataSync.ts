@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { useSupabaseData } from './useSupabaseData';
-import { useAccountData } from './useAccountData';
 import { WeeklyPerformance, PlayerPerformance } from '@/types/futChampions';
 
 // Settings type for dashboard configuration
@@ -37,7 +36,6 @@ const defaultSettings: Settings = {
 
 export const useDataSync = () => {
   const supabaseData = useSupabaseData();
-  const accountData = useAccountData();
   const [settings, setSettings] = useState<Settings>(defaultSettings);
 
   // Calculate player statistics across all weeks
@@ -103,14 +101,14 @@ export const useDataSync = () => {
     getCurrentWeek: supabaseData.getCurrentWeek,
     refreshData: supabaseData.refreshData,
     
-    // Account data (for backwards compatibility)
-    weeks: accountData.weeks,
-    activeAccount: accountData.activeAccount,
-    accounts: accountData.accounts,
-    addAccount: accountData.addAccount,
-    switchAccount: accountData.switchAccount,
-    updateAccountData: accountData.updateAccountData,
-    setWeeklyData: () => {}, // Legacy function for compatibility
+    // Legacy compatibility properties
+    weeks: supabaseData.weeklyData,
+    activeAccount: null, // Legacy property - no longer used with Supabase
+    accounts: [], // Legacy property - no longer used with Supabase
+    addAccount: () => {}, // Legacy function - no longer needed
+    switchAccount: () => {}, // Legacy function - no longer needed
+    updateAccountData: () => {}, // Legacy function - no longer needed
+    setWeeklyData: () => {}, // Legacy function - no longer needed
     
     // Computed data
     calculatePlayerStats,

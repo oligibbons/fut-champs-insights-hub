@@ -2,54 +2,39 @@
 import { useDataSync } from './useDataSync';
 
 export function useAccountData() {
-  const { 
-    activeAccount, 
-    weeklyData, 
-    setWeeklyData, 
-    getCurrentWeek, 
-    getStorageKey,
-    getDefaultSquad
-  } = useDataSync();
+  // This hook now serves as a simple alias to useDataSync for backward compatibility
+  // We removed the circular dependency by making this a simple passthrough
+  const dataSync = useDataSync();
   
   const addNewWeek = () => {
-    const newWeekNumber = weeklyData.length + 1;
+    const newWeekNumber = dataSync.weeklyData.length + 1;
     const newWeek = {
-      id: `week-${newWeekNumber}-${Date.now()}`,
       weekNumber: newWeekNumber,
       startDate: new Date().toISOString(),
-      endDate: '',
-      games: [],
-      totalWins: 0,
-      totalLosses: 0,
-      totalGoals: 0,
-      totalConceded: 0,
-      totalExpectedGoals: 0,
-      totalExpectedGoalsAgainst: 0,
-      averageOpponentSkill: 0,
-      squadUsed: getDefaultSquad()?.name || '',
-      weeklyRating: 0,
-      isCompleted: false,
-      currentStreak: 0,
-      gamesPlayed: 0
+      winTarget: {
+        wins: 10,
+        goalsScored: undefined,
+        cleanSheets: undefined,
+        minimumRank: undefined
+      }
     };
     
-    const updatedWeeks = [...weeklyData, newWeek];
-    setWeeklyData(updatedWeeks);
-    return newWeek;
+    return dataSync.createWeek(newWeek);
   };
 
   const updateWeek = (weekId: string, updatedWeek: any) => {
-    const updatedWeeks = weeklyData.map(week => 
-      week.id === weekId ? updatedWeek : week
-    );
-    setWeeklyData(updatedWeeks);
+    return dataSync.updateWeek(weekId, updatedWeek);
+  };
+
+  const getDefaultSquad = () => {
+    return null; // Legacy function - no longer used with Supabase
   };
 
   return {
-    activeAccount,
-    weeks: weeklyData,
-    setWeeks: setWeeklyData,
-    getCurrentWeek,
+    activeAccount: dataSync.activeAccount,
+    weeks: dataSync.weeklyData,
+    setWeeks: dataSync.setWeeklyData,
+    getCurrentWeek: dataSync.getCurrentWeek,
     addNewWeek,
     updateWeek,
     getDefaultSquad
