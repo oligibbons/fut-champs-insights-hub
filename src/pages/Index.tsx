@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useDataSync } from '@/hooks/useDataSync';
 import Navigation from '@/components/Navigation';
 import DashboardCarousel from '@/components/DashboardCarousel';
+import DashboardOverview from '@/components/DashboardOverview';
 import AnalyticsDashboard from '@/components/AnalyticsDashboard';
 import PositionalHeatMap from '@/components/PositionalHeatMap';
 import AnalyticsTooltip from '@/components/AnalyticsTooltip';
@@ -19,48 +20,6 @@ const Index = () => {
 
   const currentRun = getCurrentWeek();
   const playerStats = calculatePlayerStats();
-
-  const calculateStats = () => {
-    const allGames = weeklyData.flatMap(week => week.games || []);
-    const totalGames = allGames.length;
-    const totalWins = weeklyData.reduce((sum, week) => sum + week.totalWins, 0);
-    const totalGoals = weeklyData.reduce((sum, week) => sum + week.totalGoals, 0);
-    const totalConceded = weeklyData.reduce((sum, week) => sum + week.totalConceded, 0);
-    const totalOpponentSkills = weeklyData.reduce((sum, week) => sum + week.averageOpponentSkill * week.games.length, 0);
-    const totalGamesPlayed = weeklyData.reduce((sum, week) => sum + week.games.length, 0);
-
-    const avgRating = totalGames > 0 ? weeklyData.reduce((sum, week) => {
-      const weekRating = week.games.reduce((gameSum, game) => {
-        const gameAvg = (game.playerStats || []).reduce((pSum, player) => pSum + player.rating, 0) / Math.max((game.playerStats || []).length, 1);
-        return gameSum + (gameAvg || 6.5);
-      }, 0) / Math.max(week.games.length, 1);
-      return sum + weekRating;
-    }, 0) / weeklyData.length : 0;
-
-    return {
-      totalGames,
-      totalWins,
-      totalGoals,
-      avgRating: +avgRating.toFixed(1),
-      winRate: totalGames > 0 ? Math.round((totalWins / totalGames) * 100) : 0,
-      goalDifference: totalGoals - totalConceded,
-      avgOpponentSkill: totalGamesPlayed > 0 ? +(totalOpponentSkills / totalGamesPlayed).toFixed(1) : 0
-    };
-  };
-
-  const allTimeStats = calculateStats();
-  const topPerformers = playerStats.sort((a, b) => b.goalInvolvementsPer90 - a.goalInvolvementsPer90).slice(0, 3);
-
-  // Calculate recent form
-  const recentGames = weeklyData.flatMap(week => week.games || []).slice(-5);
-  const recentForm = recentGames.map(game => game.result);
-
-  // Calculate weekly progress
-  const weeklyProgress = weeklyData.map((week, index) => ({
-    week: index + 1,
-    wins: week.totalWins,
-    winRate: week.games.length > 0 ? (week.totalWins / week.games.length) * 100 : 0
-  }));
 
   return (
     <div className="min-h-screen">
@@ -95,6 +54,9 @@ const Index = () => {
               )}
             />
           </AnalyticsTooltip>
+
+          {/* Comprehensive Dashboard Overview */}
+          <DashboardOverview />
 
           {/* Positional Heat Map */}
           <PositionalHeatMap />

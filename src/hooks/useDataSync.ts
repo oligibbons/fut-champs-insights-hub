@@ -1,236 +1,122 @@
 
-import { useLocalStorage } from './useLocalStorage';
-import { WeeklyPerformance, Player, Squad, UserSettings, GameResult } from '@/types/futChampions';
+import { useState, useEffect } from 'react';
+import { useSupabaseData } from './useSupabaseData';
+import { useAccountData } from './useAccountData';
+import { WeeklyPerformance, PlayerPerformance } from '@/types/futChampions';
 
-export function useDataSync() {
-  const [activeAccount] = useLocalStorage<string>('fc25-active-account', 'Main Account');
-  
-  // Unified data storage keys
-  const getStorageKey = (type: string) => `fc25-${type}-${activeAccount}`;
-  
-  const [weeklyData, setWeeklyData] = useLocalStorage<WeeklyPerformance[]>(getStorageKey('weeks'), []);
-  const [players, setPlayers] = useLocalStorage<Player[]>(getStorageKey('players'), []);
-  const [squads, setSquads] = useLocalStorage<Squad[]>(getStorageKey('squads'), []);
-  const [settings, setSettings] = useLocalStorage<UserSettings>('fc25-settings', {
-    preferredFormation: '4-3-3',
-    trackingStartDate: new Date().toISOString().split('T')[0],
-    gameplayStyle: 'balanced',
-    notifications: true,
-    gamesPerWeek: 15,
-    theme: 'futvisionary',
-    carouselSpeed: 12,
-    defaultCrossPlay: false,
-    dashboardSettings: {
-      showTopPerformers: true,
-      showXGAnalysis: true,
-      showAIInsights: true,
-      showFormAnalysis: true,
-      showWeaknesses: true,
-      showOpponentAnalysis: true,
-      showPositionalAnalysis: true,
-      showRecentTrends: true,
-      showAchievements: true,
-      showTargetProgress: true,
-      showTimeAnalysis: true,
-      showStressAnalysis: true,
-    },
-    currentWeekSettings: {
-      showTopPerformers: true,
-      showXGAnalysis: true,
-      showAIInsights: true,
-      showFormAnalysis: true,
-      showWeaknesses: true,
-      showOpponentAnalysis: true,
-      showPositionalAnalysis: true,
-      showRecentTrends: true,
-      showAchievements: true,
-      showTargetProgress: true,
-      showTimeAnalysis: true,
-      showStressAnalysis: true,
-    },
-    qualifierSettings: {
-      totalGames: 5,
-      winsRequired: 2,
-    },
-    targetSettings: {
-      autoSetTargets: false,
-      adaptiveTargets: true,
-      notifyOnTarget: true,
-    },
-    analyticsPreferences: {
-      detailedPlayerStats: true,
-      opponentTracking: true,
-      timeTracking: true,
-      stressTracking: true,
-      showAnimations: true,
-      dynamicFeedback: true,
-    }
-  });
+// Settings type for dashboard configuration
+interface DashboardSettings {
+  showTopPerformers: boolean;
+  showMatchFacts: boolean;
+  showWeeklyScores: boolean;
+  showRecentForm: boolean;
+  showTargetProgress: boolean;
+}
 
-  const getCurrentWeek = (): WeeklyPerformance | null => {
-    return weeklyData.find(week => !week.isCompleted) || null;
-  };
+interface CurrentWeekSettings {
+  showCurrentRunStats: boolean;
+}
 
-  const addGameToWeek = (weekId: string, game: GameResult) => {
-    const updatedWeeks = weeklyData.map(week => {
-      if (week.id === weekId) {
-        const updatedGames = [...week.games, game];
-        return {
-          ...week,
-          games: updatedGames,
-          totalWins: updatedGames.filter(g => g.result === 'win').length,
-          totalLosses: updatedGames.filter(g => g.result === 'loss').length,
-          totalGoals: updatedGames.reduce((sum, g) => {
-            const [goals] = g.scoreLine.split('-').map(Number);
-            return sum + goals;
-          }, 0),
-          totalConceded: updatedGames.reduce((sum, g) => {
-            const [, conceded] = g.scoreLine.split('-').map(Number);
-            return sum + conceded;
-          }, 0),
-          averageOpponentSkill: updatedGames.reduce((sum, g) => sum + g.opponentSkill, 0) / updatedGames.length,
-          totalPlayTime: updatedGames.reduce((sum, g) => sum + g.duration, 0),
-          averageGameDuration: updatedGames.reduce((sum, g) => sum + g.duration, 0) / updatedGames.length,
-          isCompleted: updatedGames.length >= settings.gamesPerWeek,
-          gamesPlayed: updatedGames.length,
-        };
-      }
-      return week;
-    });
-    setWeeklyData(updatedWeeks);
-  };
+interface Settings {
+  dashboardSettings: DashboardSettings;
+  currentWeekSettings: CurrentWeekSettings;
+}
 
-  const calculatePlayerStats = () => {
-    const allGames = weeklyData.flatMap(week => week.games || []);
-    const playerStats = new Map();
+const defaultSettings: Settings = {
+  dashboardSettings: {
+    showTopPerformers: true,
+    showMatchFacts: true,
+    showWeeklyScores: true,
+    showRecentForm: true,
+    showTargetProgress: true,
+  },
+  currentWeekSettings: {
+    showCurrentRunStats: true,
+  }
+};
+
+export const useDataSync = () => {
+  const supabaseData = useSupabaseData();
+  const accountData = useAccountData();
+  const [settings, setSettings] = useState<Settings>(defaultSettings);
+
+  // Calculate player statistics across all weeks
+  const calculatePlayerStats = (): PlayerPerformance[] => {
+    const allGames = supabaseData.weeklyData.flatMap(week => week.games || []);
+    const playerStatsMap = new Map<string, {
+      name: string;
+      position: string;
+      totalRating: number;
+      games: number;
+      goals: number;
+      assists: number;
+      totalMinutes: number;
+    }>();
 
     allGames.forEach(game => {
-      game.playerStats?.forEach(playerPerf => {
-        const existing = playerStats.get(playerPerf.name) || {
-          name: playerPerf.name,
-          position: playerPerf.position,
-          gamesPlayed: 0,
-          totalMinutes: 0,
+      game.playerStats?.forEach(player => {
+        const key = `${player.name}-${player.position}`;
+        const existing = playerStatsMap.get(key) || {
+          name: player.name,
+          position: player.position,
+          totalRating: 0,
+          games: 0,
           goals: 0,
           assists: 0,
-          totalRating: 0,
-          yellowCards: 0,
-          redCards: 0
+          totalMinutes: 0
         };
 
-        existing.gamesPlayed += 1;
-        existing.totalMinutes += playerPerf.minutesPlayed;
-        existing.goals += playerPerf.goals;
-        existing.assists += playerPerf.assists;
-        existing.totalRating += playerPerf.rating;
-        existing.yellowCards += playerPerf.yellowCards;
-        existing.redCards += playerPerf.redCards;
+        existing.totalRating += player.rating;
+        existing.games += 1;
+        existing.goals += player.goals;
+        existing.assists += player.assists;
+        existing.totalMinutes += player.minutesPlayed;
 
-        playerStats.set(playerPerf.name, existing);
+        playerStatsMap.set(key, existing);
       });
     });
 
-    return Array.from(playerStats.values()).map(player => ({
-      ...player,
-      averageRating: player.gamesPlayed > 0 ? (player.totalRating / player.gamesPlayed) : 0,
-      goalsPer90: player.totalMinutes > 0 ? (player.goals * 90) / player.totalMinutes : 0,
-      assistsPer90: player.totalMinutes > 0 ? (player.assists * 90) / player.totalMinutes : 0,
-      goalInvolvements: player.goals + player.assists,
-      goalInvolvementsPer90: player.totalMinutes > 0 ? ((player.goals + player.assists) * 90) / player.totalMinutes : 0
+    return Array.from(playerStatsMap.values()).map((stats, index) => ({
+      id: `stat-${index}`,
+      name: stats.name,
+      position: stats.position,
+      rating: stats.totalRating / stats.games,
+      goals: stats.goals,
+      assists: stats.assists,
+      yellowCards: 0,
+      redCards: 0,
+      ownGoals: 0,
+      minutesPlayed: stats.totalMinutes,
+      wasSubstituted: false,
+      goalInvolvementsPer90: stats.totalMinutes > 0 ? ((stats.goals + stats.assists) / stats.totalMinutes) * 90 : 0
     }));
   };
 
-  const getDefaultSquad = () => {
-    return squads.find(squad => squad.isDefault === true) || null;
-  };
-
-  const deleteAllData = () => {
-    // Clear all FC25 data from localStorage
-    const keys = Object.keys(localStorage);
-    keys.forEach(key => {
-      if (key.startsWith('fc25-')) {
-        localStorage.removeItem(key);
-      }
-    });
-    
-    // Reset state to empty arrays/defaults
-    setWeeklyData([]);
-    setPlayers([]);
-    setSquads([]);
-    
-    // Reset settings to defaults
-    setSettings({
-      preferredFormation: '4-3-3',
-      trackingStartDate: new Date().toISOString().split('T')[0],
-      gameplayStyle: 'balanced',
-      notifications: true,
-      gamesPerWeek: 15,
-      theme: 'futvisionary',
-      carouselSpeed: 12,
-      defaultCrossPlay: false,
-      dashboardSettings: {
-        showTopPerformers: true,
-        showXGAnalysis: true,
-        showAIInsights: true,
-        showFormAnalysis: true,
-        showWeaknesses: true,
-        showOpponentAnalysis: true,
-        showPositionalAnalysis: true,
-        showRecentTrends: true,
-        showAchievements: true,
-        showTargetProgress: true,
-        showTimeAnalysis: true,
-        showStressAnalysis: true,
-      },
-      currentWeekSettings: {
-        showTopPerformers: true,
-        showXGAnalysis: true,
-        showAIInsights: true,
-        showFormAnalysis: true,
-        showWeaknesses: true,
-        showOpponentAnalysis: true,
-        showPositionalAnalysis: true,
-        showRecentTrends: true,
-        showAchievements: true,
-        showTargetProgress: true,
-        showTimeAnalysis: true,
-        showStressAnalysis: true,
-      },
-      qualifierSettings: {
-        totalGames: 5,
-        winsRequired: 2,
-      },
-      targetSettings: {
-        autoSetTargets: false,
-        adaptiveTargets: true,
-        notifyOnTarget: true,
-      },
-      analyticsPreferences: {
-        detailedPlayerStats: true,
-        opponentTracking: true,
-        timeTracking: true,
-        stressTracking: true,
-        showAnimations: true,
-        dynamicFeedback: true,
-      }
-    });
-  };
-
   return {
-    activeAccount,
-    weeklyData,
-    setWeeklyData,
-    players,
-    setPlayers,
-    squads,
-    setSquads,
+    // Supabase data
+    weeklyData: supabaseData.weeklyData,
+    loading: supabaseData.loading,
+    saveGame: supabaseData.saveGame,
+    createWeek: supabaseData.createWeek,
+    updateWeek: supabaseData.updateWeek,
+    updateGame: supabaseData.updateGame,
+    getCurrentWeek: supabaseData.getCurrentWeek,
+    refreshData: supabaseData.refreshData,
+    
+    // Account data (for backwards compatibility)
+    weeks: accountData.weeks,
+    activeAccount: accountData.activeAccount,
+    accounts: accountData.accounts,
+    addAccount: accountData.addAccount,
+    switchAccount: accountData.switchAccount,
+    updateAccountData: accountData.updateAccountData,
+    setWeeklyData: () => {}, // Legacy function for compatibility
+    
+    // Computed data
+    calculatePlayerStats,
+    
+    // Settings
     settings,
     setSettings,
-    getCurrentWeek,
-    addGameToWeek,
-    calculatePlayerStats,
-    getStorageKey,
-    getDefaultSquad,
-    deleteAllData
   };
-}
+};

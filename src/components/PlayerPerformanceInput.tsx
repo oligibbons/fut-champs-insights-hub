@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { PlayerPerformance } from '@/types/futChampions';
-import { Users, Plus, Trash2 } from 'lucide-react';
+import { Users, Plus, Trash2, Minus } from 'lucide-react';
 
 interface PlayerPerformanceInputProps {
   players: PlayerPerformance[];
@@ -41,6 +41,18 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
     onChange(players.filter((_, i) => i !== index));
   };
 
+  const incrementValue = (index: number, field: keyof PlayerPerformance, increment: number) => {
+    const currentValue = players[index][field] as number;
+    const newValue = Math.max(0, currentValue + increment);
+    updatePlayer(index, field, newValue);
+  };
+
+  const incrementRating = (index: number, increment: number) => {
+    const currentRating = players[index].rating as number;
+    const newRating = Math.max(1, Math.min(10, currentRating + increment));
+    updatePlayer(index, 'rating', parseFloat(newRating.toFixed(1)));
+  };
+
   return (
     <Card className="glass-card">
       <CardHeader>
@@ -54,7 +66,7 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
           <div key={player.id} className="p-4 bg-white/5 rounded-xl space-y-3">
             <div className="flex items-center justify-between">
               <Badge variant="outline" className="text-fifa-blue border-fifa-blue">
-                Player {index + 1}
+                {player.position || `Player ${index + 1}`}
               </Badge>
               <Button
                 type="button"
@@ -69,105 +81,212 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
             
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               <div>
-                <Label className="text-gray-300 text-xs">Name</Label>
+                <Label className="text-white text-xs">Player Name</Label>
                 <Input
-                  placeholder="Player name"
                   value={player.name}
                   onChange={(e) => updatePlayer(index, 'name', e.target.value)}
-                  className="bg-white/10 border-white/20 text-white h-8"
+                  placeholder="Player name"
+                  className="bg-gray-800 border-gray-600 text-white text-sm"
                 />
               </div>
               
               <div>
-                <Label className="text-gray-300 text-xs">Position</Label>
+                <Label className="text-white text-xs">Position</Label>
                 <Input
-                  placeholder="e.g. ST, CM"
                   value={player.position}
                   onChange={(e) => updatePlayer(index, 'position', e.target.value)}
-                  className="bg-white/10 border-white/20 text-white h-8"
+                  placeholder="e.g. ST, CM"
+                  className="bg-gray-800 border-gray-600 text-white text-sm"
                 />
               </div>
-              
+
               <div>
-                <Label className="text-gray-300 text-xs">Rating (0-10)</Label>
-                <Input
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  max="10"
-                  value={player.rating}
-                  onChange={(e) => updatePlayer(index, 'rating', parseFloat(e.target.value) || 0)}
-                  className="bg-white/10 border-white/20 text-white h-8"
-                />
+                <Label className="text-white text-xs">Minutes</Label>
+                <div className="flex items-center gap-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => incrementValue(index, 'minutesPlayed', -5)}
+                    className="h-8 w-8 p-0 text-fifa-red hover:bg-fifa-red/10"
+                  >
+                    <Minus className="h-3 w-3" />
+                  </Button>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="120"
+                    value={player.minutesPlayed}
+                    onChange={(e) => updatePlayer(index, 'minutesPlayed', parseInt(e.target.value) || 0)}
+                    className="bg-gray-800 border-gray-600 text-white text-center text-sm"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => incrementValue(index, 'minutesPlayed', 5)}
+                    className="h-8 w-8 p-0 text-fifa-green hover:bg-fifa-green/10"
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                </div>
               </div>
-              
+
               <div>
-                <Label className="text-gray-300 text-xs">Goals</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  value={player.goals}
-                  onChange={(e) => updatePlayer(index, 'goals', parseInt(e.target.value) || 0)}
-                  className="bg-white/10 border-white/20 text-white h-8"
-                />
+                <Label className="text-white text-xs">Rating</Label>
+                <div className="flex items-center gap-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => incrementRating(index, -0.1)}
+                    className="h-8 w-8 p-0 text-fifa-red hover:bg-fifa-red/10"
+                  >
+                    <Minus className="h-3 w-3" />
+                  </Button>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="10"
+                    step="0.1"
+                    value={player.rating}
+                    onChange={(e) => updatePlayer(index, 'rating', parseFloat(e.target.value) || 6.0)}
+                    className="bg-gray-800 border-gray-600 text-white text-center text-sm"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => incrementRating(index, 0.1)}
+                    className="h-8 w-8 p-0 text-fifa-green hover:bg-fifa-green/10"
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                </div>
               </div>
-              
+
               <div>
-                <Label className="text-gray-300 text-xs">Assists</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  value={player.assists}
-                  onChange={(e) => updatePlayer(index, 'assists', parseInt(e.target.value) || 0)}
-                  className="bg-white/10 border-white/20 text-white h-8"
-                />
+                <Label className="text-white text-xs">Goals</Label>
+                <div className="flex items-center gap-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => incrementValue(index, 'goals', -1)}
+                    className="h-8 w-8 p-0 text-fifa-red hover:bg-fifa-red/10"
+                  >
+                    <Minus className="h-3 w-3" />
+                  </Button>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={player.goals}
+                    onChange={(e) => updatePlayer(index, 'goals', parseInt(e.target.value) || 0)}
+                    className="bg-gray-800 border-gray-600 text-white text-center text-sm"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => incrementValue(index, 'goals', 1)}
+                    className="h-8 w-8 p-0 text-fifa-green hover:bg-fifa-green/10"
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                </div>
               </div>
-              
+
               <div>
-                <Label className="text-gray-300 text-xs">Minutes</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  max="120"
-                  value={player.minutesPlayed}
-                  onChange={(e) => updatePlayer(index, 'minutesPlayed', parseInt(e.target.value) || 0)}
-                  className="bg-white/10 border-white/20 text-white h-8"
-                />
+                <Label className="text-white text-xs">Assists</Label>
+                <div className="flex items-center gap-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => incrementValue(index, 'assists', -1)}
+                    className="h-8 w-8 p-0 text-fifa-red hover:bg-fifa-red/10"
+                  >
+                    <Minus className="h-3 w-3" />
+                  </Button>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={player.assists}
+                    onChange={(e) => updatePlayer(index, 'assists', parseInt(e.target.value) || 0)}
+                    className="bg-gray-800 border-gray-600 text-white text-center text-sm"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => incrementValue(index, 'assists', 1)}
+                    className="h-8 w-8 p-0 text-fifa-green hover:bg-fifa-green/10"
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                </div>
               </div>
-              
+
               <div>
-                <Label className="text-gray-300 text-xs">Yellow Cards</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  max="2"
-                  value={player.yellowCards}
-                  onChange={(e) => updatePlayer(index, 'yellowCards', parseInt(e.target.value) || 0)}
-                  className="bg-white/10 border-white/20 text-white h-8"
-                />
+                <Label className="text-white text-xs">Yellow Cards</Label>
+                <div className="flex items-center gap-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => incrementValue(index, 'yellowCards', -1)}
+                    className="h-8 w-8 p-0 text-fifa-red hover:bg-fifa-red/10"
+                  >
+                    <Minus className="h-3 w-3" />
+                  </Button>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={player.yellowCards}
+                    onChange={(e) => updatePlayer(index, 'yellowCards', parseInt(e.target.value) || 0)}
+                    className="bg-gray-800 border-gray-600 text-white text-center text-sm"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => incrementValue(index, 'yellowCards', 1)}
+                    className="h-8 w-8 p-0 text-fifa-green hover:bg-fifa-green/10"
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                </div>
               </div>
-              
+
               <div>
-                <Label className="text-gray-300 text-xs">Red Cards</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  max="1"
-                  value={player.redCards}
-                  onChange={(e) => updatePlayer(index, 'redCards', parseInt(e.target.value) || 0)}
-                  className="bg-white/10 border-white/20 text-white h-8"
-                />
-              </div>
-              
-              <div>
-                <Label className="text-gray-300 text-xs">Own Goals</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  value={player.ownGoals}
-                  onChange={(e) => updatePlayer(index, 'ownGoals', parseInt(e.target.value) || 0)}
-                  className="bg-white/10 border-white/20 text-white h-8"
-                />
+                <Label className="text-white text-xs">Red Cards</Label>
+                <div className="flex items-center gap-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => incrementValue(index, 'redCards', -1)}
+                    className="h-8 w-8 p-0 text-fifa-red hover:bg-fifa-red/10"
+                  >
+                    <Minus className="h-3 w-3" />
+                  </Button>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={player.redCards}
+                    onChange={(e) => updatePlayer(index, 'redCards', parseInt(e.target.value) || 0)}
+                    className="bg-gray-800 border-gray-600 text-white text-center text-sm"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => incrementValue(index, 'redCards', 1)}
+                    className="h-8 w-8 p-0 text-fifa-green hover:bg-fifa-green/10"
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
@@ -175,9 +294,9 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
         
         <Button
           type="button"
-          variant="outline"
           onClick={addPlayer}
-          className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20"
+          variant="outline"
+          className="w-full border-fifa-blue text-fifa-blue hover:bg-fifa-blue/10"
         >
           <Plus className="h-4 w-4 mr-2" />
           Add Player

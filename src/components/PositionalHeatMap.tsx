@@ -12,8 +12,8 @@ interface PositionData {
   totalMinutes: number;
   goals: number;
   assists: number;
-  x: number; // Position on field (0-100%)
-  y: number; // Position on field (0-100%)
+  x: number;
+  y: number;
 }
 
 const PositionalHeatMap = () => {
@@ -94,18 +94,17 @@ const PositionalHeatMap = () => {
   }, [weeklyData]);
 
   const getHeatColor = (rating: number) => {
-    if (rating >= 8.5) return 'from-green-400 to-green-600';
-    if (rating >= 8.0) return 'from-lime-400 to-green-500';
-    if (rating >= 7.5) return 'from-yellow-400 to-lime-500';
-    if (rating >= 7.0) return 'from-yellow-500 to-yellow-600';
-    if (rating >= 6.5) return 'from-orange-400 to-yellow-500';
-    if (rating >= 6.0) return 'from-orange-500 to-orange-600';
-    return 'from-red-500 to-red-600';
+    if (rating >= 8.5) return '#10b981'; // green-500
+    if (rating >= 8.0) return '#84cc16'; // lime-500
+    if (rating >= 7.5) return '#eab308'; // yellow-500
+    if (rating >= 7.0) return '#f97316'; // orange-500
+    if (rating >= 6.5) return '#f59e0b'; // amber-500
+    if (rating >= 6.0) return '#ef4444'; // red-500
+    return '#dc2626'; // red-600
   };
 
   const getIntensity = (rating: number) => {
-    const intensity = Math.max(0.3, Math.min(1, (rating - 5) / 5));
-    return intensity;
+    return Math.max(0.4, Math.min(1, (rating - 4) / 6));
   };
 
   if (positionData.length === 0) {
@@ -140,13 +139,13 @@ const PositionalHeatMap = () => {
                 </div>
               </TooltipTrigger>
               <TooltipContent className="max-w-xs">
-                <p>Visual representation of average player ratings by position. Warmer colors indicate better performance. Hover over positions for detailed statistics.</p>
+                <p>Visual representation of average player ratings by position. Heat patches show performance intensity, with ratings overlaid. Hover over positions for detailed statistics.</p>
               </TooltipContent>
             </Tooltip>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="relative w-full h-96 bg-gradient-to-b from-green-800/20 to-green-900/30 rounded-lg border-2 border-white/20">
+          <div className="relative w-full h-96 bg-gradient-to-b from-green-800/20 to-green-900/30 rounded-lg border-2 border-white/20 overflow-hidden">
             {/* Football pitch markings */}
             <div className="absolute inset-0">
               {/* Center line */}
@@ -161,28 +160,40 @@ const PositionalHeatMap = () => {
               <div className="absolute right-0 top-2/5 bottom-2/5 w-12 border-l border-white/30" />
             </div>
 
-            {/* Position markers */}
+            {/* Heat patches */}
+            {positionData.map((position, index) => (
+              <div
+                key={`heat-${position.position}`}
+                className="absolute rounded-full blur-sm pointer-events-none"
+                style={{
+                  left: `${position.x}%`,
+                  top: `${position.y}%`,
+                  width: '80px',
+                  height: '80px',
+                  background: `radial-gradient(circle, ${getHeatColor(position.averageRating)}${Math.round(getIntensity(position.averageRating) * 255).toString(16).padStart(2, '0')} 0%, transparent 70%)`,
+                  transform: 'translate(-50%, -50%)',
+                }}
+              />
+            ))}
+
+            {/* Position markers with ratings */}
             {positionData.map((position) => (
               <Tooltip key={position.position}>
                 <TooltipTrigger asChild>
                   <div
-                    className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group"
+                    className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group pointer-events-auto"
                     style={{
                       left: `${position.x}%`,
                       top: `${position.y}%`,
                     }}
                   >
-                    <div
-                      className={`w-12 h-12 rounded-full bg-gradient-to-r ${getHeatColor(position.averageRating)} 
-                        flex items-center justify-center text-xs font-bold text-black shadow-lg 
-                        group-hover:scale-110 transition-transform duration-200 border-2 border-white/50`}
-                      style={{
-                        opacity: getIntensity(position.averageRating),
-                      }}
-                    >
-                      <div className="text-center">
-                        <div className="text-[10px] font-bold">{position.position}</div>
-                        <div className="text-[8px]">{position.averageRating.toFixed(1)}</div>
+                    <div className="relative">
+                      {/* Subtle border circle */}
+                      <div className="w-14 h-14 rounded-full border-2 border-white/50 bg-black/30 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                        <div className="text-center">
+                          <div className="text-[10px] font-bold text-white">{position.position}</div>
+                          <div className="text-xs font-bold text-white">{position.averageRating.toFixed(1)}</div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -217,11 +228,11 @@ const PositionalHeatMap = () => {
             <div className="absolute bottom-2 right-2 bg-black/60 rounded-lg p-3">
               <p className="text-white text-xs font-semibold mb-2">Performance Scale</p>
               <div className="flex items-center gap-2 text-xs text-white">
-                <div className="w-3 h-3 bg-gradient-to-r from-red-500 to-red-600 rounded" />
+                <div className="w-3 h-3 bg-red-500 rounded" />
                 <span>Poor</span>
-                <div className="w-3 h-3 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded" />
+                <div className="w-3 h-3 bg-yellow-500 rounded" />
                 <span>Good</span>
-                <div className="w-3 h-3 bg-gradient-to-r from-green-400 to-green-600 rounded" />
+                <div className="w-3 h-3 bg-green-500 rounded" />
                 <span>Excellent</span>
               </div>
             </div>
