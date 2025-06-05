@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -34,20 +35,20 @@ const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecord
   const [crossPlayEnabled, setCrossPlayEnabled] = useState(false);
   const [comments, setComments] = useState('');
 
-  // Team stats with better defaults
+  // Team stats with more realistic defaults
   const [teamStats, setTeamStats] = useState<TeamStats>({
-    shots: 12,
-    shotsOnTarget: 6,
-    possession: 55,
-    expectedGoals: 1.8,
+    shots: 8,
+    shotsOnTarget: 4,
+    possession: 50,
+    expectedGoals: 1.2,
     actualGoals: 0,
-    expectedGoalsAgainst: 1.2,
+    expectedGoalsAgainst: 1.0,
     actualGoalsAgainst: 0,
-    passes: 320,
-    passAccuracy: 82,
-    corners: 4,
-    fouls: 8,
-    yellowCards: 1,
+    passes: 100,
+    passAccuracy: 78,
+    corners: 3,
+    fouls: 0,
+    yellowCards: 0,
     redCards: 0,
     distanceCovered: 0
   });
