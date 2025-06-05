@@ -6,10 +6,6 @@ import { WeeklyPerformance, PlayerPerformance } from '@/types/futChampions';
 // Settings type for dashboard configuration
 interface DashboardSettings {
   showTopPerformers: boolean;
-  showMatchFacts: boolean;
-  showWeeklyScores: boolean;
-  showRecentForm: boolean;
-  showTargetProgress: boolean;
   showXGAnalysis: boolean;
   showAIInsights: boolean;
   showFormAnalysis: boolean;
@@ -18,8 +14,12 @@ interface DashboardSettings {
   showPositionalAnalysis: boolean;
   showRecentTrends: boolean;
   showAchievements: boolean;
+  showTargetProgress: boolean;
   showTimeAnalysis: boolean;
   showStressAnalysis: boolean;
+  showMatchFacts: boolean;
+  showWeeklyScores: boolean;
+  showRecentForm: boolean;
 }
 
 interface CurrentWeekSettings {
@@ -59,6 +59,15 @@ interface Settings {
   dashboardSettings: DashboardSettings;
   currentWeekSettings: CurrentWeekSettings;
   analyticsPreferences: AnalyticsPreferences;
+  qualifierSettings: {
+    totalGames: number;
+    winsRequired: number;
+  };
+  targetSettings: {
+    autoSetTargets: boolean;
+    adaptiveTargets: boolean;
+    notifyOnTarget: boolean;
+  };
 }
 
 const defaultSettings: Settings = {
@@ -72,10 +81,6 @@ const defaultSettings: Settings = {
   defaultCrossPlay: false,
   dashboardSettings: {
     showTopPerformers: true,
-    showMatchFacts: true,
-    showWeeklyScores: true,
-    showRecentForm: true,
-    showTargetProgress: true,
     showXGAnalysis: true,
     showAIInsights: true,
     showFormAnalysis: true,
@@ -84,8 +89,12 @@ const defaultSettings: Settings = {
     showPositionalAnalysis: true,
     showRecentTrends: true,
     showAchievements: true,
+    showTargetProgress: true,
     showTimeAnalysis: true,
     showStressAnalysis: true,
+    showMatchFacts: true,
+    showWeeklyScores: true,
+    showRecentForm: true,
   },
   currentWeekSettings: {
     showCurrentRunStats: true,
@@ -109,6 +118,15 @@ const defaultSettings: Settings = {
     stressTracking: true,
     showAnimations: true,
     dynamicFeedback: true,
+  },
+  qualifierSettings: {
+    totalGames: 5,
+    winsRequired: 2,
+  },
+  targetSettings: {
+    autoSetTargets: false,
+    adaptiveTargets: true,
+    notifyOnTarget: true,
   }
 };
 
@@ -186,12 +204,12 @@ export const useDataSync = () => {
     
     // Legacy compatibility properties
     weeks: supabaseData.weeklyData,
-    activeAccount: null, // Legacy property - no longer used with Supabase
-    accounts: [], // Legacy property - no longer used with Supabase
-    addAccount: () => {}, // Legacy function - no longer needed
-    switchAccount: () => {}, // Legacy function - no longer needed
-    updateAccountData: () => {}, // Legacy function - no longer needed
-    setWeeklyData: () => {}, // Legacy function - no longer needed
+    activeAccount: null,
+    accounts: [],
+    addAccount: () => {},
+    switchAccount: () => {},
+    updateAccountData: () => {},
+    setWeeklyData: () => {},
     
     // Computed data
     calculatePlayerStats,
@@ -201,8 +219,8 @@ export const useDataSync = () => {
     setSettings,
     
     // Mock data for Settings page compatibility
-    players: [], // Mock empty array
-    squads: [], // Mock empty array
+    players: [],
+    squads: [],
     deleteAllData,
   };
 };

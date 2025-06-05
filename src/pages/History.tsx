@@ -84,11 +84,11 @@ const History = () => {
 
   const confirmDeleteWeek = () => {
     if (deleteWeekDialog.weekId) {
-      const updatedWeeks = weeklyData.filter(week => week.id !== deleteWeekDialog.weekId);
-      setWeeklyData(updatedWeeks);
+      console.log('Delete week functionality not implemented with Supabase');
       toast({
-        title: "Week Deleted",
-        description: "The week and all its games have been permanently deleted.",
+        title: "Feature Not Available",
+        description: "Week deletion is not currently available with Supabase integration.",
+        variant: "destructive"
       });
     }
     setDeleteWeekDialog({ isOpen: false, weekId: null });
@@ -100,15 +100,11 @@ const History = () => {
 
   const confirmEndWeek = () => {
     if (endWeekDialog.weekId) {
-      const updatedWeeks = weeklyData.map(week => 
-        week.id === endWeekDialog.weekId 
-          ? { ...week, isCompleted: true, endDate: new Date().toISOString() }
-          : week
-      );
-      setWeeklyData(updatedWeeks);
+      console.log('End week functionality not implemented with Supabase');
       toast({
-        title: "Week Ended",
-        description: "The week has been marked as completed.",
+        title: "Feature Not Available", 
+        description: "Week ending is not currently available with Supabase integration.",
+        variant: "destructive"
       });
     }
     setEndWeekDialog({ isOpen: false, weekId: null });
