@@ -19,7 +19,7 @@ const WeeklyTargets = () => {
     wins: 11,
     goalsScored: undefined as number | undefined,
     cleanSheets: undefined as number | undefined,
-    minimumRank: undefined as number | undefined
+    minimumRank: undefined as string | undefined
   });
   
   const [isEditing, setIsEditing] = useState(false);
@@ -158,14 +158,13 @@ const WeeklyTargets = () => {
               <div>
                 <Label className="text-white">Minimum Rank Target (Optional)</Label>
                 <Input
-                  type="number"
-                  min="1"
+                  type="text"
                   value={targets.minimumRank || ''}
                   onChange={(e) => setTargets(prev => ({ 
                     ...prev, 
-                    minimumRank: e.target.value ? parseInt(e.target.value) : undefined 
+                    minimumRank: e.target.value || undefined 
                   }))}
-                  placeholder="e.g. 45"
+                  placeholder="e.g. Rank V"
                   className="bg-gray-800 border-gray-600 text-white"
                 />
               </div>
@@ -245,7 +244,7 @@ const WeeklyTargets = () => {
                     <span className="text-white font-medium">Target Rank</span>
                   </div>
                   <Badge variant="outline">
-                    Reach Rank {targets.minimumRank}
+                    Reach {targets.minimumRank}
                   </Badge>
                 </div>
               </div>

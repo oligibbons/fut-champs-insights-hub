@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useDataSync } from '@/hooks/useDataSync';
-import { Trophy, Target, TrendingUp, Calendar, Award, Zap, BarChart3, Users, Shield, Flame, Clock, Star } from 'lucide-react';
+import { Trophy, Target, TrendingUp, TrendingDown, Calendar, Award, Zap, BarChart3, Users, Shield, Flame, Clock, Star } from 'lucide-react';
 import AnalyticsTooltip from './AnalyticsTooltip';
 import { Progress } from '@/components/ui/progress';
 
