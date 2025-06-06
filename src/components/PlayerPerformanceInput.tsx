@@ -102,41 +102,41 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
     <div className="space-y-1">
       <Label className="text-white text-xs font-medium">{label}</Label>
       <div className="flex items-center rounded-lg border border-gray-600 bg-gray-800 overflow-hidden">
-        <Button
+        <button
           type="button"
-          variant="ghost"
-          size="sm"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
             onDecrement();
           }}
-          className="h-8 w-8 p-0 text-fifa-red hover:bg-fifa-red/10 hover:text-fifa-red rounded-none border-r border-gray-600"
+          className="h-8 w-8 flex items-center justify-center text-fifa-red hover:bg-fifa-red/10 hover:text-fifa-red border-r border-gray-600 transition-colors"
         >
           <Minus className="h-3 w-3" />
-        </Button>
+        </button>
         <Input
           type={type}
           min={min}
           max={max}
           step={step}
           value={type === "number" && value % 1 !== 0 ? value.toFixed(1) : value}
-          onChange={(e) => onChange(e.target.value)}
-          className="bg-transparent border-0 text-white text-center text-sm h-8 flex-1 focus:ring-0 focus:border-0"
+          onChange={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onChange(e.target.value);
+          }}
+          className="bg-transparent border-0 text-white text-center text-sm h-8 flex-1 focus:ring-0 focus:border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
         />
-        <Button
+        <button
           type="button"
-          variant="ghost"
-          size="sm"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
             onIncrement();
           }}
-          className="h-8 w-8 p-0 text-fifa-green hover:bg-fifa-green/10 hover:text-fifa-green rounded-none border-l border-gray-600"
+          className="h-8 w-8 flex items-center justify-center text-fifa-green hover:bg-fifa-green/10 hover:text-fifa-green border-l border-gray-600 transition-colors"
         >
           <Plus className="h-3 w-3" />
-        </Button>
+        </button>
       </div>
     </div>
   );
@@ -151,7 +151,11 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
           </CardTitle>
           <Button
             type="button"
-            onClick={addPlayer}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              addPlayer();
+            }}
             size="sm"
             className="bg-fifa-green hover:bg-fifa-green/80 text-white"
           >
@@ -166,7 +170,14 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
             <Users className="h-12 w-12 mx-auto mb-4 text-gray-500" />
             <h3 className="text-lg font-medium text-white mb-2">No Players Added</h3>
             <p className="text-gray-400 mb-4">Add players to track their performance</p>
-            <Button onClick={addPlayer} className="bg-fifa-green hover:bg-fifa-green/80">
+            <Button 
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                addPlayer();
+              }} 
+              className="bg-fifa-green hover:bg-fifa-green/80"
+            >
               <Plus className="h-4 w-4 mr-2" />
               Add First Player
             </Button>
@@ -178,19 +189,17 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                 <Badge variant="outline" className="text-fifa-blue border-fifa-blue">
                   {player.position || `Player ${index + 1}`}
                 </Badge>
-                <Button
+                <button
                   type="button"
-                  variant="ghost"
-                  size="sm"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     removePlayer(index);
                   }}
-                  className="text-fifa-red hover:text-fifa-red hover:bg-fifa-red/10"
+                  className="p-2 text-fifa-red hover:text-fifa-red hover:bg-fifa-red/10 rounded-md transition-colors"
                 >
                   <Trash2 className="h-4 w-4" />
-                </Button>
+                </button>
               </div>
               
               {/* Basic Info */}
@@ -199,7 +208,11 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                   <Label className="text-white text-xs font-medium">Player Name</Label>
                   <Input
                     value={player.name}
-                    onChange={(e) => updatePlayer(index, 'name', e.target.value)}
+                    onChange={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      updatePlayer(index, 'name', e.target.value);
+                    }}
                     placeholder="Enter player name"
                     className="bg-gray-800 border-gray-600 text-white text-sm"
                   />
@@ -209,7 +222,11 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                   <Label className="text-white text-xs font-medium">Position</Label>
                   <Input
                     value={player.position}
-                    onChange={(e) => updatePlayer(index, 'position', e.target.value)}
+                    onChange={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      updatePlayer(index, 'position', e.target.value);
+                    }}
                     placeholder="e.g. ST, CM, CB"
                     className="bg-gray-800 border-gray-600 text-white text-sm"
                   />
