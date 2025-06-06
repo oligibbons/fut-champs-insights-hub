@@ -136,7 +136,7 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                     value={player.name}
                     onChange={(e) => handleInputChange(index, 'name', e.target.value)}
                     placeholder="Enter player name"
-                    className="bg-gray-800 border-gray-600 text-white h-10"
+                    className="bg-gray-800 border-gray-600 text-white h-12"
                   />
                 </div>
                 
@@ -146,7 +146,7 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                     value={player.position}
                     onChange={(e) => handleInputChange(index, 'position', e.target.value)}
                     placeholder="e.g. ST, CM, CB"
-                    className="bg-gray-800 border-gray-600 text-white h-10"
+                    className="bg-gray-800 border-gray-600 text-white h-12"
                   />
                 </div>
 
@@ -158,7 +158,7 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                       variant="outline"
                       size="sm"
                       onClick={() => adjustValue(index, 'minutesPlayed', -5)}
-                      className="w-10 h-10 p-0 border-gray-600 text-fifa-red hover:bg-fifa-red/10 flex-shrink-0"
+                      className="w-12 h-12 p-0 border-gray-600 text-fifa-red hover:bg-fifa-red/10 flex-shrink-0"
                     >
                       <Minus className="h-4 w-4" />
                     </Button>
@@ -168,14 +168,14 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                       max="120"
                       value={player.minutesPlayed}
                       onChange={(e) => handleInputChange(index, 'minutesPlayed', e.target.value)}
-                      className="bg-gray-800 border-gray-600 text-white text-center h-10 min-w-0"
+                      className="bg-gray-800 border-gray-600 text-white text-center h-12 w-20 text-lg font-semibold"
                     />
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => adjustValue(index, 'minutesPlayed', 5)}
-                      className="w-10 h-10 p-0 border-gray-600 text-fifa-green hover:bg-fifa-green/10 flex-shrink-0"
+                      className="w-12 h-12 p-0 border-gray-600 text-fifa-green hover:bg-fifa-green/10 flex-shrink-0"
                     >
                       <Plus className="h-4 w-4" />
                     </Button>
@@ -187,13 +187,13 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
                 <div className="space-y-2">
                   <Label className="text-white text-sm font-medium">Rating</Label>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-2">
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => adjustValue(index, 'rating', -0.1)}
-                      className="w-8 h-8 p-0 border-gray-600 text-fifa-red hover:bg-fifa-red/10 flex-shrink-0"
+                      className="w-10 h-10 p-0 border-gray-600 text-fifa-red hover:bg-fifa-red/10 flex-shrink-0"
                     >
                       <Minus className="h-3 w-3" />
                     </Button>
@@ -204,14 +204,14 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                       step="0.1"
                       value={player.rating}
                       onChange={(e) => handleInputChange(index, 'rating', e.target.value)}
-                      className="bg-gray-800 border-gray-600 text-white text-center h-8 text-sm min-w-0"
+                      className="bg-gray-800 border-gray-600 text-white text-center h-10 w-16 text-sm font-semibold"
                     />
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => adjustValue(index, 'rating', 0.1)}
-                      className="w-8 h-8 p-0 border-gray-600 text-fifa-green hover:bg-fifa-green/10 flex-shrink-0"
+                      className="w-10 h-10 p-0 border-gray-600 text-fifa-green hover:bg-fifa-green/10 flex-shrink-0"
                     >
                       <Plus className="h-3 w-3" />
                     </Button>
@@ -220,13 +220,13 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
 
                 <div className="space-y-2">
                   <Label className="text-white text-sm font-medium">Goals</Label>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-2">
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => adjustValue(index, 'goals', -1)}
-                      className="w-8 h-8 p-0 border-gray-600 text-fifa-red hover:bg-fifa-red/10 flex-shrink-0"
+                      className="w-10 h-10 p-0 border-gray-600 text-fifa-red hover:bg-fifa-red/10 flex-shrink-0"
                     >
                       <Minus className="h-3 w-3" />
                     </Button>
@@ -235,14 +235,14 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                       min="0"
                       value={player.goals}
                       onChange={(e) => handleInputChange(index, 'goals', e.target.value)}
-                      className="bg-gray-800 border-gray-600 text-white text-center h-8 text-sm min-w-0"
+                      className="bg-gray-800 border-gray-600 text-white text-center h-10 w-16 text-sm font-semibold"
                     />
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => adjustValue(index, 'goals', 1)}
-                      className="w-8 h-8 p-0 border-gray-600 text-fifa-green hover:bg-fifa-green/10 flex-shrink-0"
+                      className="w-10 h-10 p-0 border-gray-600 text-fifa-green hover:bg-fifa-green/10 flex-shrink-0"
                     >
                       <Plus className="h-3 w-3" />
                     </Button>
@@ -251,13 +251,13 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
 
                 <div className="space-y-2">
                   <Label className="text-white text-sm font-medium">Assists</Label>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-2">
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => adjustValue(index, 'assists', -1)}
-                      className="w-8 h-8 p-0 border-gray-600 text-fifa-red hover:bg-fifa-red/10 flex-shrink-0"
+                      className="w-10 h-10 p-0 border-gray-600 text-fifa-red hover:bg-fifa-red/10 flex-shrink-0"
                     >
                       <Minus className="h-3 w-3" />
                     </Button>
@@ -266,14 +266,14 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                       min="0"
                       value={player.assists}
                       onChange={(e) => handleInputChange(index, 'assists', e.target.value)}
-                      className="bg-gray-800 border-gray-600 text-white text-center h-8 text-sm min-w-0"
+                      className="bg-gray-800 border-gray-600 text-white text-center h-10 w-16 text-sm font-semibold"
                     />
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => adjustValue(index, 'assists', 1)}
-                      className="w-8 h-8 p-0 border-gray-600 text-fifa-green hover:bg-fifa-green/10 flex-shrink-0"
+                      className="w-10 h-10 p-0 border-gray-600 text-fifa-green hover:bg-fifa-green/10 flex-shrink-0"
                     >
                       <Plus className="h-3 w-3" />
                     </Button>
@@ -282,13 +282,13 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
 
                 <div className="space-y-2">
                   <Label className="text-white text-sm font-medium">Yellow Cards</Label>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-2">
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => adjustValue(index, 'yellowCards', -1)}
-                      className="w-8 h-8 p-0 border-gray-600 text-fifa-red hover:bg-fifa-red/10 flex-shrink-0"
+                      className="w-10 h-10 p-0 border-gray-600 text-fifa-red hover:bg-fifa-red/10 flex-shrink-0"
                     >
                       <Minus className="h-3 w-3" />
                     </Button>
@@ -298,14 +298,14 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                       max="2"
                       value={player.yellowCards}
                       onChange={(e) => handleInputChange(index, 'yellowCards', e.target.value)}
-                      className="bg-gray-800 border-gray-600 text-white text-center h-8 text-sm min-w-0"
+                      className="bg-gray-800 border-gray-600 text-white text-center h-10 w-16 text-sm font-semibold"
                     />
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => adjustValue(index, 'yellowCards', 1)}
-                      className="w-8 h-8 p-0 border-gray-600 text-fifa-green hover:bg-fifa-green/10 flex-shrink-0"
+                      className="w-10 h-10 p-0 border-gray-600 text-fifa-green hover:bg-fifa-green/10 flex-shrink-0"
                     >
                       <Plus className="h-3 w-3" />
                     </Button>
@@ -314,13 +314,13 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
 
                 <div className="space-y-2">
                   <Label className="text-white text-sm font-medium">Red Cards</Label>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-2">
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => adjustValue(index, 'redCards', -1)}
-                      className="w-8 h-8 p-0 border-gray-600 text-fifa-red hover:bg-fifa-red/10 flex-shrink-0"
+                      className="w-10 h-10 p-0 border-gray-600 text-fifa-red hover:bg-fifa-red/10 flex-shrink-0"
                     >
                       <Minus className="h-3 w-3" />
                     </Button>
@@ -330,14 +330,14 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                       max="1"
                       value={player.redCards}
                       onChange={(e) => handleInputChange(index, 'redCards', e.target.value)}
-                      className="bg-gray-800 border-gray-600 text-white text-center h-8 text-sm min-w-0"
+                      className="bg-gray-800 border-gray-600 text-white text-center h-10 w-16 text-sm font-semibold"
                     />
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => adjustValue(index, 'redCards', 1)}
-                      className="w-8 h-8 p-0 border-gray-600 text-fifa-green hover:bg-fifa-green/10 flex-shrink-0"
+                      className="w-10 h-10 p-0 border-gray-600 text-fifa-green hover:bg-fifa-green/10 flex-shrink-0"
                     >
                       <Plus className="h-3 w-3" />
                     </Button>
@@ -346,13 +346,13 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
 
                 <div className="space-y-2">
                   <Label className="text-white text-sm font-medium">Own Goals</Label>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-2">
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => adjustValue(index, 'ownGoals', -1)}
-                      className="w-8 h-8 p-0 border-gray-600 text-fifa-red hover:bg-fifa-red/10 flex-shrink-0"
+                      className="w-10 h-10 p-0 border-gray-600 text-fifa-red hover:bg-fifa-red/10 flex-shrink-0"
                     >
                       <Minus className="h-3 w-3" />
                     </Button>
@@ -361,14 +361,14 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                       min="0"
                       value={player.ownGoals || 0}
                       onChange={(e) => handleInputChange(index, 'ownGoals', e.target.value)}
-                      className="bg-gray-800 border-gray-600 text-white text-center h-8 text-sm min-w-0"
+                      className="bg-gray-800 border-gray-600 text-white text-center h-10 w-16 text-sm font-semibold"
                     />
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => adjustValue(index, 'ownGoals', 1)}
-                      className="w-8 h-8 p-0 border-gray-600 text-fifa-green hover:bg-fifa-green/10 flex-shrink-0"
+                      className="w-10 h-10 p-0 border-gray-600 text-fifa-green hover:bg-fifa-green/10 flex-shrink-0"
                     >
                       <Plus className="h-3 w-3" />
                     </Button>
