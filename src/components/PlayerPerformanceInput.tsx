@@ -32,24 +32,42 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
   };
 
   const updatePlayer = (index: number, field: keyof PlayerPerformance, value: any) => {
-    const updatedPlayers = [...players];
-    updatedPlayers[index] = { ...updatedPlayers[index], [field]: value };
-    onChange(updatedPlayers);
+    const newPlayers = [...players];
+    newPlayers[index] = { ...newPlayers[index], [field]: value };
+    onChange(newPlayers);
   };
 
   const removePlayer = (index: number) => {
-    onChange(players.filter((_, i) => i !== index));
+    const newPlayers = players.filter((_, i) => i !== index);
+    onChange(newPlayers);
   };
 
-  const incrementValue = (index: number, field: keyof PlayerPerformance, increment: number) => {
-    const player = players[index];
-    const currentValue = player[field] as number;
-    let newValue = currentValue + increment;
+  const handleInputChange = (index: number, field: keyof PlayerPerformance, value: string) => {
+    let processedValue: any = value;
     
-    // Apply constraints based on field type
+    if (field === 'name' || field === 'position') {
+      processedValue = value;
+    } else if (field === 'rating') {
+      const num = parseFloat(value);
+      processedValue = isNaN(num) ? 0 : Math.max(1, Math.min(10, num));
+    } else {
+      const num = parseInt(value);
+      processedValue = isNaN(num) ? 0 : Math.max(0, num);
+      if (field === 'minutesPlayed') {
+        processedValue = Math.min(120, processedValue);
+      }
+    }
+    
+    updatePlayer(index, field, processedValue);
+  };
+
+  const adjustValue = (index: number, field: keyof PlayerPerformance, delta: number) => {
+    const currentValue = players[index][field] as number;
+    let newValue = currentValue + delta;
+    
     if (field === 'rating') {
       newValue = Math.max(1, Math.min(10, newValue));
-      newValue = Math.round(newValue * 10) / 10; // Round to 1 decimal place
+      newValue = Math.round(newValue * 10) / 10;
     } else if (field === 'minutesPlayed') {
       newValue = Math.max(0, Math.min(120, newValue));
     } else {
@@ -58,88 +76,6 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
     
     updatePlayer(index, field, newValue);
   };
-
-  const handleDirectInput = (index: number, field: keyof PlayerPerformance, value: string) => {
-    let parsedValue: any = value;
-    
-    if (field === 'rating') {
-      parsedValue = parseFloat(value);
-      if (isNaN(parsedValue)) parsedValue = 6.0;
-      parsedValue = Math.max(1, Math.min(10, parsedValue));
-    } else if (['minutesPlayed', 'goals', 'assists', 'yellowCards', 'redCards', 'ownGoals'].includes(field)) {
-      parsedValue = parseInt(value);
-      if (isNaN(parsedValue)) parsedValue = 0;
-      parsedValue = Math.max(0, parsedValue);
-      if (field === 'minutesPlayed') {
-        parsedValue = Math.min(120, parsedValue);
-      }
-    }
-    
-    updatePlayer(index, field, parsedValue);
-  };
-
-  const StatInput = ({ 
-    label, 
-    value, 
-    onIncrement, 
-    onDecrement, 
-    onChange, 
-    min = 0, 
-    max = 999, 
-    step = 1,
-    type = "number"
-  }: {
-    label: string;
-    value: number;
-    onIncrement: () => void;
-    onDecrement: () => void;
-    onChange: (value: string) => void;
-    min?: number;
-    max?: number;
-    step?: number;
-    type?: string;
-  }) => (
-    <div className="space-y-1">
-      <Label className="text-white text-xs font-medium">{label}</Label>
-      <div className="flex items-center rounded-lg border border-gray-600 bg-gray-800 overflow-hidden">
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onDecrement();
-          }}
-          className="h-8 w-8 flex items-center justify-center text-fifa-red hover:bg-fifa-red/10 hover:text-fifa-red border-r border-gray-600 transition-colors"
-        >
-          <Minus className="h-3 w-3" />
-        </button>
-        <Input
-          type={type}
-          min={min}
-          max={max}
-          step={step}
-          value={type === "number" && value % 1 !== 0 ? value.toFixed(1) : value}
-          onChange={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onChange(e.target.value);
-          }}
-          className="bg-transparent border-0 text-white text-center text-sm h-8 flex-1 focus:ring-0 focus:border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-        />
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onIncrement();
-          }}
-          className="h-8 w-8 flex items-center justify-center text-fifa-green hover:bg-fifa-green/10 hover:text-fifa-green border-l border-gray-600 transition-colors"
-        >
-          <Plus className="h-3 w-3" />
-        </button>
-      </div>
-    </div>
-  );
 
   return (
     <Card className="glass-card">
@@ -151,11 +87,7 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
           </CardTitle>
           <Button
             type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              addPlayer();
-            }}
+            onClick={addPlayer}
             size="sm"
             className="bg-fifa-green hover:bg-fifa-green/80 text-white"
           >
@@ -171,11 +103,7 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
             <h3 className="text-lg font-medium text-white mb-2">No Players Added</h3>
             <p className="text-gray-400 mb-4">Add players to track their performance</p>
             <Button 
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                addPlayer();
-              }} 
+              onClick={addPlayer} 
               className="bg-fifa-green hover:bg-fifa-green/80"
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -189,114 +117,263 @@ const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputPro
                 <Badge variant="outline" className="text-fifa-blue border-fifa-blue">
                   {player.position || `Player ${index + 1}`}
                 </Badge>
-                <button
+                <Button
                   type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    removePlayer(index);
-                  }}
-                  className="p-2 text-fifa-red hover:text-fifa-red hover:bg-fifa-red/10 rounded-md transition-colors"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removePlayer(index)}
+                  className="text-fifa-red hover:text-fifa-red hover:bg-fifa-red/10"
                 >
                   <Trash2 className="h-4 w-4" />
-                </button>
+                </Button>
               </div>
               
               {/* Basic Info */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="space-y-1">
-                  <Label className="text-white text-xs font-medium">Player Name</Label>
+                <div className="space-y-2">
+                  <Label className="text-white text-sm font-medium">Player Name</Label>
                   <Input
                     value={player.name}
-                    onChange={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      updatePlayer(index, 'name', e.target.value);
-                    }}
+                    onChange={(e) => handleInputChange(index, 'name', e.target.value)}
                     placeholder="Enter player name"
-                    className="bg-gray-800 border-gray-600 text-white text-sm"
+                    className="bg-gray-800 border-gray-600 text-white"
                   />
                 </div>
                 
-                <div className="space-y-1">
-                  <Label className="text-white text-xs font-medium">Position</Label>
+                <div className="space-y-2">
+                  <Label className="text-white text-sm font-medium">Position</Label>
                   <Input
                     value={player.position}
-                    onChange={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      updatePlayer(index, 'position', e.target.value);
-                    }}
+                    onChange={(e) => handleInputChange(index, 'position', e.target.value)}
                     placeholder="e.g. ST, CM, CB"
-                    className="bg-gray-800 border-gray-600 text-white text-sm"
+                    className="bg-gray-800 border-gray-600 text-white"
                   />
                 </div>
 
-                <StatInput
-                  label="Minutes Played"
-                  value={player.minutesPlayed}
-                  onIncrement={() => incrementValue(index, 'minutesPlayed', 5)}
-                  onDecrement={() => incrementValue(index, 'minutesPlayed', -5)}
-                  onChange={(value) => handleDirectInput(index, 'minutesPlayed', value)}
-                  min={0}
-                  max={120}
-                />
+                <div className="space-y-2">
+                  <Label className="text-white text-sm font-medium">Minutes Played</Label>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => adjustValue(index, 'minutesPlayed', -5)}
+                      className="w-8 h-8 p-0 border-gray-600 text-fifa-red hover:bg-fifa-red/10"
+                    >
+                      <Minus className="h-3 w-3" />
+                    </Button>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="120"
+                      value={player.minutesPlayed}
+                      onChange={(e) => handleInputChange(index, 'minutesPlayed', e.target.value)}
+                      className="bg-gray-800 border-gray-600 text-white text-center flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => adjustValue(index, 'minutesPlayed', 5)}
+                      className="w-8 h-8 p-0 border-gray-600 text-fifa-green hover:bg-fifa-green/10"
+                    >
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
               </div>
 
               {/* Performance Stats */}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-                <StatInput
-                  label="Rating"
-                  value={player.rating}
-                  onIncrement={() => incrementValue(index, 'rating', 0.1)}
-                  onDecrement={() => incrementValue(index, 'rating', -0.1)}
-                  onChange={(value) => handleDirectInput(index, 'rating', value)}
-                  min={1}
-                  max={10}
-                  step={0.1}
-                />
+                <div className="space-y-2">
+                  <Label className="text-white text-sm font-medium">Rating</Label>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => adjustValue(index, 'rating', -0.1)}
+                      className="w-8 h-8 p-0 border-gray-600 text-fifa-red hover:bg-fifa-red/10"
+                    >
+                      <Minus className="h-3 w-3" />
+                    </Button>
+                    <Input
+                      type="number"
+                      min="1"
+                      max="10"
+                      step="0.1"
+                      value={player.rating}
+                      onChange={(e) => handleInputChange(index, 'rating', e.target.value)}
+                      className="bg-gray-800 border-gray-600 text-white text-center flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => adjustValue(index, 'rating', 0.1)}
+                      className="w-8 h-8 p-0 border-gray-600 text-fifa-green hover:bg-fifa-green/10"
+                    >
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
 
-                <StatInput
-                  label="Goals"
-                  value={player.goals}
-                  onIncrement={() => incrementValue(index, 'goals', 1)}
-                  onDecrement={() => incrementValue(index, 'goals', -1)}
-                  onChange={(value) => handleDirectInput(index, 'goals', value)}
-                />
+                <div className="space-y-2">
+                  <Label className="text-white text-sm font-medium">Goals</Label>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => adjustValue(index, 'goals', -1)}
+                      className="w-8 h-8 p-0 border-gray-600 text-fifa-red hover:bg-fifa-red/10"
+                    >
+                      <Minus className="h-3 w-3" />
+                    </Button>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={player.goals}
+                      onChange={(e) => handleInputChange(index, 'goals', e.target.value)}
+                      className="bg-gray-800 border-gray-600 text-white text-center flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => adjustValue(index, 'goals', 1)}
+                      className="w-8 h-8 p-0 border-gray-600 text-fifa-green hover:bg-fifa-green/10"
+                    >
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
 
-                <StatInput
-                  label="Assists"
-                  value={player.assists}
-                  onIncrement={() => incrementValue(index, 'assists', 1)}
-                  onDecrement={() => incrementValue(index, 'assists', -1)}
-                  onChange={(value) => handleDirectInput(index, 'assists', value)}
-                />
+                <div className="space-y-2">
+                  <Label className="text-white text-sm font-medium">Assists</Label>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => adjustValue(index, 'assists', -1)}
+                      className="w-8 h-8 p-0 border-gray-600 text-fifa-red hover:bg-fifa-red/10"
+                    >
+                      <Minus className="h-3 w-3" />
+                    </Button>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={player.assists}
+                      onChange={(e) => handleInputChange(index, 'assists', e.target.value)}
+                      className="bg-gray-800 border-gray-600 text-white text-center flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => adjustValue(index, 'assists', 1)}
+                      className="w-8 h-8 p-0 border-gray-600 text-fifa-green hover:bg-fifa-green/10"
+                    >
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
 
-                <StatInput
-                  label="Yellow Cards"
-                  value={player.yellowCards}
-                  onIncrement={() => incrementValue(index, 'yellowCards', 1)}
-                  onDecrement={() => incrementValue(index, 'yellowCards', -1)}
-                  onChange={(value) => handleDirectInput(index, 'yellowCards', value)}
-                  max={2}
-                />
+                <div className="space-y-2">
+                  <Label className="text-white text-sm font-medium">Yellow Cards</Label>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => adjustValue(index, 'yellowCards', -1)}
+                      className="w-8 h-8 p-0 border-gray-600 text-fifa-red hover:bg-fifa-red/10"
+                    >
+                      <Minus className="h-3 w-3" />
+                    </Button>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="2"
+                      value={player.yellowCards}
+                      onChange={(e) => handleInputChange(index, 'yellowCards', e.target.value)}
+                      className="bg-gray-800 border-gray-600 text-white text-center flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => adjustValue(index, 'yellowCards', 1)}
+                      className="w-8 h-8 p-0 border-gray-600 text-fifa-green hover:bg-fifa-green/10"
+                    >
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
 
-                <StatInput
-                  label="Red Cards"
-                  value={player.redCards}
-                  onIncrement={() => incrementValue(index, 'redCards', 1)}
-                  onDecrement={() => incrementValue(index, 'redCards', -1)}
-                  onChange={(value) => handleDirectInput(index, 'redCards', value)}
-                  max={1}
-                />
+                <div className="space-y-2">
+                  <Label className="text-white text-sm font-medium">Red Cards</Label>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => adjustValue(index, 'redCards', -1)}
+                      className="w-8 h-8 p-0 border-gray-600 text-fifa-red hover:bg-fifa-red/10"
+                    >
+                      <Minus className="h-3 w-3" />
+                    </Button>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="1"
+                      value={player.redCards}
+                      onChange={(e) => handleInputChange(index, 'redCards', e.target.value)}
+                      className="bg-gray-800 border-gray-600 text-white text-center flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => adjustValue(index, 'redCards', 1)}
+                      className="w-8 h-8 p-0 border-gray-600 text-fifa-green hover:bg-fifa-green/10"
+                    >
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
 
-                <StatInput
-                  label="Own Goals"
-                  value={player.ownGoals || 0}
-                  onIncrement={() => incrementValue(index, 'ownGoals', 1)}
-                  onDecrement={() => incrementValue(index, 'ownGoals', -1)}
-                  onChange={(value) => handleDirectInput(index, 'ownGoals', value)}
-                />
+                <div className="space-y-2">
+                  <Label className="text-white text-sm font-medium">Own Goals</Label>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => adjustValue(index, 'ownGoals', -1)}
+                      className="w-8 h-8 p-0 border-gray-600 text-fifa-red hover:bg-fifa-red/10"
+                    >
+                      <Minus className="h-3 w-3" />
+                    </Button>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={player.ownGoals || 0}
+                      onChange={(e) => handleInputChange(index, 'ownGoals', e.target.value)}
+                      className="bg-gray-800 border-gray-600 text-white text-center flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => adjustValue(index, 'ownGoals', 1)}
+                      className="w-8 h-8 p-0 border-gray-600 text-fifa-green hover:bg-fifa-green/10"
+                    >
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
           ))
