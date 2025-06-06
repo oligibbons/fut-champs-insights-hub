@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -55,49 +54,59 @@ const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecord
 
   // Player stats
   const [playerStats, setPlayerStats] = useState<PlayerPerformance[]>([]);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Auto-populate starting XI when component loads
+  // Auto-populate starting XI when component loads - only once
   useEffect(() => {
-    const defaultSquad = getDefaultSquad();
-    if (defaultSquad && defaultSquad.startingXI) {
-      const startingPlayers: PlayerPerformance[] = defaultSquad.startingXI
-        .filter(pos => pos.player)
-        .map((pos, index) => ({
-          id: `${pos.player!.id}-${index}`,
-          name: pos.player!.name,
-          position: pos.position,
-          rating: 7.0,
-          goals: 0,
-          assists: 0,
-          yellowCards: 0,
-          redCards: 0,
-          ownGoals: 0,
-          minutesPlayed: duration,
-          wasSubstituted: false
-        }));
+    if (!isInitialized) {
+      const defaultSquad = getDefaultSquad();
+      if (defaultSquad && defaultSquad.startingXI) {
+        const startingPlayers: PlayerPerformance[] = defaultSquad.startingXI
+          .filter(pos => pos.player)
+          .map((pos, index) => ({
+            id: `${pos.player!.id}-${index}`,
+            name: pos.player!.name,
+            position: pos.position,
+            rating: 7.0,
+            goals: 0,
+            assists: 0,
+            yellowCards: 0,
+            redCards: 0,
+            ownGoals: 0,
+            minutesPlayed: duration,
+            wasSubstituted: false
+          }));
 
-      setPlayerStats(startingPlayers);
-    } else {
-      // Create default players if no squad data
-      const defaultPlayers: PlayerPerformance[] = [
-        { id: 'gk-1', name: 'Goalkeeper', position: 'GK', rating: 7.0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, ownGoals: 0, minutesPlayed: duration, wasSubstituted: false },
-        { id: 'def-1', name: 'Defender 1', position: 'CB', rating: 7.0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, ownGoals: 0, minutesPlayed: duration, wasSubstituted: false },
-        { id: 'def-2', name: 'Defender 2', position: 'CB', rating: 7.0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, ownGoals: 0, minutesPlayed: duration, wasSubstituted: false },
-        { id: 'mid-1', name: 'Midfielder 1', position: 'CM', rating: 7.0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, ownGoals: 0, minutesPlayed: duration, wasSubstituted: false },
-        { id: 'mid-2', name: 'Midfielder 2', position: 'CM', rating: 7.0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, ownGoals: 0, minutesPlayed: duration, wasSubstituted: false },
-        { id: 'att-1', name: 'Attacker 1', position: 'ST', rating: 7.0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, ownGoals: 0, minutesPlayed: duration, wasSubstituted: false }
-      ];
-      setPlayerStats(defaultPlayers);
+        setPlayerStats(startingPlayers);
+      } else {
+        // Create default players if no squad data
+        const defaultPlayers: PlayerPerformance[] = [
+          { id: 'gk-1', name: 'Goalkeeper', position: 'GK', rating: 7.0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, ownGoals: 0, minutesPlayed: duration, wasSubstituted: false },
+          { id: 'def-1', name: 'Defender 1', position: 'CB', rating: 7.0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, ownGoals: 0, minutesPlayed: duration, wasSubstituted: false },
+          { id: 'def-2', name: 'Defender 2', position: 'CB', rating: 7.0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, ownGoals: 0, minutesPlayed: duration, wasSubstituted: false },
+          { id: 'mid-1', name: 'Midfielder 1', position: 'CM', rating: 7.0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, ownGoals: 0, minutesPlayed: duration, wasSubstituted: false },
+          { id: 'mid-2', name: 'Midfielder 2', position: 'CM', rating: 7.0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, ownGoals: 0, minutesPlayed: duration, wasSubstituted: false },
+          { id: 'att-1', name: 'Attacker 1', position: 'ST', rating: 7.0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, ownGoals: 0, minutesPlayed: duration, wasSubstituted: false }
+        ];
+        setPlayerStats(defaultPlayers);
+      }
+      setIsInitialized(true);
     }
-  }, [getDefaultSquad, duration]);
+  }, [getDefaultSquad, duration, isInitialized]);
 
-  // Update all player minutes when duration changes
+  // Update player minutes when duration changes - but only if players exist and are initialized
+  const updatePlayerMinutes = useCallback(() => {
+    if (isInitialized && playerStats.length > 0) {
+      setPlayerStats(prev => prev.map(player => ({
+        ...player,
+        minutesPlayed: player.position === 'SUB' ? 0 : duration
+      })));
+    }
+  }, [duration, isInitialized, playerStats.length]);
+
   useEffect(() => {
-    setPlayerStats(prev => prev.map(player => ({
-      ...player,
-      minutesPlayed: player.position === 'SUB' ? 0 : duration
-    })));
-  }, [duration]);
+    updatePlayerMinutes();
+  }, [updatePlayerMinutes]);
 
   // Update actual goals when user/opponent goals change
   useEffect(() => {
@@ -421,11 +430,13 @@ const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecord
             </TabsContent>
 
             <TabsContent value="players" className="mt-6">
-              <PlayerStatsForm 
-                playerStats={playerStats}
-                onPlayerStatsChange={setPlayerStats}
-                gameDuration={duration}
-              />
+              {isInitialized && (
+                <PlayerStatsForm 
+                  playerStats={playerStats}
+                  onPlayerStatsChange={setPlayerStats}
+                  gameDuration={duration}
+                />
+              )}
             </TabsContent>
 
             <TabsContent value="notes" className="space-y-4 mt-6">
