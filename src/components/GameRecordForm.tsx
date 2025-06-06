@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { GameResult, PlayerPerformance, TeamStats } from '@/types/futChampions';
 import { useSquadData } from '@/hooks/useSquadData';
-import { Save, Users, BarChart3, MessageSquare, X, Trophy } from 'lucide-react';
+import { Save, Users, BarChart3, MessageSquare, X, Trophy, UserPlus } from 'lucide-react';
 import PlayerStatsForm from './PlayerStatsForm';
 
 interface GameRecordFormProps {
@@ -22,7 +22,7 @@ interface GameRecordFormProps {
 
 const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecordFormProps) => {
   const { toast } = useToast();
-  const { getDefaultSquad } = useSquadData();
+  const { getDefaultSquad, squads } = useSquadData();
   
   // Basic game info
   const [userGoals, setUserGoals] = useState('');
@@ -94,19 +94,51 @@ const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecord
     }
   }, [getDefaultSquad, duration, isInitialized]);
 
-  // Update player minutes when duration changes - but only if players exist and are initialized
-  const updatePlayerMinutes = useCallback(() => {
-    if (isInitialized && playerStats.length > 0) {
-      setPlayerStats(prev => prev.map(player => ({
-        ...player,
-        minutesPlayed: player.position === 'SUB' ? 0 : duration
-      })));
+  // Add substitute from squad
+  const addSubstituteFromSquad = () => {
+    const defaultSquad = getDefaultSquad();
+    if (defaultSquad && defaultSquad.startingXI) {
+      // Find unused players from the squad
+      const usedPlayerIds = playerStats.map(p => p.id.split('-')[0]);
+      const unusedPlayers = defaultSquad.startingXI.filter(pos => 
+        pos.player && !usedPlayerIds.includes(pos.player.id)
+      );
+      
+      if (unusedPlayers.length > 0) {
+        const substitute = unusedPlayers[0];
+        const newPlayer: PlayerPerformance = {
+          id: `${substitute.player!.id}-sub-${Date.now()}`,
+          name: substitute.player!.name,
+          position: 'SUB',
+          rating: 6.0,
+          goals: 0,
+          assists: 0,
+          yellowCards: 0,
+          redCards: 0,
+          ownGoals: 0,
+          minutesPlayed: 0,
+          wasSubstituted: false
+        };
+        setPlayerStats(prev => [...prev, newPlayer]);
+      } else {
+        // Create generic substitute if no unused players
+        const newPlayer: PlayerPerformance = {
+          id: `sub-${Date.now()}`,
+          name: `Substitute ${playerStats.filter(p => p.position === 'SUB').length + 1}`,
+          position: 'SUB',
+          rating: 6.0,
+          goals: 0,
+          assists: 0,
+          yellowCards: 0,
+          redCards: 0,
+          ownGoals: 0,
+          minutesPlayed: 0,
+          wasSubstituted: false
+        };
+        setPlayerStats(prev => [...prev, newPlayer]);
+      }
     }
-  }, [duration, isInitialized, playerStats.length]);
-
-  useEffect(() => {
-    updatePlayerMinutes();
-  }, [updatePlayerMinutes]);
+  };
 
   // Update actual goals when user/opponent goals change
   useEffect(() => {
@@ -264,18 +296,16 @@ const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecord
                 </div>
                 <div>
                   <Label className="text-white font-medium">Game Duration (minutes)</Label>
-                  <Select value={duration.toString()} onValueChange={(value) => setDuration(parseInt(value))}>
-                    <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="90">90 minutes (Regular)</SelectItem>
-                      <SelectItem value="105">105 minutes (Extra Time - AET)</SelectItem>
-                      <SelectItem value="120">120 minutes (Full Extra Time)</SelectItem>
-                      <SelectItem value="45">45 minutes (Rage Quit)</SelectItem>
-                      <SelectItem value="30">30 minutes (Early Disconnect)</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="120"
+                    value={duration}
+                    onChange={(e) => setDuration(parseInt(e.target.value) || 90)}
+                    placeholder="90"
+                    className="bg-gray-800 border-gray-600 text-white"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Enter exact duration (1-120 minutes)</p>
                 </div>
               </div>
 
@@ -307,6 +337,7 @@ const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecord
             </TabsContent>
 
             <TabsContent value="team" className="space-y-6 mt-6">
+              
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                 {/* Key Stats */}
                 <div>
@@ -429,7 +460,20 @@ const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecord
               </div>
             </TabsContent>
 
-            <TabsContent value="players" className="mt-6">
+            <TabsContent value="players" className="mt-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-white">Player Performance</h3>
+                <Button
+                  type="button"
+                  onClick={addSubstituteFromSquad}
+                  size="sm"
+                  className="bg-fifa-purple hover:bg-fifa-purple/80 text-white"
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Add Substitute
+                </Button>
+              </div>
+              
               {isInitialized && (
                 <PlayerStatsForm 
                   playerStats={playerStats}

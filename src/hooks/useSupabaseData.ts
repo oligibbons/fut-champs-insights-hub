@@ -18,6 +18,7 @@ export function useSupabaseData() {
     }
 
     try {
+      setLoading(true);
       const { data: weeks, error } = await supabase
         .from('weekly_performances')
         .select('*')
@@ -37,36 +38,155 @@ export function useSupabaseData() {
 
           if (gamesError) throw gamesError;
 
-          // Transform games data to match the expected format
-          const transformedGames: GameResult[] = (games || []).map(game => ({
-            id: game.id,
-            gameNumber: game.game_number,
-            result: game.result as 'win' | 'loss',
-            scoreLine: game.score_line,
-            date: game.date_played,
-            opponentSkill: game.opponent_skill,
-            duration: game.duration,
-            gameContext: game.game_context as any,
-            comments: game.comments,
-            crossPlayEnabled: game.cross_play_enabled,
-            teamStats: {
-              shots: 10,
-              shotsOnTarget: 5,
-              possession: 50,
-              expectedGoals: 1.5,
-              actualGoals: game.user_goals || 0,
-              expectedGoalsAgainst: game.opponent_xg || 1.0,
-              actualGoalsAgainst: game.opponent_goals || 0,
-              passes: 100,
-              passAccuracy: 75,
-              corners: 3,
-              fouls: 8,
-              yellowCards: 1,
-              redCards: 0,
-              distanceCovered: 0
-            } as TeamStats,
-            playerStats: [] // Will be populated later if needed
-          }));
+          // Fetch player performances for each game
+          const transformedGames: GameResult[] = await Promise.all(
+            (games || []).map(async (game) => {
+              const { data: playerPerfs, error: playerError } = await supabase
+                .from('player_performances')
+                .select('*')
+                .eq('game_id', game.id);
+
+              if (playerError) console.error('Error fetching player performances:', playerError);
+
+              const { data: teamStatsData, error: teamError } = await supabase
+                .from('team_statistics')
+                .select('*')
+                .eq('game_id', game.id)
+                .single();
+
+              if (teamError && teamError.code !== 'PGRST116') {
+                console.error('Error fetching team stats:', teamError);
+              }
+
+              const playerStats: PlayerPerformance[] = (playerPerfs || []).map(perf => ({
+                id: perf.id,
+                name: perf.player_name,
+                position: perf.position,
+                rating: Number(perf.rating),
+                goals: perf.goals || 0,
+                assists: perf.assists || 0,
+                yellowCards: perf.yellow_cards || 0,
+                redCards: perf.red_cards || 0,
+                ownGoals: 0,
+                minutesPlayed: perf.minutes_played || 90,
+                wasSubstituted: false
+              }));
+
+              const teamStats: TeamStats = teamStatsData ? {
+                shots: teamStatsData.shots || 10,
+                shotsOnTarget: teamStatsData.shots_on_target || 5,
+                possession: teamStatsData.possession || 50,
+                expectedGoals: Number(teamStatsData.expected_goals) || 1.5,
+                actualGoals: game.user_goals || 0,
+                expectedGoalsAgainst: Number(teamStatsData.expected_goals_against) || 1.0,
+                actualGoalsAgainst: game.opponent_goals || 0,
+                passes: teamStatsData.passes || 100,
+                passAccuracy: teamStatsData.pass_accuracy || 75,
+                corners: teamStatsData.corners || 3,
+                fouls: teamStatsData.fouls || 8,
+                yellowCards: teamStatsData.yellow_cards || 1,
+                redCards: teamStatsData.red_cards || 0,
+                distanceCovered: 0
+              } : {
+                shots: 10,
+                shotsOnTarget: 5,
+                possession: 50,
+                expectedGoals: 1.5,
+                actualGoals: game.user_goals || 0,
+                expectedGoalsAgainst: 1.0,
+                actualGoalsAgainst: game.opponent_goals || 0,
+                passes: 100,
+                passAccuracy: 75,
+                corners: 3,
+                fouls: 8,
+                yellowCards: 1,
+                redCards: 0,
+                distanceCovered: 0
+              };
+
+              return {
+                id: game.id,
+                gameNumber: game.game_number,
+                result: game.result as 'win' | 'loss',
+                scoreLine: game.score_line,
+                date: game.date_played,
+                opponentSkill: game.opponent_skill,
+                duration: game.duration,
+                gameContext: game.game_context as any,
+                comments: game.comments,
+                crossPlayEnabled: game.cross_play_enabled || false,
+                teamStats,
+                playerStats
+              } as GameResult;
+            })
+          );
+
+          // Calculate week statistics from games
+          const totalWins = transformedGames.filter(g => g.result === 'win').length;
+          const totalLosses = transformedGames.filter(g => g.result === 'loss').length;
+          const totalGoals = transformedGames.reduce((sum, g) => sum + (g.teamStats?.actualGoals || 0), 0);
+          const totalConceded = transformedGames.reduce((sum, g) => sum + (g.teamStats?.actualGoalsAgainst || 0), 0);
+          const totalExpectedGoals = transformedGames.reduce((sum, g) => sum + (g.teamStats?.expectedGoals || 0), 0);
+          const totalExpectedGoalsAgainst = transformedGames.reduce((sum, g) => sum + (g.teamStats?.expectedGoalsAgainst || 0), 0);
+          const averageOpponentSkill = transformedGames.length > 0 ? 
+            transformedGames.reduce((sum, g) => sum + g.opponentSkill, 0) / transformedGames.length : 0;
+
+          // Calculate streaks
+          let currentStreak = 0;
+          let bestStreak = 0;
+          let worstStreak = 0;
+          let tempWinStreak = 0;
+          let tempLossStreak = 0;
+
+          for (const game of transformedGames) {
+            if (game.result === 'win') {
+              tempWinStreak++;
+              tempLossStreak = 0;
+              bestStreak = Math.max(bestStreak, tempWinStreak);
+            } else {
+              tempLossStreak++;
+              tempWinStreak = 0;
+              worstStreak = Math.max(worstStreak, tempLossStreak);
+            }
+          }
+
+          // Current streak is based on the last few games
+          if (transformedGames.length > 0) {
+            const lastGame = transformedGames[transformedGames.length - 1];
+            if (lastGame.result === 'win') {
+              for (let i = transformedGames.length - 1; i >= 0; i--) {
+                if (transformedGames[i].result === 'win') {
+                  currentStreak++;
+                } else {
+                  break;
+                }
+              }
+            } else {
+              for (let i = transformedGames.length - 1; i >= 0; i--) {
+                if (transformedGames[i].result === 'loss') {
+                  currentStreak--;
+                } else {
+                  break;
+                }
+              }
+            }
+          }
+
+          // Update week totals in database
+          await supabase
+            .from('weekly_performances')
+            .update({
+              total_wins: totalWins,
+              total_losses: totalLosses,
+              total_goals: totalGoals,
+              total_conceded: totalConceded,
+              total_expected_goals: totalExpectedGoals,
+              total_expected_goals_against: totalExpectedGoalsAgainst,
+              average_opponent_skill: averageOpponentSkill,
+              best_streak: bestStreak,
+              worst_streak: worstStreak
+            })
+            .eq('id', week.id);
 
           return {
             id: week.id,
@@ -75,23 +195,24 @@ export function useSupabaseData() {
             startDate: week.start_date,
             endDate: week.end_date || '',
             games: transformedGames,
-            totalWins: week.total_wins || 0,
-            totalLosses: week.total_losses || 0,
-            totalGoals: week.total_goals || 0,
-            totalConceded: week.total_conceded || 0,
-            totalExpectedGoals: Number(week.total_expected_goals) || 0,
-            totalExpectedGoalsAgainst: Number(week.total_expected_goals_against) || 0,
-            averageOpponentSkill: Number(week.average_opponent_skill) || 0,
+            totalWins,
+            totalLosses,
+            totalGoals,
+            totalConceded,
+            totalExpectedGoals,
+            totalExpectedGoalsAgainst,
+            averageOpponentSkill,
             squadUsed: week.squad_used || '',
             weeklyRating: Number(week.weekly_rating) || 0,
             isCompleted: week.is_completed || false,
-            bestStreak: week.best_streak || 0,
-            worstStreak: week.worst_streak || 0,
-            currentStreak: 0,
+            bestStreak,
+            worstStreak,
+            currentStreak,
             gamesPlayed: transformedGames.length,
             weekScore: week.week_score || 0,
             totalPlayTime: week.total_play_time || 0,
-            averageGameDuration: Number(week.average_game_duration) || 0,
+            averageGameDuration: transformedGames.length > 0 ? 
+              transformedGames.reduce((sum, g) => sum + g.duration, 0) / transformedGames.length : 0,
             winTarget: {
               wins: week.target_wins || 10,
               goalsScored: week.target_goals,
@@ -160,7 +281,7 @@ export function useSupabaseData() {
       }
 
       // Save player performances
-      if (gameData.playerStats) {
+      if (gameData.playerStats && gameData.playerStats.length > 0) {
         const playerPerformances = gameData.playerStats.map(player => ({
           user_id: user.id,
           game_id: game.id,
@@ -179,7 +300,8 @@ export function useSupabaseData() {
           .insert(playerPerformances);
       }
 
-      await fetchWeeklyData(); // Refresh data
+      // Refresh data to ensure consistency
+      await fetchWeeklyData();
     } catch (error) {
       console.error('Error saving game:', error);
       throw error;
