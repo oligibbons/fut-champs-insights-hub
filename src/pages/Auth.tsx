@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -73,8 +72,8 @@ const Auth = () => {
           <div className="w-16 h-16 rounded-3xl flex items-center justify-center mx-auto mb-4"
                style={{ backgroundColor: currentTheme.colors.primary + '20' }}>
             <img 
-              src="/lovable-uploads/bb8114bb-d9f2-40fe-8413-4232e31f0621.png" 
-              alt="FUT Visionary Logo" 
+              src="/lovable-uploads/6b6465f4-e466-4f3b-9761-8a829fbe395c.png" 
+              alt="FUTALYST Logo" 
               className="w-10 h-10 object-contain"
             />
           </div>
@@ -82,7 +81,7 @@ const Auth = () => {
             {isSignUp ? 'Create Account' : 'Welcome Back'}
           </CardTitle>
           <p style={{ color: currentTheme.colors.muted }}>
-            {isSignUp ? 'Join the FUT Champions community' : 'Sign in to continue your journey'}
+            {isSignUp ? 'Join the Champions community' : 'Sign in to continue your journey'}
           </p>
         </CardHeader>
         

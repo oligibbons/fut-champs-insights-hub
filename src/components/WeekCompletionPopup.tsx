@@ -1,10 +1,10 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useTheme } from '@/hooks/useTheme';
 import { WeeklyPerformance, FC25_RANKS } from '@/types/futChampions';
-import { Trophy, Target, TrendingUp, TrendingDown, Star, BarChart3, Award, Calendar } from 'lucide-react';
+import { Trophy, Target, TrendingUp, TrendingDown, Star, BarChart3, Award, Calendar, PieChart, LineChart, Activity } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RePieChart, Pie, Cell } from 'recharts';
 
 interface WeekCompletionPopupProps {
   isOpen: boolean;
@@ -15,6 +15,8 @@ interface WeekCompletionPopupProps {
 
 const WeekCompletionPopup = ({ isOpen, onClose, weekData, onNewWeek }: WeekCompletionPopupProps) => {
   const { currentTheme } = useTheme();
+
+  if (!isOpen || !weekData) return null;
 
   const winRate = weekData.games.length > 0 ? (weekData.totalWins / weekData.games.length) * 100 : 0;
   const achievedRank = FC25_RANKS.find(rank => weekData.totalWins >= rank.wins);
@@ -34,6 +36,73 @@ const WeekCompletionPopup = ({ isOpen, onClose, weekData, onNewWeek }: WeekCompl
   const worstRating = Math.min(...allPlayerRatings);
   const avgRating = allPlayerRatings.reduce((a, b) => a + b, 0) / allPlayerRatings.length;
 
+  // Get top performers
+  const playerPerformances = new Map();
+  weekData.games.forEach(game => {
+    game.playerStats.forEach(player => {
+      if (!playerPerformances.has(player.name)) {
+        playerPerformances.set(player.name, {
+          name: player.name,
+          position: player.position,
+          games: 0,
+          goals: 0,
+          assists: 0,
+          totalRating: 0
+        });
+      }
+      
+      const stats = playerPerformances.get(player.name);
+      stats.games += 1;
+      stats.goals += player.goals;
+      stats.assists += player.assists;
+      stats.totalRating += player.rating;
+    });
+  });
+  
+  const topPerformers = Array.from(playerPerformances.values())
+    .map(p => ({
+      ...p,
+      avgRating: p.totalRating / p.games,
+      goalContributions: p.goals + p.assists
+    }))
+    .sort((a, b) => b.avgRating - a.avgRating)
+    .slice(0, 3);
+
+  // Game context distribution
+  const gameContexts = weekData.games.reduce((acc, game) => {
+    acc[game.gameContext] = (acc[game.gameContext] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  
+  const contextData = Object.entries(gameContexts).map(([context, count]) => ({
+    name: context.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
+    value: count,
+    color: getContextColor(context)
+  }));
+
+  function getContextColor(context: string) {
+    const colors = {
+      normal: '#3b82f6',
+      rage_quit: '#ef4444',
+      extra_time: '#f59e0b',
+      penalties: '#8b5cf6',
+      disconnect: '#6b7280',
+      hacker: '#dc2626',
+      free_win: '#10b981'
+    };
+    return colors[context as keyof typeof colors] || '#6b7280';
+  }
+
+  // Goal distribution data
+  const goalData = weekData.games.map(game => {
+    const [goalsFor, goalsAgainst] = game.scoreLine.split('-').map(Number);
+    return {
+      game: `Game ${game.gameNumber}`,
+      scored: goalsFor,
+      conceded: goalsAgainst
+    };
+  });
+
   const getWeekGrade = () => {
     if (winRate >= 80) return { grade: 'S', color: '#9932CC' };
     if (winRate >= 70) return { grade: 'A', color: '#32CD32' };
@@ -50,13 +119,12 @@ const WeekCompletionPopup = ({ isOpen, onClose, weekData, onNewWeek }: WeekCompl
     onClose();
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
-      <div className="w-full max-w-6xl max-h-[95vh] overflow-y-auto rounded-3xl" 
-           style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto rounded-3xl shadow-3xl border-0 p-0" 
+                     style={{ backgroundColor: currentTheme.colors.cardBg }}>
         <div className="p-8 space-y-8">
+          {/* Header */}
           <div className="flex items-center gap-4">
             <div className="p-6 bg-gradient-to-br from-primary to-accent rounded-3xl">
               <Trophy className="h-10 w-10 text-white" />
@@ -167,6 +235,68 @@ const WeekCompletionPopup = ({ isOpen, onClose, weekData, onNewWeek }: WeekCompl
             </div>
           </div>
 
+          {/* Charts and Analysis */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Goal Distribution Chart */}
+            <div className="p-6 rounded-3xl" style={{ backgroundColor: currentTheme.colors.surface }}>
+              <h3 className="text-xl font-semibold mb-4 flex items-center gap-3" style={{ color: currentTheme.colors.text }}>
+                <Activity className="h-6 w-6" style={{ color: currentTheme.colors.primary }} />
+                Goal Distribution
+              </h3>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={goalData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                    <XAxis dataKey="game" stroke="#9ca3af" />
+                    <YAxis stroke="#9ca3af" />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'rgba(17, 24, 39, 0.9)', 
+                        border: '1px solid rgba(59, 130, 246, 0.3)', 
+                        borderRadius: '12px' 
+                      }} 
+                    />
+                    <Bar dataKey="scored" name="Goals Scored" fill="#10b981" />
+                    <Bar dataKey="conceded" name="Goals Conceded" fill="#ef4444" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Game Context Distribution */}
+            <div className="p-6 rounded-3xl" style={{ backgroundColor: currentTheme.colors.surface }}>
+              <h3 className="text-xl font-semibold mb-4 flex items-center gap-3" style={{ color: currentTheme.colors.text }}>
+                <PieChart className="h-6 w-6" style={{ color: currentTheme.colors.secondary }} />
+                Game Context Distribution
+              </h3>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RePieChart>
+                    <Pie
+                      data={contextData}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      dataKey="value"
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    >
+                      {contextData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'rgba(17, 24, 39, 0.9)', 
+                        border: '1px solid rgba(59, 130, 246, 0.3)', 
+                        borderRadius: '12px' 
+                      }} 
+                    />
+                  </RePieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+
           {/* XG Analysis */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="p-8 rounded-3xl" style={{ backgroundColor: currentTheme.colors.surface }}>
@@ -230,6 +360,48 @@ const WeekCompletionPopup = ({ isOpen, onClose, weekData, onNewWeek }: WeekCompl
             </div>
           </div>
 
+          {/* Top Performers */}
+          <div className="p-8 rounded-3xl" style={{ backgroundColor: currentTheme.colors.surface }}>
+            <h3 className="text-2xl font-semibold mb-6 flex items-center gap-3" style={{ color: currentTheme.colors.text }}>
+              <Star className="h-6 w-6" style={{ color: currentTheme.colors.accent }} />
+              Top Performers
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {topPerformers.map((player, index) => (
+                <div key={index} className="p-4 rounded-xl border" style={{ 
+                  backgroundColor: currentTheme.colors.cardBg, 
+                  borderColor: index === 0 ? '#fbbf24' : currentTheme.colors.border 
+                }}>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ 
+                      backgroundColor: index === 0 ? '#fbbf24' : currentTheme.colors.primary 
+                    }}>
+                      <span className="text-black font-bold">{index + 1}</span>
+                    </div>
+                    <div>
+                      <p className="font-semibold" style={{ color: currentTheme.colors.text }}>{player.name}</p>
+                      <p className="text-sm" style={{ color: currentTheme.colors.muted }}>{player.position}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div>
+                      <p className="font-bold text-fifa-gold">{player.avgRating.toFixed(1)}</p>
+                      <p className="text-xs text-gray-400">Rating</p>
+                    </div>
+                    <div>
+                      <p className="font-bold text-fifa-green">{player.goals}</p>
+                      <p className="text-xs text-gray-400">Goals</p>
+                    </div>
+                    <div>
+                      <p className="font-bold text-fifa-blue">{player.assists}</p>
+                      <p className="text-xs text-gray-400">Assists</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* Insights */}
           <div className="p-8 rounded-3xl" style={{ backgroundColor: currentTheme.colors.surface }}>
             <h3 className="text-2xl font-semibold mb-6 flex items-center gap-3" style={{ color: currentTheme.colors.text }}>
@@ -245,6 +417,10 @@ const WeekCompletionPopup = ({ isOpen, onClose, weekData, onNewWeek }: WeekCompl
                   {xgaPerformance < -10 && <p>✅ Solid defense - conceding less than expected</p>}
                   {avgRating >= 7.5 && <p>✅ Consistent team performance across all players</p>}
                   {weekData.averageOpponentSkill >= 7 && <p>✅ Competing against high-level opponents</p>}
+                  {weekData.totalWins >= 11 && <p>✅ Achieved an excellent rank this week</p>}
+                  {weekData.bestStreak && weekData.bestStreak >= 5 && <p>✅ Impressive winning streak of {weekData.bestStreak} games</p>}
+                  {topPerformers.length > 0 && topPerformers[0].avgRating >= 8.0 && 
+                    <p>✅ Standout performance from {topPerformers[0].name} with {topPerformers[0].avgRating.toFixed(1)} rating</p>}
                 </div>
               </div>
               
@@ -256,6 +432,10 @@ const WeekCompletionPopup = ({ isOpen, onClose, weekData, onNewWeek }: WeekCompl
                   {xgaPerformance > 15 && <p>⚠️ Defensive stability needed - conceding too many</p>}
                   {avgRating < 7.0 && <p>⚠️ Team performance inconsistent - squad changes needed?</p>}
                   {worstRating < 6.0 && <p>⚠️ Some players underperforming - consider substitutions</p>}
+                  {weekData.totalConceded > weekData.totalGoals && <p>⚠️ Negative goal difference - balance attack and defense</p>}
+                  {weekData.worstStreak && weekData.worstStreak <= -3 && <p>⚠️ Experienced a losing streak of {Math.abs(weekData.worstStreak)} games</p>}
+                  {weekData.games.filter(g => g.result === 'loss' && g.opponentSkill <= 5).length >= 2 && 
+                    <p>⚠️ Lost multiple games to lower-skilled opponents</p>}
                 </div>
               </div>
             </div>
@@ -272,8 +452,8 @@ const WeekCompletionPopup = ({ isOpen, onClose, weekData, onNewWeek }: WeekCompl
             </Button>
           </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

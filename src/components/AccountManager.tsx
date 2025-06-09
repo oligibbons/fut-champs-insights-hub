@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Edit, Trash2, Gamepad2, User } from 'lucide-react';
 
-interface FC25Account {
+interface Account {
   id: string;
   name: string;
   platform: 'PS5' | 'Xbox' | 'PC' | 'Switch';
@@ -20,9 +20,9 @@ interface FC25Account {
 
 const AccountManager = () => {
   const { toast } = useToast();
-  const [accounts, setAccounts] = useState<FC25Account[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [editingAccount, setEditingAccount] = useState<FC25Account | null>(null);
+  const [editingAccount, setEditingAccount] = useState<Account | null>(null);
   const [newAccount, setNewAccount] = useState({
     name: '',
     platform: 'PS5' as const
@@ -30,13 +30,13 @@ const AccountManager = () => {
 
   // Load accounts from localStorage
   useEffect(() => {
-    const savedAccounts = localStorage.getItem('fc25-accounts');
+    const savedAccounts = localStorage.getItem('accounts');
     if (savedAccounts) {
       const parsed = JSON.parse(savedAccounts);
       setAccounts(parsed);
     } else {
       // Create default account if none exists
-      const defaultAccount: FC25Account = {
+      const defaultAccount: Account = {
         id: 'default-account',
         name: 'Main Account',
         platform: 'PS5',
@@ -46,14 +46,14 @@ const AccountManager = () => {
         totalWins: 0
       };
       setAccounts([defaultAccount]);
-      localStorage.setItem('fc25-accounts', JSON.stringify([defaultAccount]));
-      localStorage.setItem('active-fc25-account', 'default-account');
+      localStorage.setItem('accounts', JSON.stringify([defaultAccount]));
+      localStorage.setItem('active-account', 'default-account');
     }
   }, []);
 
-  const saveAccounts = (updatedAccounts: FC25Account[]) => {
+  const saveAccounts = (updatedAccounts: Account[]) => {
     setAccounts(updatedAccounts);
-    localStorage.setItem('fc25-accounts', JSON.stringify(updatedAccounts));
+    localStorage.setItem('accounts', JSON.stringify(updatedAccounts));
   };
 
   const addAccount = () => {
@@ -66,7 +66,7 @@ const AccountManager = () => {
       return;
     }
 
-    const account: FC25Account = {
+    const account: Account = {
       id: `account-${Date.now()}`,
       name: newAccount.name,
       platform: newAccount.platform,
@@ -95,7 +95,7 @@ const AccountManager = () => {
     }));
     
     saveAccounts(updatedAccounts);
-    localStorage.setItem('active-fc25-account', accountId);
+    localStorage.setItem('active-account', accountId);
     
     const activeAccount = updatedAccounts.find(acc => acc.id === accountId);
     toast({
@@ -123,7 +123,7 @@ const AccountManager = () => {
     // If deleting active account, make the first remaining account active
     if (accountToDelete?.isActive && updatedAccounts.length > 0) {
       updatedAccounts[0].isActive = true;
-      localStorage.setItem('active-fc25-account', updatedAccounts[0].id);
+      localStorage.setItem('active-account', updatedAccounts[0].id);
     }
     
     saveAccounts(updatedAccounts);
@@ -141,7 +141,7 @@ const AccountManager = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-white">
           <Gamepad2 className="h-5 w-5 text-fifa-blue" />
-          FC25 Accounts
+          Game Accounts
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -240,7 +240,7 @@ const AccountManager = () => {
                   <SelectContent>
                     <SelectItem value="PS5">PlayStation 5</SelectItem>
                     <SelectItem value="Xbox">Xbox Series X/S</SelectItem>
-                    <SelectItem value="PC">PC (EA App/Steam)</SelectItem>
+                    <SelectItem value="PC">PC</SelectItem>
                     <SelectItem value="Switch">Nintendo Switch</SelectItem>
                   </SelectContent>
                 </Select>

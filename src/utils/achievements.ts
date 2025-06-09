@@ -1,9 +1,8 @@
-
-import { Achievement } from '@/types/futChampions';
+import { Achievement, WeeklyPerformance } from '@/types/futChampions';
 
 export const achievements: Achievement[] = [
   // Beginner Achievements
-  { id: 'first-game', title: 'First Steps', description: 'Play your first FUT Champions game', category: 'games', threshold: 1, rarity: 'common', icon: '🎮', unlocked: false },
+  { id: 'first-game', title: 'First Steps', description: 'Play your first Champions game', category: 'games', threshold: 1, rarity: 'common', icon: '🎮', unlocked: false },
   { id: 'early-bird', title: 'Early Bird', description: 'Win your first game', category: 'wins', threshold: 1, rarity: 'common', icon: '🏆', unlocked: false },
   { id: 'hat-trick-hero', title: 'Hat-trick Hero', description: 'Score 3 goals in a single game', category: 'goals', threshold: 3, rarity: 'rare', icon: '⚽', unlocked: false },
   { id: 'clean-sheet', title: 'Clean Sheet', description: 'Keep a clean sheet', category: 'cleanSheets', threshold: 1, rarity: 'common', icon: '🛡️', unlocked: false },
@@ -30,7 +29,7 @@ export const achievements: Achievement[] = [
   { id: 'winner', title: 'Winner', description: 'Win 25 games', category: 'wins', threshold: 25, rarity: 'rare', icon: '🏆', unlocked: false },
   { id: 'champion', title: 'Champion', description: 'Win 50 games', category: 'wins', threshold: 50, rarity: 'epic', icon: '🥇', unlocked: false },
   { id: 'elite-champion', title: 'Elite Champion', description: 'Win 100 games', category: 'wins', threshold: 100, rarity: 'legendary', icon: '👑', unlocked: false },
-  { id: 'fut-legend', title: 'FUT Legend', description: 'Win 200 games', category: 'wins', threshold: 200, rarity: 'mythic', icon: '🌟', unlocked: false },
+  { id: 'legend', title: 'Legend', description: 'Win 200 games', category: 'wins', threshold: 200, rarity: 'mythic', icon: '🌟', unlocked: false },
 
   // Weekly Achievements
   { id: 'perfect-week', title: 'Perfect Week', description: 'Win all 15 games in a week', category: 'weekly', threshold: 15, rarity: 'legendary', icon: '💎', unlocked: false },
@@ -91,7 +90,7 @@ export const achievements: Achievement[] = [
   { id: 'assist-legend', title: 'Assist Legend', description: 'Get 200 assists total', category: 'assists', threshold: 200, rarity: 'legendary', icon: '🌟', unlocked: false },
 
   // Milestone Celebrations
-  { id: 'first-week-complete', title: 'First Week Complete', description: 'Complete your first FUT Champions week', category: 'weekly', threshold: 1, rarity: 'common', icon: '🎉', unlocked: false },
+  { id: 'first-week-complete', title: 'First Week Complete', description: 'Complete your first Champions week', category: 'weekly', threshold: 1, rarity: 'common', icon: '🎉', unlocked: false },
   { id: 'month-veteran', title: 'Month Veteran', description: 'Play for 30 consecutive days', category: 'time', threshold: 30, rarity: 'epic', icon: '📅', unlocked: false },
   { id: 'season-warrior', title: 'Season Warrior', description: 'Complete 50 weeks', category: 'weekly', threshold: 50, rarity: 'mythic', icon: '⚔️', unlocked: false },
 
@@ -112,7 +111,7 @@ export const achievements: Achievement[] = [
   { id: 'community-champion', title: 'Community Champion', description: 'Be #1 in any leaderboard', category: 'competitive', threshold: 1, rarity: 'legendary', icon: '👑', unlocked: false },
 
   // Ultimate Achievements
-  { id: 'fut-master', title: 'FUT Master', description: 'Unlock 50 other achievements', category: 'meta', threshold: 50, rarity: 'mythic', icon: '🏆', unlocked: false },
+  { id: 'master', title: 'Master', description: 'Unlock 50 other achievements', category: 'meta', threshold: 50, rarity: 'mythic', icon: '🏆', unlocked: false },
   { id: 'completionist', title: 'Completionist', description: 'Unlock all achievements', category: 'meta', threshold: 79, rarity: 'mythic', icon: '💎', unlocked: false },
   { id: 'legend-status', title: 'Legend Status', description: 'Reach 1000 total games with 70%+ win rate', category: 'ultimate', threshold: 1, rarity: 'mythic', icon: '⭐', unlocked: false },
 
@@ -132,14 +131,338 @@ export const achievements: Achievement[] = [
   { id: 'tactical-chameleon', title: 'Tactical Chameleon', description: 'Use every formation at least once', category: 'variety', threshold: 29, rarity: 'mythic', icon: '🦎', unlocked: false }
 ];
 
-export const checkAchievements = (weeklyData: any[], currentWeek: any) => {
-  // This would contain the logic to check which achievements are unlocked
-  return achievements;
+export const checkAchievements = (weeklyData: WeeklyPerformance[], currentWeek: WeeklyPerformance | null): Achievement[] => {
+  const allGames = weeklyData.flatMap(week => week.games);
+  const totalGames = allGames.length;
+  const totalWins = weeklyData.reduce((sum, week) => sum + week.totalWins, 0);
+  const totalGoals = weeklyData.reduce((sum, week) => sum + week.totalGoals, 0);
+  
+  // Create a copy of achievements to update
+  const updatedAchievements = [...achievements];
+  
+  // Check each achievement
+  updatedAchievements.forEach(achievement => {
+    let progress = 0;
+    
+    switch(achievement.id) {
+      // Game count achievements
+      case 'first-game':
+        progress = Math.min(totalGames, 1);
+        break;
+      case 'veteran':
+        progress = Math.min(totalGames, 50);
+        break;
+      case 'centurion':
+        progress = Math.min(totalGames, 100);
+        break;
+      case 'marathon-runner':
+        progress = Math.min(totalGames, 250);
+        break;
+      case 'elite-competitor':
+        progress = Math.min(totalGames, 500);
+        break;
+        
+      // Win achievements
+      case 'early-bird':
+        progress = Math.min(totalWins, 1);
+        break;
+      case 'winner':
+        progress = Math.min(totalWins, 25);
+        break;
+      case 'champion':
+        progress = Math.min(totalWins, 50);
+        break;
+      case 'elite-champion':
+        progress = Math.min(totalWins, 100);
+        break;
+      case 'legend':
+        progress = Math.min(totalWins, 200);
+        break;
+        
+      // Goal achievements
+      case 'goal-machine':
+        progress = Math.min(totalGoals, 100);
+        break;
+      case 'prolific-scorer':
+        progress = Math.min(totalGoals, 250);
+        break;
+      case 'goal-legend':
+        progress = Math.min(totalGoals, 500);
+        break;
+        
+      // Streak achievements
+      case 'win-streak-3':
+        progress = Math.max(...weeklyData.map(week => week.bestStreak || 0), 0);
+        progress = Math.min(progress, 3);
+        break;
+      case 'win-streak-5':
+        progress = Math.max(...weeklyData.map(week => week.bestStreak || 0), 0);
+        progress = Math.min(progress, 5);
+        break;
+      case 'win-streak-10':
+        progress = Math.max(...weeklyData.map(week => week.bestStreak || 0), 0);
+        progress = Math.min(progress, 10);
+        break;
+      case 'win-streak-15':
+        progress = Math.max(...weeklyData.map(week => week.bestStreak || 0), 0);
+        progress = Math.min(progress, 15);
+        break;
+        
+      // Weekly achievements
+      case 'perfect-week':
+        const perfectWeek = weeklyData.find(week => 
+          week.totalWins === 15 && week.games.length === 15
+        );
+        progress = perfectWeek ? 15 : 0;
+        break;
+      case 'week-warrior':
+        progress = Math.min(weeklyData.filter(week => week.isCompleted).length, 10);
+        break;
+      case 'consistency-king':
+        progress = Math.min(weeklyData.filter(week => week.isCompleted).length, 25);
+        break;
+        
+      // Clean sheet achievements
+      case 'clean-sheet':
+        const cleanSheets = allGames.filter(game => {
+          const [, goalsAgainst] = game.scoreLine.split('-').map(Number);
+          return goalsAgainst === 0;
+        }).length;
+        progress = Math.min(cleanSheets, 1);
+        break;
+      case 'defensive-wall':
+        const cleanSheetsTotal = allGames.filter(game => {
+          const [, goalsAgainst] = game.scoreLine.split('-').map(Number);
+          return goalsAgainst === 0;
+        }).length;
+        progress = Math.min(cleanSheetsTotal, 10);
+        break;
+      case 'fortress':
+        const cleanSheetsTotal2 = allGames.filter(game => {
+          const [, goalsAgainst] = game.scoreLine.split('-').map(Number);
+          return goalsAgainst === 0;
+        }).length;
+        progress = Math.min(cleanSheetsTotal2, 25);
+        break;
+      case 'impenetrable':
+        const cleanSheetsTotal3 = allGames.filter(game => {
+          const [, goalsAgainst] = game.scoreLine.split('-').map(Number);
+          return goalsAgainst === 0;
+        }).length;
+        progress = Math.min(cleanSheetsTotal3, 50);
+        break;
+        
+      // Special achievements
+      case 'hat-trick-hero':
+        const hatTrickGames = allGames.filter(game => {
+          const playerWithHatTrick = game.playerStats?.find(player => player.goals >= 3);
+          return !!playerWithHatTrick;
+        });
+        progress = Math.min(hatTrickGames.length, 1);
+        break;
+      case 'goal-rush':
+        const highScoringGames = allGames.filter(game => {
+          const [goalsFor] = game.scoreLine.split('-').map(Number);
+          return goalsFor >= 7;
+        });
+        progress = Math.min(highScoringGames.length, 1);
+        break;
+      case 'record-breaker':
+        const veryHighScoringGames = allGames.filter(game => {
+          const [goalsFor] = game.scoreLine.split('-').map(Number);
+          return goalsFor >= 10;
+        });
+        progress = Math.min(veryHighScoringGames.length, 1);
+        break;
+      case 'perfectionist':
+        const perfectGames = allGames.filter(game => {
+          return game.scoreLine === '5-0' && game.result === 'win';
+        });
+        progress = Math.min(perfectGames.length, 1);
+        break;
+      case 'demolition':
+        const demolitionGames = allGames.filter(game => {
+          const [goalsFor, goalsAgainst] = game.scoreLine.split('-').map(Number);
+          return game.result === 'win' && (goalsFor - goalsAgainst) >= 5;
+        });
+        progress = Math.min(demolitionGames.length, 1);
+        break;
+        
+      // Assist achievements
+      case 'team-player':
+        const totalAssists = allGames.flatMap(game => 
+          game.playerStats?.map(player => player.assists) || []
+        ).reduce((sum, assists) => sum + assists, 0);
+        progress = Math.min(totalAssists, 50);
+        break;
+      case 'playmaker':
+        const totalAssists2 = allGames.flatMap(game => 
+          game.playerStats?.map(player => player.assists) || []
+        ).reduce((sum, assists) => sum + assists, 0);
+        progress = Math.min(totalAssists2, 100);
+        break;
+      case 'assist-legend':
+        const totalAssists3 = allGames.flatMap(game => 
+          game.playerStats?.map(player => player.assists) || []
+        ).reduce((sum, assists) => sum + assists, 0);
+        progress = Math.min(totalAssists3, 200);
+        break;
+        
+      // Default case
+      default:
+        // For achievements not specifically handled, keep progress at 0
+        progress = 0;
+    }
+    
+    // Update progress and unlocked status
+    achievement.progress = progress;
+    achievement.unlocked = progress >= achievement.threshold;
+    if (achievement.unlocked && !achievement.unlockedAt) {
+      achievement.unlockedAt = new Date().toISOString();
+    }
+  });
+  
+  return updatedAchievements;
 };
 
-export const calculateAchievementProgress = (achievement: Achievement, weeklyData: any[]) => {
-  // This would calculate progress towards an achievement
-  return 0;
+export const calculateAchievementProgress = (achievement: Achievement, weeklyData: WeeklyPerformance[]): number => {
+  const allGames = weeklyData.flatMap(week => week.games);
+  const totalGames = allGames.length;
+  const totalWins = weeklyData.reduce((sum, week) => sum + week.totalWins, 0);
+  const totalGoals = weeklyData.reduce((sum, week) => sum + week.totalGoals, 0);
+  
+  switch(achievement.id) {
+    // Game count achievements
+    case 'first-game':
+      return Math.min(totalGames, 1);
+    case 'veteran':
+      return Math.min(totalGames, 50);
+    case 'centurion':
+      return Math.min(totalGames, 100);
+    case 'marathon-runner':
+      return Math.min(totalGames, 250);
+    case 'elite-competitor':
+      return Math.min(totalGames, 500);
+      
+    // Win achievements
+    case 'early-bird':
+      return Math.min(totalWins, 1);
+    case 'winner':
+      return Math.min(totalWins, 25);
+    case 'champion':
+      return Math.min(totalWins, 50);
+    case 'elite-champion':
+      return Math.min(totalWins, 100);
+    case 'legend':
+      return Math.min(totalWins, 200);
+      
+    // Goal achievements
+    case 'goal-machine':
+      return Math.min(totalGoals, 100);
+    case 'prolific-scorer':
+      return Math.min(totalGoals, 250);
+    case 'goal-legend':
+      return Math.min(totalGoals, 500);
+      
+    // Streak achievements
+    case 'win-streak-3':
+      return Math.min(Math.max(...weeklyData.map(week => week.bestStreak || 0), 0), 3);
+    case 'win-streak-5':
+      return Math.min(Math.max(...weeklyData.map(week => week.bestStreak || 0), 0), 5);
+    case 'win-streak-10':
+      return Math.min(Math.max(...weeklyData.map(week => week.bestStreak || 0), 0), 10);
+    case 'win-streak-15':
+      return Math.min(Math.max(...weeklyData.map(week => week.bestStreak || 0), 0), 15);
+      
+    // Weekly achievements
+    case 'perfect-week':
+      const perfectWeek = weeklyData.find(week => 
+        week.totalWins === 15 && week.games.length === 15
+      );
+      return perfectWeek ? 15 : Math.max(...weeklyData.map(week => week.totalWins));
+    case 'week-warrior':
+      return Math.min(weeklyData.filter(week => week.isCompleted).length, 10);
+    case 'consistency-king':
+      return Math.min(weeklyData.filter(week => week.isCompleted).length, 25);
+      
+    // Clean sheet achievements
+    case 'clean-sheet':
+      const cleanSheets = allGames.filter(game => {
+        const [, goalsAgainst] = game.scoreLine.split('-').map(Number);
+        return goalsAgainst === 0;
+      }).length;
+      return Math.min(cleanSheets, 1);
+    case 'defensive-wall':
+      const cleanSheetsTotal = allGames.filter(game => {
+        const [, goalsAgainst] = game.scoreLine.split('-').map(Number);
+        return goalsAgainst === 0;
+      }).length;
+      return Math.min(cleanSheetsTotal, 10);
+    case 'fortress':
+      const cleanSheetsTotal2 = allGames.filter(game => {
+        const [, goalsAgainst] = game.scoreLine.split('-').map(Number);
+        return goalsAgainst === 0;
+      }).length;
+      return Math.min(cleanSheetsTotal2, 25);
+    case 'impenetrable':
+      const cleanSheetsTotal3 = allGames.filter(game => {
+        const [, goalsAgainst] = game.scoreLine.split('-').map(Number);
+        return goalsAgainst === 0;
+      }).length;
+      return Math.min(cleanSheetsTotal3, 50);
+      
+    // Special achievements
+    case 'hat-trick-hero':
+      const hatTrickGames = allGames.filter(game => {
+        const playerWithHatTrick = game.playerStats?.find(player => player.goals >= 3);
+        return !!playerWithHatTrick;
+      });
+      return Math.min(hatTrickGames.length, 1);
+    case 'goal-rush':
+      const highScoringGames = allGames.filter(game => {
+        const [goalsFor] = game.scoreLine.split('-').map(Number);
+        return goalsFor >= 7;
+      });
+      return Math.min(highScoringGames.length, 1);
+    case 'record-breaker':
+      const veryHighScoringGames = allGames.filter(game => {
+        const [goalsFor] = game.scoreLine.split('-').map(Number);
+        return goalsFor >= 10;
+      });
+      return Math.min(veryHighScoringGames.length, 1);
+    case 'perfectionist':
+      const perfectGames = allGames.filter(game => {
+        return game.scoreLine === '5-0' && game.result === 'win';
+      });
+      return Math.min(perfectGames.length, 1);
+    case 'demolition':
+      const demolitionGames = allGames.filter(game => {
+        const [goalsFor, goalsAgainst] = game.scoreLine.split('-').map(Number);
+        return game.result === 'win' && (goalsFor - goalsAgainst) >= 5;
+      });
+      return Math.min(demolitionGames.length, 1);
+      
+    // Assist achievements
+    case 'team-player':
+      const totalAssists = allGames.flatMap(game => 
+        game.playerStats?.map(player => player.assists) || []
+      ).reduce((sum, assists) => sum + assists, 0);
+      return Math.min(totalAssists, 50);
+    case 'playmaker':
+      const totalAssists2 = allGames.flatMap(game => 
+        game.playerStats?.map(player => player.assists) || []
+      ).reduce((sum, assists) => sum + assists, 0);
+      return Math.min(totalAssists2, 100);
+    case 'assist-legend':
+      const totalAssists3 = allGames.flatMap(game => 
+        game.playerStats?.map(player => player.assists) || []
+      ).reduce((sum, assists) => sum + assists, 0);
+      return Math.min(totalAssists3, 200);
+      
+    // Default case
+    default:
+      return 0;
+  }
 };
 
 export const ACHIEVEMENTS = achievements;

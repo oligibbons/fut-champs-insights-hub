@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import Navigation from '@/components/Navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,92 +8,31 @@ import { supabase } from '@/integrations/supabase/client';
 import { useTheme } from '@/hooks/useTheme';
 import { Trophy, Star, Target, Zap, Clock, Shield, Crown, Sword, Flame, Award } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { ACHIEVEMENTS } from '@/utils/achievements';
+import { ACHIEVEMENTS, checkAchievements, calculateAchievementProgress } from '@/utils/achievements';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { WeeklyPerformance } from '@/types/futChampions';
-
-interface Achievement {
-  id: string;
-  achievement_id: string;
-  title: string;
-  description: string;
-  category: string;
-  rarity: string;
-  unlocked_at: string;
-  progress: number;
-  target: number | null;
-}
+import { useDataSync } from '@/hooks/useDataSync';
 
 const Achievements = () => {
   const { user } = useAuth();
   const { currentTheme } = useTheme();
   const { toast } = useToast();
-  const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const { weeklyData } = useDataSync();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [loading, setLoading] = useState(true);
-  const [weeklyData] = useLocalStorage<WeeklyPerformance[]>('futChampions_weeks', []);
 
-  // Calculate progress for each achievement based on actual data
-  const calculateAchievementProgress = (achievementId: string): number => {
-    const allGames = weeklyData.flatMap(week => week.games || []);
-    const totalWins = weeklyData.reduce((sum, week) => sum + (week.totalWins || 0), 0);
-    const totalGoals = weeklyData.reduce((sum, week) => sum + (week.totalGoals || 0), 0);
-    const totalGames = allGames.length;
+  // Calculate achievements and progress
+  const allAchievements = ACHIEVEMENTS.map(achievement => {
+    const progress = calculateAchievementProgress(achievement, weeklyData);
+    const isUnlocked = progress >= achievement.threshold;
     
-    switch (achievementId) {
-      case 'first_win':
-        return totalWins >= 1 ? 1 : 0;
-      case 'win_streak_3':
-        return Math.max(...weeklyData.map(week => week.currentStreak || 0), 0);
-      case 'win_streak_5':
-        return Math.max(...weeklyData.map(week => week.currentStreak || 0), 0);
-      case 'win_streak_10':
-        return Math.max(...weeklyData.map(week => week.currentStreak || 0), 0);
-      case 'total_wins_10':
-      case 'total_wins_50':
-      case 'total_wins_100':
-      case 'total_wins_250':
-      case 'total_wins_500':
-        return totalWins;
-      case 'goals_10':
-      case 'goals_50':
-      case 'goals_100':
-        return totalGoals;
-      case 'perfect_week':
-        return weeklyData.some(week => week.totalWins === 15 && week.totalLosses === 0) ? 15 : Math.max(...weeklyData.map(week => week.totalWins || 0), 0);
-      default:
-        return 0;
-    }
-  };
-
-  useEffect(() => {
-    if (user) {
-      fetchAchievements();
-    }
-  }, [user, weeklyData]);
-
-  const fetchAchievements = async () => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('achievements')
-        .select('*')
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-      setAchievements(data || []);
-    } catch (error) {
-      console.error('Error fetching achievements:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load achievements",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+    return {
+      ...achievement,
+      unlocked: isUnlocked,
+      currentProgress: progress,
+      target: achievement.threshold
+    };
+  });
 
   const getRarityColor = (rarity: string) => {
     switch (rarity) {
@@ -119,19 +57,6 @@ const Achievements = () => {
   };
 
   const categories = ['all', 'wins', 'goals', 'streaks', 'performance', 'milestone', 'games', 'weekly', 'cleanSheets', 'assists', 'playTime', 'consistency', 'improvement', 'domination', 'comeback', 'teamwork', 'possession', 'passing', 'shooting', 'defending', 'attacking', 'midfield', 'seasonal', 'special', 'hidden'];
-
-  // Use the full ACHIEVEMENTS array from utils
-  const allAchievements = ACHIEVEMENTS.map(achievement => {
-    const progress = calculateAchievementProgress(achievement.id);
-    const isUnlocked = progress >= achievement.threshold;
-    
-    return {
-      ...achievement,
-      unlocked: isUnlocked,
-      currentProgress: progress,
-      target: achievement.threshold
-    };
-  });
 
   const filteredAchievements = allAchievements.filter(achievement => 
     selectedCategory === 'all' || achievement.category === selectedCategory

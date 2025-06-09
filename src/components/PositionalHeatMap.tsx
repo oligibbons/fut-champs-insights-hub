@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
@@ -47,6 +46,7 @@ const PositionalHeatMap = () => {
     'ST': { x: 90, y: 50 },
     'LF': { x: 85, y: 35 },
     'RF': { x: 85, y: 65 },
+    'SUB': { x: 50, y: 95 },
   };
 
   useEffect(() => {
@@ -107,6 +107,48 @@ const PositionalHeatMap = () => {
     return Math.max(0.4, Math.min(1, (rating - 4) / 6));
   };
 
+  // Generate a full pitch heatmap
+  const generateHeatmapData = () => {
+    // Create a grid of points covering the entire pitch
+    const gridPoints = [];
+    const gridDensity = 20; // Higher number = more detailed heatmap
+    
+    for (let x = 0; x <= 100; x += 100/gridDensity) {
+      for (let y = 0; y <= 100; y += 100/gridDensity) {
+        // Calculate influence from each position
+        let totalInfluence = 0;
+        let weightedRating = 0;
+        
+        positionData.forEach(pos => {
+          // Calculate distance from this grid point to the position
+          const distance = Math.sqrt(Math.pow(x - pos.x, 2) + Math.pow(y - pos.y, 2));
+          // Influence decreases with distance (inverse square law with a cutoff)
+          const influence = Math.max(0, 1 - Math.min(1, (distance / 30)));
+          
+          if (influence > 0) {
+            totalInfluence += influence;
+            weightedRating += pos.averageRating * influence;
+          }
+        });
+        
+        // Only add points with some influence
+        if (totalInfluence > 0) {
+          const avgRating = weightedRating / totalInfluence;
+          gridPoints.push({
+            x,
+            y,
+            rating: avgRating,
+            intensity: getIntensity(avgRating) * Math.min(1, totalInfluence)
+          });
+        }
+      }
+    }
+    
+    return gridPoints;
+  };
+
+  const heatmapPoints = positionData.length > 0 ? generateHeatmapData() : [];
+
   if (positionData.length === 0) {
     return (
       <Card className="glass-card">
@@ -160,18 +202,19 @@ const PositionalHeatMap = () => {
               <div className="absolute right-0 top-2/5 bottom-2/5 w-12 border-l border-white/30" />
             </div>
 
-            {/* Heat patches */}
-            {positionData.map((position, index) => (
+            {/* Full pitch heatmap */}
+            {heatmapPoints.map((point, index) => (
               <div
-                key={`heat-${position.position}`}
-                className="absolute rounded-full blur-sm pointer-events-none"
+                key={`heat-point-${index}`}
+                className="absolute rounded-full blur-md pointer-events-none"
                 style={{
-                  left: `${position.x}%`,
-                  top: `${position.y}%`,
-                  width: '80px',
-                  height: '80px',
-                  background: `radial-gradient(circle, ${getHeatColor(position.averageRating)}${Math.round(getIntensity(position.averageRating) * 255).toString(16).padStart(2, '0')} 0%, transparent 70%)`,
+                  left: `${point.x}%`,
+                  top: `${point.y}%`,
+                  width: '60px',
+                  height: '60px',
+                  background: `radial-gradient(circle, ${getHeatColor(point.rating)}${Math.round(point.intensity * 255).toString(16).padStart(2, '0')} 0%, transparent 70%)`,
                   transform: 'translate(-50%, -50%)',
+                  opacity: point.intensity,
                 }}
               />
             ))}

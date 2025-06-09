@@ -1,11 +1,11 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Achievement, WeeklyPerformance } from '@/types/futChampions';
 import { Trophy, Star, Target, Zap, Clock, Shield, Crown, Sword, Flame, Award } from 'lucide-react';
 import { ACHIEVEMENTS, checkAchievements, calculateAchievementProgress } from '@/utils/achievements';
+import { useToast } from '@/hooks/use-toast';
 
 interface AchievementSystemProps {
   weeklyData: WeeklyPerformance[];
@@ -15,16 +15,50 @@ interface AchievementSystemProps {
 
 const AchievementSystem = ({ weeklyData, currentWeek, onAchievementUnlocked }: AchievementSystemProps) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const { toast } = useToast();
+  const [achievements, setAchievements] = useState<(Achievement & { progress: number, unlockedAt?: string })[]>([]);
 
-  // Get all achievements with progress calculated
-  const achievementsWithProgress = ACHIEVEMENTS.map(achievement => ({
-    ...achievement,
-    progress: calculateAchievementProgress(achievement, weeklyData),
-    unlockedAt: calculateAchievementProgress(achievement, weeklyData) >= achievement.threshold ? new Date().toISOString() : undefined
-  }));
+  // Calculate achievements and progress
+  useEffect(() => {
+    // Get all achievements with progress calculated
+    const achievementsWithProgress = ACHIEVEMENTS.map(achievement => ({
+      ...achievement,
+      progress: calculateAchievementProgress(achievement, weeklyData),
+      unlockedAt: undefined
+    }));
 
-  const unlockedAchievements = achievementsWithProgress.filter(a => a.unlockedAt);
-  const lockedAchievements = achievementsWithProgress.filter(a => !a.unlockedAt);
+    // Check which achievements are unlocked
+    const checkedAchievements = checkAchievements(weeklyData, currentWeek);
+    
+    // Merge the progress with the unlocked status
+    const mergedAchievements = achievementsWithProgress.map(achievement => {
+      const checkedAchievement = checkedAchievements.find(a => a.id === achievement.id);
+      const isUnlocked = achievement.progress >= achievement.threshold;
+      
+      // If newly unlocked, notify
+      if (isUnlocked && !achievement.unlockedAt) {
+        toast({
+          title: "Achievement Unlocked!",
+          description: `${achievement.title} - ${achievement.description}`,
+        });
+        
+        if (onAchievementUnlocked) {
+          onAchievementUnlocked(achievement);
+        }
+      }
+      
+      return {
+        ...achievement,
+        unlocked: isUnlocked,
+        unlockedAt: isUnlocked ? new Date().toISOString() : undefined
+      };
+    });
+    
+    setAchievements(mergedAchievements);
+    
+    // Save achievements to localStorage
+    localStorage.setItem('achievements', JSON.stringify(mergedAchievements));
+  }, [weeklyData, currentWeek, toast, onAchievementUnlocked]);
 
   const getRarityColor = (rarity: string) => {
     switch (rarity) {
@@ -53,9 +87,12 @@ const AchievementSystem = ({ weeklyData, currentWeek, onAchievementUnlocked }: A
 
   const categories = ['all', 'wins', 'goals', 'streaks', 'performance', 'consistency', 'milestone', 'special'];
 
-  const filteredAchievements = achievementsWithProgress.filter(achievement => 
+  const filteredAchievements = achievements.filter(achievement => 
     selectedCategory === 'all' || achievement.category === selectedCategory
   );
+
+  const unlockedCount = achievements.filter(a => a.unlocked).length;
+  const totalCount = achievements.length;
 
   return (
     <div className="space-y-6">
@@ -63,7 +100,7 @@ const AchievementSystem = ({ weeklyData, currentWeek, onAchievementUnlocked }: A
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-white">
             <Trophy className="h-5 w-5 text-fifa-gold" />
-            Achievements ({unlockedAchievements.length}/{ACHIEVEMENTS.length})
+            Achievements ({unlockedCount}/{totalCount})
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -71,12 +108,12 @@ const AchievementSystem = ({ weeklyData, currentWeek, onAchievementUnlocked }: A
           <div className="mb-6 p-4 bg-white/5 rounded-lg">
             <div className="flex justify-between text-sm text-gray-300 mb-2">
               <span>Overall Progress</span>
-              <span>{unlockedAchievements.length}/{ACHIEVEMENTS.length}</span>
+              <span>{unlockedCount}/{totalCount}</span>
             </div>
             <div className="w-full bg-white/10 rounded-full h-2">
               <div 
                 className="h-2 bg-fifa-gold rounded-full transition-all duration-500"
-                style={{ width: `${(unlockedAchievements.length / ACHIEVEMENTS.length) * 100}%` }}
+                style={{ width: `${(unlockedCount / totalCount) * 100}%` }}
               />
             </div>
           </div>
@@ -100,7 +137,7 @@ const AchievementSystem = ({ weeklyData, currentWeek, onAchievementUnlocked }: A
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredAchievements.map(achievement => {
               const IconComponent = getIconComponent(achievement.icon);
-              const isUnlocked = !!achievement.unlockedAt;
+              const isUnlocked = achievement.unlocked;
               const progress = achievement.progress || 0;
               const threshold = achievement.threshold;
               const progressPercentage = Math.min((progress / threshold) * 100, 100);

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useSupabaseData } from './useSupabaseData';
 import { WeeklyPerformance, PlayerPerformance } from '@/types/futChampions';
@@ -132,7 +131,24 @@ const defaultSettings: Settings = {
 
 export const useDataSync = () => {
   const supabaseData = useSupabaseData();
-  const [settings, setSettings] = useState<Settings>(defaultSettings);
+  const [settings, setSettings] = useState<Settings>(() => {
+    // Load settings from localStorage if available
+    const savedSettings = localStorage.getItem('futChampions_settings');
+    if (savedSettings) {
+      try {
+        return { ...defaultSettings, ...JSON.parse(savedSettings) };
+      } catch (e) {
+        console.error('Error parsing saved settings:', e);
+        return defaultSettings;
+      }
+    }
+    return defaultSettings;
+  });
+
+  // Save settings to localStorage when they change
+  useEffect(() => {
+    localStorage.setItem('futChampions_settings', JSON.stringify(settings));
+  }, [settings]);
 
   // Calculate player statistics across all weeks
   const calculatePlayerStats = (): PlayerPerformance[] => {
@@ -185,6 +201,17 @@ export const useDataSync = () => {
       goalInvolvementsPer90: stats.totalMinutes > 0 ? ((stats.goals + stats.assists) / stats.totalMinutes) * 90 : 0
     }));
   };
+
+  // Auto-complete week when 15 games are played
+  useEffect(() => {
+    const currentWeek = supabaseData.getCurrentWeek();
+    if (currentWeek && currentWeek.games.length >= 15 && !currentWeek.isCompleted) {
+      supabaseData.updateWeek(currentWeek.id, { 
+        isCompleted: true,
+        endDate: new Date().toISOString()
+      });
+    }
+  }, [supabaseData.weeklyData]);
 
   // Mock functions for compatibility
   const deleteAllData = () => {

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -116,7 +115,12 @@ export function useSupabaseData() {
                 comments: game.comments,
                 crossPlayEnabled: game.cross_play_enabled || false,
                 teamStats,
-                playerStats
+                playerStats,
+                time: game.time_played,
+                stressLevel: game.stress_level,
+                serverQuality: game.server_quality,
+                gameRating: game.game_rating,
+                gameScore: game.game_score
               } as GameResult;
             })
           );
@@ -124,8 +128,14 @@ export function useSupabaseData() {
           // Calculate week statistics from games
           const totalWins = transformedGames.filter(g => g.result === 'win').length;
           const totalLosses = transformedGames.filter(g => g.result === 'loss').length;
-          const totalGoals = transformedGames.reduce((sum, g) => sum + (g.teamStats?.actualGoals || 0), 0);
-          const totalConceded = transformedGames.reduce((sum, g) => sum + (g.teamStats?.actualGoalsAgainst || 0), 0);
+          const totalGoals = transformedGames.reduce((sum, g) => {
+            const [goals] = g.scoreLine.split('-').map(Number);
+            return sum + goals;
+          }, 0);
+          const totalConceded = transformedGames.reduce((sum, g) => {
+            const [, goals] = g.scoreLine.split('-').map(Number);
+            return sum + goals;
+          }, 0);
           const totalExpectedGoals = transformedGames.reduce((sum, g) => sum + (g.teamStats?.expectedGoals || 0), 0);
           const totalExpectedGoalsAgainst = transformedGames.reduce((sum, g) => sum + (g.teamStats?.expectedGoalsAgainst || 0), 0);
           const averageOpponentSkill = transformedGames.length > 0 ? 
@@ -184,9 +194,21 @@ export function useSupabaseData() {
               total_expected_goals_against: totalExpectedGoalsAgainst,
               average_opponent_skill: averageOpponentSkill,
               best_streak: bestStreak,
-              worst_streak: worstStreak
+              worst_streak: worstStreak,
+              current_streak: currentStreak
             })
             .eq('id', week.id);
+
+          // Auto-complete week if 15 games are played
+          if (transformedGames.length >= 15 && !week.is_completed) {
+            await supabase
+              .from('weekly_performances')
+              .update({
+                is_completed: true,
+                end_date: new Date().toISOString()
+              })
+              .eq('id', week.id);
+          }
 
           return {
             id: week.id,
@@ -204,7 +226,7 @@ export function useSupabaseData() {
             averageOpponentSkill,
             squadUsed: week.squad_used || '',
             weeklyRating: Number(week.weekly_rating) || 0,
-            isCompleted: week.is_completed || false,
+            isCompleted: week.is_completed || transformedGames.length >= 15,
             bestStreak,
             worstStreak,
             currentStreak,
@@ -252,7 +274,10 @@ export function useSupabaseData() {
           user_goals: parseInt(gameData.scoreLine.split('-')[0]),
           opponent_goals: parseInt(gameData.scoreLine.split('-')[1]),
           opponent_xg: gameData.teamStats?.expectedGoalsAgainst || 1.0,
-          date_played: gameData.date
+          date_played: gameData.date,
+          time_played: gameData.time,
+          stress_level: gameData.stressLevel,
+          server_quality: gameData.serverQuality
         })
         .select()
         .single();
@@ -352,6 +377,7 @@ export function useSupabaseData() {
           target_clean_sheets: updates.winTarget?.cleanSheets,
           minimum_rank: updates.winTarget?.minimumRank,
           is_completed: updates.isCompleted,
+          end_date: updates.isCompleted ? new Date().toISOString() : null,
           total_wins: updates.totalWins,
           total_losses: updates.totalLosses,
           total_goals: updates.totalGoals,
@@ -383,12 +409,62 @@ export function useSupabaseData() {
           duration: gameData.duration,
           user_goals: gameData.scoreLine ? parseInt(gameData.scoreLine.split('-')[0]) : undefined,
           opponent_goals: gameData.scoreLine ? parseInt(gameData.scoreLine.split('-')[1]) : undefined,
-          opponent_xg: gameData.teamStats?.expectedGoalsAgainst
+          opponent_xg: gameData.teamStats?.expectedGoalsAgainst,
+          stress_level: gameData.stressLevel,
+          server_quality: gameData.serverQuality,
+          time_played: gameData.time
         })
         .eq('id', gameId)
         .eq('user_id', user.id);
 
       if (error) throw error;
+
+      // Update team stats if provided
+      if (gameData.teamStats) {
+        await supabase
+          .from('team_statistics')
+          .update({
+            possession: gameData.teamStats.possession,
+            passes: gameData.teamStats.passes,
+            pass_accuracy: gameData.teamStats.passAccuracy,
+            shots: gameData.teamStats.shots,
+            shots_on_target: gameData.teamStats.shotsOnTarget,
+            corners: gameData.teamStats.corners,
+            fouls: gameData.teamStats.fouls,
+            yellow_cards: gameData.teamStats.yellowCards,
+            red_cards: gameData.teamStats.redCards,
+            expected_goals: gameData.teamStats.expectedGoals,
+            expected_goals_against: gameData.teamStats.expectedGoalsAgainst
+          })
+          .eq('game_id', gameId);
+      }
+
+      // Update player stats if provided
+      if (gameData.playerStats && gameData.playerStats.length > 0) {
+        // First delete existing player stats
+        await supabase
+          .from('player_performances')
+          .delete()
+          .eq('game_id', gameId);
+
+        // Then insert new ones
+        const playerPerformances = gameData.playerStats.map(player => ({
+          user_id: user.id,
+          game_id: gameId,
+          player_name: player.name,
+          position: player.position,
+          minutes_played: player.minutesPlayed,
+          goals: player.goals,
+          assists: player.assists,
+          rating: player.rating,
+          yellow_cards: player.yellowCards,
+          red_cards: player.redCards
+        }));
+
+        await supabase
+          .from('player_performances')
+          .insert(playerPerformances);
+      }
 
       await fetchWeeklyData(); // Refresh data
     } catch (error) {
