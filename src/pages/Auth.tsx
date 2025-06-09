@@ -89,7 +89,7 @@ const Auth = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
               <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm" style={{ color: currentTheme.colors.text }}>
+                <div className="flex items-center gap-2 text-sm\" style={{ color: currentTheme.colors.text }}>
                   <User className="h-4 w-4" />
                   Username
                 </div>
