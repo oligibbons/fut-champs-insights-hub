@@ -23,8 +23,8 @@ function App() {
   const { currentTheme } = useTheme();
   
   return (
-    <AuthProvider>
-      <Router>
+    <Router>
+      <AuthProvider>
         <div 
           className="min-h-screen transition-all duration-500 relative"
           style={{
@@ -124,8 +124,8 @@ function App() {
           </div>
           <Toaster />
         </div>
-      </Router>
-    </AuthProvider>
+      </AuthProvider>
+    </Router>
   );
 }
 
