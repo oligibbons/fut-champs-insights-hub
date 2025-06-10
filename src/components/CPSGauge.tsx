@@ -99,6 +99,9 @@ const CPSGauge = ({ weekData, historicalData = [] }: CPSGaugeProps) => {
       
       setCpsScore(finalCPS);
       setCpsBreakdown(components);
+      
+      // Update the week's CPS score
+      weekData.cpsScore = finalCPS;
     };
     
     // Calculate historical trend
@@ -142,31 +145,13 @@ const CPSGauge = ({ weekData, historicalData = [] }: CPSGaugeProps) => {
     
     calculateCPS();
     calculateTrend();
-  }, [weekData, historicalData, cpsScore]);
+  }, [weekData, historicalData]);
 
   const getCpsColor = () => {
     if (cpsScore >= 80) return '#10b981'; // Green
     if (cpsScore >= 60) return '#f59e0b'; // Amber
     return '#ef4444'; // Red
   };
-
-  const getGaugeStyles = () => {
-    const color = getCpsColor();
-    const percentage = cpsScore;
-    
-    // Calculate the rotation for the gauge fill
-    const rotation = (percentage / 100) * 360;
-    
-    return {
-      color,
-      rotation: `rotate(${Math.min(180, rotation / 2)}deg)`,
-      rightClip: rotation <= 180 ? 'rect(0, 150px, 300px, 150px)' : 'rect(0, 150px, 300px, 0px)',
-      leftClip: rotation <= 180 ? 'rect(0, 150px, 300px, 150px)' : 'rect(0, 150px, 300px, 0px)',
-      leftRotation: rotation <= 180 ? 'rotate(0deg)' : `rotate(${rotation - 180}deg)`
-    };
-  };
-
-  const gaugeStyles = getGaugeStyles();
 
   return (
     <Card className="glass-card">
@@ -209,7 +194,7 @@ const CPSGauge = ({ weekData, historicalData = [] }: CPSGaugeProps) => {
                   cy="75" 
                   r="70" 
                   fill="none" 
-                  stroke={gaugeStyles.color} 
+                  stroke={getCpsColor()} 
                   strokeWidth="10"
                   strokeDasharray={`${(cpsScore / 100) * 440} 440`}
                   strokeDashoffset="110"
@@ -218,7 +203,7 @@ const CPSGauge = ({ weekData, historicalData = [] }: CPSGaugeProps) => {
               </svg>
               
               <div className="cps-gauge-center">
-                <div className="cps-gauge-value" style={{ color: gaugeStyles.color }}>{cpsScore.toFixed(1)}</div>
+                <div className="cps-gauge-value" style={{ color: getCpsColor() }}>{cpsScore.toFixed(1)}</div>
                 <div className="cps-gauge-label">CPS</div>
               </div>
             </div>
@@ -236,7 +221,7 @@ const CPSGauge = ({ weekData, historicalData = [] }: CPSGaugeProps) => {
                   </div>
                   <Badge 
                     className="bg-white/10 text-white"
-                    style={{ borderLeft: `3px solid ${gaugeStyles.color}` }}
+                    style={{ borderLeft: `3px solid ${getCpsColor()}` }}
                   >
                     +{Math.round(value)}
                   </Badge>

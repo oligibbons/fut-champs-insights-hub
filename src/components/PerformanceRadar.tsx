@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useDataSync } from '@/hooks/useDataSync';
-import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer } from 'recharts';
+import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer, Legend } from 'recharts';
 import { Activity, Info } from 'lucide-react';
 import { 
   Tooltip,
@@ -360,6 +360,7 @@ const PerformanceRadar = () => {
                       fill="#F59E0B"
                       fillOpacity={0.3}
                     />
+                    <Legend />
                   </>
                 ) : (
                   <Radar
@@ -370,14 +371,6 @@ const PerformanceRadar = () => {
                     fillOpacity={0.3}
                   />
                 )}
-                
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'rgba(17, 24, 39, 0.9)', 
-                    border: '1px solid rgba(59, 130, 246, 0.3)', 
-                    borderRadius: '12px' 
-                  }}
-                />
               </RadarChart>
             </ResponsiveContainer>
           </div>
