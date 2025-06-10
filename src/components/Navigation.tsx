@@ -27,6 +27,21 @@ const Navigation = () => {
   const navigate = useNavigate();
   const { currentTheme } = useTheme();
   const { signOut, user } = useAuth();
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Check if device is mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
 
   const navigationItems = [
     { name: 'Dashboard', path: '/', icon: Home },
@@ -98,15 +113,16 @@ const Navigation = () => {
           lg:translate-x-0
           overflow-y-auto
           static-element
+          ${isMobile ? 'w-[70%] max-w-[250px]' : ''}
         `}
         style={{
           backgroundColor: currentTheme.colors.surface,
           borderColor: currentTheme.colors.border,
           backdropFilter: 'blur(12px)',
-          width: !isHovered && !isOpen ? '5.5rem' : '16rem'
+          width: !isHovered && !isOpen && !isMobile ? '5.5rem' : '16rem'
         }}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+        onMouseEnter={() => !isMobile && setIsHovered(true)}
+        onMouseLeave={() => !isMobile && setIsHovered(false)}
       >
         {/* Hover trigger area - invisible but extends beyond sidebar */}
         <div 
@@ -114,14 +130,14 @@ const Navigation = () => {
           onMouseEnter={() => setIsHovered(true)}
         />
         
-        <div className={`p-6 h-full flex flex-col ${!isHovered && !isOpen ? 'lg:items-center' : ''}`}>
-          <div className={`flex items-center mb-8 ${!isHovered && !isOpen ? 'lg:justify-center' : 'space-x-2'}`}>
+        <div className={`p-6 h-full flex flex-col ${!isHovered && !isOpen && !isMobile ? 'lg:items-center' : ''}`}>
+          <div className={`flex items-center mb-8 ${!isHovered && !isOpen && !isMobile ? 'lg:justify-center' : 'space-x-2'}`}>
             <img 
               src="/lovable-uploads/6b6465f4-e466-4f3b-9761-8a829fbe395c.png" 
               alt="FUTALYST Logo" 
               className="w-10 h-10 object-contain flex-shrink-0"
             />
-            <div className={`transition-all duration-300 overflow-hidden ${!isHovered && !isOpen ? 'lg:w-0 lg:opacity-0' : 'lg:w-auto lg:opacity-100'}`}>
+            <div className={`transition-all duration-300 overflow-hidden ${!isHovered && !isOpen && !isMobile ? 'lg:w-0 lg:opacity-0' : 'lg:w-auto lg:opacity-100'}`}>
               <h1 
                 className="text-xl font-bold whitespace-nowrap"
                 style={{ color: currentTheme.colors.text }}
@@ -144,7 +160,7 @@ const Navigation = () => {
                   onClick={handleNavClick}
                   className={`
                     flex items-center px-4 py-3 rounded-lg transition-all duration-200 nav-element
-                    ${!isHovered && !isOpen ? 'lg:justify-center lg:px-3' : 'space-x-3'}
+                    ${!isHovered && !isOpen && !isMobile ? 'lg:justify-center lg:px-3' : 'space-x-3'}
                     ${isActive 
                       ? 'shadow-lg' 
                       : 'hover:opacity-80'
@@ -156,7 +172,7 @@ const Navigation = () => {
                   }}
                 >
                   <item.icon className="h-5 w-5 flex-shrink-0" />
-                  <span className={`font-medium transition-all duration-300 overflow-hidden whitespace-nowrap ${!isHovered && !isOpen ? 'lg:w-0 lg:opacity-0' : 'lg:w-auto lg:opacity-100'}`}>
+                  <span className={`font-medium transition-all duration-300 overflow-hidden whitespace-nowrap ${!isHovered && !isOpen && !isMobile ? 'lg:w-0 lg:opacity-0' : 'lg:w-auto lg:opacity-100'}`}>
                     {item.name}
                   </span>
                 </Link>
@@ -170,7 +186,7 @@ const Navigation = () => {
                 onClick={handleNavClick}
                 className={`
                   flex items-center px-4 py-3 rounded-lg transition-all duration-200 nav-element
-                  ${!isHovered && !isOpen ? 'lg:justify-center lg:px-3' : 'space-x-3'}
+                  ${!isHovered && !isOpen && !isMobile ? 'lg:justify-center lg:px-3' : 'space-x-3'}
                   ${location.pathname === '/admin' ? 'shadow-lg' : 'hover:opacity-80'}
                 `}
                 style={{
@@ -179,7 +195,7 @@ const Navigation = () => {
                 }}
               >
                 <Shield className="h-5 w-5 flex-shrink-0" />
-                <span className={`font-medium transition-all duration-300 overflow-hidden whitespace-nowrap ${!isHovered && !isOpen ? 'lg:w-0 lg:opacity-0' : 'lg:w-auto lg:opacity-100'}`}>
+                <span className={`font-medium transition-all duration-300 overflow-hidden whitespace-nowrap ${!isHovered && !isOpen && !isMobile ? 'lg:w-0 lg:opacity-0' : 'lg:w-auto lg:opacity-100'}`}>
                   Admin
                 </span>
               </Link>
@@ -189,7 +205,7 @@ const Navigation = () => {
           {/* User Section */}
           {user && (
             <div className="mt-auto pt-4 border-t absolute bottom-0 left-0 right-0 bg-inherit px-6 pb-6" style={{ borderColor: currentTheme.colors.border }}>
-              <div className={`mb-4 p-3 rounded-lg transition-all duration-300 overflow-hidden ${!isHovered && !isOpen ? 'lg:w-0 lg:opacity-0 lg:hidden' : 'lg:w-auto lg:opacity-100 lg:block'}`} 
+              <div className={`mb-4 p-3 rounded-lg transition-all duration-300 overflow-hidden ${!isHovered && !isOpen && !isMobile ? 'lg:w-0 lg:opacity-0 lg:hidden' : 'lg:w-auto lg:opacity-100 lg:block'}`} 
                    style={{ backgroundColor: currentTheme.colors.cardBg }}>
                 <p className="text-sm font-medium text-white whitespace-nowrap">{user.email}</p>
                 <p className="text-xs whitespace-nowrap" style={{ color: currentTheme.colors.muted }}>
@@ -199,7 +215,7 @@ const Navigation = () => {
               <Button
                 onClick={handleSignOut}
                 variant="outline"
-                className={`w-full flex items-center gap-2 rounded-lg transition-all duration-300 nav-element ${!isHovered && !isOpen ? 'lg:w-12 lg:justify-center lg:px-2' : ''}`}
+                className={`w-full flex items-center gap-2 rounded-lg transition-all duration-300 nav-element ${!isHovered && !isOpen && !isMobile ? 'lg:w-12 lg:justify-center lg:px-2' : ''}`}
                 style={{
                   backgroundColor: 'transparent',
                   borderColor: currentTheme.colors.border,
@@ -207,7 +223,7 @@ const Navigation = () => {
                 }}
               >
                 <LogOut className="h-4 w-4 flex-shrink-0" />
-                <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${!isHovered && !isOpen ? 'lg:w-0 lg:opacity-0' : 'lg:w-auto lg:opacity-100'}`}>
+                <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${!isHovered && !isOpen && !isMobile ? 'lg:w-0 lg:opacity-0' : 'lg:w-auto lg:opacity-100'}`}>
                   Sign Out
                 </span>
               </Button>
@@ -216,7 +232,7 @@ const Navigation = () => {
         </div>
 
         {/* Dock indicator */}
-        <div className={`absolute right-0 top-1/2 transform -translate-y-1/2 w-1 h-12 bg-gradient-to-b from-transparent via-white/30 to-transparent rounded-l-full transition-opacity duration-300 ${!isHovered && !isOpen ? 'lg:opacity-100' : 'lg:opacity-0'}`} />
+        <div className={`absolute right-0 top-1/2 transform -translate-y-1/2 w-1 h-12 bg-gradient-to-b from-transparent via-white/30 to-transparent rounded-l-full transition-opacity duration-300 ${!isHovered && !isOpen && !isMobile ? 'lg:opacity-100' : 'lg:opacity-0'}`} />
       </nav>
 
       {/* Overlay for mobile */}
