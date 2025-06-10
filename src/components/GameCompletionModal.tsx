@@ -5,7 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { useTheme } from '@/hooks/useTheme';
 import { GameResult } from '@/types/futChampions';
 import { generateGameInsights } from '@/utils/aiInsights';
-import { Trophy, Target, TrendingUp, Star, Calendar, Clock, Zap, Sparkles, Award } from 'lucide-react';
+import { Trophy, Target, TrendingUp, Star, Calendar, Clock, Zap, Sparkles, Award, Shield, BarChart3 } from 'lucide-react';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 
 interface GameCompletionModalProps {
   isOpen: boolean;
@@ -54,6 +55,30 @@ const GameCompletionModal = ({ isOpen, onClose, game, weekStats }: GameCompletio
 
   const isWin = game.result === 'win';
   const [goalsFor, goalsAgainst] = game.scoreLine.split('-').map(Number);
+
+  // Generate performance stats for charts
+  const teamStatsData = [
+    { name: 'Possession', value: game.teamStats?.possession || 50, color: '#3b82f6' },
+    { name: 'Pass Acc.', value: game.teamStats?.passAccuracy || 75, color: '#8b5cf6' },
+    { name: 'Shot Acc.', value: game.teamStats?.shots > 0 ? (game.teamStats?.shotsOnTarget || 0) / game.teamStats?.shots * 100 : 0, color: '#10b981' }
+  ];
+
+  // XG comparison data
+  const xgData = [
+    { name: 'Goals', expected: game.teamStats?.expectedGoals || 0, actual: goalsFor },
+    { name: 'Conceded', expected: game.teamStats?.expectedGoalsAgainst || 0, actual: goalsAgainst }
+  ];
+
+  // Player performance data
+  const playerPerformanceData = game.playerStats
+    .sort((a, b) => b.rating - a.rating)
+    .slice(0, 5)
+    .map(player => ({
+      name: player.name.length > 10 ? player.name.substring(0, 10) + '...' : player.name,
+      rating: player.rating,
+      goals: player.goals,
+      assists: player.assists
+    }));
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -141,10 +166,100 @@ const GameCompletionModal = ({ isOpen, onClose, game, weekStats }: GameCompletio
           </div>
         </div>
 
+        {/* Performance Charts */}
+        <div className="p-6 border-b border-opacity-20" style={{ borderColor: currentTheme.colors.border }}>
+          <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-3">
+            <BarChart3 className="h-5 w-5 text-fifa-blue" />
+            Performance Analysis
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Team Stats Chart */}
+            <div className="p-4 rounded-xl bg-white/5">
+              <h4 className="text-sm font-medium text-white mb-3">Team Performance</h4>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={teamStatsData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#374151" />
+                  <XAxis type="number" domain={[0, 100]} stroke="#9ca3af" />
+                  <YAxis dataKey="name" type="category" stroke="#9ca3af" width={70} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'rgba(17, 24, 39, 0.9)', 
+                      border: '1px solid rgba(59, 130, 246, 0.3)', 
+                      borderRadius: '12px' 
+                    }}
+                    formatter={(value: any) => [`${value.toFixed(1)}%`, '']}
+                  />
+                  <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                    {teamStatsData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* XG Comparison Chart */}
+            <div className="p-4 rounded-xl bg-white/5">
+              <h4 className="text-sm font-medium text-white mb-3">Expected vs Actual Goals</h4>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={xgData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis dataKey="name" stroke="#9ca3af" />
+                  <YAxis stroke="#9ca3af" />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'rgba(17, 24, 39, 0.9)', 
+                      border: '1px solid rgba(59, 130, 246, 0.3)', 
+                      borderRadius: '12px' 
+                    }}
+                    formatter={(value: any) => [value.toFixed(1), '']}
+                  />
+                  <Bar dataKey="expected" name="Expected" fill="#8b5cf6" />
+                  <Bar dataKey="actual" name="Actual" fill="#3b82f6" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
+        {/* Player Performance Chart */}
+        <div className="p-6 border-b border-opacity-20" style={{ borderColor: currentTheme.colors.border }}>
+          <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-3">
+            <Users className="h-5 w-5 text-fifa-purple" />
+            Player Performances
+          </h3>
+          
+          {playerPerformanceData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={playerPerformanceData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis dataKey="name" stroke="#9ca3af" />
+                <YAxis yAxisId="left" orientation="left" stroke="#f59e0b" domain={[0, 10]} />
+                <YAxis yAxisId="right" orientation="right" stroke="#10b981" domain={[0, Math.max(5, ...playerPerformanceData.map(p => Math.max(p.goals, p.assists)))]} />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'rgba(17, 24, 39, 0.9)', 
+                    border: '1px solid rgba(59, 130, 246, 0.3)', 
+                    borderRadius: '12px' 
+                  }}
+                />
+                <Bar yAxisId="left" dataKey="rating" name="Rating" fill="#f59e0b" />
+                <Bar yAxisId="right" dataKey="goals" name="Goals" fill="#10b981" />
+                <Bar yAxisId="right" dataKey="assists" name="Assists" fill="#3b82f6" />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="text-center py-4">
+              <p className="text-gray-400">No player performance data available</p>
+            </div>
+          )}
+        </div>
+
         {/* Enhanced Week Performance Stats */}
-        <div className="p-8 border-b border-opacity-20" style={{ borderColor: currentTheme.colors.border }}>
-          <h3 className="text-2xl font-semibold text-white mb-6 flex items-center gap-3">
-            <TrendingUp className="h-6 w-6" style={{ color: currentTheme.colors.primary }} />
+        <div className="p-6 border-b border-opacity-20" style={{ borderColor: currentTheme.colors.border }}>
+          <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-3">
+            <TrendingUp className="h-5 w-5" style={{ color: currentTheme.colors.primary }} />
             Week Performance Analytics
           </h3>
           
@@ -205,9 +320,9 @@ const GameCompletionModal = ({ isOpen, onClose, game, weekStats }: GameCompletio
         </div>
 
         {/* Enhanced AI Insights Section */}
-        <div className="p-8">
-          <h3 className="text-2xl font-semibold text-white mb-6 flex items-center gap-3">
-            <Zap className="h-6 w-6 text-yellow-400" />
+        <div className="p-6">
+          <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-3">
+            <Zap className="h-5 w-5 text-yellow-400" />
             AI Performance Analysis
           </h3>
           
@@ -244,7 +359,7 @@ const GameCompletionModal = ({ isOpen, onClose, game, weekStats }: GameCompletio
         </div>
 
         {/* Enhanced Footer */}
-        <div className="p-8 bg-gradient-to-t from-black/20 to-transparent">
+        <div className="p-6 bg-gradient-to-t from-black/20 to-transparent">
           <div className="flex gap-4">
             <Button
               onClick={onClose}

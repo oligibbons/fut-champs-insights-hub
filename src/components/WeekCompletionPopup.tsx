@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { useTheme } from '@/hooks/useTheme';
 import { WeeklyPerformance, FC25_RANKS } from '@/types/futChampions';
 import { Trophy, Target, TrendingUp, TrendingDown, Star, BarChart3, Award, Calendar, PieChart, LineChart, Activity } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RePieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RePieChart, Pie, Cell, LineChart as ReLineChart, Line, AreaChart, Area, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
 
 interface WeekCompletionPopupProps {
   isOpen: boolean;
@@ -31,10 +31,13 @@ const WeekCompletionPopup = ({ isOpen, onClose, weekData, onNewWeek }: WeekCompl
     : 0;
 
   // Calculate best and worst performances
-  const allPlayerRatings = weekData.games.flatMap(game => game.playerStats.map(p => p.rating));
-  const bestRating = Math.max(...allPlayerRatings);
-  const worstRating = Math.min(...allPlayerRatings);
-  const avgRating = allPlayerRatings.reduce((a, b) => a + b, 0) / allPlayerRatings.length;
+  const allPlayerRatings = weekData.games.flatMap(game => game.playerStats.map(p => ({...p, gameNumber: game.gameNumber})));
+  const bestRating = Math.max(...allPlayerRatings.map(p => p.rating));
+  const worstRating = Math.min(...allPlayerRatings.map(p => p.rating));
+  const avgRating = allPlayerRatings.reduce((a, b) => a + b.rating, 0) / allPlayerRatings.length;
+  
+  const bestPerformance = allPlayerRatings.find(p => p.rating === bestRating);
+  const worstPerformance = allPlayerRatings.find(p => p.rating === worstRating);
 
   // Get top performers
   const playerPerformances = new Map();
@@ -102,6 +105,47 @@ const WeekCompletionPopup = ({ isOpen, onClose, weekData, onNewWeek }: WeekCompl
       conceded: goalsAgainst
     };
   });
+
+  // Win/loss progression
+  const progressionData = weekData.games.map((game, index) => ({
+    game: `Game ${game.gameNumber}`,
+    result: game.result === 'win' ? 1 : 0,
+    cumulativeWins: weekData.games.slice(0, index + 1).filter(g => g.result === 'win').length,
+    cumulativeLosses: weekData.games.slice(0, index + 1).filter(g => g.result === 'loss').length,
+  }));
+
+  // Opponent skill distribution
+  const opponentSkillData = Array.from({ length: 10 }, (_, i) => {
+    const skill = i + 1;
+    const games = weekData.games.filter(game => game.opponentSkill === skill);
+    return {
+      skill: skill.toString(),
+      count: games.length,
+      wins: games.filter(g => g.result === 'win').length,
+      losses: games.filter(g => g.result === 'loss').length,
+      winRate: games.length > 0 ? (games.filter(g => g.result === 'win').length / games.length) * 100 : 0
+    };
+  }).filter(item => item.count > 0);
+
+  // Team stats averages
+  const teamStatsAverages = {
+    possession: weekData.games.reduce((sum, game) => sum + (game.teamStats?.possession || 50), 0) / weekData.games.length,
+    passAccuracy: weekData.games.reduce((sum, game) => sum + (game.teamStats?.passAccuracy || 75), 0) / weekData.games.length,
+    shots: weekData.games.reduce((sum, game) => sum + (game.teamStats?.shots || 0), 0) / weekData.games.length,
+    shotsOnTarget: weekData.games.reduce((sum, game) => sum + (game.teamStats?.shotsOnTarget || 0), 0) / weekData.games.length,
+    corners: weekData.games.reduce((sum, game) => sum + (game.teamStats?.corners || 0), 0) / weekData.games.length,
+    fouls: weekData.games.reduce((sum, game) => sum + (game.teamStats?.fouls || 0), 0) / weekData.games.length
+  };
+
+  // Performance radar data
+  const radarData = [
+    { metric: 'Attack', value: Math.min(100, weekData.totalGoals * 6.67) },
+    { metric: 'Defense', value: Math.max(0, 100 - (weekData.totalConceded * 6.67)) },
+    { metric: 'Win Rate', value: winRate },
+    { metric: 'Consistency', value: Math.min(100, (weekData.bestStreak || 0) * 20) },
+    { metric: 'Finishing', value: xgPerformance > 0 ? Math.min(100, xgPerformance + 50) : Math.max(0, 50 + xgPerformance/2) },
+    { metric: 'Defending', value: xgaPerformance < 0 ? Math.min(100, Math.abs(xgaPerformance) + 50) : Math.max(0, 50 - xgaPerformance/2) }
+  ];
 
   const getWeekGrade = () => {
     if (winRate >= 80) return { grade: 'S', color: '#9932CC' };
@@ -177,6 +221,81 @@ const WeekCompletionPopup = ({ isOpen, onClose, weekData, onNewWeek }: WeekCompl
                   {nextRank.wins - weekData.totalWins} wins to {nextRank.name}
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* Performance Radar Chart */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="p-6 rounded-3xl" style={{ backgroundColor: currentTheme.colors.surface }}>
+              <h3 className="text-xl font-semibold mb-4 flex items-center gap-3" style={{ color: currentTheme.colors.text }}>
+                <Activity className="h-6 w-6" style={{ color: currentTheme.colors.primary }} />
+                Performance Profile
+              </h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <RadarChart data={radarData}>
+                  <PolarGrid stroke="#374151" />
+                  <PolarAngleAxis dataKey="metric" tick={{ fontSize: 12, fill: '#9CA3AF' }} />
+                  <PolarRadiusAxis 
+                    domain={[0, 100]} 
+                    tick={{ fontSize: 10, fill: '#9CA3AF' }}
+                    tickCount={5}
+                  />
+                  <Radar 
+                    name="Performance" 
+                    dataKey="value" 
+                    stroke="#3B82F6" 
+                    fill="#3B82F6" 
+                    fillOpacity={0.3}
+                    strokeWidth={2}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#1F2937', 
+                      border: '1px solid #374151',
+                      borderRadius: '8px',
+                      color: '#F9FAFB'
+                    }}
+                  />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="p-6 rounded-3xl" style={{ backgroundColor: currentTheme.colors.surface }}>
+              <h3 className="text-xl font-semibold mb-4 flex items-center gap-3" style={{ color: currentTheme.colors.text }}>
+                <TrendingUp className="h-6 w-6" style={{ color: currentTheme.colors.primary }} />
+                Win/Loss Progression
+              </h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={progressionData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis dataKey="game" stroke="#9CA3AF" />
+                  <YAxis stroke="#9CA3AF" />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#1F2937', 
+                      border: '1px solid #374151',
+                      borderRadius: '8px',
+                      color: '#F9FAFB'
+                    }}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="cumulativeWins" 
+                    stackId="1"
+                    stroke="#10B981" 
+                    fill="#10B981" 
+                    name="Wins"
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="cumulativeLosses" 
+                    stackId="1"
+                    stroke="#EF4444" 
+                    fill="#EF4444" 
+                    name="Losses"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
           </div>
 
@@ -297,6 +416,90 @@ const WeekCompletionPopup = ({ isOpen, onClose, weekData, onNewWeek }: WeekCompl
             </div>
           </div>
 
+          {/* Opponent Skill Analysis */}
+          <div className="p-6 rounded-3xl" style={{ backgroundColor: currentTheme.colors.surface }}>
+            <h3 className="text-xl font-semibold mb-4 flex items-center gap-3" style={{ color: currentTheme.colors.text }}>
+              <Users className="h-6 w-6" style={{ color: currentTheme.colors.primary }} />
+              Performance vs Opponent Skill
+            </h3>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={opponentSkillData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis dataKey="skill" stroke="#9ca3af" label={{ value: 'Opponent Skill Level', position: 'insideBottom', offset: -5 }} />
+                  <YAxis stroke="#9ca3af" />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'rgba(17, 24, 39, 0.9)', 
+                      border: '1px solid rgba(59, 130, 246, 0.3)', 
+                      borderRadius: '12px' 
+                    }} 
+                  />
+                  <Bar dataKey="winRate" name="Win Rate %" fill="#3b82f6" />
+                  <Bar dataKey="count" name="Games Played" fill="#8b5cf6" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Team Stats Overview */}
+          <div className="p-6 rounded-3xl" style={{ backgroundColor: currentTheme.colors.surface }}>
+            <h3 className="text-xl font-semibold mb-4 flex items-center gap-3" style={{ color: currentTheme.colors.text }}>
+              <BarChart3 className="h-6 w-6" style={{ color: currentTheme.colors.primary }} />
+              Team Stats Overview
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className="text-3xl font-bold" style={{ color: currentTheme.colors.primary }}>
+                  {teamStatsAverages.possession.toFixed(1)}%
+                </div>
+                <div className="text-sm" style={{ color: currentTheme.colors.muted }}>
+                  Avg Possession
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold" style={{ color: currentTheme.colors.accent }}>
+                  {teamStatsAverages.passAccuracy.toFixed(1)}%
+                </div>
+                <div className="text-sm" style={{ color: currentTheme.colors.muted }}>
+                  Pass Accuracy
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold" style={{ color: currentTheme.colors.secondary }}>
+                  {teamStatsAverages.shots.toFixed(1)}
+                </div>
+                <div className="text-sm" style={{ color: currentTheme.colors.muted }}>
+                  Shots per Game
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold" style={{ color: currentTheme.colors.primary }}>
+                  {teamStatsAverages.shotsOnTarget.toFixed(1)}
+                </div>
+                <div className="text-sm" style={{ color: currentTheme.colors.muted }}>
+                  Shots on Target
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold" style={{ color: currentTheme.colors.accent }}>
+                  {teamStatsAverages.corners.toFixed(1)}
+                </div>
+                <div className="text-sm" style={{ color: currentTheme.colors.muted }}>
+                  Corners per Game
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold" style={{ color: currentTheme.colors.secondary }}>
+                  {(teamStatsAverages.shotsOnTarget / teamStatsAverages.shots * 100).toFixed(1)}%
+                </div>
+                <div className="text-sm" style={{ color: currentTheme.colors.muted }}>
+                  Shot Accuracy
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* XG Analysis */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="p-8 rounded-3xl" style={{ backgroundColor: currentTheme.colors.surface }}>
@@ -402,6 +605,53 @@ const WeekCompletionPopup = ({ isOpen, onClose, weekData, onNewWeek }: WeekCompl
             </div>
           </div>
 
+          {/* Best & Worst Performances */}
+          {bestPerformance && worstPerformance && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="p-6 rounded-3xl" style={{ backgroundColor: currentTheme.colors.surface }}>
+                <h3 className="text-xl font-semibold mb-4 flex items-center gap-3" style={{ color: currentTheme.colors.text }}>
+                  <Star className="h-6 w-6 text-fifa-gold" />
+                  Best Individual Performance
+                </h3>
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-full bg-fifa-gold flex items-center justify-center text-black font-bold text-2xl">
+                    {bestPerformance.rating.toFixed(1)}
+                  </div>
+                  <div>
+                    <p className="text-xl font-bold" style={{ color: currentTheme.colors.text }}>{bestPerformance.name}</p>
+                    <p className="text-sm" style={{ color: currentTheme.colors.muted }}>
+                      {bestPerformance.position} • Game {bestPerformance.gameNumber}
+                    </p>
+                    <p className="text-sm mt-1" style={{ color: currentTheme.colors.text }}>
+                      {bestPerformance.goals} goals, {bestPerformance.assists} assists
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 rounded-3xl" style={{ backgroundColor: currentTheme.colors.surface }}>
+                <h3 className="text-xl font-semibold mb-4 flex items-center gap-3" style={{ color: currentTheme.colors.text }}>
+                  <TrendingDown className="h-6 w-6 text-fifa-red" />
+                  Needs Improvement
+                </h3>
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-full bg-fifa-red flex items-center justify-center text-white font-bold text-2xl">
+                    {worstPerformance.rating.toFixed(1)}
+                  </div>
+                  <div>
+                    <p className="text-xl font-bold" style={{ color: currentTheme.colors.text }}>{worstPerformance.name}</p>
+                    <p className="text-sm" style={{ color: currentTheme.colors.muted }}>
+                      {worstPerformance.position} • Game {worstPerformance.gameNumber}
+                    </p>
+                    <p className="text-sm mt-1" style={{ color: currentTheme.colors.text }}>
+                      Consider adjusting tactics or player position
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Insights */}
           <div className="p-8 rounded-3xl" style={{ backgroundColor: currentTheme.colors.surface }}>
             <h3 className="text-2xl font-semibold mb-6 flex items-center gap-3" style={{ color: currentTheme.colors.text }}>
@@ -421,6 +671,9 @@ const WeekCompletionPopup = ({ isOpen, onClose, weekData, onNewWeek }: WeekCompl
                   {weekData.bestStreak && weekData.bestStreak >= 5 && <p>✅ Impressive winning streak of {weekData.bestStreak} games</p>}
                   {topPerformers.length > 0 && topPerformers[0].avgRating >= 8.0 && 
                     <p>✅ Standout performance from {topPerformers[0].name} with {topPerformers[0].avgRating.toFixed(1)} rating</p>}
+                  {teamStatsAverages.possession >= 60 && <p>✅ Excellent possession control ({teamStatsAverages.possession.toFixed(1)}%)</p>}
+                  {teamStatsAverages.passAccuracy >= 85 && <p>✅ Exceptional passing accuracy ({teamStatsAverages.passAccuracy.toFixed(1)}%)</p>}
+                  {(teamStatsAverages.shotsOnTarget / teamStatsAverages.shots) >= 0.6 && <p>✅ High shot accuracy ({(teamStatsAverages.shotsOnTarget / teamStatsAverages.shots * 100).toFixed(1)}%)</p>}
                 </div>
               </div>
               
@@ -436,6 +689,9 @@ const WeekCompletionPopup = ({ isOpen, onClose, weekData, onNewWeek }: WeekCompl
                   {weekData.worstStreak && weekData.worstStreak <= -3 && <p>⚠️ Experienced a losing streak of {Math.abs(weekData.worstStreak)} games</p>}
                   {weekData.games.filter(g => g.result === 'loss' && g.opponentSkill <= 5).length >= 2 && 
                     <p>⚠️ Lost multiple games to lower-skilled opponents</p>}
+                  {teamStatsAverages.possession < 45 && <p>⚠️ Low possession ({teamStatsAverages.possession.toFixed(1)}%) - work on ball retention</p>}
+                  {teamStatsAverages.passAccuracy < 70 && <p>⚠️ Poor passing accuracy ({teamStatsAverages.passAccuracy.toFixed(1)}%)</p>}
+                  {(teamStatsAverages.shotsOnTarget / teamStatsAverages.shots) < 0.4 && <p>⚠️ Low shot accuracy ({(teamStatsAverages.shotsOnTarget / teamStatsAverages.shots * 100).toFixed(1)}%)</p>}
                 </div>
               </div>
             </div>

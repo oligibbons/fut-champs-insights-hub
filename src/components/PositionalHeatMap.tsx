@@ -111,7 +111,7 @@ const PositionalHeatMap = () => {
   const generateHeatmapData = () => {
     // Create a grid of points covering the entire pitch
     const gridPoints = [];
-    const gridDensity = 20; // Higher number = more detailed heatmap
+    const gridDensity = 40; // Higher number = more detailed heatmap
     
     for (let x = 0; x <= 100; x += 100/gridDensity) {
       for (let y = 0; y <= 100; y += 100/gridDensity) {
@@ -181,7 +181,7 @@ const PositionalHeatMap = () => {
                 </div>
               </TooltipTrigger>
               <TooltipContent className="max-w-xs">
-                <p>Visual representation of average player ratings by position. Heat patches show performance intensity, with ratings overlaid. Hover over positions for detailed statistics.</p>
+                <p>Visual representation of average player ratings by position. Heat patches show performance intensity across the entire pitch, with ratings overlaid on key positions. Hover over positions for detailed statistics.</p>
               </TooltipContent>
             </Tooltip>
           </CardTitle>
@@ -210,8 +210,8 @@ const PositionalHeatMap = () => {
                 style={{
                   left: `${point.x}%`,
                   top: `${point.y}%`,
-                  width: '60px',
-                  height: '60px',
+                  width: '80px',
+                  height: '80px',
                   background: `radial-gradient(circle, ${getHeatColor(point.rating)}${Math.round(point.intensity * 255).toString(16).padStart(2, '0')} 0%, transparent 70%)`,
                   transform: 'translate(-50%, -50%)',
                   opacity: point.intensity,

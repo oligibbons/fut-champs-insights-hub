@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAccountData } from '@/hooks/useAccountData';
@@ -7,7 +6,7 @@ import { TrendingUp, Target, Trophy, Users, Calendar, BarChart3, Brain, Lightbul
 import { generateAIInsights } from '@/utils/aiInsights';
 import { generateEnhancedAIInsights } from '@/utils/enhancedAiInsights';
 import AnalyticsTooltip from '@/components/AnalyticsTooltip';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const AnalyticsDashboard = () => {
   const { weeks, activeAccount } = useAccountData();
@@ -16,13 +15,17 @@ const AnalyticsDashboard = () => {
   const completedWeeks = weeks.filter(week => week.isCompleted);
   const currentWeek = weeks.find(week => !week.isCompleted);
   const recentGames = weeks.flatMap(week => week.games).slice(-10);
+  
+  // Ref to prevent re-rendering of insights
+  const insightsRef = useRef<any[]>([]);
 
   useEffect(() => {
-    if (completedWeeks.length > 0) {
+    if (completedWeeks.length > 0 && insightsRef.current.length === 0) {
       const insights = generateAIInsights(completedWeeks, currentWeek, recentGames);
       const enhanced = generateEnhancedAIInsights(completedWeeks, currentWeek);
       setAiInsights(insights);
       setEnhancedInsights(enhanced);
+      insightsRef.current = enhanced;
     }
   }, [completedWeeks, currentWeek, recentGames]);
 
@@ -131,16 +134,18 @@ const AnalyticsDashboard = () => {
     }
 
     // Enhanced AI-based tips from insights
-    enhancedInsights.slice(0, 3).forEach(insight => {
-      if (insight.actionableAdvice) {
-        tips.push({
-          type: 'ai',
-          title: insight.title,
-          content: insight.actionableAdvice,
-          icon: <Brain className="h-5 w-5 text-fifa-purple" />
-        });
-      }
-    });
+    if (enhancedInsights.length > 0) {
+      enhancedInsights.slice(0, 3).forEach(insight => {
+        if (insight.actionableAdvice) {
+          tips.push({
+            type: 'ai',
+            title: insight.title,
+            content: insight.actionableAdvice,
+            icon: <Brain className="h-5 w-5 text-fifa-purple" />
+          });
+        }
+      });
+    }
 
     // General tips
     tips.push(
@@ -179,7 +184,7 @@ const AnalyticsDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <AnalyticsTooltip
           title="Total Games Played"
-          description="Complete count of all FIFA Champions matches you've recorded. Includes wins, losses, and all game contexts."
+          description="Complete count of all Champions matches you've recorded. Includes wins, losses, and all game contexts."
         >
           <Card className="glass-card">
             <CardContent className="p-6">
@@ -196,7 +201,7 @@ const AnalyticsDashboard = () => {
 
         <AnalyticsTooltip
           title="Overall Win Rate"
-          description="Percentage of games won across all recorded matches. This is your primary performance indicator in FIFA Champions."
+          description="Percentage of games won across all recorded matches. This is your primary performance indicator in Champions."
         >
           <Card className="glass-card">
             <CardContent className="p-6">
@@ -268,7 +273,7 @@ const AnalyticsDashboard = () => {
           </AnalyticsTooltip>
           <AnalyticsTooltip
             title="Tips & Tricks"
-            description="Personalized advice based on your performance data and general FIFA Champions strategy tips to improve your gameplay."
+            description="Personalized advice based on your performance data and general Champions strategy tips to improve your gameplay."
             showIcon={false}
           >
             <TabsTrigger value="tips">Tips & Tricks</TabsTrigger>
@@ -414,6 +419,11 @@ const AnalyticsDashboard = () => {
                   </CardHeader>
                   <CardContent>
                     <p className="text-white text-sm mb-3">{insight.description}</p>
+                    {insight.actionableAdvice && (
+                      <div className="p-2 rounded bg-white/5 mb-3 text-sm text-gray-300">
+                        <strong className="text-fifa-blue">Advice:</strong> {insight.actionableAdvice}
+                      </div>
+                    )}
                     <div className="flex items-center justify-between">
                       <span className={`text-xs px-2 py-1 rounded-full ${
                         insight.severity === 'low' ? 'bg-green-500/20 text-green-400' :
@@ -444,7 +454,7 @@ const AnalyticsDashboard = () => {
               <AnalyticsTooltip
                 key={index}
                 title={`${tip.type.toUpperCase()} Tip`}
-                description="Personalized advice based on your performance data and FIFA Champions best practices."
+                description="Personalized advice based on your performance data and Champions best practices."
               >
                 <Card className="glass-card">
                   <CardHeader>
