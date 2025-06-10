@@ -120,7 +120,7 @@ function App() {
               <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
               <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
               <Route path="/404" element={<NotFound />} />
-              <Route path="*" element={<Navigate to="/404\" replace />} />
+              <Route path="*" element={<Navigate to="/404" replace />} />
             </Routes>
           </div>
           <Toaster />

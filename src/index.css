@@ -54,6 +54,7 @@ body {
   .mobile-nav {
     width: 80% !important;
     max-width: 300px !important;
+    z-index: 100 !important;
   }
 }
 
