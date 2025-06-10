@@ -19,7 +19,6 @@ import {
   ResponsiveContainer,
   ReferenceLine
 } from 'recharts';
-import { Gauge } from 'gauge-js';
 
 interface CPSGaugeProps {
   weekData: WeeklyPerformance;
@@ -30,10 +29,6 @@ const CPSGauge = ({ weekData, historicalData = [] }: CPSGaugeProps) => {
   const [cpsScore, setCpsScore] = useState(0);
   const [cpsBreakdown, setCpsBreakdown] = useState<Record<string, number>>({});
   const [trendData, setTrendData] = useState<any[]>([]);
-  const [gaugeRef, setGaugeRef] = useState<HTMLCanvasElement | null>(null);
-  const [gaugeInstance, setGaugeInstance] = useState<any>(null);
-  const [gaugeError, setGaugeError] = useState<string | null>(null);
-  const [useSimpleGauge, setUseSimpleGauge] = useState(false);
 
   useEffect(() => {
     // Calculate CPS score
@@ -152,107 +147,7 @@ const CPSGauge = ({ weekData, historicalData = [] }: CPSGaugeProps) => {
     
     const score = calculateCPS();
     calculateTrend();
-    
-    // Initialize Gauge.js with proper error handling
-    const initGauge = () => {
-      if (!gaugeRef || typeof window === 'undefined') {
-        console.log('CPSGauge: No gauge ref or not in browser environment');
-        return;
-      }
-
-      try {
-        console.log('CPSGauge: Creating gauge instance...');
-        
-        // Create gauge instance directly using the imported Gauge class
-        const gauge = new Gauge(gaugeRef);
-        console.log('CPSGauge: Gauge instance created successfully');
-        
-        // Verify gauge has required methods
-        if (!gauge || typeof gauge.setOptions !== 'function') {
-          console.error('CPSGauge: Gauge instance missing setOptions method:', {
-            gaugeExists: !!gauge,
-            gaugeType: typeof gauge,
-            hasSetOptions: !!(gauge && gauge.setOptions),
-            gaugeMethods: gauge ? Object.getOwnPropertyNames(Object.getPrototypeOf(gauge)) : 'no gauge'
-          });
-          throw new Error('Gauge instance does not have setOptions method');
-        }
-        
-        console.log('CPSGauge: Configuring gauge options...');
-        
-        // Set gauge options
-        gauge.setOptions({
-          angle: 0.15,
-          lineWidth: 0.44,
-          radiusScale: 1,
-          pointer: {
-            length: 0.6,
-            strokeWidth: 0.035,
-            color: '#000000'
-          },
-          limitMax: false,
-          limitMin: false,
-          colorStart: '#6FADCF',
-          colorStop: getCpsColor(score),
-          strokeColor: '#E0E0E0',
-          generateGradient: true,
-          highDpiSupport: true,
-          staticZones: [
-            {min: 0, max: 40, color: "#ef4444"},
-            {min: 40, max: 60, color: "#f59e0b"},
-            {min: 60, max: 80, color: "#f59e0b"},
-            {min: 80, max: 100, color: "#10b981"}
-          ],
-          staticLabels: {
-            font: "10px sans-serif",
-            labels: [0, 20, 40, 60, 80, 100],
-            color: "#ffffff",
-            fractionDigits: 0
-          },
-        });
-        console.log('CPSGauge: Options set successfully');
-        
-        // Set gauge value
-        gauge.maxValue = 100;
-        gauge.setMinValue(0);
-        gauge.animationSpeed = 32;
-        gauge.set(score);
-        console.log('CPSGauge: Gauge value set to:', score);
-        
-        // Save gauge instance for cleanup
-        setGaugeInstance(gauge);
-        setGaugeError(null);
-        setUseSimpleGauge(false);
-        console.log('CPSGauge: Gauge initialization completed successfully');
-        
-      } catch (error) {
-        console.error('CPSGauge: Complete gauge initialization failed:', error);
-        setGaugeError(error.message);
-        setUseSimpleGauge(true);
-        
-        // Clear any partial gauge instance
-        if (gaugeInstance) {
-          setGaugeInstance(null);
-        }
-      }
-    };
-    
-    initGauge();
-    
-    // Cleanup function
-    return () => {
-      if (gaugeInstance) {
-        try {
-          // Attempt cleanup if gauge has cleanup methods
-          if (typeof gaugeInstance.destroy === 'function') {
-            gaugeInstance.destroy();
-          }
-        } catch (error) {
-          console.warn('CPSGauge: Error during cleanup:', error);
-        }
-      }
-    };
-  }, [weekData, historicalData, gaugeRef]);
+  }, [weekData, historicalData]);
 
   const getCpsColor = (score: number) => {
     if (score >= 80) return '#10b981'; // Green
@@ -260,33 +155,125 @@ const CPSGauge = ({ weekData, historicalData = [] }: CPSGaugeProps) => {
     return '#ef4444'; // Red
   };
 
-  // Simple CSS-based gauge as fallback
-  const SimpleGauge = ({ score }: { score: number }) => {
+  // Custom SVG Gauge Component
+  const CustomGauge = ({ score }: { score: number }) => {
+    const size = 200;
+    const strokeWidth = 12;
+    const radius = (size - strokeWidth) / 2;
+    const circumference = radius * Math.PI; // Half circle
     const percentage = Math.max(0, Math.min(100, score));
-    const rotation = (percentage / 100) * 180 - 90; // -90 to 90 degrees
+    
+    // Calculate the stroke offset for the progress
+    const offset = circumference - (percentage / 100) * circumference;
+    
+    // Calculate needle angle (-90 to 90 degrees)
+    const needleAngle = -90 + (percentage / 100) * 180;
+    
+    // Needle length
+    const needleLength = radius - 20;
     
     return (
-      <div className="relative w-[200px] h-[100px] mx-auto">
-        {/* Gauge background */}
-        <div className="absolute inset-0 border-8 border-gray-600 rounded-t-full border-b-0"></div>
-        
-        {/* Colored segments */}
-        <div className="absolute inset-2 border-4 border-red-500 rounded-t-full border-b-0 opacity-30"></div>
-        <div className="absolute inset-2 border-4 border-yellow-500 rounded-t-full border-b-0 opacity-30" 
-             style={{ clipPath: 'polygon(40% 100%, 60% 100%, 100% 0%, 80% 0%)' }}></div>
-        <div className="absolute inset-2 border-4 border-green-500 rounded-t-full border-b-0 opacity-30"
-             style={{ clipPath: 'polygon(60% 100%, 100% 100%, 100% 0%, 80% 0%)' }}></div>
-        
-        {/* Needle */}
-        <div className="absolute bottom-0 left-1/2 w-1 h-20 bg-white origin-bottom transform -translate-x-1/2"
-             style={{ transform: `translateX(-50%) rotate(${rotation}deg)` }}>
-          <div className="absolute -bottom-2 -left-1 w-3 h-3 bg-white rounded-full"></div>
-        </div>
+      <div className="relative flex flex-col items-center">
+        <svg width={size} height={size / 2 + 40} className="overflow-visible">
+          {/* Background arc */}
+          <path
+            d={`M ${strokeWidth/2} ${size/2} A ${radius} ${radius} 0 0 1 ${size - strokeWidth/2} ${size/2}`}
+            fill="none"
+            stroke="#374151"
+            strokeWidth={strokeWidth}
+            strokeLinecap="round"
+          />
+          
+          {/* Colored segments for reference */}
+          <defs>
+            <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="40%" stopColor="#ef4444" />
+              <stop offset="60%" stopColor="#f59e0b" />
+              <stop offset="80%" stopColor="#10b981" />
+              <stop offset="100%" stopColor="#10b981" />
+            </linearGradient>
+          </defs>
+          
+          {/* Progress arc */}
+          <path
+            d={`M ${strokeWidth/2} ${size/2} A ${radius} ${radius} 0 0 1 ${size - strokeWidth/2} ${size/2}`}
+            fill="none"
+            stroke="url(#gaugeGradient)"
+            strokeWidth={strokeWidth - 2}
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+            style={{
+              transition: 'stroke-dashoffset 1s ease-in-out',
+              opacity: 0.8
+            }}
+          />
+          
+          {/* Needle */}
+          <g transform={`translate(${size/2}, ${size/2})`}>
+            <line
+              x1="0"
+              y1="0"
+              x2={needleLength}
+              y2="0"
+              stroke="#ffffff"
+              strokeWidth="3"
+              strokeLinecap="round"
+              transform={`rotate(${needleAngle})`}
+              style={{
+                transition: 'transform 1s ease-in-out'
+              }}
+            />
+            {/* Needle center dot */}
+            <circle
+              cx="0"
+              cy="0"
+              r="6"
+              fill="#ffffff"
+            />
+          </g>
+          
+          {/* Scale markers */}
+          {[0, 20, 40, 60, 80, 100].map((value) => {
+            const angle = -90 + (value / 100) * 180;
+            const x1 = size/2 + (radius - 15) * Math.cos(angle * Math.PI / 180);
+            const y1 = size/2 + (radius - 15) * Math.sin(angle * Math.PI / 180);
+            const x2 = size/2 + (radius - 5) * Math.cos(angle * Math.PI / 180);
+            const y2 = size/2 + (radius - 5) * Math.sin(angle * Math.PI / 180);
+            
+            return (
+              <g key={value}>
+                <line
+                  x1={x1}
+                  y1={y1}
+                  x2={x2}
+                  y2={y2}
+                  stroke="#9ca3af"
+                  strokeWidth="2"
+                />
+                <text
+                  x={size/2 + (radius - 25) * Math.cos(angle * Math.PI / 180)}
+                  y={size/2 + (radius - 25) * Math.sin(angle * Math.PI / 180)}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fill="#9ca3af"
+                  fontSize="12"
+                  fontWeight="500"
+                >
+                  {value}
+                </text>
+              </g>
+            );
+          })}
+        </svg>
         
         {/* Center value */}
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-center">
-          <div className="text-2xl font-bold" style={{ color: getCpsColor(score) }}>{score.toFixed(1)}</div>
-          <div className="text-xs text-gray-400">CPS</div>
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-center">
+          <div className="text-3xl font-bold" style={{ color: getCpsColor(score) }}>
+            {score.toFixed(1)}
+          </div>
+          <div className="text-sm text-gray-400">CPS</div>
         </div>
       </div>
     );
@@ -322,30 +309,7 @@ const CPSGauge = ({ weekData, historicalData = [] }: CPSGaugeProps) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* CPS Gauge */}
           <div className="flex flex-col items-center">
-            {useSimpleGauge ? (
-              <div className="w-[200px] h-[200px] flex flex-col items-center justify-center">
-                <SimpleGauge score={cpsScore} />
-                {gaugeError && (
-                  <div className="mt-2 text-xs text-yellow-400 text-center max-w-xs">
-                    Using fallback gauge (gauge-js error: {gaugeError})
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="relative w-[200px] h-[200px]">
-                {/* Gauge.js canvas */}
-                <canvas 
-                  ref={setGaugeRef}
-                  className="w-full h-full"
-                />
-                
-                {/* Center value overlay (in case gauge doesn't render) */}
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
-                  <div className="text-3xl font-bold" style={{ color: getCpsColor(cpsScore) }}>{cpsScore.toFixed(1)}</div>
-                  <div className="text-sm text-gray-400">CPS</div>
-                </div>
-              </div>
-            )}
+            <CustomGauge score={cpsScore} />
             
             <div className="mt-4 space-y-2 w-full max-w-xs">
               {Object.entries(cpsBreakdown).map(([key, value]) => (
