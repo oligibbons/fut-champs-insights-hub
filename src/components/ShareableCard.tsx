@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { WeeklyPerformance, GameResult } from '@/types/futChampions';
 import { Share2, Download, Twitter, Facebook, Copy, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import * as htmlToImage from 'html-to-image';
+import domtoimage from 'dom-to-image-more';
 
 interface ShareableCardProps {
   weekData?: WeeklyPerformance;
@@ -24,9 +24,9 @@ const ShareableCard = ({ weekData, gameData, type }: ShareableCardProps) => {
     setIsGenerating(true);
     
     try {
-      const dataUrl = await htmlToImage.toPng(cardRef.current, {
+      const dataUrl = await domtoimage.toPng(cardRef.current, {
         quality: 0.95,
-        backgroundColor: '#000'
+        bgcolor: '#000'
       });
       
       // Download the image
@@ -55,9 +55,9 @@ const ShareableCard = ({ weekData, gameData, type }: ShareableCardProps) => {
     if (!cardRef.current) return;
     
     try {
-      const dataUrl = await htmlToImage.toPng(cardRef.current, {
+      const dataUrl = await domtoimage.toPng(cardRef.current, {
         quality: 0.95,
-        backgroundColor: '#000'
+        bgcolor: '#000'
       });
       
       // Create a blob from the data URL
@@ -91,9 +91,9 @@ const ShareableCard = ({ weekData, gameData, type }: ShareableCardProps) => {
     if (!cardRef.current) return;
     
     try {
-      const dataUrl = await htmlToImage.toPng(cardRef.current, {
+      const dataUrl = await domtoimage.toPng(cardRef.current, {
         quality: 0.95,
-        backgroundColor: '#000'
+        bgcolor: '#000'
       });
       
       // Create tweet text
