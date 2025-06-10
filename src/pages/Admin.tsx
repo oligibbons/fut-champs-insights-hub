@@ -26,7 +26,8 @@ import {
   AlertTriangle,
   RefreshCw,
   Download,
-  Upload
+  Upload,
+  Plus
 } from 'lucide-react';
 import { 
   AlertDialog,
@@ -38,6 +39,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 interface User {
   id: string;
