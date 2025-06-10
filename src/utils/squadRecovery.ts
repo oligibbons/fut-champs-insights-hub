@@ -1,5 +1,8 @@
 import { Squad, PlayerCard, SquadPosition } from '@/types/squads';
 import { supabase } from '@/integrations/supabase/client';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { useState } from 'react';
 
 // Default squad data for Week 1
 export const defaultSquad: Squad = {
@@ -219,3 +222,71 @@ export async function recoverSquads(userId?: string) {
   
   return squads;
 }
+
+// Squad Selection Dialog Component
+export const SquadSelectionDialog = ({ 
+  isOpen, 
+  onClose, 
+  squads, 
+  onSelectSquad 
+}: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  squads: Squad[]; 
+  onSelectSquad: (squad: Squad) => void;
+}) => {
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="bg-gray-900 border-gray-700 max-w-3xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-white">Select Squad to Restore</DialogTitle>
+        </DialogHeader>
+        
+        <div className="space-y-4 mt-4">
+          <p className="text-gray-400">Choose a squad to restore from the available options:</p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {squads.map((squad) => (
+              <div 
+                key={squad.id}
+                className="p-4 bg-gray-800 rounded-lg border border-gray-700 hover:border-fifa-blue cursor-pointer transition-colors"
+                onClick={() => onSelectSquad(squad)}
+              >
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-white font-medium">{squad.name}</h3>
+                  <Badge className="bg-fifa-blue">{squad.formation}</Badge>
+                </div>
+                
+                <div className="text-sm text-gray-400 mb-3">
+                  {squad.startingXI.filter(pos => pos.player).length}/11 players
+                </div>
+                
+                <div className="flex flex-wrap gap-1">
+                  {squad.startingXI
+                    .filter(pos => pos.player)
+                    .slice(0, 5)
+                    .map((pos) => (
+                      <Badge key={pos.id} variant="outline" className="text-xs text-gray-300 border-gray-600">
+                        {pos.player?.name}
+                      </Badge>
+                    ))}
+                  {squad.startingXI.filter(pos => pos.player).length > 5 && (
+                    <Badge variant="outline" className="text-xs text-gray-300 border-gray-600">
+                      +{squad.startingXI.filter(pos => pos.player).length - 5} more
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={onClose} className="border-gray-600 text-gray-400">
+              Cancel
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
