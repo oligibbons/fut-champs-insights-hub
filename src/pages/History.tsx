@@ -28,7 +28,7 @@ import WeekCompletionPopup from '@/components/WeekCompletionPopup';
 import GameCompletionModal from '@/components/GameCompletionModal';
 
 const History = () => {
-  const { weeklyData, setWeeklyData } = useDataSync();
+  const { weeklyData, deleteWeek, endWeek } = useDataSync();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterResult, setFilterResult] = useState<'all' | 'win' | 'loss'>('all');
   const [filterWeek, setFilterWeek] = useState<string>('all');
@@ -92,14 +92,22 @@ const History = () => {
     setDeleteWeekDialog({ isOpen: true, weekId });
   };
 
-  const confirmDeleteWeek = () => {
+  const confirmDeleteWeek = async () => {
     if (deleteWeekDialog.weekId) {
-      console.log('Delete week functionality not implemented with Supabase');
-      toast({
-        title: "Feature Not Available",
-        description: "Week deletion is not currently available with Supabase integration.",
-        variant: "destructive"
-      });
+      try {
+        await deleteWeek(deleteWeekDialog.weekId);
+        toast({
+          title: "Week Deleted",
+          description: "The week and all its games have been deleted."
+        });
+      } catch (error) {
+        console.error('Error deleting week:', error);
+        toast({
+          title: "Error",
+          description: "Failed to delete week. Please try again.",
+          variant: "destructive"
+        });
+      }
     }
     setDeleteWeekDialog({ isOpen: false, weekId: null });
   };
@@ -108,14 +116,22 @@ const History = () => {
     setEndWeekDialog({ isOpen: true, weekId });
   };
 
-  const confirmEndWeek = () => {
+  const confirmEndWeek = async () => {
     if (endWeekDialog.weekId) {
-      console.log('End week functionality not implemented with Supabase');
-      toast({
-        title: "Feature Not Available", 
-        description: "Week ending is not currently available with Supabase integration.",
-        variant: "destructive"
-      });
+      try {
+        await endWeek(endWeekDialog.weekId);
+        toast({
+          title: "Week Completed",
+          description: "The week has been marked as completed."
+        });
+      } catch (error) {
+        console.error('Error ending week:', error);
+        toast({
+          title: "Error",
+          description: "Failed to end week. Please try again.",
+          variant: "destructive"
+        });
+      }
     }
     setEndWeekDialog({ isOpen: false, weekId: null });
   };
