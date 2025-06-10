@@ -104,6 +104,14 @@ const Navigation = () => {
         </Button>
       </div>
 
+      {/* Mobile Navigation Overlay */}
+      {isOpen && isMobile && (
+        <div
+          className="fixed inset-0 bg-black/50 z-20 backdrop-blur-sm"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
       {/* Navigation Sidebar - Mobile Optimized */}
       <nav 
         className={`
@@ -113,6 +121,7 @@ const Navigation = () => {
           lg:translate-x-0
           overflow-y-auto
           static-element
+          ${isMobile ? 'mobile-nav' : ''}
         `}
         style={{
           backgroundColor: currentTheme.colors.surface,
@@ -250,14 +259,6 @@ const Navigation = () => {
           <div className={`absolute right-0 top-1/2 transform -translate-y-1/2 w-1 h-12 bg-gradient-to-b from-transparent via-white/30 to-transparent rounded-l-full transition-opacity duration-300 ${!isHovered && !isOpen ? 'lg:opacity-100' : 'lg:opacity-0'}`} />
         )}
       </nav>
-
-      {/* Overlay for mobile */}
-      {isOpen && (
-        <div
-          className="lg:hidden fixed inset-0 bg-black/50 z-20 backdrop-blur-sm"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
     </>
   );
 };
