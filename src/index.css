@@ -40,6 +40,15 @@ body {
   .lg\:hover\:ml-64:hover {
     margin-left: 0 !important;
   }
+  
+  /* Fix for radar chart text */
+  .recharts-polar-angle-axis-tick text {
+    font-size: 9px !important;
+  }
+  
+  .recharts-legend-item-text {
+    font-size: 10px !important;
+  }
 }
 
 /* Enhanced animations and transitions - ONLY for specific elements */
