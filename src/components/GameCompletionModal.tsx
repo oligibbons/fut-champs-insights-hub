@@ -4,9 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useTheme } from '@/hooks/useTheme';
 import { GameResult } from '@/types/futChampions';
-import { generateGameInsights } from '@/utils/aiInsights';
-import { Trophy, Target, TrendingUp, Star, Calendar, Clock, Zap, Sparkles, Award, Shield, BarChart3 } from 'lucide-react';
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+import { generateMatchFeedback } from '@/utils/aiInsights';
+import { Trophy, Target, TrendingUp, Star, Calendar, Clock, Zap, Sparkles, Award, Shield, BarChart3, Users } from 'lucide-react';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell } from 'recharts';
 
 interface GameCompletionModalProps {
   isOpen: boolean;
@@ -29,8 +29,15 @@ const GameCompletionModal = ({ isOpen, onClose, game, weekStats }: GameCompletio
 
   useEffect(() => {
     if (isOpen && game && weekStats) {
-      // Generate AI insights
-      const gameInsights = generateGameInsights(game, weekStats);
+      // Generate AI insights using the correct function
+      const weekData = {
+        totalWins: weekStats.wins,
+        totalGoals: 0, // This would need to be passed from parent or calculated
+        totalConceded: 0, // This would need to be passed from parent or calculated
+        games: [], // This would need to be passed from parent
+        currentStreak: weekStats.currentStreak
+      };
+      const gameInsights = generateMatchFeedback(game, weekData);
       setInsights(gameInsights);
 
       // Show celebration for wins
