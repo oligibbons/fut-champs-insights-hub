@@ -337,7 +337,7 @@ const Squads = () => {
                         <div className="space-y-2">
                           {stats.topRatedPlayers.length > 0 && (
                             <div>
-                              <p className="text-xs" style={{ color: currentTheme.colors.muted }}>Key Players:</p>
+                              <p className="text-xs\" style={{ color: currentTheme.colors.muted }}>Key Players:</p>
                               <p className="text-sm font-medium" style={{ color: currentTheme.colors.text }}>
                                 {stats.topRatedPlayers.slice(0, 2).join(', ')}
                               </p>
