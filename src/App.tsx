@@ -1,5 +1,5 @@
 import { Toaster } from "@/components/ui/toaster";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -23,7 +23,7 @@ function App() {
   const { currentTheme } = useTheme();
   
   return (
-    <Router>
+    <Router basename="/">
       <AuthProvider>
         <div 
           className="min-h-screen transition-all duration-500 relative"
@@ -106,8 +106,8 @@ function App() {
 
           <div className="pt-16">
             <Routes>
-              <Route path="/auth" element={<Auth />} />
               <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+              <Route path="/auth" element={<Auth />} />
               <Route path="/current-week" element={<ProtectedRoute><CurrentWeek /></ProtectedRoute>} />
               <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
@@ -119,7 +119,8 @@ function App() {
               <Route path="/leaderboards" element={<ProtectedRoute><Leaderboards /></ProtectedRoute>} />
               <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
               <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
-              <Route path="*" element={<NotFound />} />
+              <Route path="/404" element={<NotFound />} />
+              <Route path="*" element={<Navigate to="/404\" replace />} />
             </Routes>
           </div>
           <Toaster />
