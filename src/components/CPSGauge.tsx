@@ -94,7 +94,10 @@ const CPSGauge = ({ weekData, historicalData = [] }: CPSGaugeProps) => {
       // Calculate total CPS
       const totalCPS = Object.values(components).reduce((sum, value) => sum + value, 0);
       
-      setCpsScore(Math.round(totalCPS));
+      // Ensure CPS is between 1 and 100 with 1 decimal place
+      const finalCPS = Math.max(1, Math.min(100, parseFloat(totalCPS.toFixed(1))));
+      
+      setCpsScore(finalCPS);
       setCpsBreakdown(components);
     };
     
@@ -116,7 +119,7 @@ const CPSGauge = ({ weekData, historicalData = [] }: CPSGaugeProps) => {
           const resultComponent = winRate * CPS_WEIGHTS.result;
           
           // Simplified calculation for historical data
-          const cps = Math.round(goalsComponent + xgComponent + resultComponent);
+          const cps = Math.max(1, Math.min(100, parseFloat((goalsComponent + xgComponent + resultComponent).toFixed(1))));
           
           return {
             week: `W${week.weekNumber}`,
@@ -215,7 +218,7 @@ const CPSGauge = ({ weekData, historicalData = [] }: CPSGaugeProps) => {
               </svg>
               
               <div className="cps-gauge-center">
-                <div className="cps-gauge-value" style={{ color: gaugeStyles.color }}>{cpsScore}</div>
+                <div className="cps-gauge-value" style={{ color: gaugeStyles.color }}>{cpsScore.toFixed(1)}</div>
                 <div className="cps-gauge-label">CPS</div>
               </div>
             </div>
@@ -282,11 +285,11 @@ const CPSGauge = ({ weekData, historicalData = [] }: CPSGaugeProps) => {
               <div className="p-3 rounded-lg bg-white/5">
                 {cpsScore >= 80 ? (
                   <p className="text-green-400 text-sm">
-                    Elite performance! Your CPS of {cpsScore} puts you in the top tier of players.
+                    Elite performance! Your CPS of {cpsScore.toFixed(1)} puts you in the top tier of players.
                   </p>
                 ) : cpsScore >= 60 ? (
                   <p className="text-yellow-400 text-sm">
-                    Solid performance with a CPS of {cpsScore}. Focus on improving your {
+                    Solid performance with a CPS of {cpsScore.toFixed(1)}. Focus on improving your {
                       Object.entries(cpsBreakdown)
                         .sort(([, a], [, b]) => a - b)[0][0] === 'goalsScored' ? 'goal scoring' :
                         Object.entries(cpsBreakdown)
@@ -301,7 +304,7 @@ const CPSGauge = ({ weekData, historicalData = [] }: CPSGaugeProps) => {
                   </p>
                 ) : (
                   <p className="text-red-400 text-sm">
-                    Your CPS of {cpsScore} indicates room for improvement. Focus on increasing your win rate and goal scoring efficiency.
+                    Your CPS of {cpsScore.toFixed(1)} indicates room for improvement. Focus on increasing your win rate and goal scoring efficiency.
                   </p>
                 )}
               </div>

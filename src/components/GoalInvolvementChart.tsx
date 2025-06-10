@@ -102,89 +102,173 @@ const GoalInvolvementChart = () => {
     const centerY = 150;
     const radius = 140;
     
-    // Create random shapes that fit within a circle
-    return goalInvolvements.map((involvement, index) => {
-      // Calculate position based on percentage and index
-      const angle = (index / goalInvolvements.length) * Math.PI * 2;
-      const distance = radius * 0.6 * Math.random() + radius * 0.2;
-      
-      // Create a random polygon with 5-8 points
-      const points = [];
-      const numPoints = Math.floor(Math.random() * 4) + 5; // 5-8 points
-      const sizeMultiplier = Math.sqrt(involvement.percentage) / 5;
-      
-      for (let i = 0; i < numPoints; i++) {
-        const pointAngle = angle + (i / numPoints) * Math.PI * 2;
-        const pointDistance = distance * (0.8 + Math.random() * 0.4) * sizeMultiplier;
-        const x = centerX + Math.cos(pointAngle) * pointDistance;
-        const y = centerY + Math.sin(pointAngle) * pointDistance;
-        points.push(`${x},${y}`);
-      }
-      
-      // Create polygon
-      return (
-        <polygon
-          key={index}
-          points={points.join(' ')}
-          fill={involvement.color}
-          stroke="rgba(0, 0, 0, 0.3)"
-          strokeWidth="1"
-          onMouseEnter={(e) => {
-            setHoveredPlayer(involvement);
-            if (chartRef.current) {
-              const rect = chartRef.current.getBoundingClientRect();
-              setTooltipPosition({
-                x: e.clientX - rect.left,
-                y: e.clientY - rect.top - 70 // Position above cursor
-              });
-            }
-          }}
-          onMouseMove={(e) => {
-            if (chartRef.current) {
-              const rect = chartRef.current.getBoundingClientRect();
-              setTooltipPosition({
-                x: e.clientX - rect.left,
-                y: e.clientY - rect.top - 70
-              });
-            }
-          }}
-          onMouseLeave={() => setHoveredPlayer(null)}
-        />
-      );
-    });
+    // Create cells that fill the circle
+    return (
+      <svg width="300" height="300" viewBox="0 0 300 300" className="mx-auto">
+        {/* Circle background */}
+        <circle cx="150" cy="150" r="140" fill="rgba(255,255,255,0.05)" />
+        
+        {/* Generate cells */}
+        {goalInvolvements.map((player, index) => {
+          // Calculate angle based on index
+          const startAngle = (index / goalInvolvements.length) * Math.PI * 2;
+          const endAngle = ((index + 1) / goalInvolvements.length) * Math.PI * 2;
+          
+          // Calculate arc size based on percentage
+          const arcSize = (player.percentage / 100) * Math.PI * 2;
+          const adjustedEndAngle = startAngle + arcSize;
+          
+          // Calculate points for the path
+          const startX = centerX + Math.cos(startAngle) * radius;
+          const startY = centerY + Math.sin(startAngle) * radius;
+          
+          const endX = centerX + Math.cos(adjustedEndAngle) * radius;
+          const endY = centerY + Math.sin(adjustedEndAngle) * radius;
+          
+          // Create random points within the sector
+          const points = [];
+          const numPoints = 8; // Number of random points
+          
+          // Add center point
+          points.push([centerX, centerY]);
+          
+          // Add points along the arc
+          for (let i = 0; i < numPoints; i++) {
+            const angle = startAngle + (arcSize * i) / numPoints;
+            const distance = radius * (0.5 + Math.random() * 0.5); // Random distance from center
+            const x = centerX + Math.cos(angle) * distance;
+            const y = centerY + Math.sin(angle) * distance;
+            points.push([x, y]);
+          }
+          
+          // Add the end points
+          points.push([startX, startY]);
+          points.push([endX, endY]);
+          
+          // Create a convex hull from the points
+          const hullPoints = getConvexHull(points);
+          
+          // Create path from hull points
+          const pathData = hullPoints.map((point, i) => 
+            (i === 0 ? 'M' : 'L') + point[0] + ',' + point[1]
+          ).join(' ') + 'Z';
+          
+          return (
+            <path
+              key={index}
+              d={pathData}
+              fill={player.color}
+              stroke="rgba(0, 0, 0, 0.3)"
+              strokeWidth="1"
+              onMouseEnter={(e) => {
+                setHoveredPlayer(player);
+                if (chartRef.current) {
+                  const rect = chartRef.current.getBoundingClientRect();
+                  setTooltipPosition({
+                    x: e.clientX - rect.left,
+                    y: e.clientY - rect.top - 70 // Position above cursor
+                  });
+                }
+              }}
+              onMouseMove={(e) => {
+                if (chartRef.current) {
+                  const rect = chartRef.current.getBoundingClientRect();
+                  setTooltipPosition({
+                    x: e.clientX - rect.left,
+                    y: e.clientY - rect.top - 70
+                  });
+                }
+              }}
+              onMouseLeave={() => setHoveredPlayer(null)}
+            />
+          );
+        })}
+        
+        {/* Player labels */}
+        {goalInvolvements.map((player, index) => {
+          // Calculate angle based on index and percentage
+          const angle = (index / goalInvolvements.length) * Math.PI * 2;
+          const arcSize = (player.percentage / 100) * Math.PI * 2;
+          const labelAngle = angle + arcSize / 2;
+          
+          // Calculate label position
+          const labelDistance = radius * 0.6; // Position labels at 60% of radius
+          const x = centerX + Math.cos(labelAngle) * labelDistance;
+          const y = centerY + Math.sin(labelAngle) * labelDistance;
+          
+          // Only show label for segments with enough space
+          if (player.percentage < 5) return null;
+          
+          return (
+            <text
+              key={`label-${index}`}
+              x={x}
+              y={y}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              fill="white"
+              fontSize="10"
+              fontWeight="bold"
+              pointerEvents="none"
+            >
+              {player.name.split(' ')[0]}
+            </text>
+          );
+        })}
+      </svg>
+    );
   };
 
-  // Generate player labels
-  const generateLabels = () => {
-    if (goalInvolvements.length === 0) return null;
-    
-    return goalInvolvements.map((involvement, index) => {
-      // Calculate position based on percentage and index
-      const angle = (index / goalInvolvements.length) * Math.PI * 2;
-      const distance = 140 * 0.6 * Math.random() + 140 * 0.2;
-      
-      const x = 150 + Math.cos(angle) * distance;
-      const y = 150 + Math.sin(angle) * distance;
-      
-      // Only show label for segments with enough space
-      if (involvement.percentage < 5) return null;
-      
-      return (
-        <text
-          key={index}
-          x={x}
-          y={y}
-          textAnchor="middle"
-          dominantBaseline="middle"
-          fill="white"
-          fontSize="10"
-          fontWeight="bold"
-          pointerEvents="none"
-        >
-          {involvement.name.split(' ')[0]}
-        </text>
-      );
+  // Function to calculate convex hull (Graham scan algorithm)
+  const getConvexHull = (points: number[][]) => {
+    // Sort points by y-coordinate (and x-coordinate if y is the same)
+    points.sort((a, b) => {
+      if (a[1] === b[1]) {
+        return a[0] - b[0];
+      }
+      return a[1] - b[1];
     });
+    
+    const p0 = points[0];
+    
+    // Sort points by polar angle with respect to p0
+    const sortedPoints = points.slice(1).sort((a, b) => {
+      const orient = orientation(p0, a, b);
+      if (orient === 0) {
+        // If collinear, sort by distance from p0
+        return (
+          (a[0] - p0[0]) * (a[0] - p0[0]) + (a[1] - p0[1]) * (a[1] - p0[1]) -
+          ((b[0] - p0[0]) * (b[0] - p0[0]) + (b[1] - p0[1]) * (b[1] - p0[1]))
+        );
+      }
+      return orient;
+    });
+    
+    // Build hull
+    const hull = [p0, sortedPoints[0]];
+    
+    for (let i = 1; i < sortedPoints.length; i++) {
+      while (
+        hull.length > 1 &&
+        orientation(
+          hull[hull.length - 2],
+          hull[hull.length - 1],
+          sortedPoints[i]
+        ) <= 0
+      ) {
+        hull.pop();
+      }
+      hull.push(sortedPoints[i]);
+    }
+    
+    return hull;
+  };
+
+  // Function to determine orientation of triplet (p, q, r)
+  const orientation = (p: number[], q: number[], r: number[]) => {
+    const val = (q[1] - p[1]) * (r[0] - q[0]) - (q[0] - p[0]) * (r[1] - q[1]);
+    if (val === 0) return 0; // collinear
+    return val > 0 ? 1 : -1; // clockwise or counterclockwise
   };
 
   return (
@@ -203,16 +287,7 @@ const GoalInvolvementChart = () => {
         ) : goalInvolvements.length > 0 ? (
           <div className="space-y-6">
             <div className="relative" ref={chartRef}>
-              <svg width="300" height="300" viewBox="0 0 300 300" className="mx-auto">
-                {/* Circle background */}
-                <circle cx="150" cy="150" r="140" fill="rgba(255,255,255,0.05)" />
-                
-                {/* Voronoi cells */}
-                {generateVoronoiCells()}
-                
-                {/* Player labels */}
-                {generateLabels()}
-              </svg>
+              {generateVoronoiCells()}
               
               {hoveredPlayer && (
                 <div 

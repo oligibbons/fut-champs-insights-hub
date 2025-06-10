@@ -18,10 +18,13 @@ const PerformanceRadar = () => {
   const [radarData, setRadarData] = useState<any[]>([]);
   const [comparisonData, setComparisonData] = useState<any[]>([]);
   const [showComparison, setShowComparison] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const currentWeek = getCurrentWeek();
   
   useEffect(() => {
+    setIsLoading(true);
+    
     // Generate radar data for selected week
     const generateRadarData = () => {
       let weekToAnalyze;
@@ -32,7 +35,11 @@ const PerformanceRadar = () => {
         // Calculate all-time averages
         const allGames = weeklyData.flatMap(week => week.games);
         
-        if (allGames.length === 0) return;
+        if (allGames.length === 0) {
+          setRadarData([]);
+          setIsLoading(false);
+          return;
+        }
         
         const totalWins = allGames.filter(game => game.result === 'win').length;
         const totalGoals = allGames.reduce((sum, game) => {
@@ -74,6 +81,7 @@ const PerformanceRadar = () => {
       
       if (!weekToAnalyze || weekToAnalyze.games.length === 0) {
         setRadarData([]);
+        setIsLoading(false);
         return;
       }
       
@@ -122,6 +130,7 @@ const PerformanceRadar = () => {
       ];
       
       setRadarData(data);
+      setIsLoading(false);
     };
     
     // Generate comparison data (all-time vs current)
@@ -323,10 +332,14 @@ const PerformanceRadar = () => {
         </div>
       </CardHeader>
       <CardContent>
-        {radarData.length > 0 ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center h-80">
+            <div className="w-8 h-8 border-4 border-fifa-purple/30 border-t-fifa-purple rounded-full animate-spin"></div>
+          </div>
+        ) : radarData.length > 0 ? (
           <div className="h-80">
-            <ResponsiveContainer width="100%\" height="100%">
-              <RadarChart cx="50%\" cy="50%\" outerRadius="80%\" data={showComparison ? comparisonData : radarData}>
+            <ResponsiveContainer width="100%" height="100%">
+              <RadarChart cx="50%" cy="50%" outerRadius="80%" data={showComparison ? comparisonData : radarData}>
                 <PolarGrid stroke="#374151" />
                 <PolarAngleAxis dataKey="metric" tick={{ fill: '#9CA3AF', fontSize: 12 }} />
                 <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: '#9CA3AF', fontSize: 10 }} />
