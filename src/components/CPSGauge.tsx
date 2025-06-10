@@ -154,8 +154,9 @@ const CPSGauge = ({ weekData, historicalData = [] }: CPSGaugeProps) => {
     const initGauge = async () => {
       if (gaugeRef && typeof window !== 'undefined') {
         try {
-          // Import Gauge.js dynamically
-          const Gauge = (await import('gauge-js')).default;
+          // Import Gauge.js dynamically with proper handling
+          const GaugeModule = await import('gauge-js');
+          const Gauge = (GaugeModule as any).default || GaugeModule;
           
           // Create gauge instance
           const gauge = new Gauge(gaugeRef).setOptions({
