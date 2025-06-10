@@ -158,8 +158,11 @@ const CPSGauge = ({ weekData, historicalData = [] }: CPSGaugeProps) => {
           const GaugeModule = await import('gauge-js');
           const Gauge = (GaugeModule as any).default || GaugeModule;
           
-          // Create gauge instance
-          const gauge = new Gauge(gaugeRef).setOptions({
+          // Create gauge instance first
+          const gauge = new Gauge(gaugeRef);
+          
+          // Then set options on the created instance
+          gauge.setOptions({
             angle: 0.15,
             lineWidth: 0.44,
             radiusScale: 1,
