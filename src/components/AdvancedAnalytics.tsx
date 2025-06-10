@@ -48,6 +48,7 @@ const AdvancedAnalytics = ({ weeklyData, currentWeek }: AdvancedAnalyticsProps) 
   // Calculate comprehensive stats
   const allGames = weeklyData.flatMap(week => week.games);
   const allPlayerPerformances = allGames.flatMap(game => game.playerStats || []);
+  const totalMinutes = allGames.reduce((sum, game) => sum + game.duration, 0);
 
   // Performance over time data
   const performanceOverTime = weeklyData.map(week => ({
@@ -79,7 +80,8 @@ const AdvancedAnalytics = ({ weeklyData, currentWeek }: AdvancedAnalyticsProps) 
           ratings: [],
           goals: 0,
           assists: 0,
-          games: 0
+          games: 0,
+          totalMinutes: 0
         };
       }
       
@@ -87,6 +89,7 @@ const AdvancedAnalytics = ({ weeklyData, currentWeek }: AdvancedAnalyticsProps) 
       acc[perf.name].goals += perf.goals;
       acc[perf.name].assists += perf.assists;
       acc[perf.name].games += 1;
+      acc[perf.name].totalMinutes += perf.minutesPlayed;
       return acc;
     }, {} as any);
 
@@ -99,8 +102,8 @@ const AdvancedAnalytics = ({ weeklyData, currentWeek }: AdvancedAnalyticsProps) 
         ...player,
         avgRating: Number(avgRating.toFixed(1)),
         consistency: Number(consistency.toFixed(1)),
-        goalsPG: Number((player.goals / player.games).toFixed(2)),
-        assistsPG: Number((player.assists / player.games).toFixed(2))
+        goalsPer90: player.totalMinutes > 0 ? Number(((player.goals / player.totalMinutes) * 90).toFixed(2)) : 0,
+        assistsPer90: player.totalMinutes > 0 ? Number(((player.assists / player.totalMinutes) * 90).toFixed(2)) : 0
       };
     }).sort((a, b) => b.avgRating - a.avgRating);
   };
@@ -193,8 +196,8 @@ const AdvancedAnalytics = ({ weeklyData, currentWeek }: AdvancedAnalyticsProps) 
 
   // Weekly progression radar chart data
   const radarData = currentWeek ? [
-    { metric: 'Attack', value: currentWeek.totalGoals * 6.67 }, // Scale to 100
-    { metric: 'Defense', value: Math.max(0, 100 - (currentWeek.totalConceded * 10)) },
+    { metric: 'Attack', value: Math.min(100, currentWeek.totalGoals * 6.67) }, // Scale to 100
+    { metric: 'Defense', value: Math.max(0, 100 - (currentWeek.totalConceded * 6.67)) },
     { metric: 'Consistency', value: currentWeek.games.length > 0 ? (currentWeek.totalWins / currentWeek.games.length) * 100 : 0 },
     { metric: 'Opposition', value: (currentWeek.averageOpponentSkill || 5) * 10 },
     { metric: 'Form', value: Math.min(100, currentWeek.totalWins * 6.67) },
@@ -533,8 +536,8 @@ const AdvancedAnalytics = ({ weeklyData, currentWeek }: AdvancedAnalyticsProps) 
                           <p className="text-xs text-gray-400">Consistency</p>
                         </div>
                         <div className="text-center">
-                          <p className="font-bold text-fifa-blue">{player.goalsPG}</p>
-                          <p className="text-xs text-gray-400">G/G</p>
+                          <p className="font-bold text-fifa-blue">{player.goalsPer90.toFixed(2)}</p>
+                          <p className="text-xs text-gray-400">G/90</p>
                         </div>
                       </div>
                     </div>
@@ -568,10 +571,10 @@ const AdvancedAnalytics = ({ weeklyData, currentWeek }: AdvancedAnalyticsProps) 
                   />
                   <YAxis 
                     type="number" 
-                    dataKey="goalsPG" 
-                    name="Goals per Game" 
+                    dataKey="goalsPer90" 
+                    name="Goals per 90" 
                     stroke="#9CA3AF"
-                    label={{ value: 'Goals per Game', angle: -90, position: 'insideLeft', fill: '#9CA3AF' }}
+                    label={{ value: 'Goals per 90', angle: -90, position: 'insideLeft', fill: '#9CA3AF' }}
                   />
                   <ZAxis 
                     type="number" 
@@ -604,12 +607,12 @@ const AdvancedAnalytics = ({ weeklyData, currentWeek }: AdvancedAnalyticsProps) 
                                 <p className="text-sm text-fifa-gold">{data.avgRating.toFixed(1)}</p>
                               </div>
                               <div>
-                                <p className="text-xs text-gray-400">Goals/Game</p>
-                                <p className="text-sm text-fifa-green">{data.goalsPG.toFixed(2)}</p>
+                                <p className="text-xs text-gray-400">Goals/90</p>
+                                <p className="text-sm text-fifa-green">{data.goalsPer90.toFixed(2)}</p>
                               </div>
                               <div>
-                                <p className="text-xs text-gray-400">Assists/Game</p>
-                                <p className="text-sm text-fifa-blue">{data.assistsPG.toFixed(2)}</p>
+                                <p className="text-xs text-gray-400">Assists/90</p>
+                                <p className="text-sm text-fifa-blue">{data.assistsPer90.toFixed(2)}</p>
                               </div>
                               <div>
                                 <p className="text-xs text-gray-400">Consistency</p>
@@ -1020,7 +1023,7 @@ const AdvancedAnalytics = ({ weeklyData, currentWeek }: AdvancedAnalyticsProps) 
                     <span className="text-fifa-gold font-medium text-sm">Playtime</span>
                   </div>
                   <p className="text-white font-bold">
-                    {Math.round(allGames.reduce((sum, game) => sum + game.duration, 0) / 60)}h
+                    {Math.round(totalMinutes / 60)}h
                   </p>
                   <p className="text-xs text-gray-400">Total hours</p>
                 </div>
@@ -1072,11 +1075,19 @@ const AdvancedAnalytics = ({ weeklyData, currentWeek }: AdvancedAnalyticsProps) 
                     <span className="text-fifa-green font-medium text-sm">Attacking Advice</span>
                   </div>
                   <p className="text-white text-sm">
-                    {avgGoalsPerGame >= 3.0 
-                      ? "Your attacking output is excellent. Focus on maintaining this clinical edge while ensuring you're not sacrificing defensive stability."
-                      : avgGoalsPerGame >= 2.0
-                      ? "Your attacking output is solid. Look for opportunities to create higher quality chances rather than increasing shot volume."
-                      : "Your attacking output needs improvement. Focus on patient build-up play and only taking high-percentage shots."}
+                    {allGames.length > 0 ? (
+                      allGames.reduce((sum, game) => {
+                        const [goals] = game.scoreLine.split('-').map(Number);
+                        return sum + goals;
+                      }, 0) / allGames.length >= 3.0 
+                        ? "Your attacking output is excellent. Focus on maintaining this clinical edge while ensuring you're not sacrificing defensive stability."
+                        : allGames.reduce((sum, game) => {
+                            const [goals] = game.scoreLine.split('-').map(Number);
+                            return sum + goals;
+                          }, 0) / allGames.length >= 2.0
+                        ? "Your attacking output is solid. Look for opportunities to create higher quality chances rather than increasing shot volume."
+                        : "Your attacking output needs improvement. Focus on patient build-up play and only taking high-percentage shots."
+                    ) : "Not enough data to provide attacking advice."}
                   </p>
                 </div>
 
@@ -1087,11 +1098,19 @@ const AdvancedAnalytics = ({ weeklyData, currentWeek }: AdvancedAnalyticsProps) 
                     <span className="text-fifa-red font-medium text-sm">Defensive Advice</span>
                   </div>
                   <p className="text-white text-sm">
-                    {avgConcededPerGame <= 1.0
-                      ? "Your defensive organization is exceptional. Continue with your current defensive setup and focus on quick transitions from defense to attack."
-                      : avgConcededPerGame <= 2.0
-                      ? "Your defense is solid but could be improved. Focus on not pulling defenders out of position and using jockey more effectively."
-                      : "Your defense needs significant improvement. Consider using a more defensive formation and focusing on manual defending fundamentals."}
+                    {allGames.length > 0 ? (
+                      allGames.reduce((sum, game) => {
+                        const [, conceded] = game.scoreLine.split('-').map(Number);
+                        return sum + conceded;
+                      }, 0) / allGames.length <= 1.0
+                        ? "Your defensive organization is exceptional. Continue with your current defensive setup and focus on quick transitions from defense to attack."
+                        : allGames.reduce((sum, game) => {
+                            const [, conceded] = game.scoreLine.split('-').map(Number);
+                            return sum + conceded;
+                          }, 0) / allGames.length <= 2.0
+                        ? "Your defense is solid but could be improved. Focus on not pulling defenders out of position and using jockey more effectively."
+                        : "Your defense needs significant improvement. Consider using a more defensive formation and focusing on manual defending fundamentals."
+                    ) : "Not enough data to provide defensive advice."}
                   </p>
                 </div>
 

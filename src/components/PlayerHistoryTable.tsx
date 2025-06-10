@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -19,7 +18,7 @@ interface PlayerStats {
   totalGames: number;
   totalGoals: number;
   totalAssists: number;
-  totalMinutes: number;
+  totalRating: number;
   averageRating: number;
   yellowCards: number;
   redCards: number;
@@ -28,9 +27,13 @@ interface PlayerStats {
   worstRating: number;
   gamesWon: number;
   gamesLost: number;
+  totalMinutes: number;
+  goalsPer90: number;
+  assistsPer90: number;
+  goalInvolvementsPer90: number;
 }
 
-type SortField = 'name' | 'position' | 'totalGames' | 'totalGoals' | 'totalAssists' | 'averageRating' | 'gamesWon';
+type SortField = 'name' | 'position' | 'totalGames' | 'totalGoals' | 'totalAssists' | 'averageRating' | 'gamesWon' | 'goalsPer90' | 'assistsPer90';
 type SortDirection = 'asc' | 'desc';
 
 const PlayerHistoryTable = ({ weeklyData }: PlayerHistoryTableProps) => {
@@ -56,7 +59,7 @@ const PlayerHistoryTable = ({ weeklyData }: PlayerHistoryTableProps) => {
             totalGames: 0,
             totalGoals: 0,
             totalAssists: 0,
-            totalMinutes: 0,
+            totalRating: 0,
             averageRating: 0,
             yellowCards: 0,
             redCards: 0,
@@ -64,7 +67,11 @@ const PlayerHistoryTable = ({ weeklyData }: PlayerHistoryTableProps) => {
             bestRating: player.rating,
             worstRating: player.rating,
             gamesWon: 0,
-            gamesLost: 0
+            gamesLost: 0,
+            totalMinutes: 0,
+            goalsPer90: 0,
+            assistsPer90: 0,
+            goalInvolvementsPer90: 0
           });
         }
 
@@ -72,12 +79,13 @@ const PlayerHistoryTable = ({ weeklyData }: PlayerHistoryTableProps) => {
         stats.totalGames += 1;
         stats.totalGoals += player.goals;
         stats.totalAssists += player.assists;
-        stats.totalMinutes += player.minutesPlayed;
+        stats.totalRating += player.rating;
         stats.yellowCards += player.yellowCards;
         stats.redCards += player.redCards;
-        stats.ownGoals += player.ownGoals;
+        stats.ownGoals += player.ownGoals || 0;
         stats.bestRating = Math.max(stats.bestRating, player.rating);
         stats.worstRating = Math.min(stats.worstRating, player.rating);
+        stats.totalMinutes += player.minutesPlayed;
         
         if (game.result === 'win') stats.gamesWon += 1;
         else stats.gamesLost += 1;
@@ -88,13 +96,16 @@ const PlayerHistoryTable = ({ weeklyData }: PlayerHistoryTableProps) => {
   // Calculate averages and convert to array
   playerMap.forEach(stats => {
     if (stats.totalGames > 0) {
-      const totalRating = weeklyData
-        .flatMap(week => week.games)
-        .flatMap(game => game.playerStats || [])
-        .filter(player => player.name === stats.name && player.position === stats.position)
-        .reduce((sum, player) => sum + player.rating, 0);
+      stats.averageRating = stats.totalRating / stats.totalGames;
       
-      stats.averageRating = totalRating / stats.totalGames;
+      // Calculate per 90 minutes stats
+      const minutesPlayed = stats.totalMinutes;
+      if (minutesPlayed > 0) {
+        stats.goalsPer90 = (stats.totalGoals / minutesPlayed) * 90;
+        stats.assistsPer90 = (stats.totalAssists / minutesPlayed) * 90;
+        stats.goalInvolvementsPer90 = ((stats.totalGoals + stats.totalAssists) / minutesPlayed) * 90;
+      }
+      
       playerStats.push(stats);
     }
   });
@@ -149,6 +160,14 @@ const PlayerHistoryTable = ({ weeklyData }: PlayerHistoryTableProps) => {
       case 'gamesWon':
         aValue = a.gamesWon;
         bValue = b.gamesWon;
+        break;
+      case 'goalsPer90':
+        aValue = a.goalsPer90;
+        bValue = b.goalsPer90;
+        break;
+      case 'assistsPer90':
+        aValue = a.assistsPer90;
+        bValue = b.assistsPer90;
         break;
       default:
         aValue = a.totalGames;
@@ -218,68 +237,70 @@ const PlayerHistoryTable = ({ weeklyData }: PlayerHistoryTableProps) => {
 
         {/* Table */}
         <div className="rounded-lg overflow-hidden" style={{ backgroundColor: currentTheme.colors.surface }}>
-          <Table>
-            <TableHeader>
-              <TableRow style={{ borderColor: currentTheme.colors.border }}>
-                <SortableHeader field="name">Player</SortableHeader>
-                <SortableHeader field="position">Position</SortableHeader>
-                <SortableHeader field="totalGames">Games</SortableHeader>
-                <SortableHeader field="totalGoals">Goals</SortableHeader>
-                <SortableHeader field="totalAssists">Assists</SortableHeader>
-                <SortableHeader field="averageRating">Avg Rating</SortableHeader>
-                <SortableHeader field="gamesWon">Win Rate</SortableHeader>
-                <TableHead style={{ color: currentTheme.colors.text }}>Cards</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sortedPlayers.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8" style={{ color: currentTheme.colors.muted }}>
-                    No players found matching your criteria
-                  </TableCell>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow style={{ borderColor: currentTheme.colors.border }}>
+                  <SortableHeader field="name">Player</SortableHeader>
+                  <SortableHeader field="position">Position</SortableHeader>
+                  <SortableHeader field="totalGames">Games</SortableHeader>
+                  <SortableHeader field="goalsPer90">G/90</SortableHeader>
+                  <SortableHeader field="assistsPer90">A/90</SortableHeader>
+                  <SortableHeader field="averageRating">Avg Rating</SortableHeader>
+                  <SortableHeader field="gamesWon">Win Rate</SortableHeader>
+                  <TableHead style={{ color: currentTheme.colors.text }}>Cards</TableHead>
                 </TableRow>
-              ) : (
-                sortedPlayers.map((player, index) => (
-                  <TableRow key={`${player.name}-${player.position}`} style={{ borderColor: currentTheme.colors.border }}>
-                    <TableCell style={{ color: currentTheme.colors.text }}>
-                      <div className="font-medium">{player.name}</div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" style={{ borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}>
-                        {player.position}
-                      </Badge>
-                    </TableCell>
-                    <TableCell style={{ color: currentTheme.colors.text }}>{player.totalGames}</TableCell>
-                    <TableCell style={{ color: currentTheme.colors.text }}>{player.totalGoals}</TableCell>
-                    <TableCell style={{ color: currentTheme.colors.text }}>{player.totalAssists}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Star className="h-3 w-3" style={{ color: currentTheme.colors.accent }} />
-                        <span style={{ color: currentTheme.colors.text }}>{player.averageRating.toFixed(1)}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell style={{ color: currentTheme.colors.text }}>
-                      {player.totalGames > 0 ? ((player.gamesWon / player.totalGames) * 100).toFixed(0) : 0}%
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        {player.yellowCards > 0 && (
-                          <Badge className="bg-yellow-500 text-black text-xs px-1">
-                            {player.yellowCards}Y
-                          </Badge>
-                        )}
-                        {player.redCards > 0 && (
-                          <Badge className="bg-red-500 text-white text-xs px-1">
-                            {player.redCards}R
-                          </Badge>
-                        )}
-                      </div>
+              </TableHeader>
+              <TableBody>
+                {sortedPlayers.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-8" style={{ color: currentTheme.colors.muted }}>
+                      No players found matching your criteria
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : (
+                  sortedPlayers.map((player, index) => (
+                    <TableRow key={`${player.name}-${player.position}`} style={{ borderColor: currentTheme.colors.border }}>
+                      <TableCell style={{ color: currentTheme.colors.text }}>
+                        <div className="font-medium">{player.name}</div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" style={{ borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}>
+                          {player.position}
+                        </Badge>
+                      </TableCell>
+                      <TableCell style={{ color: currentTheme.colors.text }}>{player.totalGames}</TableCell>
+                      <TableCell style={{ color: currentTheme.colors.text }}>{player.goalsPer90.toFixed(2)}</TableCell>
+                      <TableCell style={{ color: currentTheme.colors.text }}>{player.assistsPer90.toFixed(2)}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Star className="h-3 w-3" style={{ color: currentTheme.colors.accent }} />
+                          <span style={{ color: currentTheme.colors.text }}>{player.averageRating.toFixed(1)}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell style={{ color: currentTheme.colors.text }}>
+                        {player.totalGames > 0 ? ((player.gamesWon / player.totalGames) * 100).toFixed(0) : 0}%
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          {player.yellowCards > 0 && (
+                            <Badge className="bg-yellow-500 text-black text-xs px-1">
+                              {player.yellowCards}Y
+                            </Badge>
+                          )}
+                          {player.redCards > 0 && (
+                            <Badge className="bg-red-500 text-white text-xs px-1">
+                              {player.redCards}R
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       </CardContent>
     </Card>

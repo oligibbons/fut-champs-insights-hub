@@ -1,4 +1,3 @@
-
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +24,7 @@ const CurrentRunStats = () => {
     const totalFouls = games.reduce((sum, game) => sum + (game.teamStats?.fouls || 0), 0);
     const totalYellowCards = games.reduce((sum, game) => sum + (game.teamStats?.yellowCards || 0), 0);
     const totalRedCards = games.reduce((sum, game) => sum + (game.teamStats?.redCards || 0), 0);
+    const totalMinutes = games.reduce((sum, game) => sum + game.duration, 0);
 
     // Performance metrics
     const avgOpponentSkill = games.reduce((sum, game) => sum + game.opponentSkill, 0) / totalGames;
@@ -51,7 +51,8 @@ const CurrentRunStats = () => {
       avgFouls: (totalFouls / totalGames).toFixed(1),
       totalYellowCards,
       totalRedCards,
-      disciplineRating: Math.max(0, 10 - (totalYellowCards * 0.5) - (totalRedCards * 2)).toFixed(1)
+      disciplineRating: Math.max(0, 10 - (totalYellowCards * 0.5) - (totalRedCards * 2)).toFixed(1),
+      totalMinutes
     };
   }, [currentWeek]);
 
@@ -242,7 +243,7 @@ const CurrentRunStats = () => {
                     <p className="text-xs text-gray-400">Rating</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-fifa-green">{player.goalInvolvementsPer90.toFixed(1)}</p>
+                    <p className="font-bold text-fifa-green">{player.goalInvolvementsPer90.toFixed(2)}</p>
                     <p className="text-xs text-gray-400">G+A/90</p>
                   </div>
                   <div className="text-right">
