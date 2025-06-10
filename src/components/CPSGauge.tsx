@@ -29,6 +29,8 @@ const CPSGauge = ({ weekData, historicalData = [] }: CPSGaugeProps) => {
   const [cpsScore, setCpsScore] = useState(0);
   const [cpsBreakdown, setCpsBreakdown] = useState<Record<string, number>>({});
   const [trendData, setTrendData] = useState<any[]>([]);
+  const [gaugeRef, setGaugeRef] = useState<HTMLDivElement | null>(null);
+  const [gaugeInstance, setGaugeInstance] = useState<any>(null);
 
   useEffect(() => {
     // Calculate CPS score
@@ -102,6 +104,8 @@ const CPSGauge = ({ weekData, historicalData = [] }: CPSGaugeProps) => {
       
       // Update the week's CPS score
       weekData.cpsScore = finalCPS;
+      
+      return finalCPS;
     };
     
     // Calculate historical trend
@@ -143,13 +147,74 @@ const CPSGauge = ({ weekData, historicalData = [] }: CPSGaugeProps) => {
       setTrendData(trendPoints);
     };
     
-    calculateCPS();
+    const score = calculateCPS();
     calculateTrend();
-  }, [weekData, historicalData, cpsScore]);
+    
+    // Initialize Gauge.js if available
+    const initGauge = async () => {
+      if (gaugeRef && typeof window !== 'undefined') {
+        try {
+          // Import Gauge.js dynamically
+          const Gauge = (await import('gauge-js')).default;
+          
+          // Create gauge instance
+          const gauge = new Gauge(gaugeRef).setOptions({
+            angle: 0.15,
+            lineWidth: 0.44,
+            radiusScale: 1,
+            pointer: {
+              length: 0.6,
+              strokeWidth: 0.035,
+              color: '#000000'
+            },
+            limitMax: false,
+            limitMin: false,
+            colorStart: '#6FADCF',
+            colorStop: getCpsColor(score),
+            strokeColor: '#E0E0E0',
+            generateGradient: true,
+            highDpiSupport: true,
+            staticZones: [
+              {min: 0, max: 40, color: "#ef4444"},
+              {min: 40, max: 60, color: "#f59e0b"},
+              {min: 60, max: 80, color: "#f59e0b"},
+              {min: 80, max: 100, color: "#10b981"}
+            ],
+            staticLabels: {
+              font: "10px sans-serif",
+              labels: [0, 20, 40, 60, 80, 100],
+              color: "#ffffff",
+              fractionDigits: 0
+            },
+          });
+          
+          // Set gauge value
+          gauge.maxValue = 100;
+          gauge.setMinValue(0);
+          gauge.animationSpeed = 32;
+          gauge.set(score);
+          
+          // Save gauge instance for cleanup
+          setGaugeInstance(gauge);
+        } catch (error) {
+          console.error('Error initializing gauge:', error);
+        }
+      }
+    };
+    
+    initGauge();
+    
+    // Cleanup function
+    return () => {
+      if (gaugeInstance) {
+        // No explicit cleanup needed for Gauge.js
+      }
+    };
+  }, [weekData, historicalData, gaugeRef]);
 
-  const getCpsColor = () => {
-    if (cpsScore >= 80) return '#10b981'; // Green
-    if (cpsScore >= 60) return '#f59e0b'; // Amber
+  const getCpsColor = (score: number) => {
+    if (score >= 80) return '#10b981'; // Green
+    if (score >= 60) return '#f59e0b'; // Amber
     return '#ef4444'; // Red
   };
 
@@ -183,28 +248,17 @@ const CPSGauge = ({ weekData, historicalData = [] }: CPSGaugeProps) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* CPS Gauge */}
           <div className="flex flex-col items-center">
-            <div className="cps-gauge-container">
-              <div className="cps-gauge-background"></div>
+            <div className="relative w-[200px] h-[200px]">
+              {/* Gauge.js canvas */}
+              <canvas 
+                ref={setGaugeRef}
+                className="w-full h-full"
+              />
               
-              {/* Custom SVG gauge */}
-              <svg width="150" height="150" viewBox="0 0 150 150" className="absolute top-0 left-0">
-                <circle cx="75" cy="75" r="70" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="10" />
-                <circle 
-                  cx="75" 
-                  cy="75" 
-                  r="70" 
-                  fill="none" 
-                  stroke={getCpsColor()} 
-                  strokeWidth="10"
-                  strokeDasharray={`${(cpsScore / 100) * 440} 440`}
-                  strokeDashoffset="110"
-                  transform="rotate(-90 75 75)"
-                />
-              </svg>
-              
-              <div className="cps-gauge-center">
-                <div className="cps-gauge-value" style={{ color: getCpsColor() }}>{cpsScore.toFixed(1)}</div>
-                <div className="cps-gauge-label">CPS</div>
+              {/* Center value */}
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
+                <div className="text-3xl font-bold" style={{ color: getCpsColor(cpsScore) }}>{cpsScore.toFixed(1)}</div>
+                <div className="text-sm text-gray-400">CPS</div>
               </div>
             </div>
             
@@ -221,7 +275,7 @@ const CPSGauge = ({ weekData, historicalData = [] }: CPSGaugeProps) => {
                   </div>
                   <Badge 
                     className="bg-white/10 text-white"
-                    style={{ borderLeft: `3px solid ${getCpsColor()}` }}
+                    style={{ borderLeft: `3px solid ${getCpsColor(cpsScore)}` }}
                   >
                     +{Math.round(value)}
                   </Badge>

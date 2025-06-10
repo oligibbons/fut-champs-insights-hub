@@ -14,89 +14,13 @@ interface GoalInvolvement {
   account?: string;
 }
 
-// D3 Voronoi implementation
-const computeVoronoi = (
-  data: GoalInvolvement[],
-  width: number,
-  height: number
-) => {
-  // Create a container for all cells
-  const cells: Array<{
-    points: string;
-    color: string;
-    data: GoalInvolvement;
-    centroid: [number, number];
-  }> = [];
-
-  // Total percentage for angle calculation
-  const totalPercentage = data.reduce((sum, d) => sum + d.percentage, 0);
-  
-  // Center of the chart
-  const centerX = width / 2;
-  const centerY = height / 2;
-  const radius = Math.min(width, height) / 2 - 10;
-  
-  // Starting angle
-  let startAngle = 0;
-  
-  // Create cells for each data point
-  data.forEach((d) => {
-    // Calculate angle based on percentage
-    const angle = (d.percentage / totalPercentage) * (2 * Math.PI);
-    const endAngle = startAngle + angle;
-    
-    // Create points for the cell
-    const points: [number, number][] = [];
-    
-    // Add center point
-    points.push([centerX, centerY]);
-    
-    // Add points along the arc
-    const numPoints = Math.max(8, Math.floor(d.percentage));
-    for (let i = 0; i <= numPoints; i++) {
-      const pointAngle = startAngle + (i / numPoints) * angle;
-      
-      // Vary the radius slightly for organic shape
-      const variableRadius = radius * (0.85 + Math.random() * 0.15);
-      
-      const x = centerX + Math.cos(pointAngle) * variableRadius;
-      const y = centerY + Math.sin(pointAngle) * variableRadius;
-      
-      points.push([x, y]);
-    }
-    
-    // Calculate centroid for label placement
-    const midAngle = startAngle + angle / 2;
-    const labelRadius = radius * 0.6;
-    const centroidX = centerX + Math.cos(midAngle) * labelRadius;
-    const centroidY = centerY + Math.sin(midAngle) * labelRadius;
-    
-    // Create SVG path
-    const pathPoints = points.map(p => p.join(',')).join(' ');
-    
-    // Add cell
-    cells.push({
-      points: pathPoints,
-      color: d.color,
-      data: d,
-      centroid: [centroidX, centroidY]
-    });
-    
-    // Update start angle for next cell
-    startAngle = endAngle;
-  });
-  
-  return cells;
-};
-
 const GoalInvolvementChart = () => {
   const { weeklyData } = useDataSync();
   const [goalInvolvements, setGoalInvolvements] = useState<GoalInvolvement[]>([]);
   const [selectedPlayer, setSelectedPlayer] = useState<GoalInvolvement | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [voronoiCells, setVoronoiCells] = useState<any[]>([]);
-  const svgRef = useRef<SVGSVGElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const chartRef = useRef<HTMLDivElement>(null);
+  const chartInstanceRef = useRef<any>(null);
 
   useEffect(() => {
     setIsLoading(true);
@@ -181,29 +105,126 @@ const GoalInvolvementChart = () => {
     return colors[index % colors.length];
   };
 
-  // Compute Voronoi cells when data or container size changes
+  // Initialize amCharts when component mounts or data changes
   useEffect(() => {
-    if (goalInvolvements.length === 0 || !containerRef.current) return;
+    if (goalInvolvements.length === 0 || !chartRef.current) return;
     
-    const updateVoronoi = () => {
-      const containerWidth = containerRef.current?.clientWidth || 300;
-      const containerHeight = containerRef.current?.clientHeight || 300;
-      
-      // Compute Voronoi cells
-      const cells = computeVoronoi(goalInvolvements, containerWidth, containerHeight);
-      setVoronoiCells(cells);
+    // Load amCharts modules
+    const loadAmCharts = async () => {
+      try {
+        // Import amCharts modules
+        const am5 = await import('@amcharts/amcharts5');
+        const am5hierarchy = await import('@amcharts/amcharts5/hierarchy');
+        const am5themes_Animated = await import('@amcharts/amcharts5/themes/Animated');
+        
+        // Dispose of previous chart instance if it exists
+        if (chartInstanceRef.current) {
+          chartInstanceRef.current.dispose();
+        }
+        
+        // Create root element
+        const root = am5.Root.new(chartRef.current);
+        
+        // Set themes
+        root.setThemes([am5themes_Animated.default.new(root)]);
+        
+        // Create series
+        const series = am5hierarchy.VoronoiTreemap.new(root, {
+          sort: "descending",
+          singleBranchOnly: true,
+          downDepth: 1,
+          upDepth: 0,
+          initialDepth: 1,
+          valueField: "value",
+          categoryField: "name",
+          childDataField: "children",
+          nodePaddingInner: 2,
+          nodePaddingOuter: 2
+        });
+        
+        // Configure series
+        series.rectangles.template.setAll({
+          templateField: "nodeSettings",
+          interactive: true,
+          strokeWidth: 1,
+          stroke: am5.color(0x000000),
+          strokeOpacity: 0.15,
+          cornerRadiusTL: 8,
+          cornerRadiusTR: 8,
+          cornerRadiusBL: 8,
+          cornerRadiusBR: 8
+        });
+        
+        // Add click event to rectangles
+        series.rectangles.template.events.on("click", (ev) => {
+          const dataItem = ev.target.dataItem;
+          if (dataItem && dataItem.dataContext) {
+            const player = goalInvolvements.find(p => p.name === dataItem.dataContext.name);
+            if (player) {
+              setSelectedPlayer(player);
+            }
+          }
+        });
+        
+        // Add hover state
+        series.rectangles.template.states.create("hover", {
+          strokeWidth: 3,
+          stroke: am5.color(0xffffff),
+          strokeOpacity: 0.5,
+          scale: 1.02
+        });
+        
+        // Configure labels
+        series.labels.template.setAll({
+          text: "{name}",
+          fontSize: 12,
+          fill: am5.color(0xffffff),
+          fontWeight: "500",
+          oversizedBehavior: "truncate",
+          maxWidth: 120
+        });
+        
+        // Prepare data
+        const data = {
+          name: "Goal Involvements",
+          children: goalInvolvements.map(player => ({
+            name: player.name,
+            value: player.percentage,
+            nodeSettings: {
+              fill: am5.color(player.color),
+              fillOpacity: 0.8
+            },
+            goals: player.goals,
+            assists: player.assists,
+            percentage: player.percentage
+          }))
+        };
+        
+        // Set data
+        series.data.setAll([data]);
+        series.set("selectedDataItem", series.dataItems[0]);
+        
+        // Save chart instance for cleanup
+        chartInstanceRef.current = root;
+        
+        // Make chart responsive
+        root.container.children.push(series);
+        series.appear(1000, 100);
+      } catch (error) {
+        console.error('Error loading amCharts:', error);
+        setIsLoading(false);
+      }
     };
     
-    updateVoronoi();
+    loadAmCharts();
     
-    // Update on window resize
-    window.addEventListener('resize', updateVoronoi);
-    return () => window.removeEventListener('resize', updateVoronoi);
+    // Cleanup function
+    return () => {
+      if (chartInstanceRef.current) {
+        chartInstanceRef.current.dispose();
+      }
+    };
   }, [goalInvolvements]);
-
-  const handleCellClick = (involvement: GoalInvolvement) => {
-    setSelectedPlayer(involvement);
-  };
 
   const closePopup = () => {
     setSelectedPlayer(null);
@@ -224,112 +245,51 @@ const GoalInvolvementChart = () => {
           </div>
         ) : goalInvolvements.length > 0 ? (
           <div className="space-y-6">
+            {/* amCharts Voronoi Treemap */}
             <div 
-              ref={containerRef} 
-              className="relative h-[300px] w-full max-w-[300px] mx-auto"
-            >
-              <svg 
-                ref={svgRef} 
-                width="100%" 
-                height="100%" 
-                viewBox="0 0 300 300" 
-                className="mx-auto"
-                style={{ overflow: 'visible' }}
+              ref={chartRef} 
+              className="h-[300px] w-full"
+            />
+            
+            {/* Player popup */}
+            {selectedPlayer && (
+              <div 
+                className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-4 rounded-lg border border-white/20 shadow-xl z-50 w-64"
+                style={{ borderColor: selectedPlayer.color }}
               >
-                {/* Background circle */}
-                <circle 
-                  cx="150" 
-                  cy="150" 
-                  r="140" 
-                  fill="rgba(255,255,255,0.05)" 
-                  stroke="rgba(255,255,255,0.1)" 
-                  strokeWidth="1"
-                />
-                
-                {/* Voronoi cells */}
-                {voronoiCells.map((cell, i) => (
-                  <g key={i} onClick={() => handleCellClick(cell.data)}>
-                    <polygon
-                      points={cell.points}
-                      fill={cell.color}
-                      stroke="rgba(0,0,0,0.3)"
-                      strokeWidth="1"
-                      opacity="0.8"
-                      style={{ 
-                        cursor: 'pointer',
-                        transition: 'opacity 0.2s, transform 0.2s'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.setAttribute('opacity', '1');
-                        e.currentTarget.setAttribute('stroke-width', '2');
-                        e.currentTarget.style.transform = 'scale(1.02)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.setAttribute('opacity', '0.8');
-                        e.currentTarget.setAttribute('stroke-width', '1');
-                        e.currentTarget.style.transform = 'scale(1)';
-                      }}
-                    />
-                    
-                    {/* Add labels for cells that are large enough */}
-                    {cell.data.percentage >= 8 && (
-                      <text
-                        x={cell.centroid[0]}
-                        y={cell.centroid[1]}
-                        textAnchor="middle"
-                        dominantBaseline="middle"
-                        fill="white"
-                        fontSize="10"
-                        fontWeight="bold"
-                        pointerEvents="none"
-                      >
-                        {cell.data.name.split(' ')[0]}
-                      </text>
-                    )}
-                  </g>
-                ))}
-              </svg>
-              
-              {/* Player popup */}
-              {selectedPlayer && (
-                <div 
-                  className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-4 rounded-lg border border-white/20 shadow-xl z-10 w-64"
-                  style={{ borderColor: selectedPlayer.color }}
-                >
-                  <div className="flex justify-between items-center mb-2">
-                    <h3 className="text-white font-bold">{selectedPlayer.name}</h3>
-                    <button 
-                      onClick={closePopup}
-                      className="text-gray-400 hover:text-white"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-3 mb-3">
-                    <div className="text-center p-2 bg-white/10 rounded-lg">
-                      <p className="text-lg font-bold text-fifa-green">{selectedPlayer.goals}</p>
-                      <p className="text-xs text-gray-400">Goals</p>
-                    </div>
-                    <div className="text-center p-2 bg-white/10 rounded-lg">
-                      <p className="text-lg font-bold text-fifa-blue">{selectedPlayer.assists}</p>
-                      <p className="text-xs text-gray-400">Assists</p>
-                    </div>
-                  </div>
-                  
-                  <div className="text-center p-2 bg-white/10 rounded-lg mb-3">
-                    <p className="text-lg font-bold text-fifa-gold">{selectedPlayer.percentage.toFixed(1)}%</p>
-                    <p className="text-xs text-gray-400">of Total Involvements</p>
-                  </div>
-                  
-                  {selectedPlayer.account && (
-                    <div className="text-center text-sm text-gray-400">
-                      {selectedPlayer.account}
-                    </div>
-                  )}
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-white font-bold">{selectedPlayer.name}</h3>
+                  <button 
+                    onClick={closePopup}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    ✕
+                  </button>
                 </div>
-              )}
-            </div>
+                
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div className="text-center p-2 bg-white/10 rounded-lg">
+                    <p className="text-lg font-bold text-fifa-green">{selectedPlayer.goals}</p>
+                    <p className="text-xs text-gray-400">Goals</p>
+                  </div>
+                  <div className="text-center p-2 bg-white/10 rounded-lg">
+                    <p className="text-lg font-bold text-fifa-blue">{selectedPlayer.assists}</p>
+                    <p className="text-xs text-gray-400">Assists</p>
+                  </div>
+                </div>
+                
+                <div className="text-center p-2 bg-white/10 rounded-lg mb-3">
+                  <p className="text-lg font-bold text-fifa-gold">{selectedPlayer.percentage.toFixed(1)}%</p>
+                  <p className="text-xs text-gray-400">of Total Involvements</p>
+                </div>
+                
+                {selectedPlayer.account && (
+                  <div className="text-center text-sm text-gray-400">
+                    {selectedPlayer.account}
+                  </div>
+                )}
+              </div>
+            )}
             
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
               {goalInvolvements.map((involvement, index) => (
