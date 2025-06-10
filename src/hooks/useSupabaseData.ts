@@ -128,7 +128,8 @@ export function useSupabaseData() {
                 stressLevel: game.stress_level,
                 serverQuality: game.server_quality,
                 gameRating: game.game_rating,
-                gameScore: game.game_score
+                gameScore: game.game_score,
+                tags: game.tags || []
               } as GameResult;
             })
           );
@@ -317,7 +318,8 @@ export function useSupabaseData() {
           date_played: gameData.date,
           time_played: gameData.time,
           stress_level: gameData.stressLevel,
-          server_quality: gameData.serverQuality
+          server_quality: gameData.serverQuality,
+          tags: gameData.tags || []
         })
         .select()
         .single();
@@ -543,7 +545,8 @@ export function useSupabaseData() {
           opponent_xg: gameData.teamStats?.expectedGoalsAgainst,
           stress_level: gameData.stressLevel,
           server_quality: gameData.serverQuality,
-          time_played: gameData.time
+          time_played: gameData.time,
+          tags: gameData.tags || []
         })
         .eq('id', gameId)
         .eq('user_id', user.id);
@@ -604,6 +607,99 @@ export function useSupabaseData() {
     }
   };
 
+  // Delete week
+  const deleteWeek = async (weekId: string) => {
+    if (!user) {
+      // If no user, delete from localStorage for backward compatibility
+      const savedWeeks = localStorage.getItem('futChampions_weeks');
+      let weeks: WeeklyPerformance[] = [];
+      
+      if (savedWeeks) {
+        try {
+          weeks = JSON.parse(savedWeeks);
+          const filteredWeeks = weeks.filter(w => w.id !== weekId);
+          localStorage.setItem('futChampions_weeks', JSON.stringify(filteredWeeks));
+          setWeeklyData(filteredWeeks);
+        } catch (e) {
+          console.error('Error deleting week from localStorage:', e);
+        }
+      }
+      
+      return;
+    }
+
+    try {
+      // First, delete all games associated with this week
+      // This will cascade delete player performances and team statistics
+      const { error: gamesError } = await supabase
+        .from('game_results')
+        .delete()
+        .eq('week_id', weekId)
+        .eq('user_id', user.id);
+
+      if (gamesError) throw gamesError;
+
+      // Then delete the week itself
+      const { error: weekError } = await supabase
+        .from('weekly_performances')
+        .delete()
+        .eq('id', weekId)
+        .eq('user_id', user.id);
+
+      if (weekError) throw weekError;
+
+      await fetchWeeklyData(); // Refresh data
+    } catch (error) {
+      console.error('Error deleting week:', error);
+      throw error;
+    }
+  };
+
+  // End week
+  const endWeek = async (weekId: string) => {
+    if (!user) {
+      // If no user, update in localStorage for backward compatibility
+      const savedWeeks = localStorage.getItem('futChampions_weeks');
+      let weeks: WeeklyPerformance[] = [];
+      
+      if (savedWeeks) {
+        try {
+          weeks = JSON.parse(savedWeeks);
+          const weekIndex = weeks.findIndex(w => w.id === weekId);
+          
+          if (weekIndex >= 0) {
+            weeks[weekIndex].isCompleted = true;
+            weeks[weekIndex].endDate = new Date().toISOString();
+            localStorage.setItem('futChampions_weeks', JSON.stringify(weeks));
+            setWeeklyData(weeks);
+          }
+        } catch (e) {
+          console.error('Error ending week in localStorage:', e);
+        }
+      }
+      
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('weekly_performances')
+        .update({
+          is_completed: true,
+          end_date: new Date().toISOString()
+        })
+        .eq('id', weekId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      await fetchWeeklyData(); // Refresh data
+    } catch (error) {
+      console.error('Error ending week:', error);
+      throw error;
+    }
+  };
+
   useEffect(() => {
     fetchWeeklyData();
   }, [user]);
@@ -619,6 +715,8 @@ export function useSupabaseData() {
     createWeek,
     updateWeek,
     updateGame,
+    deleteWeek,
+    endWeek,
     getCurrentWeek,
     refreshData: fetchWeeklyData
   };
