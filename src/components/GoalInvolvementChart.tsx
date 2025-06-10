@@ -14,27 +14,12 @@ interface GoalInvolvement {
   account?: string;
 }
 
-interface VoronoiCell {
-  id: string;
-  path: string;
-  color: string;
-  name: string;
-  goals: number;
-  assists: number;
-  percentage: number;
-  x: number;
-  y: number;
-  weight: number;
-}
-
 const GoalInvolvementChart = () => {
   const { weeklyData } = useDataSync();
   const [goalInvolvements, setGoalInvolvements] = useState<GoalInvolvement[]>([]);
-  const [voronoiCells, setVoronoiCells] = useState<VoronoiCell[]>([]);
   const [selectedPlayer, setSelectedPlayer] = useState<GoalInvolvement | null>(null);
-  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
-  const chartRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
     setIsLoading(true);
@@ -88,12 +73,6 @@ const GoalInvolvementChart = () => {
       .sort((a, b) => b.total - a.total); // Sort by total involvements
     
     setGoalInvolvements(involvements);
-    
-    // Generate Voronoi cells
-    if (involvements.length > 0) {
-      generateVoronoiCells(involvements);
-    }
-    
     setIsLoading(false);
   }, [weeklyData]);
 
@@ -125,167 +104,106 @@ const GoalInvolvementChart = () => {
     return colors[index % colors.length];
   };
 
-  // Generate Voronoi Treemap cells
-  const generateVoronoiCells = (involvements: GoalInvolvement[]) => {
-    if (involvements.length === 0) return;
-    
-    const centerX = 150;
-    const centerY = 150;
-    const radius = 140;
-    
-    // Create cells array
-    const cells: VoronoiCell[] = [];
-    
-    // Calculate total weight
-    const totalWeight = involvements.reduce((sum, player) => sum + player.percentage, 0);
-    
-    // Generate initial seed points based on sunburst layout
-    // This gives us a better starting distribution than random points
-    let currentAngle = 0;
-    involvements.forEach((player, index) => {
-      // Calculate angle based on percentage
-      const angleSize = (player.percentage / totalWeight) * (2 * Math.PI);
-      const angle = currentAngle + (angleSize / 2);
-      
-      // Calculate distance from center based on weight
-      // Larger percentages are closer to center
-      const distance = radius * (0.3 + (Math.random() * 0.4));
-      
-      // Calculate position
-      const x = centerX + Math.cos(angle) * distance;
-      const y = centerY + Math.sin(angle) * distance;
-      
-      // Create cell
-      cells.push({
-        id: `cell-${index}`,
-        path: '', // Will be calculated later
-        color: player.color,
-        name: player.name,
-        goals: player.goals,
-        assists: player.assists,
-        percentage: player.percentage,
-        x: x,
-        y: y,
-        weight: player.percentage
-      });
-      
-      // Update angle for next player
-      currentAngle += angleSize;
-    });
-    
-    // Generate Voronoi cells using weighted Voronoi algorithm
-    generateWeightedVoronoiCells(cells, centerX, centerY, radius);
-    
-    setVoronoiCells(cells);
-  };
-  
-  // Generate weighted Voronoi cells
-  const generateWeightedVoronoiCells = (cells: VoronoiCell[], centerX: number, centerY: number, radius: number) => {
-    // Number of points to sample for cell boundaries
-    const numSamplePoints = 360;
-    
-    // For each cell, calculate its boundary
-    cells.forEach(cell => {
-      const boundaryPoints: [number, number][] = [];
-      
-      // Sample points around the circle
-      for (let i = 0; i < numSamplePoints; i++) {
-        const angle = (i / numSamplePoints) * (2 * Math.PI);
-        const sampleX = centerX + Math.cos(angle) * radius;
-        const sampleY = centerY + Math.sin(angle) * radius;
-        
-        // Find which cell this point belongs to
-        let minDistanceRatio = Infinity;
-        let closestCellIndex = -1;
-        
-        cells.forEach((otherCell, index) => {
-          // Calculate weighted distance
-          // Distance is divided by square root of weight to give larger cells more influence
-          const dx = sampleX - otherCell.x;
-          const dy = sampleY - otherCell.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-          const weightedDistance = distance / Math.sqrt(otherCell.weight);
-          
-          if (weightedDistance < minDistanceRatio) {
-            minDistanceRatio = weightedDistance;
-            closestCellIndex = index;
-          }
-        });
-        
-        // If this point belongs to our cell, add it to boundary
-        if (closestCellIndex === cells.indexOf(cell)) {
-          boundaryPoints.push([sampleX, sampleY]);
-        }
-      }
-      
-      // Add points for the cell center
-      boundaryPoints.push([cell.x, cell.y]);
-      
-      // Sort boundary points by angle from cell center
-      boundaryPoints.sort((a, b) => {
-        const angleA = Math.atan2(a[1] - cell.y, a[0] - cell.x);
-        const angleB = Math.atan2(b[1] - cell.y, b[0] - cell.x);
-        return angleA - angleB;
-      });
-      
-      // Remove duplicate points
-      const uniquePoints: [number, number][] = [];
-      for (let i = 0; i < boundaryPoints.length; i++) {
-        const point = boundaryPoints[i];
-        const nextPoint = boundaryPoints[(i + 1) % boundaryPoints.length];
-        
-        // Skip if too close to next point
-        if (Math.abs(point[0] - nextPoint[0]) < 0.1 && Math.abs(point[1] - nextPoint[1]) < 0.1) {
-          continue;
-        }
-        
-        uniquePoints.push(point);
-      }
-      
-      // Create SVG path from boundary points
-      if (uniquePoints.length > 2) {
-        const pathData = uniquePoints.map((point, i) => 
-          (i === 0 ? 'M' : 'L') + point[0] + ',' + point[1]
-        ).join(' ') + 'Z';
-        
-        cell.path = pathData;
-      } else {
-        // Fallback for cells with too few points - create a small circle
-        const radius = 5;
-        cell.path = `M ${cell.x - radius},${cell.y} a ${radius},${radius} 0 1,0 ${radius * 2},0 a ${radius},${radius} 0 1,0 ${-radius * 2},0`;
-      }
-    });
-    
-    // Calculate cell centers based on boundary points
-    cells.forEach(cell => {
-      if (!cell.path) return;
-      
-      // Parse path to get points
-      const pointsRegex = /[ML]([0-9.-]+),([0-9.-]+)/g;
-      const points: [number, number][] = [];
-      let match;
-      
-      while ((match = pointsRegex.exec(cell.path)) !== null) {
-        points.push([parseFloat(match[1]), parseFloat(match[2])]);
-      }
-      
-      // Calculate centroid
-      if (points.length > 0) {
-        const sumX = points.reduce((sum, point) => sum + point[0], 0);
-        const sumY = points.reduce((sum, point) => sum + point[1], 0);
-        
-        cell.x = sumX / points.length;
-        cell.y = sumY / points.length;
-      }
-    });
-  };
+  // Generate Voronoi Treemap
+  useEffect(() => {
+    if (goalInvolvements.length === 0 || !svgRef.current) return;
 
-  const handleCellClick = (cell: VoronoiCell) => {
-    const player = goalInvolvements.find(p => p.name === cell.name);
-    if (player) {
-      setSelectedPlayer(player);
+    // Clear previous content
+    while (svgRef.current.firstChild) {
+      svgRef.current.removeChild(svgRef.current.firstChild);
     }
-  };
+
+    const width = 300;
+    const height = 300;
+    const radius = 140;
+    const centerX = width / 2;
+    const centerY = height / 2;
+
+    // Create circle background
+    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    circle.setAttribute("cx", centerX.toString());
+    circle.setAttribute("cy", centerY.toString());
+    circle.setAttribute("r", radius.toString());
+    circle.setAttribute("fill", "rgba(255,255,255,0.05)");
+    svgRef.current.appendChild(circle);
+
+    // Create Voronoi cells
+    const totalPercentage = goalInvolvements.reduce((sum, player) => sum + player.percentage, 0);
+    let startAngle = 0;
+
+    goalInvolvements.forEach((player, index) => {
+      // Calculate angle based on percentage
+      const angleSize = (player.percentage / totalPercentage) * (2 * Math.PI);
+      const endAngle = startAngle + angleSize;
+      
+      // Create random polygon shape within the sector
+      const points: [number, number][] = [];
+      const numPoints = Math.max(6, Math.floor(player.percentage / 2));
+      
+      // Add center point
+      points.push([centerX, centerY]);
+      
+      // Add points along the arc
+      for (let i = 0; i <= numPoints; i++) {
+        const angle = startAngle + (i / numPoints) * angleSize;
+        const randomRadius = radius * (0.7 + Math.random() * 0.3); // Vary radius for organic shape
+        const x = centerX + Math.cos(angle) * randomRadius;
+        const y = centerY + Math.sin(angle) * randomRadius;
+        points.push([x, y]);
+      }
+      
+      // Create polygon
+      const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+      polygon.setAttribute("points", points.map(p => p.join(",")).join(" "));
+      polygon.setAttribute("fill", player.color);
+      polygon.setAttribute("stroke", "rgba(0, 0, 0, 0.3)");
+      polygon.setAttribute("stroke-width", "1");
+      polygon.setAttribute("opacity", "0.8");
+      polygon.setAttribute("data-player-index", index.toString());
+      polygon.style.cursor = "pointer";
+      
+      // Add event listeners
+      polygon.addEventListener("click", () => {
+        setSelectedPlayer(player);
+      });
+      
+      polygon.addEventListener("mouseenter", () => {
+        polygon.setAttribute("opacity", "1");
+        polygon.setAttribute("stroke-width", "2");
+      });
+      
+      polygon.addEventListener("mouseleave", () => {
+        polygon.setAttribute("opacity", "0.8");
+        polygon.setAttribute("stroke-width", "1");
+      });
+      
+      svgRef.current.appendChild(polygon);
+      
+      // Add label if segment is large enough
+      if (player.percentage >= 5) {
+        const labelAngle = startAngle + angleSize / 2;
+        const labelRadius = radius * 0.6;
+        const labelX = centerX + Math.cos(labelAngle) * labelRadius;
+        const labelY = centerY + Math.sin(labelAngle) * labelRadius;
+        
+        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        text.setAttribute("x", labelX.toString());
+        text.setAttribute("y", labelY.toString());
+        text.setAttribute("text-anchor", "middle");
+        text.setAttribute("dominant-baseline", "middle");
+        text.setAttribute("fill", "white");
+        text.setAttribute("font-size", "10");
+        text.setAttribute("font-weight", "bold");
+        text.setAttribute("pointer-events", "none");
+        text.textContent = player.name.split(' ')[0];
+        
+        svgRef.current.appendChild(text);
+      }
+      
+      // Update start angle for next segment
+      startAngle = endAngle;
+    });
+  }, [goalInvolvements]);
 
   const closePopup = () => {
     setSelectedPlayer(null);
@@ -306,47 +224,8 @@ const GoalInvolvementChart = () => {
           </div>
         ) : goalInvolvements.length > 0 ? (
           <div className="space-y-6">
-            <div className="relative h-[300px] w-[300px] mx-auto" ref={chartRef}>
-              <svg width="300" height="300" viewBox="0 0 300 300" className="mx-auto">
-                {/* Circle background */}
-                <circle cx="150" cy="150" r="140" fill="rgba(255,255,255,0.05)" />
-                
-                {/* Voronoi cells */}
-                {voronoiCells.map((cell) => (
-                  <path
-                    key={cell.id}
-                    d={cell.path}
-                    fill={cell.color}
-                    stroke="rgba(0, 0, 0, 0.3)"
-                    strokeWidth="1"
-                    opacity="0.8"
-                    onClick={() => handleCellClick(cell)}
-                    style={{ cursor: 'pointer' }}
-                  />
-                ))}
-                
-                {/* Player labels */}
-                {voronoiCells.map((cell) => {
-                  // Only show label for segments with enough space
-                  if (cell.percentage < 5) return null;
-                  
-                  return (
-                    <text
-                      key={`label-${cell.id}`}
-                      x={cell.x}
-                      y={cell.y}
-                      textAnchor="middle"
-                      dominantBaseline="middle"
-                      fill="white"
-                      fontSize="10"
-                      fontWeight="bold"
-                      pointerEvents="none"
-                    >
-                      {cell.name.split(' ')[0]}
-                    </text>
-                  );
-                })}
-              </svg>
+            <div className="relative h-[300px] w-[300px] mx-auto">
+              <svg ref={svgRef} width="300" height="300" viewBox="0 0 300 300" className="mx-auto" />
               
               {/* Player popup */}
               {selectedPlayer && (
