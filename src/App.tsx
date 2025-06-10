@@ -15,6 +15,7 @@ import Auth from "./pages/Auth";
 import Friends from "./pages/Friends";
 import Leaderboards from "./pages/Leaderboards";
 import Achievements from "./pages/Achievements";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import "./App.css";
 
@@ -117,6 +118,7 @@ function App() {
               <Route path="/friends" element={<ProtectedRoute><Friends /></ProtectedRoute>} />
               <Route path="/leaderboards" element={<ProtectedRoute><Leaderboards /></ProtectedRoute>} />
               <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
+              <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>

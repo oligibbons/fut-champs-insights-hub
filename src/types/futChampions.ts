@@ -96,6 +96,10 @@ export interface GameResult {
   rageQuits?: number;
   timePlayed?: string;
   crossPlay?: boolean;
+  tags?: string[]; // Match tags
+  opponentPlayStyle?: string; // Opponent play style
+  opponentFormation?: string; // Opponent formation
+  opponentSquadRating?: number; // Opponent squad rating
 }
 
 export interface Squad {
@@ -164,6 +168,7 @@ export interface WeeklyPerformance {
   targetRank?: string;
   targetWins?: number;
   personalNotes?: string;
+  cpsScore?: number; // Champs Performance Score
 }
 
 export interface Achievement {
@@ -350,3 +355,13 @@ export const GAME_RATINGS = [
   { letter: 'A', minScore: 80, maxScore: 89, color: '#32CD32' },
   { letter: 'S', minScore: 90, maxScore: 100, color: '#9932CC' }
 ];
+
+// CPS (Champs Performance Score) weights
+export const CPS_WEIGHTS = {
+  goalsScored: 0.30, // 30% weight for offensive output
+  xgDifferential: 0.25, // 25% weight for xG vs xGa differential
+  playerRating: 0.20, // 20% weight for average player rating
+  goalsConceded: 0.15, // 15% weight for goals conceded
+  cards: 0.10, // 10% weight for cards received
+  result: 0.30 // 30% weight for win/loss
+};

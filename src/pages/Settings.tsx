@@ -9,8 +9,10 @@ import { useTheme } from '@/hooks/useTheme';
 import { useToast } from '@/hooks/use-toast';
 import Navigation from '@/components/Navigation';
 import AccountManager from '@/components/AccountManager';
+import AccountSelector from '@/components/AccountSelector';
 import UserAccountSettings from '@/components/UserAccountSettings';
-import { Settings as SettingsIcon, Palette, Gamepad2, User, BarChart3, Target, Sparkles } from 'lucide-react';
+import DataManagement from '@/components/DataManagement';
+import { Settings as SettingsIcon, Palette, Gamepad2, User, BarChart3, Target, Sparkles, Database } from 'lucide-react';
 import { useDataSync } from '@/hooks/useDataSync';
 
 interface DashboardSettings {
@@ -195,6 +197,10 @@ const Settings = () => {
                   <Target className="h-4 w-4 mr-2" />
                   <span>Targets</span>
                 </TabsTrigger>
+                <TabsTrigger value="data" className="flex-shrink-0">
+                  <Database className="h-4 w-4 mr-2" />
+                  <span>Data</span>
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="account" className="space-y-4 mt-4">
@@ -202,7 +208,7 @@ const Settings = () => {
               </TabsContent>
 
               <TabsContent value="fc25-accounts" className="space-y-4 mt-4">
-                <AccountManager />
+                <AccountSelector />
               </TabsContent>
 
               <TabsContent value="appearance" className="space-y-4 mt-4">
@@ -349,6 +355,10 @@ const Settings = () => {
                     </div>
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              <TabsContent value="data" className="space-y-4 mt-4">
+                <DataManagement />
               </TabsContent>
             </Tabs>
           </div>

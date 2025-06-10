@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Navigation from '@/components/Navigation';
 import PlayerHistoryTable from '@/components/PlayerHistoryTable';
+import ClubLegends from '@/components/ClubLegends';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -17,10 +18,14 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { WeeklyPerformance, GameResult } from '@/types/futChampions';
-import { Search, Calendar, Trophy, Target, Clock, Star, Filter, Users, Trash2, StopCircle } from 'lucide-react';
+import { Search, Calendar, Trophy, Target, Clock, Star, Filter, Users, Trash2, StopCircle, History as HistoryIcon } from 'lucide-react';
 import { calculateWeekRating, calculateGameRating } from '@/utils/gameRating';
 import { useDataSync } from '@/hooks/useDataSync';
 import { toast } from '@/hooks/use-toast';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import ShareableCard from '@/components/ShareableCard';
+import WeekCompletionPopup from '@/components/WeekCompletionPopup';
+import GameCompletionModal from '@/components/GameCompletionModal';
 
 const History = () => {
   const { weeklyData, setWeeklyData } = useDataSync();
@@ -28,7 +33,7 @@ const History = () => {
   const [filterResult, setFilterResult] = useState<'all' | 'win' | 'loss'>('all');
   const [filterWeek, setFilterWeek] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'date' | 'rating' | 'score'>('date');
-  const [viewMode, setViewMode] = useState<'weeks' | 'games' | 'players'>('weeks');
+  const [viewMode, setViewMode] = useState<'weeks' | 'games' | 'players' | 'legends'>('weeks');
   const [deleteWeekDialog, setDeleteWeekDialog] = useState<{ isOpen: boolean; weekId: string | null }>({
     isOpen: false,
     weekId: null
@@ -37,14 +42,19 @@ const History = () => {
     isOpen: false,
     weekId: null
   });
+  const [selectedWeek, setSelectedWeek] = useState<WeeklyPerformance | null>(null);
+  const [selectedGame, setSelectedGame] = useState<GameResult | null>(null);
+  const [showWeekPopup, setShowWeekPopup] = useState(false);
+  const [showGamePopup, setShowGamePopup] = useState(false);
 
   const filteredWeeks = weeklyData.filter(week => {
     if (filterWeek !== 'all' && week.id !== filterWeek) return false;
-    return week.weekNumber.toString().includes(searchTerm.toLowerCase());
+    return week.weekNumber.toString().includes(searchTerm.toLowerCase()) || 
+           (week.customName && week.customName.toLowerCase().includes(searchTerm.toLowerCase()));
   });
 
   const allGames = weeklyData.flatMap(week => 
-    week.games.map(game => ({ ...game, weekNumber: week.weekNumber }))
+    week.games.map(game => ({ ...game, weekNumber: week.weekNumber, weekId: week.id }))
   );
 
   const filteredGames = allGames.filter(game => {
@@ -56,7 +66,7 @@ const History = () => {
     return (
       game.gameNumber.toString().includes(searchTerm) ||
       game.scoreLine.includes(searchTerm) ||
-      game.comments.toLowerCase().includes(searchTerm.toLowerCase())
+      (game.comments && game.comments.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   });
 
@@ -110,6 +120,16 @@ const History = () => {
     setEndWeekDialog({ isOpen: false, weekId: null });
   };
 
+  const handleViewWeek = (week: WeeklyPerformance) => {
+    setSelectedWeek(week);
+    setShowWeekPopup(true);
+  };
+
+  const handleViewGame = (game: GameResult) => {
+    setSelectedGame(game);
+    setShowGamePopup(true);
+  };
+
   return (
     <div className="min-h-screen">
       <Navigation />
@@ -140,32 +160,26 @@ const History = () => {
                 </div>
 
                 {/* View Mode Toggle */}
-                <div className="flex gap-2">
-                  <Button
-                    variant={viewMode === 'weeks' ? 'default' : 'outline'}
-                    onClick={() => setViewMode('weeks')}
-                    size="sm"
-                  >
-                    <Calendar className="h-4 w-4 mr-2" />
-                    Weeks
-                  </Button>
-                  <Button
-                    variant={viewMode === 'games' ? 'default' : 'outline'}
-                    onClick={() => setViewMode('games')}
-                    size="sm"
-                  >
-                    <Trophy className="h-4 w-4 mr-2" />
-                    Games
-                  </Button>
-                  <Button
-                    variant={viewMode === 'players' ? 'default' : 'outline'}
-                    onClick={() => setViewMode('players')}
-                    size="sm"
-                  >
-                    <Users className="h-4 w-4 mr-2" />
-                    Players
-                  </Button>
-                </div>
+                <Tabs value={viewMode} onValueChange={(value: any) => setViewMode(value)} className="w-full lg:w-auto">
+                  <TabsList className="w-full lg:w-auto">
+                    <TabsTrigger value="weeks" className="flex-1 lg:flex-initial">
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Weeks
+                    </TabsTrigger>
+                    <TabsTrigger value="games" className="flex-1 lg:flex-initial">
+                      <Trophy className="h-4 w-4 mr-2" />
+                      Games
+                    </TabsTrigger>
+                    <TabsTrigger value="players" className="flex-1 lg:flex-initial">
+                      <Users className="h-4 w-4 mr-2" />
+                      Players
+                    </TabsTrigger>
+                    <TabsTrigger value="legends" className="flex-1 lg:flex-initial">
+                      <HistoryIcon className="h-4 w-4 mr-2" />
+                      Legends
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
 
                 {/* Filters - only for games view */}
                 {viewMode === 'games' && (
@@ -194,7 +208,7 @@ const History = () => {
                   </>
                 )}
 
-                {viewMode !== 'players' && (
+                {viewMode !== 'players' && viewMode !== 'legends' && (
                   <Select value={filterWeek} onValueChange={setFilterWeek}>
                     <SelectTrigger className="w-40">
                       <SelectValue />
@@ -214,7 +228,9 @@ const History = () => {
           </Card>
 
           {/* Content */}
-          {viewMode === 'players' ? (
+          {viewMode === 'legends' ? (
+            <ClubLegends />
+          ) : viewMode === 'players' ? (
             <PlayerHistoryTable weeklyData={weeklyData} />
           ) : viewMode === 'weeks' ? (
             <div className="grid gap-4 lg:gap-6">
@@ -230,11 +246,11 @@ const History = () => {
                 filteredWeeks.reverse().map(week => {
                   const weekRating = calculateWeekRating(week);
                   return (
-                    <Card key={week.id} className="glass-card hover:shadow-2xl transition-all duration-300">
+                    <Card key={week.id} className="glass-card hover:shadow-2xl transition-all duration-300 cursor-pointer" onClick={() => handleViewWeek(week)}>
                       <CardHeader>
                         <div className="flex items-center justify-between">
                           <div>
-                            <CardTitle className="text-white text-xl">Week {week.weekNumber}</CardTitle>
+                            <CardTitle className="text-white text-xl">{week.customName || `Week ${week.weekNumber}`}</CardTitle>
                             <p className="text-gray-400 text-sm">
                               {new Date(week.startDate).toLocaleDateString()} - 
                               {week.endDate ? new Date(week.endDate).toLocaleDateString() : 'Ongoing'}
@@ -246,7 +262,10 @@ const History = () => {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => handleEndWeek(week.id)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEndWeek(week.id);
+                                  }}
                                   className="text-yellow-400 border-yellow-400 hover:bg-yellow-400/10"
                                 >
                                   <StopCircle className="h-4 w-4 mr-1" />
@@ -256,7 +275,10 @@ const History = () => {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleDeleteWeek(week.id)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteWeek(week.id);
+                                }}
                                 className="text-red-400 border-red-400 hover:bg-red-400/10"
                               >
                                 <Trash2 className="h-4 w-4 mr-1" />
@@ -332,7 +354,11 @@ const History = () => {
                   const avgPlayerRating = game.playerStats?.reduce((sum, p) => sum + p.rating, 0) / (game.playerStats?.length || 1) || 0;
                   
                   return (
-                    <Card key={game.id} className="glass-card hover:shadow-lg transition-all duration-200">
+                    <Card 
+                      key={game.id} 
+                      className="glass-card hover:shadow-lg transition-all duration-200 cursor-pointer"
+                      onClick={() => handleViewGame(game as GameResult)}
+                    >
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4 min-w-0 flex-1">
@@ -393,6 +419,32 @@ const History = () => {
                             {game.comments}
                           </div>
                         )}
+                        
+                        {/* Game Tags */}
+                        {game.tags && game.tags.length > 0 && (
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {game.tags.map(tag => (
+                              <Badge 
+                                key={tag} 
+                                className={
+                                  tag === 'comeback' ? 'bg-fifa-green/20 text-fifa-green' :
+                                  tag === 'bottled' ? 'bg-fifa-red/20 text-fifa-red' :
+                                  tag === 'bad-servers' ? 'bg-fifa-gold/20 text-fifa-gold' :
+                                  tag === 'scripting' ? 'bg-fifa-purple/20 text-fifa-purple' :
+                                  tag === 'good-opponent' ? 'bg-fifa-blue/20 text-fifa-blue' :
+                                  'bg-white/10 text-white'
+                                }
+                              >
+                                {tag === 'comeback' ? 'Comeback Win' :
+                                 tag === 'bottled' ? 'Bottled Lead' :
+                                 tag === 'bad-servers' ? 'Bad Servers' :
+                                 tag === 'scripting' ? 'Scripting' :
+                                 tag === 'good-opponent' ? 'Good Opponent' :
+                                 tag}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   );
@@ -400,6 +452,17 @@ const History = () => {
               )}
             </div>
           )}
+
+          {/* Share Card */}
+          {(viewMode === 'weeks' && selectedWeek) || (viewMode === 'games' && selectedGame) ? (
+            <div className="mt-6">
+              <ShareableCard 
+                type={viewMode === 'weeks' ? 'week' : 'game'}
+                weekData={selectedWeek || undefined}
+                gameData={selectedGame || undefined}
+              />
+            </div>
+          ) : null}
         </div>
       </main>
 
@@ -438,6 +501,32 @@ const History = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Week Completion Popup */}
+      {showWeekPopup && selectedWeek && (
+        <WeekCompletionPopup
+          isOpen={showWeekPopup}
+          onClose={() => setShowWeekPopup(false)}
+          weekData={selectedWeek}
+          onNewWeek={() => {}}
+        />
+      )}
+
+      {/* Game Completion Modal */}
+      {showGamePopup && selectedGame && (
+        <GameCompletionModal
+          isOpen={showGamePopup}
+          onClose={() => setShowGamePopup(false)}
+          game={selectedGame}
+          weekStats={{
+            totalGames: weeklyData.find(w => w.id === (selectedGame as any).weekId)?.games.length || 0,
+            wins: weeklyData.find(w => w.id === (selectedGame as any).weekId)?.totalWins || 0,
+            losses: weeklyData.find(w => w.id === (selectedGame as any).weekId)?.totalLosses || 0,
+            winRate: 0,
+            currentStreak: weeklyData.find(w => w.id === (selectedGame as any).weekId)?.currentStreak || 0
+          }}
+        />
+      )}
     </div>
   );
 };

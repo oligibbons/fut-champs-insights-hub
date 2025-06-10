@@ -231,7 +231,7 @@ const CurrentWeek = () => {
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-fifa-blue via-fifa-purple to-fifa-gold bg-clip-text text-transparent">
-                    {currentWeek?.customName || `Run ${currentWeek?.weekNumber || 1}`}
+                    {currentWeek?.customName || generateDefaultName()}
                   </h1>
                   <Button
                     variant="ghost"

@@ -1,10 +1,3 @@
-/* Import FUT Visionary brand fonts */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap');
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 /* Global theme variables */
 :root {
   --theme-primary: #00D4FF;
@@ -21,6 +14,13 @@
   --font-primary: 'Poppins', sans-serif;
   --font-mono: 'Space Mono', monospace;
 }
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Import FUT Visionary brand fonts */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap');
 
 /* Base body styling with brand fonts */
 body {
@@ -514,309 +514,442 @@ input::-webkit-inner-spin-button {
   scale: 1 !important;
 }
 
-/* FIFA-style components */
-.glass-card {
-  background: rgba(28, 28, 30, 0.8);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-}
-
-.metric-card {
-  background: linear-gradient(135deg, rgba(40, 40, 42, 0.9) 0%, rgba(28, 28, 30, 0.9) 100%);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  transition: all 0.3s ease;
-}
-
-.metric-card:hover {
-  border-color: var(--fifa-blue);
-  box-shadow: 0 8px 32px rgba(10, 132, 255, 0.2);
-  transform: translateY(-2px);
-}
-
-/* Modern button styles */
-.modern-button-primary {
-  background: linear-gradient(135deg, var(--fifa-blue) 0%, var(--fifa-purple) 100%);
-  border: none;
-  border-radius: 12px;
-  padding: 12px 24px;
-  font-weight: 600;
-  color: white;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 16px rgba(10, 132, 255, 0.3);
-}
-
-.modern-button-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(10, 132, 255, 0.4);
-}
-
-.modern-button-secondary {
-  background: rgba(58, 58, 60, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
-  padding: 12px 24px;
-  font-weight: 600;
-  color: white;
-  transition: all 0.3s ease;
-}
-
-.modern-button-secondary:hover {
-  background: rgba(72, 72, 74, 0.9);
-  border-color: var(--fifa-blue);
-}
-
-/* Modern input styles */
-.modern-input {
-  background: rgba(58, 58, 60, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
+/* Mobile-friendly input styles */
+.mobile-friendly-input {
+  min-height: 48px;
+  font-size: 16px;
   padding: 12px 16px;
-  color: white;
-  transition: all 0.3s ease;
 }
 
-.modern-input:focus {
-  border-color: var(--fifa-blue);
-  box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.1);
-  outline: none;
+/* Improved tab navigation for mobile */
+.mobile-tabs {
+  display: flex;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 0.5rem;
+  gap: 0.5rem;
 }
 
-.modern-input::placeholder {
-  color: rgba(255, 255, 255, 0.5);
+.mobile-tabs::-webkit-scrollbar {
+  display: none;
 }
 
-/* Page header with gradient text */
-.page-header {
-  background: linear-gradient(135deg, var(--fifa-blue) 0%, var(--fifa-purple) 50%, var(--fifa-gold) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  color: transparent;
-  font-weight: 700;
+.mobile-tab-button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  font-weight: 500;
 }
 
-/* Animation utilities */
-@keyframes fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* Improved form layout for mobile */
+.mobile-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
 }
 
-@keyframes scale-in {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+.mobile-form-field {
+  margin-bottom: 1.5rem;
 }
 
-@keyframes slide-in-right {
-  from {
-    opacity: 0;
-    transform: translateX(100%);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+/* Improved number input for mobile */
+.number-input-container {
+  display: flex;
+  align-items: center;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
-.animate-fade-in {
-  animation: fade-in 0.6s ease-out;
-}
-
-.animate-scale-in {
-  animation: scale-in 0.4s ease-out;
-}
-
-.animate-slide-in-right {
-  animation: slide-in-right 0.5s ease-out;
-}
-
-/* Scrollbar styles */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: rgba(28, 28, 30, 0.5);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(142, 142, 147, 0.6);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(142, 142, 147, 0.8);
-}
-
-/* Tab styles */
-.tabs-list {
-  background: rgba(28, 28, 30, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 4px;
-}
-
-/* FIFA color utilities */
-.text-fifa-blue { color: var(--fifa-blue); }
-.text-fifa-purple { color: var(--fifa-purple); }
-.text-fifa-green { color: var(--fifa-green); }
-.text-fifa-gold { color: var(--fifa-gold); }
-.text-fifa-red { color: var(--fifa-red); }
-
-.bg-fifa-blue { background-color: var(--fifa-blue); }
-.bg-fifa-purple { background-color: var(--fifa-purple); }
-.bg-fifa-green { background-color: var(--fifa-green); }
-.bg-fifa-gold { background-color: var(--fifa-gold); }
-.bg-fifa-red { background-color: var(--fifa-red); }
-
-.border-fifa-blue { border-color: var(--fifa-blue); }
-.border-fifa-purple { border-color: var(--fifa-purple); }
-.border-fifa-green { border-color: var(--fifa-green); }
-.border-fifa-gold { border-color: var(--fifa-gold); }
-.border-fifa-red { border-color: var(--fifa-red); }
-
-/* Progress bar styling */
-.progress-bar {
-  background: linear-gradient(90deg, var(--fifa-blue) 0%, var(--fifa-purple) 100%);
-  border-radius: 8px;
-  transition: width 0.5s ease;
-}
-
-/* Achievement badge styles */
-.achievement-badge {
-  background: linear-gradient(135deg, var(--fifa-gold) 0%, #FFB000 100%);
-  border-radius: 50%;
+.number-input-button {
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
-  box-shadow: 0 4px 12px rgba(255, 214, 10, 0.3);
-}
-
-/* Responsive typography */
-@media (max-width: 768px) {
-  .page-header {
-    font-size: 1.5rem;
-  }
-  
-  .metric-card {
-    padding: 12px;
-  }
-  
-  .modern-button-primary,
-  .modern-button-secondary {
-    padding: 10px 20px;
-    font-size: 14px;
-  }
-}
-
-/* Loading states */
-.loading-shimmer {
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-  background-size: 200% 100%;
-  animation: shimmer 2s infinite;
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-/* Form validation styles */
-.input-error {
-  border-color: var(--fifa-red);
-  box-shadow: 0 0 0 3px rgba(255, 59, 48, 0.1);
-}
-
-.input-success {
-  border-color: var(--fifa-green);
-  box-shadow: 0 0 0 3px rgba(48, 209, 88, 0.1);
-}
-
-/* Notification styles */
-.notification-success {
-  background: linear-gradient(135deg, var(--fifa-green), #28A745);
+  background-color: rgba(0, 0, 0, 0.2);
   color: white;
-  border-radius: 12px;
-  padding: 12px 16px;
-  box-shadow: 0 4px 16px rgba(48, 209, 88, 0.3);
+  font-size: 1.5rem;
+  border: none;
+  cursor: pointer;
 }
 
-.notification-error {
-  background: linear-gradient(135deg, var(--fifa-red), #DC3545);
+.number-input {
+  flex: 1;
+  height: 48px;
+  background-color: transparent;
+  border: none;
   color: white;
-  border-radius: 12px;
-  padding: 12px 16px;
-  box-shadow: 0 4px 16px rgba(255, 59, 48, 0.3);
+  text-align: center;
+  font-size: 1.25rem;
 }
 
-/* Card hover effects for interactive elements only */
-.interactive-card {
+/* CPS Gauge styles */
+.cps-gauge-container {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  margin: 0 auto;
+}
+
+.cps-gauge-background {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.cps-gauge-fill {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  clip: rect(0, 150px, 150px, 75px);
+  background-color: var(--theme-primary);
+  transform-origin: center;
+  transition: transform 1s ease-in-out;
+}
+
+.cps-gauge-center {
+  position: absolute;
+  top: 15%;
+  left: 15%;
+  width: 70%;
+  height: 70%;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.cps-gauge-value {
+  font-size: 2rem;
+  font-weight: bold;
+  color: white;
+}
+
+.cps-gauge-label {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Goal involvement chart styles */
+.goal-involvement-chart {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  margin: 0 auto;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.goal-involvement-segment {
+  position: absolute;
+  transform-origin: center;
+  transition: all 0.5s ease-in-out;
+  cursor: pointer;
+}
+
+.goal-involvement-segment:hover {
+  filter: brightness(1.2);
+  transform: scale(1.05);
+}
+
+.goal-involvement-tooltip {
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  pointer-events: none;
+  z-index: 10;
+  transform: translate(-50%, -100%);
+  transition: opacity 0.3s ease-in-out;
+}
+
+/* Match tag styles */
+.match-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
   transition: all 0.3s ease;
 }
 
-.interactive-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+.match-tag:hover {
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
-/* Make sure non-interactive elements don't have hover effects */
-.glass-card:not(.interactive-card),
-.metric-card:not(.interactive-card),
-[class*="static"] {
-  transform: none !important;
-  transition: none !important;
+.match-tag-comeback {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: rgb(16, 185, 129);
 }
 
-.glass-card:not(.interactive-card):hover,
-.metric-card:not(.interactive-card):hover,
-[class*="static"]:hover {
-  transform: none !important;
+.match-tag-bottled {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: rgb(239, 68, 68);
 }
 
-/* Mobile optimizations */
+.match-tag-server {
+  background-color: rgba(245, 158, 11, 0.2);
+  color: rgb(245, 158, 11);
+}
+
+/* Shareable card styles */
+.shareable-card {
+  position: relative;
+  width: 1200px;
+  height: 630px;
+  background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 50%, #5b21b6 100%);
+  border-radius: 1rem;
+  overflow: hidden;
+  padding: 2rem;
+  color: white;
+}
+
+.shareable-card-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url('/pattern.svg');
+  opacity: 0.1;
+  z-index: 0;
+}
+
+.shareable-card-content {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.shareable-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.shareable-card-logo {
+  height: 60px;
+}
+
+.shareable-card-title {
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, #00D4FF, #00FF88);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.shareable-card-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.shareable-card-stat {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.shareable-card-stat-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.shareable-card-stat-label {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.shareable-card-footer {
+  margin-top: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Club legends styles */
+.club-legend-card {
+  position: relative;
+  border-radius: 1rem;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.5));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.club-legend-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.club-legend-card-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.8) 100%);
+  z-index: 1;
+}
+
+.club-legend-card-content {
+  position: relative;
+  z-index: 2;
+  padding: 1.5rem;
+}
+
+.club-legend-card-badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  background-color: rgba(0, 212, 255, 0.2);
+  color: rgb(0, 212, 255);
+}
+
+.club-legend-card-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.club-legend-card-position {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 1rem;
+}
+
+.club-legend-card-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.club-legend-card-stat {
+  text-align: center;
+}
+
+.club-legend-card-stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.club-legend-card-stat-label {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Admin page styles */
+.admin-section {
+  margin-bottom: 2rem;
+}
+
+.admin-section-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: white;
+}
+
+.admin-card {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.admin-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.admin-card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: white;
+}
+
+.admin-card-content {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.admin-stat {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.admin-stat-label {
+  flex: 1;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.admin-stat-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+}
+
+/* Fix for mobile number inputs */
 @media (max-width: 768px) {
-  /* Reduce animations for better performance */
-  * {
-    transition-duration: 0.2s !important;
+  input[type="number"] {
+    font-size: 16px !important;
   }
   
-  /* Optimize layout for smaller screens */
-  .glass-card, .metric-card {
-    padding: 12px !important;
+  .mobile-friendly-input {
+    font-size: 16px !important;
+    padding: 12px 16px !important;
   }
   
-  /* Make inputs easier to tap */
-  input, select, button {
-    min-height: 44px;
+  .number-input-container {
+    margin-bottom: 1rem;
   }
   
-  /* Ensure content doesn't overflow */
-  .overflow-x-auto {
-    -webkit-overflow-scrolling: touch;
+  .mobile-tabs {
+    padding: 0.25rem;
   }
   
-  /* Fix for Settings tabs */
-  .tabs-list {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    padding: 4px;
+  .mobile-tab-button {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+  
+  .mobile-form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .mobile-form-field {
+    margin-bottom: 1rem;
   }
 }

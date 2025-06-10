@@ -5,6 +5,8 @@ import DashboardCarousel from '@/components/DashboardCarousel';
 import DashboardOverview from '@/components/DashboardOverview';
 import AnalyticsDashboard from '@/components/AnalyticsDashboard';
 import PositionalHeatMap from '@/components/PositionalHeatMap';
+import GoalInvolvementChart from '@/components/GoalInvolvementChart';
+import CPSGauge from '@/components/CPSGauge';
 import AnalyticsTooltip from '@/components/AnalyticsTooltip';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -78,6 +80,14 @@ const Index = () => {
               )}
             />
           </AnalyticsTooltip>
+
+          {/* Goal Involvement Chart */}
+          <GoalInvolvementChart />
+
+          {/* CPS Gauge */}
+          {currentRun && currentRun.games.length > 0 && (
+            <CPSGauge weekData={currentRun} historicalData={weeklyData.filter(w => w.isCompleted)} />
+          )}
 
           {/* Comprehensive Dashboard Overview */}
           <DashboardOverview />
