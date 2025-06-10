@@ -31,6 +31,8 @@ const CPSGauge = ({ weekData, historicalData = [] }: CPSGaugeProps) => {
   const [trendData, setTrendData] = useState<any[]>([]);
   const [gaugeRef, setGaugeRef] = useState<HTMLCanvasElement | null>(null);
   const [gaugeInstance, setGaugeInstance] = useState<any>(null);
+  const [gaugeError, setGaugeError] = useState<string | null>(null);
+  const [useSimpleGauge, setUseSimpleGauge] = useState(false);
 
   useEffect(() => {
     // Calculate CPS score
@@ -150,18 +152,80 @@ const CPSGauge = ({ weekData, historicalData = [] }: CPSGaugeProps) => {
     const score = calculateCPS();
     calculateTrend();
     
-    // Initialize Gauge.js if available
+    // Initialize Gauge.js with comprehensive error handling and fallback
     const initGauge = async () => {
-      if (gaugeRef && typeof window !== 'undefined') {
+      if (!gaugeRef || typeof window === 'undefined') {
+        console.log('CPSGauge: No gauge ref or not in browser environment');
+        return;
+      }
+
+      try {
+        console.log('CPSGauge: Attempting to import gauge-js...');
+        
+        // Try multiple import strategies
+        let GaugeConstructor = null;
+        let importError = null;
+        
         try {
-          // Import Gauge.js dynamically with proper handling
+          // Strategy 1: Direct default import
           const GaugeModule = await import('gauge-js');
-          const Gauge = (GaugeModule as any).default;
+          console.log('CPSGauge: Import successful, module structure:', {
+            hasDefault: !!GaugeModule.default,
+            hasGauge: !!(GaugeModule as any).Gauge,
+            moduleKeys: Object.keys(GaugeModule),
+            defaultType: typeof GaugeModule.default,
+            defaultKeys: GaugeModule.default ? Object.keys(GaugeModule.default) : 'no default'
+          });
           
-          // Create gauge instance
-          const gauge = new Gauge(gaugeRef);
-          
-          // Set gauge options
+          // Try different ways to get the constructor
+          if (typeof GaugeModule.default === 'function') {
+            GaugeConstructor = GaugeModule.default;
+            console.log('CPSGauge: Using default export as constructor');
+          } else if ((GaugeModule as any).Gauge && typeof (GaugeModule as any).Gauge === 'function') {
+            GaugeConstructor = (GaugeModule as any).Gauge;
+            console.log('CPSGauge: Using named Gauge export');
+          } else if (GaugeModule.default && (GaugeModule.default as any).Gauge) {
+            GaugeConstructor = (GaugeModule.default as any).Gauge;
+            console.log('CPSGauge: Using default.Gauge export');
+          } else {
+            throw new Error('No valid Gauge constructor found in module');
+          }
+        } catch (error) {
+          importError = error;
+          console.error('CPSGauge: Import failed:', error);
+        }
+        
+        if (!GaugeConstructor) {
+          throw new Error(`Failed to import gauge-js: ${importError?.message || 'Unknown error'}`);
+        }
+        
+        console.log('CPSGauge: Creating gauge instance...');
+        
+        // Create gauge instance with error handling
+        let gauge;
+        try {
+          gauge = new GaugeConstructor(gaugeRef);
+          console.log('CPSGauge: Gauge instance created successfully');
+        } catch (error) {
+          console.error('CPSGauge: Failed to create gauge instance:', error);
+          throw new Error(`Failed to create gauge instance: ${error.message}`);
+        }
+        
+        // Verify gauge has required methods
+        if (!gauge || typeof gauge.setOptions !== 'function') {
+          console.error('CPSGauge: Gauge instance missing setOptions method:', {
+            gaugeExists: !!gauge,
+            gaugeType: typeof gauge,
+            hasSetOptions: !!(gauge && gauge.setOptions),
+            gaugeMethods: gauge ? Object.getOwnPropertyNames(Object.getPrototypeOf(gauge)) : 'no gauge'
+          });
+          throw new Error('Gauge instance does not have setOptions method');
+        }
+        
+        console.log('CPSGauge: Configuring gauge options...');
+        
+        // Set gauge options with error handling
+        try {
           gauge.setOptions({
             angle: 0.15,
             lineWidth: 0.44,
@@ -191,17 +255,38 @@ const CPSGauge = ({ weekData, historicalData = [] }: CPSGaugeProps) => {
               fractionDigits: 0
             },
           });
-          
-          // Set gauge value
+          console.log('CPSGauge: Options set successfully');
+        } catch (error) {
+          console.error('CPSGauge: Failed to set options:', error);
+          throw new Error(`Failed to set gauge options: ${error.message}`);
+        }
+        
+        // Set gauge value with error handling
+        try {
           gauge.maxValue = 100;
           gauge.setMinValue(0);
           gauge.animationSpeed = 32;
           gauge.set(score);
-          
-          // Save gauge instance for cleanup
-          setGaugeInstance(gauge);
+          console.log('CPSGauge: Gauge value set to:', score);
         } catch (error) {
-          console.error('Error initializing gauge:', error);
+          console.error('CPSGauge: Failed to set gauge value:', error);
+          throw new Error(`Failed to set gauge value: ${error.message}`);
+        }
+        
+        // Save gauge instance for cleanup
+        setGaugeInstance(gauge);
+        setGaugeError(null);
+        setUseSimpleGauge(false);
+        console.log('CPSGauge: Gauge initialization completed successfully');
+        
+      } catch (error) {
+        console.error('CPSGauge: Complete gauge initialization failed:', error);
+        setGaugeError(error.message);
+        setUseSimpleGauge(true);
+        
+        // Clear any partial gauge instance
+        if (gaugeInstance) {
+          setGaugeInstance(null);
         }
       }
     };
@@ -211,7 +296,14 @@ const CPSGauge = ({ weekData, historicalData = [] }: CPSGaugeProps) => {
     // Cleanup function
     return () => {
       if (gaugeInstance) {
-        // No explicit cleanup needed for Gauge.js
+        try {
+          // Attempt cleanup if gauge has cleanup methods
+          if (typeof gaugeInstance.destroy === 'function') {
+            gaugeInstance.destroy();
+          }
+        } catch (error) {
+          console.warn('CPSGauge: Error during cleanup:', error);
+        }
       }
     };
   }, [weekData, historicalData, gaugeRef]);
@@ -220,6 +312,38 @@ const CPSGauge = ({ weekData, historicalData = [] }: CPSGaugeProps) => {
     if (score >= 80) return '#10b981'; // Green
     if (score >= 60) return '#f59e0b'; // Amber
     return '#ef4444'; // Red
+  };
+
+  // Simple CSS-based gauge as fallback
+  const SimpleGauge = ({ score }: { score: number }) => {
+    const percentage = Math.max(0, Math.min(100, score));
+    const rotation = (percentage / 100) * 180 - 90; // -90 to 90 degrees
+    
+    return (
+      <div className="relative w-[200px] h-[100px] mx-auto">
+        {/* Gauge background */}
+        <div className="absolute inset-0 border-8 border-gray-600 rounded-t-full border-b-0"></div>
+        
+        {/* Colored segments */}
+        <div className="absolute inset-2 border-4 border-red-500 rounded-t-full border-b-0 opacity-30"></div>
+        <div className="absolute inset-2 border-4 border-yellow-500 rounded-t-full border-b-0 opacity-30" 
+             style={{ clipPath: 'polygon(40% 100%, 60% 100%, 100% 0%, 80% 0%)' }}></div>
+        <div className="absolute inset-2 border-4 border-green-500 rounded-t-full border-b-0 opacity-30"
+             style={{ clipPath: 'polygon(60% 100%, 100% 100%, 100% 0%, 80% 0%)' }}></div>
+        
+        {/* Needle */}
+        <div className="absolute bottom-0 left-1/2 w-1 h-20 bg-white origin-bottom transform -translate-x-1/2"
+             style={{ transform: `translateX(-50%) rotate(${rotation}deg)` }}>
+          <div className="absolute -bottom-2 -left-1 w-3 h-3 bg-white rounded-full"></div>
+        </div>
+        
+        {/* Center value */}
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-center">
+          <div className="text-2xl font-bold" style={{ color: getCpsColor(score) }}>{score.toFixed(1)}</div>
+          <div className="text-xs text-gray-400">CPS</div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -252,19 +376,30 @@ const CPSGauge = ({ weekData, historicalData = [] }: CPSGaugeProps) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* CPS Gauge */}
           <div className="flex flex-col items-center">
-            <div className="relative w-[200px] h-[200px]">
-              {/* Gauge.js canvas */}
-              <canvas 
-                ref={setGaugeRef}
-                className="w-full h-full"
-              />
-              
-              {/* Center value */}
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
-                <div className="text-3xl font-bold" style={{ color: getCpsColor(cpsScore) }}>{cpsScore.toFixed(1)}</div>
-                <div className="text-sm text-gray-400">CPS</div>
+            {useSimpleGauge ? (
+              <div className="w-[200px] h-[200px] flex flex-col items-center justify-center">
+                <SimpleGauge score={cpsScore} />
+                {gaugeError && (
+                  <div className="mt-2 text-xs text-yellow-400 text-center max-w-xs">
+                    Using fallback gauge (gauge-js error: {gaugeError})
+                  </div>
+                )}
               </div>
-            </div>
+            ) : (
+              <div className="relative w-[200px] h-[200px]">
+                {/* Gauge.js canvas */}
+                <canvas 
+                  ref={setGaugeRef}
+                  className="w-full h-full"
+                />
+                
+                {/* Center value overlay (in case gauge doesn't render) */}
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
+                  <div className="text-3xl font-bold" style={{ color: getCpsColor(cpsScore) }}>{cpsScore.toFixed(1)}</div>
+                  <div className="text-sm text-gray-400">CPS</div>
+                </div>
+              </div>
+            )}
             
             <div className="mt-4 space-y-2 w-full max-w-xs">
               {Object.entries(cpsBreakdown).map(([key, value]) => (
