@@ -48,12 +48,13 @@ import {
 
 interface User {
   id: string;
-  email: string;
   username?: string;
+  display_name?: string;
   created_at: string;
-  last_sign_in_at?: string;
   is_admin?: boolean;
   is_banned?: boolean;
+  total_games?: number;
+  total_wins?: number;
 }
 
 interface SystemStats {
@@ -104,6 +105,11 @@ const Admin = () => {
           
         if (error) throw error;
         setIsAdmin(data?.is_admin || false);
+        
+        if (data?.is_admin) {
+          fetchUsers();
+          fetchSystemStats();
+        }
       } catch (error) {
         console.error('Error checking admin status:', error);
         setIsAdmin(false);
@@ -111,11 +117,7 @@ const Admin = () => {
     };
     
     checkAdmin();
-    if (isAdmin) {
-      fetchUsers();
-      fetchSystemStats();
-    }
-  }, [user, isAdmin]);
+  }, [user]);
 
   const fetchUsers = async () => {
     if (!isAdmin) return;
@@ -128,26 +130,19 @@ const Admin = () => {
         
       if (error) throw error;
       
-      // Get auth users to match emails
-      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+      // Map profiles to user format (without sensitive auth data)
+      const mappedUsers = profiles.map(profile => ({
+        id: profile.id,
+        username: profile.username,
+        display_name: profile.display_name,
+        created_at: profile.created_at,
+        is_admin: profile.is_admin || false,
+        is_banned: profile.is_banned || false,
+        total_games: profile.total_games || 0,
+        total_wins: profile.total_wins || 0
+      }));
       
-      if (authError) throw authError;
-      
-      // Combine data
-      const combinedUsers = profiles.map(profile => {
-        const authUser = authUsers.users.find(u => u.id === profile.id);
-        return {
-          id: profile.id,
-          email: authUser?.email || 'Unknown',
-          username: profile.username,
-          created_at: profile.created_at,
-          last_sign_in_at: authUser?.last_sign_in_at,
-          is_admin: profile.is_admin || false,
-          is_banned: profile.is_banned || false
-        };
-      });
-      
-      setUsers(combinedUsers);
+      setUsers(mappedUsers);
     } catch (error) {
       console.error('Error fetching users:', error);
       toast({
@@ -171,20 +166,6 @@ const Admin = () => {
         
       if (userError) throw userError;
       
-      // Get active users (signed in within last 7 days)
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      
-      const { data: activeUsers, error: activeError } = await supabase.auth.admin.listUsers({
-        filter: {
-          lastSignInAt: {
-            gte: sevenDaysAgo.toISOString()
-          }
-        }
-      });
-      
-      if (activeError) throw activeError;
-      
       // Get total games
       const { count: gameCount, error: gameError } = await supabase
         .from('game_results')
@@ -206,18 +187,37 @@ const Admin = () => {
         
       if (achievementError) throw achievementError;
       
+      // Calculate active users based on recent game activity (last 7 days)
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      
+      const { data: recentGames, error: recentError } = await supabase
+        .from('game_results')
+        .select('user_id')
+        .gte('created_at', sevenDaysAgo.toISOString());
+        
+      if (recentError) throw recentError;
+      
+      // Get unique active users
+      const activeUserIds = new Set(recentGames?.map(game => game.user_id) || []);
+      
       setSystemStats({
         totalUsers: userCount || 0,
-        activeUsers: activeUsers.users.length || 0,
+        activeUsers: activeUserIds.size,
         totalGames: gameCount || 0,
         totalSquads: squadCount || 0,
         totalAchievements: achievementCount || 0,
-        databaseSize: '128 MB', // Placeholder
+        databaseSize: '128 MB', // Placeholder - would need backend API for real size
         serverStatus: 'online',
         lastBackup: new Date().toISOString()
       });
     } catch (error) {
       console.error('Error fetching system stats:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load system statistics.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -226,8 +226,8 @@ const Admin = () => {
   };
 
   const filteredUsers = users.filter(user => 
-    user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (user.username && user.username.toLowerCase().includes(searchQuery.toLowerCase()))
+    (user.username && user.username.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (user.display_name && user.display_name.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const handleEditUser = (user: User) => {
@@ -242,6 +242,7 @@ const Admin = () => {
         .from('profiles')
         .update({
           username: editingUser.username,
+          display_name: editingUser.display_name,
           is_admin: editingUser.is_admin,
           is_banned: editingUser.is_banned
         })
@@ -269,32 +270,29 @@ const Admin = () => {
   const handleDeleteUser = async () => {
     if (!deleteConfirmation) return;
     
+    // Note: This will only delete the profile data, not the auth user
+    // Full user deletion would require a secure backend API
     try {
-      // Delete user from auth
-      const { error: authError } = await supabase.auth.admin.deleteUser(deleteConfirmation.id);
-      
-      if (authError) throw authError;
-      
-      // Delete user data
-      const { error: profileError } = await supabase
+      const { error } = await supabase
         .from('profiles')
         .delete()
         .eq('id', deleteConfirmation.id);
         
-      if (profileError) throw profileError;
+      if (error) throw error;
       
       toast({
-        title: "User Deleted",
-        description: "User and all associated data have been deleted."
+        title: "Profile Deleted",
+        description: "User profile has been deleted. Note: Authentication account still exists and requires backend deletion.",
+        variant: "destructive"
       });
       
       setDeleteConfirmation(null);
       fetchUsers();
     } catch (error) {
-      console.error('Error deleting user:', error);
+      console.error('Error deleting user profile:', error);
       toast({
         title: "Error",
-        description: "Failed to delete user.",
+        description: "Failed to delete user profile.",
         variant: "destructive"
       });
     }
@@ -304,12 +302,12 @@ const Admin = () => {
     setBackupInProgress(true);
     
     try {
-      // Simulate backup process
+      // Simulate backup process - would need backend API for real backup
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       toast({
-        title: "Backup Complete",
-        description: "Database backup has been created successfully."
+        title: "Backup Simulated",
+        description: "Database backup simulation completed. Real backups require backend implementation.",
       });
       
       setSystemStats(prev => ({
@@ -317,10 +315,10 @@ const Admin = () => {
         lastBackup: new Date().toISOString()
       }));
     } catch (error) {
-      console.error('Error backing up database:', error);
+      console.error('Error simulating backup:', error);
       toast({
         title: "Backup Failed",
-        description: "Failed to create database backup.",
+        description: "Failed to simulate database backup.",
         variant: "destructive"
       });
     } finally {
@@ -332,18 +330,18 @@ const Admin = () => {
     setRestoreInProgress(true);
     
     try {
-      // Simulate restore process
+      // Simulate restore process - would need backend API for real restore
       await new Promise(resolve => setTimeout(resolve, 3000));
       
       toast({
-        title: "Restore Complete",
-        description: "Database has been restored successfully."
+        title: "Restore Simulated",
+        description: "Database restore simulation completed. Real restores require backend implementation.",
       });
     } catch (error) {
-      console.error('Error restoring database:', error);
+      console.error('Error simulating restore:', error);
       toast({
         title: "Restore Failed",
-        description: "Failed to restore database.",
+        description: "Failed to simulate database restore.",
         variant: "destructive"
       });
     } finally {
@@ -457,12 +455,12 @@ const Admin = () => {
                   {backupInProgress ? (
                     <>
                       <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                      Backing Up...
+                      Simulating Backup...
                     </>
                   ) : (
                     <>
                       <Download className="h-4 w-4 mr-2" />
-                      Backup Database
+                      Simulate Backup
                     </>
                   )}
                 </Button>
@@ -476,12 +474,12 @@ const Admin = () => {
                   {restoreInProgress ? (
                     <>
                       <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                      Restoring...
+                      Simulating Restore...
                     </>
                   ) : (
                     <>
                       <Upload className="h-4 w-4 mr-2" />
-                      Restore Database
+                      Simulate Restore
                     </>
                   )}
                 </Button>
@@ -495,13 +493,16 @@ const Admin = () => {
               <CardTitle className="flex items-center gap-2" style={{ color: currentTheme.colors.text }}>
                 <Users className="h-5 w-5" style={{ color: currentTheme.colors.primary }} />
                 User Management
+                <Badge variant="outline" className="ml-2 text-xs">
+                  Limited Client-Side Access
+                </Badge>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4" style={{ color: currentTheme.colors.muted }} />
                 <Input
-                  placeholder="Search users by email or username..."
+                  placeholder="Search users by username or display name..."
                   value={searchQuery}
                   onChange={(e) => handleUserSearch(e.target.value)}
                   className="pl-10"
@@ -516,6 +517,7 @@ const Admin = () => {
                       <tr style={{ borderColor: currentTheme.colors.border }}>
                         <th className="px-4 py-3 text-left" style={{ color: currentTheme.colors.text }}>User</th>
                         <th className="px-4 py-3 text-left" style={{ color: currentTheme.colors.text }}>Created</th>
+                        <th className="px-4 py-3 text-left" style={{ color: currentTheme.colors.text }}>Games</th>
                         <th className="px-4 py-3 text-left" style={{ color: currentTheme.colors.text }}>Status</th>
                         <th className="px-4 py-3 text-left" style={{ color: currentTheme.colors.text }}>Actions</th>
                       </tr>
@@ -525,12 +527,19 @@ const Admin = () => {
                         <tr key={user.id} style={{ borderColor: currentTheme.colors.border }}>
                           <td className="px-4 py-3">
                             <div>
-                              <p className="font-medium" style={{ color: currentTheme.colors.text }}>{user.email}</p>
-                              <p className="text-sm" style={{ color: currentTheme.colors.muted }}>{user.username || 'No username'}</p>
+                              <p className="font-medium" style={{ color: currentTheme.colors.text }}>
+                                {user.display_name || user.username || 'Unknown User'}
+                              </p>
+                              <p className="text-sm" style={{ color: currentTheme.colors.muted }}>
+                                @{user.username || 'no-username'}
+                              </p>
                             </div>
                           </td>
                           <td className="px-4 py-3" style={{ color: currentTheme.colors.text }}>
                             {new Date(user.created_at).toLocaleDateString()}
+                          </td>
+                          <td className="px-4 py-3" style={{ color: currentTheme.colors.text }}>
+                            {user.total_games || 0} ({user.total_wins || 0}W)
                           </td>
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-2">
@@ -578,6 +587,20 @@ const Admin = () => {
                     </p>
                   </div>
                 )}
+              </div>
+              
+              <div className="p-4 rounded-lg border border-yellow-500/20 bg-yellow-500/10">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="h-5 w-5 text-yellow-500 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-yellow-500 mb-1">Limited Functionality</p>
+                    <p className="text-sm text-yellow-400">
+                      This admin panel has limited functionality due to security restrictions. 
+                      Full user management (including email access and complete user deletion) 
+                      requires a secure backend API with service role access.
+                    </p>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -700,19 +723,19 @@ const Admin = () => {
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <label className="block font-medium mb-2" style={{ color: currentTheme.colors.text }}>Email</label>
+                <label className="block font-medium mb-2" style={{ color: currentTheme.colors.text }}>Username</label>
                 <Input
-                  value={editingUser.email}
-                  disabled
+                  value={editingUser.username || ''}
+                  onChange={(e) => setEditingUser({ ...editingUser, username: e.target.value })}
                   style={{ backgroundColor: currentTheme.colors.surface, borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}
                 />
               </div>
               
               <div>
-                <label className="block font-medium mb-2" style={{ color: currentTheme.colors.text }}>Username</label>
+                <label className="block font-medium mb-2" style={{ color: currentTheme.colors.text }}>Display Name</label>
                 <Input
-                  value={editingUser.username || ''}
-                  onChange={(e) => setEditingUser({ ...editingUser, username: e.target.value })}
+                  value={editingUser.display_name || ''}
+                  onChange={(e) => setEditingUser({ ...editingUser, display_name: e.target.value })}
                   style={{ backgroundColor: currentTheme.colors.surface, borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}
                 />
               </div>
@@ -779,9 +802,10 @@ const Admin = () => {
       <AlertDialog open={!!deleteConfirmation} onOpenChange={() => setDeleteConfirmation(null)}>
         <AlertDialogContent style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}>
           <AlertDialogHeader>
-            <AlertDialogTitle style={{ color: currentTheme.colors.text }}>Delete User</AlertDialogTitle>
+            <AlertDialogTitle style={{ color: currentTheme.colors.text }}>Delete User Profile</AlertDialogTitle>
             <AlertDialogDescription style={{ color: currentTheme.colors.muted }}>
-              Are you sure you want to delete this user? This action cannot be undone and will remove all user data including games, squads, and achievements.
+              Are you sure you want to delete this user's profile? This will remove their profile data but not their authentication account. 
+              Complete user deletion requires backend API access with service role permissions.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -790,7 +814,7 @@ const Admin = () => {
             </AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteUser} className="bg-fifa-red hover:bg-fifa-red/80">
               <Trash2 className="h-4 w-4 mr-2" />
-              Delete User
+              Delete Profile
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
