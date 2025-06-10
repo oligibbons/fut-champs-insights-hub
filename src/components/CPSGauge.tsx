@@ -29,7 +29,7 @@ const CPSGauge = ({ weekData, historicalData = [] }: CPSGaugeProps) => {
   const [cpsScore, setCpsScore] = useState(0);
   const [cpsBreakdown, setCpsBreakdown] = useState<Record<string, number>>({});
   const [trendData, setTrendData] = useState<any[]>([]);
-  const [gaugeRef, setGaugeRef] = useState<HTMLDivElement | null>(null);
+  const [gaugeRef, setGaugeRef] = useState<HTMLCanvasElement | null>(null);
   const [gaugeInstance, setGaugeInstance] = useState<any>(null);
 
   useEffect(() => {
@@ -156,7 +156,7 @@ const CPSGauge = ({ weekData, historicalData = [] }: CPSGaugeProps) => {
         try {
           // Import Gauge.js dynamically with proper handling
           const GaugeModule = await import('gauge-js');
-          const Gauge = (GaugeModule as any).default || GaugeModule;
+          const Gauge = (GaugeModule as any).default || (GaugeModule as any).Gauge || GaugeModule;
           
           // Create gauge instance first
           const gauge = new Gauge(gaugeRef);
