@@ -209,7 +209,7 @@ const GoalInvolvementChart = () => {
       <CardContent>
         {goalInvolvements.length > 0 ? (
           <div className="space-y-6">
-            <div className="relative" ref={chartRef}>
+            <div className="relative\" ref={chartRef}>
               <svg width="300" height="300" viewBox="0 0 300 300" className="mx-auto">
                 {generateSegments()}
                 {generateLabels()}
