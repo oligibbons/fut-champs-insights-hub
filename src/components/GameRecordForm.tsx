@@ -36,6 +36,9 @@ const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecord
   const [crossPlayEnabled, setCrossPlayEnabled] = useState(false);
   const [comments, setComments] = useState('');
   const [matchTags, setMatchTags] = useState<string[]>([]);
+  const [opponentPlayStyle, setOpponentPlayStyle] = useState<string>('balanced');
+  const [opponentFormation, setOpponentFormation] = useState<string>('');
+  const [opponentSquadRating, setOpponentSquadRating] = useState<number>(85);
 
   // Team stats with more realistic defaults
   const [teamStats, setTeamStats] = useState<TeamStats>({
@@ -70,7 +73,10 @@ const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecord
     { id: 'lucky-win', label: 'Lucky Win', color: 'bg-green-500/20 text-green-500' },
     { id: 'unlucky-loss', label: 'Unlucky Loss', color: 'bg-red-500/20 text-red-500' },
     { id: 'dominated', label: 'Dominated', color: 'bg-purple-500/20 text-purple-500' },
-    { id: 'close-game', label: 'Close Game', color: 'bg-yellow-500/20 text-yellow-500' }
+    { id: 'close-game', label: 'Close Game', color: 'bg-yellow-500/20 text-yellow-500' },
+    { id: 'high-scoring', label: 'High Scoring', color: 'bg-blue-400/20 text-blue-400' },
+    { id: 'defensive', label: 'Defensive Battle', color: 'bg-gray-500/20 text-gray-400' },
+    { id: 'counter-attack', label: 'Counter Attack', color: 'bg-orange-500/20 text-orange-500' }
   ];
 
   // Auto-populate starting XI when component loads - only once
@@ -206,16 +212,6 @@ const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecord
     }
   }, [userGoals, opponentGoals]);
 
-  const handleTeamStatsChange = (field: keyof TeamStats, value: string) => {
-    const numValue = parseFloat(value);
-    if (!isNaN(numValue)) {
-      setTeamStats(prev => ({
-        ...prev,
-        [field]: field === 'expectedGoals' || field === 'expectedGoalsAgainst' ? numValue : Math.round(numValue)
-      }));
-    }
-  };
-
   const toggleMatchTag = (tagId: string) => {
     setMatchTags(prev => 
       prev.includes(tagId) 
@@ -251,7 +247,10 @@ const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecord
       crossPlayEnabled,
       teamStats,
       playerStats: filteredPlayerStats,
-      tags: matchTags
+      tags: matchTags,
+      opponentPlayStyle,
+      opponentFormation: opponentFormation || undefined,
+      opponentSquadRating: opponentSquadRating || undefined
     };
 
     onGameSaved(gameData);
@@ -425,6 +424,50 @@ const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecord
                 </div>
               </div>
 
+              {/* Opponent Details */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-white mb-2">Opponent Details</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <Label className="text-white font-medium">Play Style</Label>
+                    <Select value={opponentPlayStyle} onValueChange={setOpponentPlayStyle}>
+                      <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="balanced">Balanced</SelectItem>
+                        <SelectItem value="possession">Possession</SelectItem>
+                        <SelectItem value="counter-attack">Counter Attack</SelectItem>
+                        <SelectItem value="high-press">High Press</SelectItem>
+                        <SelectItem value="drop-back">Drop Back</SelectItem>
+                        <SelectItem value="long-ball">Long Ball</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-white font-medium">Formation</Label>
+                    <Input
+                      value={opponentFormation}
+                      onChange={(e) => setOpponentFormation(e.target.value)}
+                      placeholder="e.g. 4-2-3-1"
+                      className="bg-gray-800 border-gray-600 text-white"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-white font-medium">Squad Rating</Label>
+                    <MobileNumberInput
+                      label=""
+                      value={opponentSquadRating}
+                      onChange={setOpponentSquadRating}
+                      min={70}
+                      max={99}
+                      placeholder="85"
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+              </div>
+
               {/* Match Tags */}
               <div>
                 <Label className="text-white font-medium mb-2 block">Match Tags</Label>
@@ -490,6 +533,7 @@ const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecord
                     min={0}
                     max={10}
                     step={0.1}
+                    decimals={1}
                     className="mt-1"
                   />
                 </div>
@@ -537,6 +581,7 @@ const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecord
                     min={0}
                     max={10}
                     step={0.1}
+                    decimals={1}
                     className="mt-1"
                   />
                 </div>

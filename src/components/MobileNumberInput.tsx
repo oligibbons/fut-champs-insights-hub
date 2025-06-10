@@ -15,6 +15,7 @@ interface MobileNumberInputProps {
   labelClassName?: string;
   placeholder?: string;
   disabled?: boolean;
+  decimals?: number;
 }
 
 const MobileNumberInput: React.FC<MobileNumberInputProps> = ({
@@ -27,7 +28,8 @@ const MobileNumberInput: React.FC<MobileNumberInputProps> = ({
   className = '',
   labelClassName = '',
   placeholder = '',
-  disabled = false
+  disabled = false,
+  decimals = 0
 }) => {
   const [inputValue, setInputValue] = useState<string>(value.toString());
 
@@ -44,14 +46,29 @@ const MobileNumberInput: React.FC<MobileNumberInputProps> = ({
       return;
     }
     
-    // Only update if it's a valid number
-    const numValue = parseFloat(newValue);
-    if (!isNaN(numValue)) {
-      setInputValue(newValue);
-      
-      // Only call onChange if the value is within bounds
-      if (numValue >= min && numValue <= max) {
-        onChange(numValue);
+    // For decimal values, ensure we only allow the specified number of decimal places
+    if (decimals > 0) {
+      const regex = new RegExp(`^\\d*\\.?\\d{0,${decimals}}$`);
+      if (regex.test(newValue)) {
+        setInputValue(newValue);
+        
+        // Only call onChange if the value is within bounds
+        const numValue = parseFloat(newValue);
+        if (!isNaN(numValue) && numValue >= min && numValue <= max) {
+          onChange(parseFloat(parseFloat(newValue).toFixed(decimals)));
+        }
+      }
+    } else {
+      // For integer values
+      const regex = /^\d*$/;
+      if (regex.test(newValue)) {
+        setInputValue(newValue);
+        
+        // Only call onChange if the value is within bounds
+        const numValue = parseInt(newValue);
+        if (!isNaN(numValue) && numValue >= min && numValue <= max) {
+          onChange(numValue);
+        }
       }
     }
   };
@@ -73,23 +90,27 @@ const MobileNumberInput: React.FC<MobileNumberInputProps> = ({
       setInputValue(max.toString());
       onChange(max);
     } else {
-      // Ensure we're using the parsed number
-      onChange(numValue);
+      // Ensure we're using the parsed number with correct decimal places
+      const formattedValue = decimals > 0 ? parseFloat(numValue.toFixed(decimals)) : Math.round(numValue);
+      setInputValue(formattedValue.toString());
+      onChange(formattedValue);
     }
   };
 
   const increment = () => {
     const currentValue = inputValue === '' ? min - step : parseFloat(inputValue);
     const newValue = Math.min(max, currentValue + step);
-    setInputValue(newValue.toString());
-    onChange(newValue);
+    const formattedValue = decimals > 0 ? parseFloat(newValue.toFixed(decimals)) : Math.round(newValue);
+    setInputValue(formattedValue.toString());
+    onChange(formattedValue);
   };
 
   const decrement = () => {
     const currentValue = inputValue === '' ? min + step : parseFloat(inputValue);
     const newValue = Math.max(min, currentValue - step);
-    setInputValue(newValue.toString());
-    onChange(newValue);
+    const formattedValue = decimals > 0 ? parseFloat(newValue.toFixed(decimals)) : Math.round(newValue);
+    setInputValue(formattedValue.toString());
+    onChange(formattedValue);
   };
 
   return (
@@ -111,7 +132,7 @@ const MobileNumberInput: React.FC<MobileNumberInputProps> = ({
         
         <Input
           type="text"
-          inputMode="decimal"
+          inputMode={decimals > 0 ? "decimal" : "numeric"}
           value={inputValue}
           onChange={handleInputChange}
           onBlur={handleBlur}

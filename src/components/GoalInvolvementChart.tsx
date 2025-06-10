@@ -14,14 +14,18 @@ interface GoalInvolvement {
   account?: string;
 }
 
+// Voronoi Treemap implementation
 const GoalInvolvementChart = () => {
   const { weeklyData } = useDataSync();
   const [goalInvolvements, setGoalInvolvements] = useState<GoalInvolvement[]>([]);
   const [hoveredPlayer, setHoveredPlayer] = useState<GoalInvolvement | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const chartRef = useRef<HTMLDivElement>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    setIsLoading(true);
+    
     // Calculate goal involvements from all games
     const allGames = weeklyData.flatMap(week => week.games);
     const playerInvolvements = new Map<string, { goals: number; assists: number; account?: string }>();
@@ -69,6 +73,7 @@ const GoalInvolvementChart = () => {
       .sort((a, b) => b.total - a.total); // Sort by total involvements
     
     setGoalInvolvements(involvements);
+    setIsLoading(false);
   }, [weeklyData]);
 
   // Generate random color for each player
@@ -89,45 +94,38 @@ const GoalInvolvementChart = () => {
     return colors[Math.floor(Math.random() * colors.length)];
   };
 
-  // Generate segments for the chart
-  const generateSegments = () => {
+  // Generate Voronoi Treemap cells
+  const generateVoronoiCells = () => {
     if (goalInvolvements.length === 0) return null;
     
-    let cumulativeAngle = 0;
+    const centerX = 150;
+    const centerY = 150;
+    const radius = 140;
     
+    // Create random shapes that fit within a circle
     return goalInvolvements.map((involvement, index) => {
-      const angle = (involvement.percentage / 100) * 360;
-      const startAngle = cumulativeAngle;
-      cumulativeAngle += angle;
-      const endAngle = cumulativeAngle;
+      // Calculate position based on percentage and index
+      const angle = (index / goalInvolvements.length) * Math.PI * 2;
+      const distance = radius * 0.6 * Math.random() + radius * 0.2;
       
-      // Convert angles to radians
-      const startRad = (startAngle - 90) * (Math.PI / 180);
-      const endRad = (endAngle - 90) * (Math.PI / 180);
+      // Create a random polygon with 5-8 points
+      const points = [];
+      const numPoints = Math.floor(Math.random() * 4) + 5; // 5-8 points
+      const sizeMultiplier = Math.sqrt(involvement.percentage) / 5;
       
-      // Calculate path
-      const radius = 150;
-      const centerX = 150;
-      const centerY = 150;
+      for (let i = 0; i < numPoints; i++) {
+        const pointAngle = angle + (i / numPoints) * Math.PI * 2;
+        const pointDistance = distance * (0.8 + Math.random() * 0.4) * sizeMultiplier;
+        const x = centerX + Math.cos(pointAngle) * pointDistance;
+        const y = centerY + Math.sin(pointAngle) * pointDistance;
+        points.push(`${x},${y}`);
+      }
       
-      const x1 = centerX + radius * Math.cos(startRad);
-      const y1 = centerY + radius * Math.sin(startRad);
-      const x2 = centerX + radius * Math.cos(endRad);
-      const y2 = centerY + radius * Math.sin(endRad);
-      
-      const largeArcFlag = angle > 180 ? 1 : 0;
-      
-      const pathData = [
-        `M ${centerX} ${centerY}`,
-        `L ${x1} ${y1}`,
-        `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
-        'Z'
-      ].join(' ');
-      
+      // Create polygon
       return (
-        <path
+        <polygon
           key={index}
-          d={pathData}
+          points={points.join(' ')}
           fill={involvement.color}
           stroke="rgba(0, 0, 0, 0.3)"
           strokeWidth="1"
@@ -160,26 +158,16 @@ const GoalInvolvementChart = () => {
   const generateLabels = () => {
     if (goalInvolvements.length === 0) return null;
     
-    let cumulativeAngle = 0;
-    
     return goalInvolvements.map((involvement, index) => {
-      const angle = (involvement.percentage / 100) * 360;
-      const midAngle = cumulativeAngle + (angle / 2);
-      cumulativeAngle += angle;
+      // Calculate position based on percentage and index
+      const angle = (index / goalInvolvements.length) * Math.PI * 2;
+      const distance = 140 * 0.6 * Math.random() + 140 * 0.2;
       
-      // Convert angle to radians
-      const midRad = (midAngle - 90) * (Math.PI / 180);
-      
-      // Calculate position
-      const radius = 100; // Slightly less than the segment radius
-      const centerX = 150;
-      const centerY = 150;
-      
-      const x = centerX + radius * Math.cos(midRad);
-      const y = centerY + radius * Math.sin(midRad);
+      const x = 150 + Math.cos(angle) * distance;
+      const y = 150 + Math.sin(angle) * distance;
       
       // Only show label for segments with enough space
-      if (angle < 15) return null;
+      if (involvement.percentage < 5) return null;
       
       return (
         <text
@@ -189,10 +177,11 @@ const GoalInvolvementChart = () => {
           textAnchor="middle"
           dominantBaseline="middle"
           fill="white"
-          fontSize="12"
+          fontSize="10"
           fontWeight="bold"
+          pointerEvents="none"
         >
-          {involvement.total}
+          {involvement.name.split(' ')[0]}
         </text>
       );
     });
@@ -207,11 +196,21 @@ const GoalInvolvementChart = () => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {goalInvolvements.length > 0 ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center h-[300px]">
+            <div className="w-8 h-8 border-4 border-fifa-blue/30 border-t-fifa-blue rounded-full animate-spin"></div>
+          </div>
+        ) : goalInvolvements.length > 0 ? (
           <div className="space-y-6">
-            <div className="relative\" ref={chartRef}>
+            <div className="relative" ref={chartRef}>
               <svg width="300" height="300" viewBox="0 0 300 300" className="mx-auto">
-                {generateSegments()}
+                {/* Circle background */}
+                <circle cx="150" cy="150" r="140" fill="rgba(255,255,255,0.05)" />
+                
+                {/* Voronoi cells */}
+                {generateVoronoiCells()}
+                
+                {/* Player labels */}
                 {generateLabels()}
               </svg>
               
@@ -230,6 +229,9 @@ const GoalInvolvementChart = () => {
                     <span>{hoveredPlayer.assists} assists</span>
                   </div>
                   <div>{hoveredPlayer.percentage.toFixed(1)}% of total</div>
+                  {hoveredPlayer.account && (
+                    <div className="text-xs opacity-80">{hoveredPlayer.account}</div>
+                  )}
                 </div>
               )}
             </div>
@@ -238,7 +240,7 @@ const GoalInvolvementChart = () => {
               {goalInvolvements.slice(0, 8).map((involvement, index) => (
                 <div 
                   key={index}
-                  className="flex items-center gap-2 p-2 rounded-lg hover:bg-white/5 transition-colors"
+                  className="flex items-center gap-2 p-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
                   onMouseEnter={() => setHoveredPlayer(involvement)}
                   onMouseLeave={() => setHoveredPlayer(null)}
                 >

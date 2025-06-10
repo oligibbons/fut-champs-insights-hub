@@ -13,6 +13,7 @@ import RunNamingModal from '@/components/RunNamingModal';
 import TargetEditModal from '@/components/TargetEditModal';
 import WeeklyTargets from '@/components/WeeklyTargets';
 import CurrentRunStats from '@/components/CurrentRunStats';
+import MatchTagAnalysis from '@/components/MatchTagAnalysis';
 import { Calendar, Plus, Edit, Target, Trophy, Settings, PlayCircle, TrendingUp } from 'lucide-react';
 
 const CurrentWeek = () => {
@@ -286,6 +287,9 @@ const CurrentWeek = () => {
             {/* Current Run Stats */}
             <CurrentRunStats />
 
+            {/* Match Tag Analysis */}
+            <MatchTagAnalysis />
+
             {/* Recent Games */}
             <Card className="glass-card static-element">
               <CardHeader>
@@ -337,6 +341,46 @@ const CurrentWeek = () => {
                             <Edit className="h-4 w-4" />
                           </Button>
                         </div>
+                        
+                        {/* Display tags if available */}
+                        {game.tags && game.tags.length > 0 && (
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {game.tags.map(tag => (
+                              <Badge 
+                                key={tag} 
+                                className={
+                                  tag === 'comeback' ? 'bg-fifa-green/20 text-fifa-green' :
+                                  tag === 'bottled' ? 'bg-fifa-red/20 text-fifa-red' :
+                                  tag === 'bad-servers' ? 'bg-fifa-gold/20 text-fifa-gold' :
+                                  tag === 'scripting' ? 'bg-fifa-purple/20 text-fifa-purple' :
+                                  tag === 'good-opponent' ? 'bg-fifa-blue/20 text-fifa-blue' :
+                                  tag === 'lucky-win' ? 'bg-green-500/20 text-green-500' :
+                                  tag === 'unlucky-loss' ? 'bg-red-500/20 text-red-500' :
+                                  tag === 'dominated' ? 'bg-purple-500/20 text-purple-500' :
+                                  tag === 'close-game' ? 'bg-yellow-500/20 text-yellow-500' :
+                                  tag === 'high-scoring' ? 'bg-blue-400/20 text-blue-400' :
+                                  tag === 'defensive' ? 'bg-gray-500/20 text-gray-400' :
+                                  tag === 'counter-attack' ? 'bg-orange-500/20 text-orange-500' :
+                                  'bg-white/10 text-white'
+                                }
+                              >
+                                {tag === 'comeback' ? 'Comeback Win' :
+                                 tag === 'bottled' ? 'Bottled Lead' :
+                                 tag === 'bad-servers' ? 'Bad Servers' :
+                                 tag === 'scripting' ? 'Scripting' :
+                                 tag === 'good-opponent' ? 'Good Opponent' :
+                                 tag === 'lucky-win' ? 'Lucky Win' :
+                                 tag === 'unlucky-loss' ? 'Unlucky Loss' :
+                                 tag === 'dominated' ? 'Dominated' :
+                                 tag === 'close-game' ? 'Close Game' :
+                                 tag === 'high-scoring' ? 'High Scoring' :
+                                 tag === 'defensive' ? 'Defensive Battle' :
+                                 tag === 'counter-attack' ? 'Counter Attack' :
+                                 tag.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

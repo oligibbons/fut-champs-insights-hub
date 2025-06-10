@@ -18,6 +18,8 @@ interface PositionData {
 const PositionalHeatMap = () => {
   const { weeklyData } = useDataSync();
   const [positionData, setPositionData] = useState<PositionData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [optimizedHeatmapPoints, setOptimizedHeatmapPoints] = useState<any[]>([]);
 
   // Position coordinates on a football pitch (x, y as percentages)
   const positionCoordinates: Record<string, { x: number; y: number }> = {
@@ -50,47 +52,62 @@ const PositionalHeatMap = () => {
   };
 
   useEffect(() => {
-    const allGames = weeklyData.flatMap(week => week.games || []);
-    const positionStats = new Map<string, {
-      totalRating: number;
-      gamesPlayed: number;
-      totalMinutes: number;
-      goals: number;
-      assists: number;
-    }>();
+    setIsLoading(true);
+    
+    const calculatePositionData = () => {
+      const allGames = weeklyData.flatMap(week => week.games || []);
+      const positionStats = new Map<string, {
+        totalRating: number;
+        gamesPlayed: number;
+        totalMinutes: number;
+        goals: number;
+        assists: number;
+      }>();
 
-    allGames.forEach(game => {
-      game.playerStats?.forEach(player => {
-        const existing = positionStats.get(player.position) || {
-          totalRating: 0,
-          gamesPlayed: 0,
-          totalMinutes: 0,
-          goals: 0,
-          assists: 0
-        };
+      allGames.forEach(game => {
+        game.playerStats?.forEach(player => {
+          const existing = positionStats.get(player.position) || {
+            totalRating: 0,
+            gamesPlayed: 0,
+            totalMinutes: 0,
+            goals: 0,
+            assists: 0
+          };
 
-        existing.totalRating += player.rating;
-        existing.gamesPlayed += 1;
-        existing.totalMinutes += player.minutesPlayed;
-        existing.goals += player.goals;
-        existing.assists += player.assists;
+          existing.totalRating += player.rating;
+          existing.gamesPlayed += 1;
+          existing.totalMinutes += player.minutesPlayed;
+          existing.goals += player.goals;
+          existing.assists += player.assists;
 
-        positionStats.set(player.position, existing);
+          positionStats.set(player.position, existing);
+        });
       });
-    });
 
-    const positions: PositionData[] = Array.from(positionStats.entries()).map(([position, stats]) => ({
-      position,
-      averageRating: stats.gamesPlayed > 0 ? stats.totalRating / stats.gamesPlayed : 0,
-      gamesPlayed: stats.gamesPlayed,
-      totalMinutes: stats.totalMinutes,
-      goals: stats.goals,
-      assists: stats.assists,
-      x: positionCoordinates[position]?.x || 50,
-      y: positionCoordinates[position]?.y || 50
-    }));
+      const positions: PositionData[] = Array.from(positionStats.entries()).map(([position, stats]) => ({
+        position,
+        averageRating: stats.gamesPlayed > 0 ? stats.totalRating / stats.gamesPlayed : 0,
+        gamesPlayed: stats.gamesPlayed,
+        totalMinutes: stats.totalMinutes,
+        goals: stats.goals,
+        assists: stats.assists,
+        x: positionCoordinates[position]?.x || 50,
+        y: positionCoordinates[position]?.y || 50
+      }));
 
+      return positions;
+    };
+
+    const positions = calculatePositionData();
     setPositionData(positions);
+    
+    // Generate optimized heatmap data
+    if (positions.length > 0) {
+      const heatmapPoints = generateOptimizedHeatmap(positions);
+      setOptimizedHeatmapPoints(heatmapPoints);
+    }
+    
+    setIsLoading(false);
   }, [weeklyData]);
 
   const getHeatColor = (rating: number) => {
@@ -107,11 +124,11 @@ const PositionalHeatMap = () => {
     return Math.max(0.4, Math.min(1, (rating - 4) / 6));
   };
 
-  // Generate a full pitch heatmap
-  const generateHeatmapData = () => {
+  // Generate an optimized heatmap with fewer points
+  const generateOptimizedHeatmap = (positions: PositionData[]) => {
     // Create a grid of points covering the entire pitch
     const gridPoints = [];
-    const gridDensity = 40; // Higher number = more detailed heatmap
+    const gridDensity = 20; // Lower density for better performance
     
     for (let x = 0; x <= 100; x += 100/gridDensity) {
       for (let y = 0; y <= 100; y += 100/gridDensity) {
@@ -119,7 +136,7 @@ const PositionalHeatMap = () => {
         let totalInfluence = 0;
         let weightedRating = 0;
         
-        positionData.forEach(pos => {
+        positions.forEach(pos => {
           // Calculate distance from this grid point to the position
           const distance = Math.sqrt(Math.pow(x - pos.x, 2) + Math.pow(y - pos.y, 2));
           // Influence decreases with distance (inverse square law with a cutoff)
@@ -147,7 +164,21 @@ const PositionalHeatMap = () => {
     return gridPoints;
   };
 
-  const heatmapPoints = positionData.length > 0 ? generateHeatmapData() : [];
+  if (isLoading) {
+    return (
+      <Card className="glass-card">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <MapPin className="h-5 w-5 text-fifa-blue" />
+            Positional Performance Heat Map
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center h-96">
+          <div className="w-8 h-8 border-4 border-fifa-blue/30 border-t-fifa-blue rounded-full animate-spin"></div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (positionData.length === 0) {
     return (
@@ -202,16 +233,16 @@ const PositionalHeatMap = () => {
               <div className="absolute right-0 top-2/5 bottom-2/5 w-12 border-l border-white/30" />
             </div>
 
-            {/* Full pitch heatmap */}
-            {heatmapPoints.map((point, index) => (
+            {/* Optimized heatmap points */}
+            {optimizedHeatmapPoints.map((point, index) => (
               <div
                 key={`heat-point-${index}`}
                 className="absolute rounded-full blur-md pointer-events-none"
                 style={{
                   left: `${point.x}%`,
                   top: `${point.y}%`,
-                  width: '80px',
-                  height: '80px',
+                  width: '60px',
+                  height: '60px',
                   background: `radial-gradient(circle, ${getHeatColor(point.rating)}${Math.round(point.intensity * 255).toString(16).padStart(2, '0')} 0%, transparent 70%)`,
                   transform: 'translate(-50%, -50%)',
                   opacity: point.intensity,

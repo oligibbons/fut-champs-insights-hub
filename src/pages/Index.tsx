@@ -9,6 +9,7 @@ import GoalInvolvementChart from '@/components/GoalInvolvementChart';
 import CPSGauge from '@/components/CPSGauge';
 import FormationTracker from '@/components/FormationTracker';
 import PerformanceRadar from '@/components/PerformanceRadar';
+import MatchTagAnalysis from '@/components/MatchTagAnalysis';
 import AnalyticsTooltip from '@/components/AnalyticsTooltip';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -59,6 +60,9 @@ const Index = () => {
               )}
             />
           </AnalyticsTooltip>
+
+          {/* Match Tag Analysis */}
+          <MatchTagAnalysis />
 
           {/* Performance Radar */}
           <PerformanceRadar />
