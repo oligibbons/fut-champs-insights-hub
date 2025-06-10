@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navigation from '@/components/Navigation';
 import SquadBuilder from '@/components/SquadBuilder';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,16 +12,43 @@ import { Squad } from '@/types/squads';
 import { Plus, Users, Trophy, Edit, Copy, Trash2, Star, Calendar, Target, TrendingUp, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/hooks/useTheme';
+import { useAuth } from '@/contexts/AuthContext';
+import { recoverSquads } from '@/utils/squadRecovery';
 
 const Squads = () => {
-  const { squads, saveSquad, deleteSquad, setDefaultSquad } = useSquadData();
+  const { squads, saveSquad, deleteSquad, setDefaultSquad, fetchSquadsFromSupabase } = useSquadData();
   const { activeAccount } = useAccountData();
   const { currentTheme } = useTheme();
   const { toast } = useToast();
+  const { user } = useAuth();
   
   const [showBuilder, setShowBuilder] = useState(false);
   const [editingSquad, setEditingSquad] = useState<Squad | undefined>();
   const [showDeleteDialog, setShowDeleteDialog] = useState<Squad | null>(null);
+  const [isRecovering, setIsRecovering] = useState(false);
+
+  // Check if we need to recover squads
+  useEffect(() => {
+    const checkAndRecoverSquads = async () => {
+      if (squads.length === 0 && !isRecovering) {
+        setIsRecovering(true);
+        try {
+          await recoverSquads(user?.id);
+          await fetchSquadsFromSupabase();
+          toast({
+            title: "Squads Recovered",
+            description: "Your previously saved squads have been restored."
+          });
+        } catch (error) {
+          console.error('Error recovering squads:', error);
+        } finally {
+          setIsRecovering(false);
+        }
+      }
+    };
+    
+    checkAndRecoverSquads();
+  }, [squads.length, user, fetchSquadsFromSupabase, toast, isRecovering]);
 
   const handleSaveSquad = (squad: Squad) => {
     saveSquad(squad);
@@ -108,6 +135,27 @@ const Squads = () => {
     };
   };
 
+  const handleRecoverSquads = async () => {
+    setIsRecovering(true);
+    try {
+      await recoverSquads(user?.id);
+      await fetchSquadsFromSupabase();
+      toast({
+        title: "Squads Recovered",
+        description: "Default squads have been created."
+      });
+    } catch (error) {
+      console.error('Error recovering squads:', error);
+      toast({
+        title: "Recovery Failed",
+        description: "There was an error recovering squads.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsRecovering(false);
+    }
+  };
+
   if (showBuilder) {
     return (
       <div className="min-h-screen">
@@ -141,14 +189,24 @@ const Squads = () => {
                 Build and manage your ultimate teams for {activeAccount}
               </p>
             </div>
-            <Button
-              onClick={() => setShowBuilder(true)}
-              className="text-lg px-8 py-4 rounded-2xl shadow-lg hover:scale-105 transition-all duration-300"
-              style={{ backgroundColor: currentTheme.colors.primary, color: '#ffffff' }}
-            >
-              <Plus className="h-5 w-5 mr-2" />
-              Create Squad
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleRecoverSquads}
+                className="text-lg px-4 py-2 rounded-2xl shadow-lg transition-all duration-300"
+                style={{ backgroundColor: currentTheme.colors.secondary, color: '#ffffff' }}
+                disabled={isRecovering}
+              >
+                {isRecovering ? 'Recovering...' : 'Recover Squads'}
+              </Button>
+              <Button
+                onClick={() => setShowBuilder(true)}
+                className="text-lg px-4 py-2 rounded-2xl shadow-lg hover:scale-105 transition-all duration-300"
+                style={{ backgroundColor: currentTheme.colors.primary, color: '#ffffff' }}
+              >
+                <Plus className="h-5 w-5 mr-2" />
+                Create Squad
+              </Button>
+            </div>
           </div>
 
           {squads.length === 0 ? (

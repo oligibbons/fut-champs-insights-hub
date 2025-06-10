@@ -1,7 +1,7 @@
 import { useLocalStorage } from './useLocalStorage';
 import { useAccountData } from './useAccountData';
 import { Squad, PlayerCard } from '@/types/squads';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -10,15 +10,19 @@ export function useSquadData() {
   const { user } = useAuth();
   const [squads, setSquads] = useLocalStorage<Squad[]>(`fc25-squads-${activeAccount}`, []);
   const [players, setPlayers] = useLocalStorage<PlayerCard[]>(`fc25-players-${activeAccount}`, []);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Load squads from Supabase when component mounts
   useEffect(() => {
     if (user) {
       fetchSquadsFromSupabase();
+    } else {
+      setIsLoading(false);
     }
   }, [user]);
 
   const fetchSquadsFromSupabase = async () => {
+    setIsLoading(true);
     try {
       const { data, error } = await supabase
         .from('squads')
@@ -27,6 +31,7 @@ export function useSquadData() {
 
       if (error) {
         console.error('Error fetching squads:', error);
+        setIsLoading(false);
         return;
       }
 
@@ -56,8 +61,56 @@ export function useSquadData() {
           setSquads(convertedSquads);
         }
       }
+      
+      // Also fetch players
+      const { data: playerData, error: playerError } = await supabase
+        .from('players')
+        .select('*')
+        .eq('user_id', user?.id);
+        
+      if (playerError) {
+        console.error('Error fetching players:', playerError);
+      } else if (playerData && playerData.length > 0) {
+        // Convert Supabase data to local PlayerCard format
+        const convertedPlayers = playerData.map(dbPlayer => {
+          return {
+            id: dbPlayer.id,
+            name: dbPlayer.name,
+            position: dbPlayer.position,
+            rating: dbPlayer.rating,
+            cardType: dbPlayer.card_type,
+            club: dbPlayer.club || 'Unknown',
+            league: dbPlayer.league || 'Unknown',
+            nationality: dbPlayer.nationality || 'Unknown',
+            pace: dbPlayer.pace || 75,
+            shooting: dbPlayer.shooting || 75,
+            passing: dbPlayer.passing || 75,
+            dribbling: dbPlayer.dribbling || 75,
+            defending: dbPlayer.defending || 75,
+            physical: dbPlayer.physical || 75,
+            price: dbPlayer.price || 0,
+            goals: dbPlayer.goals || 0,
+            assists: dbPlayer.assists || 0,
+            averageRating: dbPlayer.average_rating || 0,
+            yellowCards: dbPlayer.yellow_cards || 0,
+            redCards: dbPlayer.red_cards || 0,
+            minutesPlayed: dbPlayer.minutes_played || 0,
+            wins: dbPlayer.wins || 0,
+            losses: dbPlayer.losses || 0,
+            cleanSheets: dbPlayer.clean_sheets || 0,
+            imageUrl: dbPlayer.image_url || '',
+            lastUsed: dbPlayer.last_used || new Date().toISOString()
+          } as PlayerCard;
+        });
+        
+        if (convertedPlayers.length > 0) {
+          setPlayers(convertedPlayers);
+        }
+      }
     } catch (e) {
       console.error('Error in fetchSquadsFromSupabase:', e);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -234,6 +287,7 @@ export function useSquadData() {
     getDefaultSquad,
     savePlayer,
     getPlayerSuggestions,
-    fetchSquadsFromSupabase
+    fetchSquadsFromSupabase,
+    isLoading
   };
 }

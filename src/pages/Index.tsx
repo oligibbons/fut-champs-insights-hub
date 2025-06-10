@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useDataSync } from '@/hooks/useDataSync';
 import Navigation from '@/components/Navigation';
@@ -12,14 +11,39 @@ import { Button } from '@/components/ui/button';
 import { TrendingUp, Trophy, Target, Users, Calendar, BarChart3, Zap, Award, Clock, Star, Activity, PieChart, LineChart } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { recoverSquads } from '@/utils/squadRecovery';
 
 const Index = () => {
   const { currentTheme } = useTheme();
   const navigate = useNavigate();
   const { weeklyData, getCurrentWeek, calculatePlayerStats, settings } = useDataSync();
+  const { user } = useAuth();
+  const [isRecovering, setIsRecovering] = useState(false);
 
   const currentRun = getCurrentWeek();
   const playerStats = calculatePlayerStats();
+
+  // Check if we need to recover squads on first load
+  useEffect(() => {
+    const checkAndRecoverSquads = async () => {
+      // Check if we need to recover squads
+      const squadsData = localStorage.getItem('fc25-squads-null');
+      if (!squadsData || JSON.parse(squadsData).length === 0) {
+        setIsRecovering(true);
+        try {
+          await recoverSquads(user?.id);
+          console.log('Squads recovered successfully');
+        } catch (error) {
+          console.error('Error recovering squads:', error);
+        } finally {
+          setIsRecovering(false);
+        }
+      }
+    };
+    
+    checkAndRecoverSquads();
+  }, [user]);
 
   return (
     <div className="min-h-screen">
