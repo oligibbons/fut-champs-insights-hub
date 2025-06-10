@@ -325,8 +325,8 @@ const PerformanceRadar = () => {
       <CardContent>
         {radarData.length > 0 ? (
           <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <RadarChart cx="50%" cy="50%" outerRadius="80%" data={showComparison ? comparisonData : radarData}>
+            <ResponsiveContainer width="100%\" height="100%">
+              <RadarChart cx="50%\" cy="50%\" outerRadius="80%\" data={showComparison ? comparisonData : radarData}>
                 <PolarGrid stroke="#374151" />
                 <PolarAngleAxis dataKey="metric" tick={{ fill: '#9CA3AF', fontSize: 12 }} />
                 <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: '#9CA3AF', fontSize: 10 }} />
