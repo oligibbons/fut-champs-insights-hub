@@ -13,7 +13,7 @@ import { Plus, Users, Trophy, Edit, Copy, Trash2, Star, Calendar, Target, Trendi
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
-import { recoverSquads } from '@/utils/squadRecovery';
+import { recoverSquads, SquadSelectionDialog } from '@/utils/squadRecovery';
 
 const Squads = () => {
   const { squads, saveSquad, deleteSquad, setDefaultSquad, fetchSquadsFromSupabase } = useSquadData();
@@ -26,29 +26,8 @@ const Squads = () => {
   const [editingSquad, setEditingSquad] = useState<Squad | undefined>();
   const [showDeleteDialog, setShowDeleteDialog] = useState<Squad | null>(null);
   const [isRecovering, setIsRecovering] = useState(false);
-
-  // Check if we need to recover squads
-  useEffect(() => {
-    const checkAndRecoverSquads = async () => {
-      if (squads.length === 0 && !isRecovering) {
-        setIsRecovering(true);
-        try {
-          await recoverSquads(user?.id);
-          await fetchSquadsFromSupabase();
-          toast({
-            title: "Squads Recovered",
-            description: "Your previously saved squads have been restored."
-          });
-        } catch (error) {
-          console.error('Error recovering squads:', error);
-        } finally {
-          setIsRecovering(false);
-        }
-      }
-    };
-    
-    checkAndRecoverSquads();
-  }, [squads.length, user, fetchSquadsFromSupabase, toast, isRecovering]);
+  const [showSquadSelectionDialog, setShowSquadSelectionDialog] = useState(false);
+  const [recoveredSquads, setRecoveredSquads] = useState<Squad[]>([]);
 
   const handleSaveSquad = (squad: Squad) => {
     saveSquad(squad);
@@ -138,12 +117,9 @@ const Squads = () => {
   const handleRecoverSquads = async () => {
     setIsRecovering(true);
     try {
-      await recoverSquads(user?.id);
-      await fetchSquadsFromSupabase();
-      toast({
-        title: "Squads Recovered",
-        description: "Default squads have been created."
-      });
+      const recoveredSquads = await recoverSquads(user?.id);
+      setRecoveredSquads(recoveredSquads);
+      setShowSquadSelectionDialog(true);
     } catch (error) {
       console.error('Error recovering squads:', error);
       toast({
@@ -154,6 +130,15 @@ const Squads = () => {
     } finally {
       setIsRecovering(false);
     }
+  };
+
+  const handleSelectRecoveredSquad = (squad: Squad) => {
+    saveSquad(squad);
+    setShowSquadSelectionDialog(false);
+    toast({
+      title: "Squad Recovered",
+      description: `${squad.name} has been restored.`
+    });
   };
 
   if (showBuilder) {
@@ -337,7 +322,7 @@ const Squads = () => {
                         <div className="space-y-2">
                           {stats.topRatedPlayers.length > 0 && (
                             <div>
-                              <p className="text-xs\" style={{ color: currentTheme.colors.muted }}>Key Players:</p>
+                              <p className="text-xs" style={{ color: currentTheme.colors.muted }}>Key Players:</p>
                               <p className="text-sm font-medium" style={{ color: currentTheme.colors.text }}>
                                 {stats.topRatedPlayers.slice(0, 2).join(', ')}
                               </p>
@@ -418,6 +403,14 @@ const Squads = () => {
               </div>
             </DialogContent>
           </Dialog>
+
+          {/* Squad Selection Dialog */}
+          <SquadSelectionDialog
+            isOpen={showSquadSelectionDialog}
+            onClose={() => setShowSquadSelectionDialog(false)}
+            squads={recoveredSquads}
+            onSelectSquad={handleSelectRecoveredSquad}
+          />
         </div>
       </main>
     </div>

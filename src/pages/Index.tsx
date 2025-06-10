@@ -7,6 +7,8 @@ import AnalyticsDashboard from '@/components/AnalyticsDashboard';
 import PositionalHeatMap from '@/components/PositionalHeatMap';
 import GoalInvolvementChart from '@/components/GoalInvolvementChart';
 import CPSGauge from '@/components/CPSGauge';
+import FormationTracker from '@/components/FormationTracker';
+import PerformanceRadar from '@/components/PerformanceRadar';
 import AnalyticsTooltip from '@/components/AnalyticsTooltip';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,38 +16,15 @@ import { TrendingUp, Trophy, Target, Users, Calendar, BarChart3, Zap, Award, Clo
 import { useTheme } from '@/hooks/useTheme';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { recoverSquads } from '@/utils/squadRecovery';
 
 const Index = () => {
   const { currentTheme } = useTheme();
   const navigate = useNavigate();
   const { weeklyData, getCurrentWeek, calculatePlayerStats, settings } = useDataSync();
   const { user } = useAuth();
-  const [isRecovering, setIsRecovering] = useState(false);
 
   const currentRun = getCurrentWeek();
   const playerStats = calculatePlayerStats();
-
-  // Check if we need to recover squads on first load
-  useEffect(() => {
-    const checkAndRecoverSquads = async () => {
-      // Check if we need to recover squads
-      const squadsData = localStorage.getItem('fc25-squads-null');
-      if (!squadsData || JSON.parse(squadsData).length === 0) {
-        setIsRecovering(true);
-        try {
-          await recoverSquads(user?.id);
-          console.log('Squads recovered successfully');
-        } catch (error) {
-          console.error('Error recovering squads:', error);
-        } finally {
-          setIsRecovering(false);
-        }
-      }
-    };
-    
-    checkAndRecoverSquads();
-  }, [user]);
 
   return (
     <div className="min-h-screen">
@@ -80,6 +59,12 @@ const Index = () => {
               )}
             />
           </AnalyticsTooltip>
+
+          {/* Performance Radar */}
+          <PerformanceRadar />
+
+          {/* Formation Tracker */}
+          <FormationTracker />
 
           {/* Goal Involvement Chart */}
           <GoalInvolvementChart />
