@@ -11,9 +11,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@amcharts/amcharts5": "^5.8.2",
-    "@amcharts/amcharts5-geodata": "^5.1.1",
-    "@amcharts/amcharts5-fonts": "^5.0.1",
     "@hookform/resolvers": "^3.9.0",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",
@@ -47,6 +44,8 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
+    "d3": "^7.9.0",
+    "d3-voronoi-treemap": "^1.1.1",
     "date-fns": "^3.6.0",
     "dom-to-image-more": "^3.6.0",
     "embla-carousel-react": "^8.3.0",
@@ -71,6 +70,7 @@
   "devDependencies": {
     "@eslint/js": "^9.9.0",
     "@tailwindcss/typography": "^0.5.15",
+    "@types/d3": "^7.4.3",
     "@types/node": "^22.5.5",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
