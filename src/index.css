@@ -49,6 +49,12 @@ body {
   .recharts-legend-item-text {
     font-size: 10px !important;
   }
+  
+  /* Fix for mobile navigation */
+  .mobile-nav {
+    width: 80% !important;
+    max-width: 300px !important;
+  }
 }
 
 /* Enhanced animations and transitions - ONLY for specific elements */
@@ -129,7 +135,7 @@ body {
   box-shadow: 0 25px 50px rgba(0, 212, 255, 0.5);
 }
 
-/* Only apply nav elements */
+/* Only apply animations to nav elements */
 .nav-element {
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
