@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
@@ -16,13 +16,15 @@ import {
   UserPlus,
   Crown,
   LogOut,
-  Award
+  Award,
+  Shield
 } from 'lucide-react';
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const { currentTheme } = useTheme();
   const { signOut, user } = useAuth();
 
@@ -40,9 +42,23 @@ const Navigation = () => {
     { name: 'Settings', path: '/settings', icon: Settings },
   ];
 
+  // Check if user is admin
+  const [isAdmin, setIsAdmin] = useState(false);
+  
+  useEffect(() => {
+    const checkAdmin = async () => {
+      if (user && user.email === 'olipg@hotmail.co.uk') {
+        setIsAdmin(true);
+      }
+    };
+    
+    checkAdmin();
+  }, [user]);
+
   const handleSignOut = async () => {
     try {
       await signOut();
+      navigate('/auth');
     } catch (error) {
       console.error('Error signing out:', error);
     }
@@ -144,6 +160,28 @@ const Navigation = () => {
                 </Link>
               );
             })}
+            
+            {/* Admin link - only visible for admin users */}
+            {isAdmin && (
+              <Link
+                to="/admin"
+                onClick={handleNavClick}
+                className={`
+                  flex items-center px-4 py-3 rounded-lg transition-all duration-200
+                  ${!isHovered && !isOpen ? 'lg:justify-center lg:px-3' : 'space-x-3'}
+                  ${location.pathname === '/admin' ? 'shadow-lg' : 'hover:opacity-80'}
+                `}
+                style={{
+                  backgroundColor: location.pathname === '/admin' ? currentTheme.colors.primary : 'transparent',
+                  color: location.pathname === '/admin' ? '#ffffff' : currentTheme.colors.text
+                }}
+              >
+                <Shield className="h-5 w-5 flex-shrink-0" />
+                <span className={`font-medium transition-all duration-300 overflow-hidden whitespace-nowrap ${!isHovered && !isOpen ? 'lg:w-0 lg:opacity-0' : 'lg:w-auto lg:opacity-100'}`}>
+                  Admin
+                </span>
+              </Link>
+            )}
           </div>
 
           {/* User Section */}
