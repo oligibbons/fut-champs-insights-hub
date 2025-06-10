@@ -164,6 +164,8 @@ const PlayerStatsForm = ({ playerStats, onPlayerStatsChange, gameDuration = 90 }
                     </Button>
                     <Input
                       type="number"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       min="0"
                       max="120"
                       value={player.minutesPlayed}
@@ -199,9 +201,10 @@ const PlayerStatsForm = ({ playerStats, onPlayerStatsChange, gameDuration = 90 }
                     </Button>
                     <Input
                       type="number"
+                      inputMode="decimal"
+                      step="0.1"
                       min="1"
                       max="10"
-                      step="0.1"
                       value={player.rating}
                       onChange={(e) => handleInputChange(index, 'rating', e.target.value)}
                       className="bg-gray-800 border-gray-600 text-white text-center h-8 w-16 text-xs font-semibold"
@@ -232,6 +235,8 @@ const PlayerStatsForm = ({ playerStats, onPlayerStatsChange, gameDuration = 90 }
                     </Button>
                     <Input
                       type="number"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       min="0"
                       value={player.goals}
                       onChange={(e) => handleInputChange(index, 'goals', e.target.value)}
@@ -263,6 +268,8 @@ const PlayerStatsForm = ({ playerStats, onPlayerStatsChange, gameDuration = 90 }
                     </Button>
                     <Input
                       type="number"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       min="0"
                       value={player.assists}
                       onChange={(e) => handleInputChange(index, 'assists', e.target.value)}
@@ -294,6 +301,8 @@ const PlayerStatsForm = ({ playerStats, onPlayerStatsChange, gameDuration = 90 }
                     </Button>
                     <Input
                       type="number"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       min="0"
                       max="2"
                       value={player.yellowCards}
@@ -326,6 +335,8 @@ const PlayerStatsForm = ({ playerStats, onPlayerStatsChange, gameDuration = 90 }
                     </Button>
                     <Input
                       type="number"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       min="0"
                       max="1"
                       value={player.redCards}
@@ -358,6 +369,8 @@ const PlayerStatsForm = ({ playerStats, onPlayerStatsChange, gameDuration = 90 }
                     </Button>
                     <Input
                       type="number"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       min="0"
                       value={player.ownGoals || 0}
                       onChange={(e) => handleInputChange(index, 'ownGoals', e.target.value)}

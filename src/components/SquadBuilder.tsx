@@ -133,16 +133,23 @@ const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
     const formationData = FORMATIONS.find(f => f.name === formation);
     if (!formationData) return;
 
+    // Keep existing players when changing formation
+    const existingPlayers = squadData.startingXI.map(pos => pos.player);
+
     setSquadData(prev => ({
       ...prev,
       formation,
-      startingXI: formationData.positions.map((pos, index) => ({
-        id: `starting-${index}`,
-        position: pos.position,
-        player: prev.startingXI[index]?.player || undefined,
-        x: pos.x,
-        y: pos.y
-      })),
+      startingXI: formationData.positions.map((pos, index) => {
+        // Try to keep existing players in similar positions if possible
+        const existingPlayer = index < existingPlayers.length ? existingPlayers[index] : undefined;
+        return {
+          id: `starting-${index}`,
+          position: pos.position,
+          player: existingPlayer,
+          x: pos.x,
+          y: pos.y
+        };
+      }),
       lastModified: new Date().toISOString()
     }));
   };
@@ -248,7 +255,7 @@ const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
       case 'tots': return 'bg-green-600 text-white';
       case 'icon': return 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black';
       case 'hero': return 'bg-purple-600 text-white';
-      default: return 'bg-yellow-500 text-black';
+      default: return 'bg-purple-500 text-white';
     }
   };
 
@@ -291,7 +298,7 @@ const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
           </div>
 
           {/* Formation Pitch */}
-          <div className="bg-gradient-to-b from-green-800 to-green-900 rounded-lg p-6 relative h-96 border-2 border-white/20">
+          <div className="bg-gradient-to-b from-green-800 to-green-900 rounded-lg p-6 relative h-96 border-2 border-white/20 overflow-x-auto">
             <div className="absolute inset-0 bg-gradient-to-b from-green-500/10 to-green-700/10 rounded-lg"></div>
             
             {/* Pitch markings */}
@@ -302,35 +309,37 @@ const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
             <div className="absolute inset-x-0 top-1/2 h-px bg-white/30 transform -translate-y-1/2"></div>
             
             {/* Players */}
-            {squadData.startingXI.map((position) => (
-              <div
-                key={position.id}
-                className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group"
-                style={{ left: `${position.x}%`, top: `${position.y}%` }}
-                onClick={() => handlePositionClick(position)}
-              >
-                {position.player ? (
-                  <div className="relative">
-                    <div className={`w-16 h-20 rounded-lg border-2 border-white/50 flex flex-col items-center justify-center text-xs font-bold transition-all duration-200 group-hover:scale-110 ${getCardTypeColor(position.player.cardType)}`}>
-                      <div className="text-xs font-bold">{position.player.rating}</div>
-                      <div className="text-xs">{position.position}</div>
-                      <div className="text-xs truncate w-full text-center px-1">{position.player.name.split(' ').pop()}</div>
+            <div className="relative w-full h-full min-w-[500px]">
+              {squadData.startingXI.map((position) => (
+                <div
+                  key={position.id}
+                  className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group"
+                  style={{ left: `${position.x}%`, top: `${position.y}%` }}
+                  onClick={() => handlePositionClick(position)}
+                >
+                  {position.player ? (
+                    <div className="relative">
+                      <div className={`w-16 h-20 rounded-lg border-2 border-white/50 flex flex-col items-center justify-center text-xs font-bold transition-all duration-200 group-hover:scale-110 ${getCardTypeColor(position.player.cardType)}`}>
+                        <div className="text-xs font-bold">{position.player.rating}</div>
+                        <div className="text-xs">{position.position}</div>
+                        <div className="text-xs truncate w-full text-center px-1">{position.player.name.split(' ').pop()}</div>
+                      </div>
+                      <button
+                        onClick={(e) => handleRemovePlayer(position.id, e)}
+                        className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
                     </div>
-                    <button
-                      onClick={(e) => handleRemovePlayer(position.id, e)}
-                      className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="w-16 h-20 border-2 border-dashed border-white/50 rounded-lg flex flex-col items-center justify-center text-white text-xs bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-all duration-200 group-hover:scale-110">
-                    <Plus className="h-4 w-4 mb-1" />
-                    <span>{position.position}</span>
-                  </div>
-                )}
-              </div>
-            ))}
+                  ) : (
+                    <div className="w-16 h-20 border-2 border-dashed border-white/50 rounded-lg flex flex-col items-center justify-center text-white text-xs bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-all duration-200 group-hover:scale-110">
+                      <Plus className="h-4 w-4 mb-1" />
+                      <span>{position.position}</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Substitutes and Reserves */}

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -76,10 +75,11 @@ const Navigation = () => {
       {/* Navigation Sidebar - Dock Style */}
       <nav 
         className={`
-          fixed left-0 top-16 h-full border-r z-30
+          fixed left-0 top-16 h-[calc(100%-4rem)] border-r z-30
           transform transition-all duration-500 ease-in-out
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
           lg:translate-x-0
+          overflow-y-auto
         `}
         style={{
           backgroundColor: currentTheme.colors.surface,
@@ -116,7 +116,7 @@ const Navigation = () => {
             </div>
           </div>
 
-          <div className="space-y-2 flex-1">
+          <div className="space-y-2 flex-1 overflow-y-auto pb-20">
             {navigationItems.map((item) => {
               const isActive = location.pathname === item.path;
               return (
@@ -148,7 +148,7 @@ const Navigation = () => {
 
           {/* User Section */}
           {user && (
-            <div className="mt-auto pt-4 border-t" style={{ borderColor: currentTheme.colors.border }}>
+            <div className="mt-auto pt-4 border-t absolute bottom-0 left-0 right-0 bg-inherit px-6 pb-6" style={{ borderColor: currentTheme.colors.border }}>
               <div className={`mb-4 p-3 rounded-lg transition-all duration-300 overflow-hidden ${!isHovered && !isOpen ? 'lg:w-0 lg:opacity-0 lg:hidden' : 'lg:w-auto lg:opacity-100 lg:block'}`} 
                    style={{ backgroundColor: currentTheme.colors.cardBg }}>
                 <p className="text-sm font-medium text-white whitespace-nowrap">{user.email}</p>

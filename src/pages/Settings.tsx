@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -11,6 +11,7 @@ import Navigation from '@/components/Navigation';
 import AccountManager from '@/components/AccountManager';
 import UserAccountSettings from '@/components/UserAccountSettings';
 import { Settings as SettingsIcon, Palette, Gamepad2, User, BarChart3, Target, Sparkles } from 'lucide-react';
+import { useDataSync } from '@/hooks/useDataSync';
 
 interface DashboardSettings {
   showTopPerformers: boolean;
@@ -49,44 +50,28 @@ interface CurrentWeekSettings {
 const Settings = () => {
   const { currentTheme, currentThemeName, setTheme, themes, themeData } = useTheme();
   const { toast } = useToast();
+  const { settings, setSettings } = useDataSync();
 
-  const [dashboardSettings, setDashboardSettings] = useState<DashboardSettings>({
-    showTopPerformers: true,
-    showXGAnalysis: true,
-    showAIInsights: true,
-    showFormAnalysis: true,
-    showWeaknesses: true,
-    showOpponentAnalysis: true,
-    showPositionalAnalysis: true,
-    showRecentTrends: true,
-    showAchievements: true,
-    showTargetProgress: true,
-    showTimeAnalysis: true,
-    showStressAnalysis: true,
-    showMatchFacts: true,
-    showWeeklyScores: true,
-    showRecentForm: true
-  });
+  const [dashboardSettings, setDashboardSettings] = useState<DashboardSettings>(
+    settings.dashboardSettings as DashboardSettings
+  );
 
-  const [currentWeekSettings, setCurrentWeekSettings] = useState<CurrentWeekSettings>({
-    showTopPerformers: true,
-    showXGAnalysis: true,
-    showAIInsights: true,
-    showFormAnalysis: true,
-    showWeaknesses: true,
-    showOpponentAnalysis: true,
-    showPositionalAnalysis: true,
-    showRecentTrends: true,
-    showAchievements: true,
-    showTargetProgress: true,
-    showTimeAnalysis: true,
-    showStressAnalysis: true,
-    showCurrentRunStats: true
-  });
+  const [currentWeekSettings, setCurrentWeekSettings] = useState<CurrentWeekSettings>(
+    settings.currentWeekSettings as CurrentWeekSettings
+  );
+
+  // Load settings from dataSync
+  useEffect(() => {
+    setDashboardSettings(settings.dashboardSettings as DashboardSettings);
+    setCurrentWeekSettings(settings.currentWeekSettings as CurrentWeekSettings);
+  }, [settings]);
 
   const saveDashboardSettings = (newSettings: DashboardSettings) => {
     setDashboardSettings(newSettings);
-    localStorage.setItem('dashboard-settings', JSON.stringify(newSettings));
+    setSettings({
+      ...settings,
+      dashboardSettings: newSettings
+    });
     toast({
       title: "Dashboard Settings Updated",
       description: "Your dashboard preferences have been saved.",
@@ -95,7 +80,10 @@ const Settings = () => {
 
   const saveCurrentWeekSettings = (newSettings: CurrentWeekSettings) => {
     setCurrentWeekSettings(newSettings);
-    localStorage.setItem('current-week-settings', JSON.stringify(newSettings));
+    setSettings({
+      ...settings,
+      currentWeekSettings: newSettings
+    });
     toast({
       title: "Current Week Settings Updated",
       description: "Your current week preferences have been saved.",
@@ -139,12 +127,24 @@ const Settings = () => {
 
     setDashboardSettings(defaultDashboard);
     setCurrentWeekSettings(defaultCurrentWeek);
-    saveDashboardSettings(defaultDashboard);
-    saveCurrentWeekSettings(defaultCurrentWeek);
+    setSettings({
+      ...settings,
+      dashboardSettings: defaultDashboard,
+      currentWeekSettings: defaultCurrentWeek
+    });
+    
+    toast({
+      title: "Settings Reset",
+      description: "All settings have been reset to their default values.",
+    });
   };
 
   const handleThemeChange = (themeName: string) => {
     setTheme(themeName);
+    setSettings({
+      ...settings,
+      theme: themeName
+    });
     toast({
       title: "Theme Updated",
       description: `Switched to ${themeData[themeName]?.name || themeName} theme.`,
@@ -155,7 +155,7 @@ const Settings = () => {
     <div className="min-h-screen">
       <Navigation />
       
-      <main className="lg:ml-20 lg:hover:ml-64 transition-all duration-500 p-4 lg:p-6">
+      <main className="lg:ml-20 lg:hover:ml-64 transition-all duration-500 p-4 lg:p-6 pb-24">
         <div className="max-w-6xl mx-auto space-y-8">
           {/* Enhanced Header */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-8">
@@ -173,7 +173,7 @@ const Settings = () => {
           </div>
 
           <Tabs defaultValue="account" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 glass-card">
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 glass-card overflow-x-auto">
               <TabsTrigger value="account" className="text-xs sm:text-sm">
                 <User className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                 <span className="hidden sm:inline">Account</span>
@@ -201,15 +201,15 @@ const Settings = () => {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="account" className="space-y-4">
+            <TabsContent value="account" className="space-y-4 mt-4">
               <UserAccountSettings />
             </TabsContent>
 
-            <TabsContent value="fc25-accounts" className="space-y-4">
+            <TabsContent value="fc25-accounts" className="space-y-4 mt-4">
               <AccountManager />
             </TabsContent>
 
-            <TabsContent value="appearance" className="space-y-4">
+            <TabsContent value="appearance" className="space-y-4 mt-4">
               <Card className="glass-card">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-white">
@@ -271,7 +271,7 @@ const Settings = () => {
               </Card>
             </TabsContent>
 
-            <TabsContent value="dashboard" className="space-y-4">
+            <TabsContent value="dashboard" className="space-y-4 mt-4">
               <Card className="glass-card">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-white">
@@ -313,7 +313,7 @@ const Settings = () => {
               </Card>
             </TabsContent>
 
-            <TabsContent value="targets" className="space-y-4">
+            <TabsContent value="targets" className="space-y-4 mt-4">
               <Card className="glass-card">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-white">

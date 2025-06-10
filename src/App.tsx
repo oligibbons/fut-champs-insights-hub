@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";

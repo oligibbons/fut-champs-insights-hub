@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -36,6 +35,24 @@ const GameEditModal = ({ game, isOpen, onClose, onSave }: GameEditModalProps) =>
       setOpponentXG(game.teamStats?.expectedGoalsAgainst || 1.0);
     }
   }, [game]);
+
+  const handleNumberInputChange = (field: string, value: string) => {
+    // For number inputs, ensure we handle them properly on mobile
+    const numValue = parseInt(value);
+    if (!isNaN(numValue)) {
+      if (field === 'userGoals') setUserGoals(numValue.toString());
+      else if (field === 'opponentGoals') setOpponentGoals(numValue.toString());
+      else if (field === 'opponentSkill') setOpponentSkill(Math.min(10, Math.max(1, numValue)));
+      else if (field === 'duration') setDuration(Math.min(120, Math.max(1, numValue)));
+    }
+  };
+
+  const handleXGChange = (value: string) => {
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue)) {
+      setOpponentXG(numValue);
+    }
+  };
 
   const handleSave = () => {
     if (!game) return;
@@ -77,9 +94,11 @@ const GameEditModal = ({ game, isOpen, onClose, onSave }: GameEditModalProps) =>
               <Label className="text-white">Your Goals</Label>
               <Input
                 type="number"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 min="0"
                 value={userGoals}
-                onChange={(e) => setUserGoals(e.target.value)}
+                onChange={(e) => handleNumberInputChange('userGoals', e.target.value)}
                 className="bg-gray-800 border-gray-600 text-white"
               />
             </div>
@@ -87,9 +106,11 @@ const GameEditModal = ({ game, isOpen, onClose, onSave }: GameEditModalProps) =>
               <Label className="text-white">Opponent Goals</Label>
               <Input
                 type="number"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 min="0"
                 value={opponentGoals}
-                onChange={(e) => setOpponentGoals(e.target.value)}
+                onChange={(e) => handleNumberInputChange('opponentGoals', e.target.value)}
                 className="bg-gray-800 border-gray-600 text-white"
               />
             </div>
@@ -112,10 +133,12 @@ const GameEditModal = ({ game, isOpen, onClose, onSave }: GameEditModalProps) =>
             <Label className="text-white">Opponent Skill (1-10)</Label>
             <Input
               type="number"
+              inputMode="numeric"
+              pattern="[0-9]*"
               min="1"
               max="10"
               value={opponentSkill}
-              onChange={(e) => setOpponentSkill(parseInt(e.target.value))}
+              onChange={(e) => handleNumberInputChange('opponentSkill', e.target.value)}
               className="bg-gray-800 border-gray-600 text-white"
             />
           </div>
@@ -124,10 +147,12 @@ const GameEditModal = ({ game, isOpen, onClose, onSave }: GameEditModalProps) =>
             <Label className="text-white">Game Duration (minutes)</Label>
             <Input
               type="number"
+              inputMode="numeric"
+              pattern="[0-9]*"
               min="1"
               max="120"
               value={duration}
-              onChange={(e) => setDuration(parseInt(e.target.value))}
+              onChange={(e) => handleNumberInputChange('duration', e.target.value)}
               className="bg-gray-800 border-gray-600 text-white"
             />
           </div>
@@ -136,10 +161,11 @@ const GameEditModal = ({ game, isOpen, onClose, onSave }: GameEditModalProps) =>
             <Label className="text-white">Opponent Expected Goals (XGa)</Label>
             <Input
               type="number"
+              inputMode="decimal"
               step="0.1"
               min="0"
               value={opponentXG}
-              onChange={(e) => setOpponentXG(parseFloat(e.target.value))}
+              onChange={(e) => handleXGChange(e.target.value)}
               className="bg-gray-800 border-gray-600 text-white"
             />
           </div>

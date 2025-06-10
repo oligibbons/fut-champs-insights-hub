@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -178,6 +177,17 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position }: Player
     }
   };
 
+  const handleNumberInputChange = (field: string, value: string) => {
+    // Parse the value to a number, defaulting to the current value if invalid
+    const numValue = parseInt(value);
+    const currentValue = newPlayer[field as keyof typeof newPlayer] as number || 0;
+    
+    // Only update if it's a valid number
+    if (!isNaN(numValue)) {
+      setNewPlayer(prev => ({ ...prev, [field]: numValue }));
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-gray-900 border-gray-700">
@@ -216,7 +226,7 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position }: Player
                   key={player.id}
                   className="flex items-center justify-between p-3 bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-700 group"
                 >
-                  <div className="flex items-center gap-3" onClick={() => onPlayerSelect(player)}>
+                  <div className="flex items-center gap-3 flex-1" onClick={() => onPlayerSelect(player)}>
                     <Badge className={`${getCardTypeColor(player.cardType)} text-xs`}>
                       {player.rating}
                     </Badge>
@@ -228,7 +238,10 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position }: Player
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => handleEditPlayer(player)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditPlayer(player);
+                    }}
                     className="opacity-0 group-hover:opacity-100 transition-opacity bg-gray-700 border-gray-600 text-white"
                   >
                     <Edit className="h-3 w-3" />
@@ -278,10 +291,12 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position }: Player
                 <label className="block text-white text-sm font-medium mb-2">Rating</label>
                 <Input
                   type="number"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   min="1"
                   max="99"
                   value={newPlayer.rating || 75}
-                  onChange={(e) => setNewPlayer(prev => ({ ...prev, rating: parseInt(e.target.value) || 75 }))}
+                  onChange={(e) => handleNumberInputChange('rating', e.target.value)}
                   className="bg-gray-800 border-gray-600 text-white"
                 />
               </div>
@@ -340,6 +355,87 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position }: Player
                   onChange={(e) => setNewPlayer(prev => ({ ...prev, league: e.target.value }))}
                   className="bg-gray-800 border-gray-600 text-white"
                   placeholder="League name"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-white text-sm font-medium mb-2">Pace</label>
+                <Input
+                  type="number"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  min="1"
+                  max="99"
+                  value={newPlayer.pace || 75}
+                  onChange={(e) => handleNumberInputChange('pace', e.target.value)}
+                  className="bg-gray-800 border-gray-600 text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-white text-sm font-medium mb-2">Shooting</label>
+                <Input
+                  type="number"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  min="1"
+                  max="99"
+                  value={newPlayer.shooting || 75}
+                  onChange={(e) => handleNumberInputChange('shooting', e.target.value)}
+                  className="bg-gray-800 border-gray-600 text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-white text-sm font-medium mb-2">Passing</label>
+                <Input
+                  type="number"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  min="1"
+                  max="99"
+                  value={newPlayer.passing || 75}
+                  onChange={(e) => handleNumberInputChange('passing', e.target.value)}
+                  className="bg-gray-800 border-gray-600 text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-white text-sm font-medium mb-2">Dribbling</label>
+                <Input
+                  type="number"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  min="1"
+                  max="99"
+                  value={newPlayer.dribbling || 75}
+                  onChange={(e) => handleNumberInputChange('dribbling', e.target.value)}
+                  className="bg-gray-800 border-gray-600 text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-white text-sm font-medium mb-2">Defending</label>
+                <Input
+                  type="number"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  min="1"
+                  max="99"
+                  value={newPlayer.defending || 75}
+                  onChange={(e) => handleNumberInputChange('defending', e.target.value)}
+                  className="bg-gray-800 border-gray-600 text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-white text-sm font-medium mb-2">Physical</label>
+                <Input
+                  type="number"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  min="1"
+                  max="99"
+                  value={newPlayer.physical || 75}
+                  onChange={(e) => handleNumberInputChange('physical', e.target.value)}
+                  className="bg-gray-800 border-gray-600 text-white"
                 />
               </div>
             </div>

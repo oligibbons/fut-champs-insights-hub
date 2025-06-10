@@ -156,6 +156,27 @@ const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecord
     }
   }, [userGoals, opponentGoals]);
 
+  const handleNumberInputChange = (field: string, value: string) => {
+    // For number inputs, ensure we handle them properly on mobile
+    const numValue = parseInt(value);
+    if (!isNaN(numValue)) {
+      if (field === 'userGoals') setUserGoals(numValue.toString());
+      else if (field === 'opponentGoals') setOpponentGoals(numValue.toString());
+      else if (field === 'opponentSkill') setOpponentSkill(Math.min(10, Math.max(1, numValue)));
+      else if (field === 'duration') setDuration(Math.min(120, Math.max(1, numValue)));
+    }
+  };
+
+  const handleTeamStatsChange = (field: keyof TeamStats, value: string) => {
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue)) {
+      setTeamStats(prev => ({
+        ...prev,
+        [field]: field === 'expectedGoals' || field === 'expectedGoalsAgainst' ? numValue : Math.round(numValue)
+      }));
+    }
+  };
+
   const handleSubmit = () => {
     if (!userGoals || !opponentGoals) {
       toast({
@@ -244,9 +265,11 @@ const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecord
                     <Label className="text-white font-medium">Your Goals</Label>
                     <Input
                       type="number"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       min="0"
                       value={userGoals}
-                      onChange={(e) => setUserGoals(e.target.value)}
+                      onChange={(e) => handleNumberInputChange('userGoals', e.target.value)}
                       placeholder="0"
                       className="bg-gray-800 border-gray-600 text-white text-lg text-center font-bold"
                     />
@@ -255,9 +278,11 @@ const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecord
                     <Label className="text-white font-medium">Opponent Goals</Label>
                     <Input
                       type="number"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       min="0"
                       value={opponentGoals}
-                      onChange={(e) => setOpponentGoals(e.target.value)}
+                      onChange={(e) => handleNumberInputChange('opponentGoals', e.target.value)}
                       placeholder="0"
                       className="bg-gray-800 border-gray-600 text-white text-lg text-center font-bold"
                     />
@@ -298,10 +323,12 @@ const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecord
                   <Label className="text-white font-medium">Game Duration (minutes)</Label>
                   <Input
                     type="number"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     min="1"
                     max="120"
                     value={duration}
-                    onChange={(e) => setDuration(parseInt(e.target.value) || 90)}
+                    onChange={(e) => handleNumberInputChange('duration', e.target.value)}
                     placeholder="90"
                     className="bg-gray-800 border-gray-600 text-white"
                   />
@@ -344,10 +371,12 @@ const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecord
                   <Label className="text-white font-medium">Possession (%)</Label>
                   <Input
                     type="number"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     min="0"
                     max="100"
                     value={teamStats.possession}
-                    onChange={(e) => setTeamStats(prev => ({ ...prev, possession: parseInt(e.target.value) || 0 }))}
+                    onChange={(e) => handleTeamStatsChange('possession', e.target.value)}
                     className="bg-gray-800 border-gray-600 text-white"
                   />
                 </div>
@@ -355,9 +384,11 @@ const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecord
                   <Label className="text-white font-medium">Total Shots</Label>
                   <Input
                     type="number"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     min="0"
                     value={teamStats.shots}
-                    onChange={(e) => setTeamStats(prev => ({ ...prev, shots: parseInt(e.target.value) || 0 }))}
+                    onChange={(e) => handleTeamStatsChange('shots', e.target.value)}
                     className="bg-gray-800 border-gray-600 text-white"
                   />
                 </div>
@@ -365,9 +396,11 @@ const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecord
                   <Label className="text-white font-medium">Shots on Target</Label>
                   <Input
                     type="number"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     min="0"
                     value={teamStats.shotsOnTarget}
-                    onChange={(e) => setTeamStats(prev => ({ ...prev, shotsOnTarget: parseInt(e.target.value) || 0 }))}
+                    onChange={(e) => handleTeamStatsChange('shotsOnTarget', e.target.value)}
                     className="bg-gray-800 border-gray-600 text-white"
                   />
                 </div>
@@ -375,10 +408,11 @@ const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecord
                   <Label className="text-white font-medium">Expected Goals (xG)</Label>
                   <Input
                     type="number"
+                    inputMode="decimal"
                     step="0.1"
                     min="0"
                     value={teamStats.expectedGoals}
-                    onChange={(e) => setTeamStats(prev => ({ ...prev, expectedGoals: parseFloat(e.target.value) || 0 }))}
+                    onChange={(e) => handleTeamStatsChange('expectedGoals', e.target.value)}
                     className="bg-gray-800 border-gray-600 text-white"
                   />
                 </div>
@@ -388,9 +422,11 @@ const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecord
                   <Label className="text-white font-medium">Total Passes</Label>
                   <Input
                     type="number"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     min="0"
                     value={teamStats.passes}
-                    onChange={(e) => setTeamStats(prev => ({ ...prev, passes: parseInt(e.target.value) || 0 }))}
+                    onChange={(e) => handleTeamStatsChange('passes', e.target.value)}
                     className="bg-gray-800 border-gray-600 text-white"
                   />
                 </div>
@@ -398,10 +434,12 @@ const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecord
                   <Label className="text-white font-medium">Pass Accuracy (%)</Label>
                   <Input
                     type="number"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     min="0"
                     max="100"
                     value={teamStats.passAccuracy}
-                    onChange={(e) => setTeamStats(prev => ({ ...prev, passAccuracy: parseInt(e.target.value) || 0 }))}
+                    onChange={(e) => handleTeamStatsChange('passAccuracy', e.target.value)}
                     className="bg-gray-800 border-gray-600 text-white"
                   />
                 </div>
@@ -409,9 +447,11 @@ const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecord
                   <Label className="text-white font-medium">Corners</Label>
                   <Input
                     type="number"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     min="0"
                     value={teamStats.corners}
-                    onChange={(e) => setTeamStats(prev => ({ ...prev, corners: parseInt(e.target.value) || 0 }))}
+                    onChange={(e) => handleTeamStatsChange('corners', e.target.value)}
                     className="bg-gray-800 border-gray-600 text-white"
                   />
                 </div>
@@ -419,10 +459,11 @@ const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecord
                   <Label className="text-white font-medium">Opponent xG (xGa)</Label>
                   <Input
                     type="number"
+                    inputMode="decimal"
                     step="0.1"
                     min="0"
                     value={teamStats.expectedGoalsAgainst}
-                    onChange={(e) => setTeamStats(prev => ({ ...prev, expectedGoalsAgainst: parseFloat(e.target.value) || 0 }))}
+                    onChange={(e) => handleTeamStatsChange('expectedGoalsAgainst', e.target.value)}
                     className="bg-gray-800 border-gray-600 text-white"
                   />
                 </div>
@@ -430,9 +471,11 @@ const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecord
                   <Label className="text-white font-medium">Fouls Committed</Label>
                   <Input
                     type="number"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     min="0"
                     value={teamStats.fouls}
-                    onChange={(e) => setTeamStats(prev => ({ ...prev, fouls: parseInt(e.target.value) || 0 }))}
+                    onChange={(e) => handleTeamStatsChange('fouls', e.target.value)}
                     className="bg-gray-800 border-gray-600 text-white"
                   />
                 </div>
@@ -440,9 +483,11 @@ const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecord
                   <Label className="text-white font-medium">Yellow Cards</Label>
                   <Input
                     type="number"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     min="0"
                     value={teamStats.yellowCards}
-                    onChange={(e) => setTeamStats(prev => ({ ...prev, yellowCards: parseInt(e.target.value) || 0 }))}
+                    onChange={(e) => handleTeamStatsChange('yellowCards', e.target.value)}
                     className="bg-gray-800 border-gray-600 text-white"
                   />
                 </div>
@@ -450,10 +495,12 @@ const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecord
                   <Label className="text-white font-medium">Red Cards</Label>
                   <Input
                     type="number"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     min="0"
                     max="2"
                     value={teamStats.redCards}
-                    onChange={(e) => setTeamStats(prev => ({ ...prev, redCards: parseInt(e.target.value) || 0 }))}
+                    onChange={(e) => handleTeamStatsChange('redCards', e.target.value)}
                     className="bg-gray-800 border-gray-600 text-white"
                   />
                 </div>
