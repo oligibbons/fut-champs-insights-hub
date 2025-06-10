@@ -19,6 +19,7 @@ import {
   ResponsiveContainer,
   ReferenceLine
 } from 'recharts';
+import { Gauge } from 'gauge-js';
 
 interface CPSGaugeProps {
   weekData: WeeklyPerformance;
@@ -152,64 +153,19 @@ const CPSGauge = ({ weekData, historicalData = [] }: CPSGaugeProps) => {
     const score = calculateCPS();
     calculateTrend();
     
-    // Initialize Gauge.js with comprehensive error handling and fallback
-    const initGauge = async () => {
+    // Initialize Gauge.js with proper error handling
+    const initGauge = () => {
       if (!gaugeRef || typeof window === 'undefined') {
         console.log('CPSGauge: No gauge ref or not in browser environment');
         return;
       }
 
       try {
-        console.log('CPSGauge: Attempting to import gauge-js...');
-        
-        // Try multiple import strategies
-        let GaugeConstructor = null;
-        let importError = null;
-        
-        try {
-          // Strategy 1: Direct default import
-          const GaugeModule = await import('gauge-js');
-          console.log('CPSGauge: Import successful, module structure:', {
-            hasDefault: !!GaugeModule.default,
-            hasGauge: !!(GaugeModule as any).Gauge,
-            moduleKeys: Object.keys(GaugeModule),
-            defaultType: typeof GaugeModule.default,
-            defaultKeys: GaugeModule.default ? Object.keys(GaugeModule.default) : 'no default'
-          });
-          
-          // Try different ways to get the constructor
-          if (typeof GaugeModule.default === 'function') {
-            GaugeConstructor = GaugeModule.default;
-            console.log('CPSGauge: Using default export as constructor');
-          } else if ((GaugeModule as any).Gauge && typeof (GaugeModule as any).Gauge === 'function') {
-            GaugeConstructor = (GaugeModule as any).Gauge;
-            console.log('CPSGauge: Using named Gauge export');
-          } else if (GaugeModule.default && (GaugeModule.default as any).Gauge) {
-            GaugeConstructor = (GaugeModule.default as any).Gauge;
-            console.log('CPSGauge: Using default.Gauge export');
-          } else {
-            throw new Error('No valid Gauge constructor found in module');
-          }
-        } catch (error) {
-          importError = error;
-          console.error('CPSGauge: Import failed:', error);
-        }
-        
-        if (!GaugeConstructor) {
-          throw new Error(`Failed to import gauge-js: ${importError?.message || 'Unknown error'}`);
-        }
-        
         console.log('CPSGauge: Creating gauge instance...');
         
-        // Create gauge instance with error handling
-        let gauge;
-        try {
-          gauge = new GaugeConstructor(gaugeRef);
-          console.log('CPSGauge: Gauge instance created successfully');
-        } catch (error) {
-          console.error('CPSGauge: Failed to create gauge instance:', error);
-          throw new Error(`Failed to create gauge instance: ${error.message}`);
-        }
+        // Create gauge instance directly using the imported Gauge class
+        const gauge = new Gauge(gaugeRef);
+        console.log('CPSGauge: Gauge instance created successfully');
         
         // Verify gauge has required methods
         if (!gauge || typeof gauge.setOptions !== 'function') {
@@ -224,54 +180,44 @@ const CPSGauge = ({ weekData, historicalData = [] }: CPSGaugeProps) => {
         
         console.log('CPSGauge: Configuring gauge options...');
         
-        // Set gauge options with error handling
-        try {
-          gauge.setOptions({
-            angle: 0.15,
-            lineWidth: 0.44,
-            radiusScale: 1,
-            pointer: {
-              length: 0.6,
-              strokeWidth: 0.035,
-              color: '#000000'
-            },
-            limitMax: false,
-            limitMin: false,
-            colorStart: '#6FADCF',
-            colorStop: getCpsColor(score),
-            strokeColor: '#E0E0E0',
-            generateGradient: true,
-            highDpiSupport: true,
-            staticZones: [
-              {min: 0, max: 40, color: "#ef4444"},
-              {min: 40, max: 60, color: "#f59e0b"},
-              {min: 60, max: 80, color: "#f59e0b"},
-              {min: 80, max: 100, color: "#10b981"}
-            ],
-            staticLabels: {
-              font: "10px sans-serif",
-              labels: [0, 20, 40, 60, 80, 100],
-              color: "#ffffff",
-              fractionDigits: 0
-            },
-          });
-          console.log('CPSGauge: Options set successfully');
-        } catch (error) {
-          console.error('CPSGauge: Failed to set options:', error);
-          throw new Error(`Failed to set gauge options: ${error.message}`);
-        }
+        // Set gauge options
+        gauge.setOptions({
+          angle: 0.15,
+          lineWidth: 0.44,
+          radiusScale: 1,
+          pointer: {
+            length: 0.6,
+            strokeWidth: 0.035,
+            color: '#000000'
+          },
+          limitMax: false,
+          limitMin: false,
+          colorStart: '#6FADCF',
+          colorStop: getCpsColor(score),
+          strokeColor: '#E0E0E0',
+          generateGradient: true,
+          highDpiSupport: true,
+          staticZones: [
+            {min: 0, max: 40, color: "#ef4444"},
+            {min: 40, max: 60, color: "#f59e0b"},
+            {min: 60, max: 80, color: "#f59e0b"},
+            {min: 80, max: 100, color: "#10b981"}
+          ],
+          staticLabels: {
+            font: "10px sans-serif",
+            labels: [0, 20, 40, 60, 80, 100],
+            color: "#ffffff",
+            fractionDigits: 0
+          },
+        });
+        console.log('CPSGauge: Options set successfully');
         
-        // Set gauge value with error handling
-        try {
-          gauge.maxValue = 100;
-          gauge.setMinValue(0);
-          gauge.animationSpeed = 32;
-          gauge.set(score);
-          console.log('CPSGauge: Gauge value set to:', score);
-        } catch (error) {
-          console.error('CPSGauge: Failed to set gauge value:', error);
-          throw new Error(`Failed to set gauge value: ${error.message}`);
-        }
+        // Set gauge value
+        gauge.maxValue = 100;
+        gauge.setMinValue(0);
+        gauge.animationSpeed = 32;
+        gauge.set(score);
+        console.log('CPSGauge: Gauge value set to:', score);
         
         // Save gauge instance for cleanup
         setGaugeInstance(gauge);
