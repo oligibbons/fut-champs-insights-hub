@@ -145,7 +145,7 @@ const CPSGauge = ({ weekData, historicalData = [] }: CPSGaugeProps) => {
     
     calculateCPS();
     calculateTrend();
-  }, [weekData, historicalData]);
+  }, [weekData, historicalData, cpsScore]);
 
   const getCpsColor = () => {
     if (cpsScore >= 80) return '#10b981'; // Green
