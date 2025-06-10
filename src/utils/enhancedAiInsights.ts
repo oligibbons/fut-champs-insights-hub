@@ -13,10 +13,10 @@ interface EnhancedInsight {
   dataPoints?: string[];
 }
 
-export function generateEnhancedAIInsights(
+export const generateEnhancedAIInsights = (
   completedWeeks: WeeklyPerformance[],
   currentWeek: WeeklyPerformance | null
-): EnhancedInsight[] {
+): EnhancedInsight[] => {
   if (completedWeeks.length === 0) return [];
 
   const allGames = completedWeeks.flatMap(week => week.games);
@@ -827,7 +827,7 @@ export function generateEnhancedAIInsights(
       type: 'mental',
       title: 'Comeback Specialist',
       description: `You've demonstrated exceptional mental strength by completing ${comebackGames.length} comebacks.`,
-      actionableAdvice: 'Your resilience is a major asset. Don\'t get discouraged when conceding first, as you've proven you can turn games around.',
+      actionableAdvice: 'Your resilience is a major asset. Don\'t get discouraged when conceding first, as you\'ve proven you can turn games around.',
       confidence: 85,
       priority: 'medium',
       category: 'strength',
@@ -849,4 +849,4 @@ export function generateEnhancedAIInsights(
       return b.confidence - a.confidence;
     })
     .slice(0, 12); // Limit to prevent overwhelming the user
-}
+};
