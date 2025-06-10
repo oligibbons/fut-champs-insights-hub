@@ -126,7 +126,6 @@ body {
   border-radius: 1.5rem;
   padding: 1.5rem;
   backdrop-filter: blur(20px);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
   transform: translateZ(0);
