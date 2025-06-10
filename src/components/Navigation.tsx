@@ -108,7 +108,7 @@ const Navigation = () => {
       <nav 
         className={`
           fixed left-0 top-16 h-[calc(100vh-4rem)] border-r z-30
-          transform transition-all duration-500 ease-in-out
+          transform transition-all duration-300 ease-in-out
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
           lg:translate-x-0
           overflow-y-auto
@@ -124,6 +124,18 @@ const Navigation = () => {
         onMouseEnter={() => !isMobile && setIsHovered(true)}
         onMouseLeave={() => !isMobile && setIsHovered(false)}
       >
+        {/* Close button for mobile */}
+        {isMobile && isOpen && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsOpen(false)}
+            className="absolute top-4 right-4 text-gray-400 hover:text-white"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
+        
         {/* Hover trigger area - invisible but extends beyond sidebar */}
         <div 
           className="absolute -right-4 top-0 w-8 h-full bg-transparent hidden lg:block"

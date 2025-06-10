@@ -19,9 +19,24 @@ const PerformanceRadar = () => {
   const [comparisonData, setComparisonData] = useState<any[]>([]);
   const [showComparison, setShowComparison] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
 
   const currentWeek = getCurrentWeek();
   
+  // Check if device is mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
+
   useEffect(() => {
     setIsLoading(true);
     
@@ -341,8 +356,24 @@ const PerformanceRadar = () => {
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart cx="50%" cy="50%" outerRadius="80%" data={showComparison ? comparisonData : radarData}>
                 <PolarGrid stroke="#374151" />
-                <PolarAngleAxis dataKey="metric" tick={{ fill: '#9CA3AF', fontSize: 12 }} />
-                <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: '#9CA3AF', fontSize: 10 }} />
+                <PolarAngleAxis 
+                  dataKey="metric" 
+                  tick={{ 
+                    fill: '#9CA3AF', 
+                    fontSize: isMobile ? 9 : 12,
+                    dy: isMobile ? 3 : 0
+                  }} 
+                  tickLine={false}
+                />
+                <PolarRadiusAxis 
+                  angle={30} 
+                  domain={[0, 100]} 
+                  tick={{ 
+                    fill: '#9CA3AF', 
+                    fontSize: isMobile ? 9 : 10 
+                  }}
+                  tickCount={isMobile ? 3 : 5}
+                />
                 
                 {showComparison ? (
                   <>
@@ -360,7 +391,10 @@ const PerformanceRadar = () => {
                       fill="#F59E0B"
                       fillOpacity={0.3}
                     />
-                    <Legend />
+                    <Legend 
+                      iconSize={isMobile ? 8 : 10}
+                      wrapperStyle={{ fontSize: isMobile ? 10 : 12 }}
+                    />
                   </>
                 ) : (
                   <Radar
