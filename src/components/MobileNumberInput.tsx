@@ -125,7 +125,7 @@ const MobileNumberInput: React.FC<MobileNumberInputProps> = ({
           size="icon"
           onClick={decrement}
           disabled={disabled || parseFloat(inputValue || min.toString()) <= min}
-          className="h-10 w-10 bg-gray-800 border-gray-600 text-white hover:bg-gray-700"
+          className="h-10 w-10 bg-gray-800 border-gray-600 text-white hover:bg-gray-700 static-element"
         >
           <Minus className="h-4 w-4" />
         </Button>
@@ -138,7 +138,7 @@ const MobileNumberInput: React.FC<MobileNumberInputProps> = ({
           onBlur={handleBlur}
           placeholder={placeholder}
           disabled={disabled}
-          className="bg-gray-800 border-gray-600 text-white text-center h-10"
+          className="bg-gray-800 border-gray-600 text-white text-center h-10 mobile-friendly-input"
         />
         
         <Button
@@ -147,7 +147,7 @@ const MobileNumberInput: React.FC<MobileNumberInputProps> = ({
           size="icon"
           onClick={increment}
           disabled={disabled || parseFloat(inputValue || max.toString()) >= max}
-          className="h-10 w-10 bg-gray-800 border-gray-600 text-white hover:bg-gray-700"
+          className="h-10 w-10 bg-gray-800 border-gray-600 text-white hover:bg-gray-700 static-element"
         >
           <Plus className="h-4 w-4" />
         </Button>

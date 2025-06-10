@@ -83,6 +83,7 @@ const Navigation = () => {
             borderColor: currentTheme.colors.border,
             color: currentTheme.colors.text
           }}
+          className="static-element"
         >
           {isOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
         </Button>
@@ -96,6 +97,7 @@ const Navigation = () => {
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
           lg:translate-x-0
           overflow-y-auto
+          static-element
         `}
         style={{
           backgroundColor: currentTheme.colors.surface,
@@ -141,7 +143,7 @@ const Navigation = () => {
                   to={item.path}
                   onClick={handleNavClick}
                   className={`
-                    flex items-center px-4 py-3 rounded-lg transition-all duration-200
+                    flex items-center px-4 py-3 rounded-lg transition-all duration-200 nav-element
                     ${!isHovered && !isOpen ? 'lg:justify-center lg:px-3' : 'space-x-3'}
                     ${isActive 
                       ? 'shadow-lg' 
@@ -167,7 +169,7 @@ const Navigation = () => {
                 to="/admin"
                 onClick={handleNavClick}
                 className={`
-                  flex items-center px-4 py-3 rounded-lg transition-all duration-200
+                  flex items-center px-4 py-3 rounded-lg transition-all duration-200 nav-element
                   ${!isHovered && !isOpen ? 'lg:justify-center lg:px-3' : 'space-x-3'}
                   ${location.pathname === '/admin' ? 'shadow-lg' : 'hover:opacity-80'}
                 `}
@@ -197,7 +199,7 @@ const Navigation = () => {
               <Button
                 onClick={handleSignOut}
                 variant="outline"
-                className={`w-full flex items-center gap-2 rounded-lg transition-all duration-300 ${!isHovered && !isOpen ? 'lg:w-12 lg:justify-center lg:px-2' : ''}`}
+                className={`w-full flex items-center gap-2 rounded-lg transition-all duration-300 nav-element ${!isHovered && !isOpen ? 'lg:w-12 lg:justify-center lg:px-2' : ''}`}
                 style={{
                   backgroundColor: 'transparent',
                   borderColor: currentTheme.colors.border,

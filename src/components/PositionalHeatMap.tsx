@@ -20,6 +20,7 @@ const PositionalHeatMap = () => {
   const [positionData, setPositionData] = useState<PositionData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [optimizedHeatmapPoints, setOptimizedHeatmapPoints] = useState<any[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
 
   // Position coordinates on a football pitch (x, y as percentages)
   const positionCoordinates: Record<string, { x: number; y: number }> = {
@@ -50,6 +51,20 @@ const PositionalHeatMap = () => {
     'RF': { x: 85, y: 65 },
     'SUB': { x: 50, y: 95 },
   };
+
+  // Check if device is mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
 
   useEffect(() => {
     setIsLoading(true);
@@ -128,7 +143,7 @@ const PositionalHeatMap = () => {
   const generateOptimizedHeatmap = (positions: PositionData[]) => {
     // Create a grid of points covering the entire pitch
     const gridPoints = [];
-    const gridDensity = 20; // Lower density for better performance
+    const gridDensity = isMobile ? 15 : 20; // Lower density for mobile
     
     for (let x = 0; x <= 100; x += 100/gridDensity) {
       for (let y = 0; y <= 100; y += 100/gridDensity) {
@@ -166,7 +181,7 @@ const PositionalHeatMap = () => {
 
   if (isLoading) {
     return (
-      <Card className="glass-card">
+      <Card className="glass-card static-element">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
             <MapPin className="h-5 w-5 text-fifa-blue" />
@@ -182,7 +197,7 @@ const PositionalHeatMap = () => {
 
   if (positionData.length === 0) {
     return (
-      <Card className="glass-card">
+      <Card className="glass-card static-element">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
             <MapPin className="h-5 w-5 text-fifa-blue" />
@@ -200,7 +215,7 @@ const PositionalHeatMap = () => {
 
   return (
     <TooltipProvider delayDuration={2000}>
-      <Card className="glass-card">
+      <Card className="glass-card static-element">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
             <Tooltip>
@@ -218,7 +233,7 @@ const PositionalHeatMap = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="relative w-full h-96 bg-gradient-to-b from-green-800/20 to-green-900/30 rounded-lg border-2 border-white/20 overflow-hidden">
+          <div className="relative w-full h-96 bg-gradient-to-b from-green-800/20 to-green-900/30 rounded-lg border-2 border-white/20 overflow-hidden static-element">
             {/* Football pitch markings */}
             <div className="absolute inset-0">
               {/* Center line */}
@@ -237,12 +252,12 @@ const PositionalHeatMap = () => {
             {optimizedHeatmapPoints.map((point, index) => (
               <div
                 key={`heat-point-${index}`}
-                className="absolute rounded-full blur-md pointer-events-none"
+                className="absolute rounded-full blur-md pointer-events-none static-element"
                 style={{
                   left: `${point.x}%`,
                   top: `${point.y}%`,
-                  width: '60px',
-                  height: '60px',
+                  width: isMobile ? '50px' : '60px',
+                  height: isMobile ? '50px' : '60px',
                   background: `radial-gradient(circle, ${getHeatColor(point.rating)}${Math.round(point.intensity * 255).toString(16).padStart(2, '0')} 0%, transparent 70%)`,
                   transform: 'translate(-50%, -50%)',
                   opacity: point.intensity,
@@ -255,7 +270,7 @@ const PositionalHeatMap = () => {
               <Tooltip key={position.position}>
                 <TooltipTrigger asChild>
                   <div
-                    className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group pointer-events-auto"
+                    className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group pointer-events-auto static-element"
                     style={{
                       left: `${position.x}%`,
                       top: `${position.y}%`,
@@ -263,7 +278,7 @@ const PositionalHeatMap = () => {
                   >
                     <div className="relative">
                       {/* Subtle border circle */}
-                      <div className="w-14 h-14 rounded-full border-2 border-white/50 bg-black/30 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                      <div className="w-14 h-14 rounded-full border-2 border-white/50 bg-black/30 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 transition-transform duration-200 static-element">
                         <div className="text-center">
                           <div className="text-[10px] font-bold text-white">{position.position}</div>
                           <div className="text-xs font-bold text-white">{position.averageRating.toFixed(1)}</div>

@@ -10,9 +10,24 @@ interface DashboardCarouselProps {
   enabledTiles: string[];
 }
 
-const DashboardCarousel = ({ weeklyData, currentWeek }: DashboardCarouselProps) => {
+const DashboardCarousel = ({ weeklyData, currentWeek, enabledTiles }: DashboardCarouselProps) => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const { settings } = useDataSync();
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Check if device is mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
 
   const calculateStats = () => {
     if (!weeklyData.length && !currentWeek) return null;
@@ -74,9 +89,6 @@ const DashboardCarousel = ({ weeklyData, currentWeek }: DashboardCarouselProps) 
     return { grade, score: Math.round(score) };
   };
 
-  const stats = calculateStats();
-  const weekScore = calculateWeekScore();
-
   const calculateTopPerformers = () => {
     if (!currentWeek?.games.length) return [];
     
@@ -127,15 +139,15 @@ const DashboardCarousel = ({ weeklyData, currentWeek }: DashboardCarouselProps) 
       content: (
         <div className="space-y-3">
           {topPerformers.length > 0 ? topPerformers.map((player, index) => (
-            <div key={`${player.name}-${index}`} className="flex items-center justify-between p-2 rounded bg-white/5">
+            <div key={`${player.name}-${index}`} className="flex items-center justify-between p-2 rounded bg-white/5 static-element">
               <div>
                 <p className="font-medium text-white text-sm">{player.name}</p>
                 <p className="text-xs text-gray-400">{player.position} • {player.totalMinutes} mins</p>
               </div>
               <div className="text-right">
-                <p className="font-bold text-fifa-gold">{player.goalInvolvementsPer90.toFixed(1)}</p>
+                <p className="font-bold text-fifa-gold">{player.goalInvolvementsPer90.toFixed(2)}</p>
                 <p className="text-xs text-gray-400">G+A/90</p>
-                <p className="text-xs text-gray-300">{player.goalsPer90.toFixed(1)}G {player.assistsPer90.toFixed(1)}A</p>
+                <p className="text-xs text-gray-300">{player.goalsPer90.toFixed(2)}G {player.assistsPer90.toFixed(2)}A</p>
               </div>
             </div>
           )) : (
@@ -153,30 +165,30 @@ const DashboardCarousel = ({ weeklyData, currentWeek }: DashboardCarouselProps) 
       icon: BarChart3,
       content: (
         <div className="space-y-3">
-          {stats ? (
+          {calculateStats() ? (
             <>
               <div className="grid grid-cols-2 gap-3">
-                <div className="text-center p-2 rounded bg-white/5">
-                  <p className="font-bold text-fifa-blue text-lg">{stats.avgPasses}</p>
+                <div className="text-center p-2 rounded bg-white/5 static-element">
+                  <p className="font-bold text-fifa-blue text-lg">{calculateStats()?.avgPasses}</p>
                   <p className="text-xs text-gray-400">Avg Passes</p>
                 </div>
-                <div className="text-center p-2 rounded bg-white/5">
-                  <p className="font-bold text-fifa-green text-lg">{stats.avgPossession}%</p>
+                <div className="text-center p-2 rounded bg-white/5 static-element">
+                  <p className="font-bold text-fifa-green text-lg">{calculateStats()?.avgPossession}%</p>
                   <p className="text-xs text-gray-400">Avg Possession</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div className="text-center p-2 rounded bg-white/5">
-                  <p className="font-bold text-fifa-purple text-lg">{stats.passAccuracy}%</p>
+                <div className="text-center p-2 rounded bg-white/5 static-element">
+                  <p className="font-bold text-fifa-purple text-lg">{calculateStats()?.passAccuracy}%</p>
                   <p className="text-xs text-gray-400">Pass Accuracy</p>
                 </div>
-                <div className="text-center p-2 rounded bg-white/5">
-                  <p className="font-bold text-fifa-gold text-lg">{stats.avgPlayerRating}</p>
+                <div className="text-center p-2 rounded bg-white/5 static-element">
+                  <p className="font-bold text-fifa-gold text-lg">{calculateStats()?.avgPlayerRating}</p>
                   <p className="text-xs text-gray-400">Avg Rating</p>
                 </div>
               </div>
-              <div className="text-center p-2 rounded bg-white/5">
-                <p className="font-bold text-fifa-red text-lg">{stats.xgVsGoals}</p>
+              <div className="text-center p-2 rounded bg-white/5 static-element">
+                <p className="font-bold text-fifa-red text-lg">{calculateStats()?.xgVsGoals}</p>
                 <p className="text-xs text-gray-400">XG vs Goals Ratio</p>
               </div>
             </>
@@ -196,25 +208,25 @@ const DashboardCarousel = ({ weeklyData, currentWeek }: DashboardCarouselProps) 
       content: (
         <div className="space-y-4">
           <div className="text-center">
-            <div className={`inline-block w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold ${
-              weekScore.grade === 'S' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black' :
-              weekScore.grade === 'A' ? 'bg-gradient-to-r from-green-400 to-green-600 text-white' :
-              weekScore.grade === 'B' ? 'bg-gradient-to-r from-blue-400 to-blue-600 text-white' :
-              weekScore.grade === 'C' ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-white' :
-              weekScore.grade === 'D' ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white' :
+            <div className={`inline-block w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold static-element ${
+              calculateWeekScore().grade === 'S' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black' :
+              calculateWeekScore().grade === 'A' ? 'bg-gradient-to-r from-green-400 to-green-600 text-white' :
+              calculateWeekScore().grade === 'B' ? 'bg-gradient-to-r from-blue-400 to-blue-600 text-white' :
+              calculateWeekScore().grade === 'C' ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-white' :
+              calculateWeekScore().grade === 'D' ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white' :
               'bg-gradient-to-r from-red-500 to-red-700 text-white'
             }`}>
-              {weekScore.grade}
+              {calculateWeekScore().grade}
             </div>
           </div>
           <div className="text-center">
-            <p className="text-3xl font-bold text-white mb-1">{weekScore.score}</p>
+            <p className="text-3xl font-bold text-white mb-1">{calculateWeekScore().score}</p>
             <p className="text-sm text-gray-400">Performance Score</p>
           </div>
-          <div className="w-full bg-white/10 rounded-full h-2">
+          <div className="w-full bg-white/10 rounded-full h-2 static-element">
             <div 
-              className="h-2 bg-gradient-to-r from-fifa-blue to-fifa-purple rounded-full transition-all duration-500"
-              style={{ width: `${weekScore.score}%` }}
+              className="h-2 bg-gradient-to-r from-fifa-blue to-fifa-purple rounded-full transition-all duration-500 static-element"
+              style={{ width: `${calculateWeekScore().score}%` }}
             />
           </div>
           {currentWeek?.games.length ? (
@@ -241,7 +253,7 @@ const DashboardCarousel = ({ weeklyData, currentWeek }: DashboardCarouselProps) 
                 {currentWeek.games.slice(-5).map((game, index) => (
                   <div
                     key={index}
-                    className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                    className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold static-element ${
                       game.result === 'win' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
                     }`}
                   >
@@ -250,16 +262,16 @@ const DashboardCarousel = ({ weeklyData, currentWeek }: DashboardCarouselProps) 
                 ))}
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div className="text-center p-2 rounded bg-white/5">
+                <div className="text-center p-2 rounded bg-white/5 static-element">
                   <p className="font-bold text-green-400 text-lg">{currentWeek.totalWins}</p>
                   <p className="text-xs text-gray-400">Wins</p>
                 </div>
-                <div className="text-center p-2 rounded bg-white/5">
+                <div className="text-center p-2 rounded bg-white/5 static-element">
                   <p className="font-bold text-red-400 text-lg">{currentWeek.totalLosses}</p>
                   <p className="text-xs text-gray-400">Losses</p>
                 </div>
               </div>
-              <div className="text-center p-2 rounded bg-white/5">
+              <div className="text-center p-2 rounded bg-white/5 static-element">
                 <p className="font-bold text-fifa-gold text-lg">{currentWeek.currentStreak || 0}</p>
                 <p className="text-xs text-gray-400">Current Streak</p>
               </div>
@@ -286,9 +298,9 @@ const DashboardCarousel = ({ weeklyData, currentWeek }: DashboardCarouselProps) 
                 {currentWeek?.games.length || 0}/15
               </span>
             </div>
-            <div className="w-full bg-white/10 rounded-full h-2">
+            <div className="w-full bg-white/10 rounded-full h-2 static-element">
               <div 
-                className="h-2 bg-fifa-blue rounded-full transition-all duration-500"
+                className="h-2 bg-fifa-blue rounded-full transition-all duration-500 static-element"
                 style={{ width: `${Math.min(((currentWeek?.games.length || 0) / 15) * 100, 100)}%` }}
               />
             </div>
@@ -301,15 +313,15 @@ const DashboardCarousel = ({ weeklyData, currentWeek }: DashboardCarouselProps) 
                 {currentWeek?.totalWins || 0}/8
               </span>
             </div>
-            <div className="w-full bg-white/10 rounded-full h-2">
+            <div className="w-full bg-white/10 rounded-full h-2 static-element">
               <div 
-                className="h-2 bg-fifa-green rounded-full transition-all duration-500"
+                className="h-2 bg-fifa-green rounded-full transition-all duration-500 static-element"
                 style={{ width: `${Math.min(((currentWeek?.totalWins || 0) / 8) * 100, 100)}%` }}
               />
             </div>
           </div>
 
-          <div className="text-center p-2 rounded bg-white/5">
+          <div className="text-center p-2 rounded bg-white/5 static-element">
             <p className="font-bold text-fifa-purple text-lg">
               {currentWeek?.games.length ? Math.round(((currentWeek.totalWins || 0) / currentWeek.games.length) * 100) : 0}%
             </p>
@@ -336,22 +348,34 @@ const DashboardCarousel = ({ weeklyData, currentWeek }: DashboardCarouselProps) 
     setCurrentSlide((prev) => (prev - 1 + carouselItems.length) % carouselItems.length);
   };
 
+  const enabledTilesData = carouselItems.filter(tile => enabledTiles.includes(tile.id));
+
+  if (enabledTilesData.length === 0) {
+    return (
+      <Card className="glass-card static-element">
+        <CardContent className="text-center py-8">
+          <p className="text-gray-400">No tiles enabled. Configure in Settings.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <Card className="glass-card relative overflow-hidden">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-white text-lg">Performance Overview</CardTitle>
+    <Card className="glass-card static-element">
+      <CardHeader>
+        <CardTitle className="text-white">Week Analytics</CardTitle>
       </CardHeader>
       <CardContent className="relative h-80">
-        <div className="flex transition-transform duration-500 ease-in-out h-full"
+        <div className="flex transition-transform duration-500 ease-in-out h-full static-element"
              style={{ transform: `translateX(-${currentSlide * 100}%)` }}>
-          {carouselItems.map((item, index) => (
-            <div key={item.id} className="w-full flex-shrink-0 px-2">
-              <div className="h-full flex flex-col">
+          {enabledTilesData.map((item, index) => (
+            <div key={item.id} className="w-full flex-shrink-0 px-2 static-element">
+              <div className="h-full flex flex-col static-element">
                 <div className="flex items-center gap-2 mb-4">
                   <item.icon className="h-5 w-5 text-fifa-blue" />
                   <h3 className="text-lg font-semibold text-white">{item.title}</h3>
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 static-element">
                   {item.content}
                 </div>
               </div>
@@ -361,24 +385,24 @@ const DashboardCarousel = ({ weeklyData, currentWeek }: DashboardCarouselProps) 
 
         <button
           onClick={prevSlide}
-          className="absolute left-2 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors"
+          className="absolute left-2 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors static-element"
         >
           <ChevronLeft className="h-4 w-4 text-white" />
         </button>
         
         <button
           onClick={nextSlide}
-          className="absolute right-2 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors"
+          className="absolute right-2 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors static-element"
         >
           <ChevronRight className="h-4 w-4 text-white" />
         </button>
 
         <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
-          {carouselItems.map((_, index) => (
+          {enabledTilesData.map((_, index) => (
             <button
               key={index}
               onClick={() => setCurrentSlide(index)}
-              className={`w-2 h-2 rounded-full transition-colors ${
+              className={`w-2 h-2 rounded-full transition-colors static-element ${
                 index === currentSlide ? 'bg-fifa-blue' : 'bg-white/30'
               }`}
             />

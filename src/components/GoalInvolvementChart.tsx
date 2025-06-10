@@ -249,7 +249,7 @@ const GoalInvolvementChart = () => {
             {/* Optimized Chart Container */}
             <div 
               ref={chartRef} 
-              className="w-full"
+              className="w-full static-element"
               style={{ height: isMobile ? '250px' : '300px' }}
             />
             
