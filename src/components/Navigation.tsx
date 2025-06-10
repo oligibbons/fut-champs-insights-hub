@@ -104,7 +104,7 @@ const Navigation = () => {
         </Button>
       </div>
 
-      {/* Navigation Sidebar - Dock Style */}
+      {/* Navigation Sidebar - Mobile Optimized */}
       <nav 
         className={`
           fixed left-0 top-16 h-[calc(100vh-4rem)] border-r z-30
@@ -113,13 +113,13 @@ const Navigation = () => {
           lg:translate-x-0
           overflow-y-auto
           static-element
-          ${isMobile ? 'w-[70%] max-w-[250px]' : ''}
         `}
         style={{
           backgroundColor: currentTheme.colors.surface,
           borderColor: currentTheme.colors.border,
           backdropFilter: 'blur(12px)',
-          width: !isHovered && !isOpen && !isMobile ? '5.5rem' : '16rem'
+          width: isMobile ? '80%' : (!isHovered && !isOpen ? '5.5rem' : '16rem'),
+          maxWidth: isMobile ? '300px' : 'none'
         }}
         onMouseEnter={() => !isMobile && setIsHovered(true)}
         onMouseLeave={() => !isMobile && setIsHovered(false)}
@@ -137,10 +137,12 @@ const Navigation = () => {
         )}
         
         {/* Hover trigger area - invisible but extends beyond sidebar */}
-        <div 
-          className="absolute -right-4 top-0 w-8 h-full bg-transparent hidden lg:block"
-          onMouseEnter={() => setIsHovered(true)}
-        />
+        {!isMobile && (
+          <div 
+            className="absolute -right-4 top-0 w-8 h-full bg-transparent hidden lg:block"
+            onMouseEnter={() => setIsHovered(true)}
+          />
+        )}
         
         <div className={`p-6 h-full flex flex-col ${!isHovered && !isOpen && !isMobile ? 'lg:items-center' : ''}`}>
           <div className={`flex items-center mb-8 ${!isHovered && !isOpen && !isMobile ? 'lg:justify-center' : 'space-x-2'}`}>
@@ -244,13 +246,15 @@ const Navigation = () => {
         </div>
 
         {/* Dock indicator */}
-        <div className={`absolute right-0 top-1/2 transform -translate-y-1/2 w-1 h-12 bg-gradient-to-b from-transparent via-white/30 to-transparent rounded-l-full transition-opacity duration-300 ${!isHovered && !isOpen && !isMobile ? 'lg:opacity-100' : 'lg:opacity-0'}`} />
+        {!isMobile && (
+          <div className={`absolute right-0 top-1/2 transform -translate-y-1/2 w-1 h-12 bg-gradient-to-b from-transparent via-white/30 to-transparent rounded-l-full transition-opacity duration-300 ${!isHovered && !isOpen ? 'lg:opacity-100' : 'lg:opacity-0'}`} />
+        )}
       </nav>
 
       {/* Overlay for mobile */}
       {isOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-black/50 z-20"
+          className="lg:hidden fixed inset-0 bg-black/50 z-20 backdrop-blur-sm"
           onClick={() => setIsOpen(false)}
         />
       )}
