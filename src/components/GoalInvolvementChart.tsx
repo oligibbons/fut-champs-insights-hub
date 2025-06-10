@@ -30,7 +30,7 @@ const GoalInvolvementChart = () => {
   const { weeklyData } = useDataSync();
   const [goalInvolvements, setGoalInvolvements] = useState<GoalInvolvement[]>([]);
   const [voronoiCells, setVoronoiCells] = useState<VoronoiCell[]>([]);
-  const [hoveredPlayer, setHoveredPlayer] = useState<GoalInvolvement | null>(null);
+  const [selectedPlayer, setSelectedPlayer] = useState<GoalInvolvement | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const chartRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -126,135 +126,123 @@ const GoalInvolvementChart = () => {
 
   // Generate Voronoi Treemap cells
   const generateVoronoiCells = (involvements: GoalInvolvement[]) => {
+    if (involvements.length === 0) return;
+    
     const centerX = 150;
     const centerY = 150;
     const radius = 140;
     const cells: VoronoiCell[] = [];
     
-    // Calculate total percentage to ensure we use the full circle
-    const totalPercentage = involvements.reduce((sum, player) => sum + player.percentage, 0);
-    const scaleFactor = 100 / totalPercentage;
+    // Create random points for each player based on their percentage
+    const totalPoints = 500; // Total number of points to distribute
+    const points: Array<{x: number, y: number, player: string}> = [];
     
-    let currentAngle = 0;
-    
-    involvements.forEach((player, index) => {
-      // Calculate adjusted percentage to ensure all cells add up to 100%
-      const adjustedPercentage = player.percentage * scaleFactor;
+    // Distribute points based on player percentages
+    involvements.forEach(player => {
+      const playerPoints = Math.max(5, Math.round((player.percentage / 100) * totalPoints));
       
-      // Calculate angle based on percentage
-      const arcAngle = (adjustedPercentage / 100) * Math.PI * 2;
-      const startAngle = currentAngle;
-      const endAngle = currentAngle + arcAngle;
-      
-      // Calculate center point of the cell for label positioning
-      const midAngle = startAngle + arcAngle / 2;
-      const labelDistance = radius * 0.6; // Position labels at 60% of radius
-      const labelX = centerX + Math.cos(midAngle) * labelDistance;
-      const labelY = centerY + Math.sin(midAngle) * labelDistance;
-      
-      // Generate random points within the sector
-      const points: [number, number][] = [];
-      const numPoints = 10 + Math.floor(adjustedPercentage / 2); // More points for larger cells
-      
-      // Add center point
-      points.push([centerX, centerY]);
-      
-      // Add points along the arc
-      for (let i = 0; i <= numPoints; i++) {
-        const angle = startAngle + (arcAngle * i) / numPoints;
-        const distance = radius * (0.3 + Math.random() * 0.7); // Random distance from center
+      for (let i = 0; i < playerPoints; i++) {
+        // Generate random point within the circle
+        const angle = Math.random() * 2 * Math.PI;
+        const distance = Math.random() * radius;
         const x = centerX + Math.cos(angle) * distance;
         const y = centerY + Math.sin(angle) * distance;
-        points.push([x, y]);
+        
+        points.push({
+          x,
+          y,
+          player: player.name
+        });
+      }
+    });
+    
+    // Create Voronoi cells using a simplified approach
+    // For each player, find their territory by checking which points belong to them
+    involvements.forEach((player, playerIndex) => {
+      const playerPoints = points.filter(point => point.player === player.name);
+      
+      if (playerPoints.length === 0) return;
+      
+      // Find the centroid of the player's points
+      const centroidX = playerPoints.reduce((sum, point) => sum + point.x, 0) / playerPoints.length;
+      const centroidY = playerPoints.reduce((sum, point) => sum + point.y, 0) / playerPoints.length;
+      
+      // Find the boundary points of the player's territory
+      const boundaryPoints: Array<[number, number]> = [];
+      
+      // Divide the circle into sectors and find the farthest point in each sector
+      const numSectors = 16;
+      for (let i = 0; i < numSectors; i++) {
+        const sectorAngle = (i / numSectors) * 2 * Math.PI;
+        const sectorStart = sectorAngle - (Math.PI / numSectors);
+        const sectorEnd = sectorAngle + (Math.PI / numSectors);
+        
+        // Find points in this sector
+        const sectorPoints = playerPoints.filter(point => {
+          const angle = Math.atan2(point.y - centerY, point.x - centerX);
+          const normalizedAngle = angle < 0 ? angle + 2 * Math.PI : angle;
+          return normalizedAngle >= sectorStart && normalizedAngle <= sectorEnd;
+        });
+        
+        if (sectorPoints.length > 0) {
+          // Find the point farthest from the center in this sector
+          let farthestPoint = sectorPoints[0];
+          let maxDistance = Math.sqrt(
+            Math.pow(farthestPoint.x - centerX, 2) + 
+            Math.pow(farthestPoint.y - centerY, 2)
+          );
+          
+          sectorPoints.forEach(point => {
+            const distance = Math.sqrt(
+              Math.pow(point.x - centerX, 2) + 
+              Math.pow(point.y - centerY, 2)
+            );
+            
+            if (distance > maxDistance) {
+              farthestPoint = point;
+              maxDistance = distance;
+            }
+          });
+          
+          boundaryPoints.push([farthestPoint.x, farthestPoint.y]);
+        } else {
+          // If no points in this sector, add a point on the circle boundary
+          const x = centerX + Math.cos(sectorAngle) * radius * 0.9;
+          const y = centerY + Math.sin(sectorAngle) * radius * 0.9;
+          boundaryPoints.push([x, y]);
+        }
       }
       
-      // Add points on the circumference
-      for (let i = 0; i <= 5; i++) {
-        const angle = startAngle + (arcAngle * i) / 5;
-        const x = centerX + Math.cos(angle) * radius;
-        const y = centerY + Math.sin(angle) * radius;
-        points.push([x, y]);
-      }
-      
-      // Create a convex hull from the points
-      const hullPoints = getConvexHull(points);
-      
-      // Create path from hull points
-      const pathData = hullPoints.map((point, i) => 
+      // Create a path from the boundary points
+      const pathData = boundaryPoints.map((point, i) => 
         (i === 0 ? 'M' : 'L') + point[0] + ',' + point[1]
       ).join(' ') + 'Z';
       
       cells.push({
-        id: `cell-${index}`,
+        id: `cell-${playerIndex}`,
         path: pathData,
         color: player.color,
         name: player.name,
         goals: player.goals,
         assists: player.assists,
         percentage: player.percentage,
-        x: labelX,
-        y: labelY
+        x: centroidX,
+        y: centroidY
       });
-      
-      // Update current angle for next cell
-      currentAngle = endAngle;
     });
     
     setVoronoiCells(cells);
   };
 
-  // Function to calculate convex hull (Graham scan algorithm)
-  const getConvexHull = (points: [number, number][]) => {
-    if (points.length <= 3) return points;
-    
-    // Sort points by y-coordinate (and x-coordinate if y is the same)
-    points.sort((a, b) => {
-      if (a[1] === b[1]) {
-        return a[0] - b[0];
-      }
-      return a[1] - b[1];
-    });
-    
-    const p0 = points[0];
-    
-    // Sort points by polar angle with respect to p0
-    const sortedPoints = points.slice(1).sort((a, b) => {
-      const orient = orientation(p0, a, b);
-      if (orient === 0) {
-        // If collinear, sort by distance from p0
-        return (
-          (a[0] - p0[0]) * (a[0] - p0[0]) + (a[1] - p0[1]) * (a[1] - p0[1]) -
-          ((b[0] - p0[0]) * (b[0] - p0[0]) + (b[1] - p0[1]) * (b[1] - p0[1]))
-        );
-      }
-      return orient;
-    });
-    
-    // Build hull
-    const hull = [p0, sortedPoints[0]];
-    
-    for (let i = 1; i < sortedPoints.length; i++) {
-      while (
-        hull.length > 1 &&
-        orientation(
-          hull[hull.length - 2],
-          hull[hull.length - 1],
-          sortedPoints[i]
-        ) <= 0
-      ) {
-        hull.pop();
-      }
-      hull.push(sortedPoints[i]);
+  const handleCellClick = (cell: VoronoiCell) => {
+    const player = goalInvolvements.find(p => p.name === cell.name);
+    if (player) {
+      setSelectedPlayer(player);
     }
-    
-    return hull;
   };
 
-  // Function to determine orientation of triplet (p, q, r)
-  const orientation = (p: [number, number], q: [number, number], r: [number, number]) => {
-    const val = (q[1] - p[1]) * (r[0] - q[0]) - (q[0] - p[0]) * (r[1] - q[1]);
-    if (val === 0) return 0; // collinear
-    return val > 0 ? 1 : -1; // clockwise or counterclockwise
+  const closePopup = () => {
+    setSelectedPlayer(null);
   };
 
   return (
@@ -286,29 +274,8 @@ const GoalInvolvementChart = () => {
                     stroke="rgba(0, 0, 0, 0.3)"
                     strokeWidth="1"
                     opacity="0.8"
-                    onMouseEnter={(e) => {
-                      const player = goalInvolvements.find(p => p.name === cell.name);
-                      if (player) {
-                        setHoveredPlayer(player);
-                        if (chartRef.current) {
-                          const rect = chartRef.current.getBoundingClientRect();
-                          setTooltipPosition({
-                            x: e.clientX - rect.left,
-                            y: e.clientY - rect.top - 70
-                          });
-                        }
-                      }
-                    }}
-                    onMouseMove={(e) => {
-                      if (chartRef.current) {
-                        const rect = chartRef.current.getBoundingClientRect();
-                        setTooltipPosition({
-                          x: e.clientX - rect.left,
-                          y: e.clientY - rect.top - 70
-                        });
-                      }
-                    }}
-                    onMouseLeave={() => setHoveredPlayer(null)}
+                    onClick={() => handleCellClick(cell)}
+                    style={{ cursor: 'pointer' }}
                   />
                 ))}
                 
@@ -335,23 +302,42 @@ const GoalInvolvementChart = () => {
                 })}
               </svg>
               
-              {hoveredPlayer && (
+              {/* Player popup */}
+              {selectedPlayer && (
                 <div 
-                  className="goal-involvement-tooltip"
-                  style={{ 
-                    left: `${tooltipPosition.x}px`, 
-                    top: `${tooltipPosition.y}px`,
-                    backgroundColor: hoveredPlayer.color + 'e6' // Add transparency
-                  }}
+                  className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-4 rounded-lg border border-white/20 shadow-xl z-10 w-64"
+                  style={{ borderColor: selectedPlayer.color }}
                 >
-                  <div className="font-bold">{hoveredPlayer.name}</div>
-                  <div className="flex justify-between gap-4">
-                    <span>{hoveredPlayer.goals} goals</span>
-                    <span>{hoveredPlayer.assists} assists</span>
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-white font-bold">{selectedPlayer.name}</h3>
+                    <button 
+                      onClick={closePopup}
+                      className="text-gray-400 hover:text-white"
+                    >
+                      ✕
+                    </button>
                   </div>
-                  <div>{hoveredPlayer.percentage.toFixed(1)}% of total</div>
-                  {hoveredPlayer.account && (
-                    <div className="text-xs opacity-80">{hoveredPlayer.account}</div>
+                  
+                  <div className="grid grid-cols-2 gap-3 mb-3">
+                    <div className="text-center p-2 bg-white/10 rounded-lg">
+                      <p className="text-lg font-bold text-fifa-green">{selectedPlayer.goals}</p>
+                      <p className="text-xs text-gray-400">Goals</p>
+                    </div>
+                    <div className="text-center p-2 bg-white/10 rounded-lg">
+                      <p className="text-lg font-bold text-fifa-blue">{selectedPlayer.assists}</p>
+                      <p className="text-xs text-gray-400">Assists</p>
+                    </div>
+                  </div>
+                  
+                  <div className="text-center p-2 bg-white/10 rounded-lg mb-3">
+                    <p className="text-lg font-bold text-fifa-gold">{selectedPlayer.percentage.toFixed(1)}%</p>
+                    <p className="text-xs text-gray-400">of Total Involvements</p>
+                  </div>
+                  
+                  {selectedPlayer.account && (
+                    <div className="text-center text-sm text-gray-400">
+                      {selectedPlayer.account}
+                    </div>
                   )}
                 </div>
               )}
@@ -362,8 +348,7 @@ const GoalInvolvementChart = () => {
                 <div 
                   key={index}
                   className="flex items-center gap-2 p-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
-                  onMouseEnter={() => setHoveredPlayer(involvement)}
-                  onMouseLeave={() => setHoveredPlayer(null)}
+                  onClick={() => setSelectedPlayer(involvement)}
                 >
                   <div 
                     className="w-3 h-3 rounded-full flex-shrink-0" 
