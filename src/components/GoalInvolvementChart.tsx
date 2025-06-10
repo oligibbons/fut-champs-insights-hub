@@ -20,8 +20,23 @@ const GoalInvolvementChart = () => {
   const [goalInvolvements, setGoalInvolvements] = useState<GoalInvolvement[]>([]);
   const [selectedPlayer, setSelectedPlayer] = useState<GoalInvolvement | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
   const chartRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
+
+  // Check if device is mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
 
   useEffect(() => {
     setIsLoading(true);
@@ -106,15 +121,16 @@ const GoalInvolvementChart = () => {
     return colors[index % colors.length];
   };
 
-  // Create custom Voronoi Treemap visualization
+  // Create optimized visualization based on device
   useEffect(() => {
     if (!chartRef.current || goalInvolvements.length === 0) return;
     
     // Clear previous chart
     d3.select(chartRef.current).selectAll("*").remove();
     
-    const width = chartRef.current.clientWidth;
-    const height = 300;
+    const containerWidth = chartRef.current.clientWidth;
+    const height = isMobile ? 250 : 300;
+    const width = Math.min(containerWidth, height);
     
     // Create SVG
     const svg = d3.select(chartRef.current)
@@ -122,64 +138,46 @@ const GoalInvolvementChart = () => {
       .attr("width", width)
       .attr("height", height)
       .attr("viewBox", [0, 0, width, height])
-      .style("font", "10px sans-serif");
+      .style("font", "10px sans-serif")
+      .style("margin", "0 auto")
+      .style("display", "block");
     
     // Create tooltip
     const tooltip = d3.select(tooltipRef.current);
     
-    // Prepare data for treemap
-    const data = {
-      name: "Goal Involvements",
-      children: goalInvolvements.map(player => ({
-        name: player.name,
-        value: player.percentage,
-        goals: player.goals,
-        assists: player.assists,
-        percentage: player.percentage,
-        color: player.color
-      }))
-    };
+    // Create pie layout
+    const pie = d3.pie<GoalInvolvement>()
+      .value(d => d.percentage)
+      .sort(null);
     
-    // Create treemap layout
-    const treemap = d3.treemap()
-      .size([width, height])
-      .padding(2)
-      .round(true);
+    const pieData = pie(goalInvolvements);
     
-    // Create hierarchy
-    const root = d3.hierarchy(data)
-      .sum(d => (d as any).value)
-      .sort((a, b) => (b.value || 0) - (a.value || 0));
+    // Create arc generator
+    const radius = Math.min(width, height) / 2 * 0.8;
+    const arc = d3.arc<d3.PieArcDatum<GoalInvolvement>>()
+      .innerRadius(radius * 0.4)
+      .outerRadius(radius);
     
-    // Apply treemap layout
-    treemap(root);
+    // Create group for pie chart
+    const g = svg.append("g")
+      .attr("transform", `translate(${width / 2},${height / 2})`);
     
-    // Create cells
-    const cell = svg.selectAll("g")
-      .data(root.leaves())
-      .join("g")
-      .attr("transform", d => `translate(${d.x0},${d.y0})`);
-    
-    // Add rectangles
-    cell.append("rect")
-      .attr("width", d => d.x1 - d.x0)
-      .attr("height", d => d.y1 - d.y0)
-      .attr("fill", d => (d.data as any).color)
+    // Add arcs
+    g.selectAll("path")
+      .data(pieData)
+      .join("path")
+      .attr("fill", d => d.data.color)
+      .attr("d", arc)
       .attr("stroke", "#000")
       .attr("stroke-width", 1)
       .attr("stroke-opacity", 0.2)
-      .attr("rx", 4)
-      .attr("ry", 4)
       .style("cursor", "pointer")
       .on("mouseover", function(event, d) {
         d3.select(this)
           .attr("stroke-width", 3)
           .attr("stroke-opacity", 0.5);
         
-        const player = goalInvolvements.find(p => p.name === (d.data as any).name);
-        if (player) {
-          setSelectedPlayer(player);
-        }
+        setSelectedPlayer(d.data);
       })
       .on("mouseout", function() {
         d3.select(this)
@@ -187,37 +185,54 @@ const GoalInvolvementChart = () => {
           .attr("stroke-opacity", 0.2);
       })
       .on("click", function(event, d) {
-        const player = goalInvolvements.find(p => p.name === (d.data as any).name);
-        if (player) {
-          setSelectedPlayer(player);
-        }
+        setSelectedPlayer(d.data);
       });
     
-    // Add text labels
-    cell.append("text")
-      .attr("x", 4)
-      .attr("y", 14)
-      .attr("fill", "white")
-      .attr("font-weight", "bold")
-      .text(d => {
-        const width = d.x1 - d.x0;
-        const name = (d.data as any).name;
-        // Truncate text if too long for the cell
-        if (name.length * 6 > width) {
-          return name.substring(0, Math.floor(width / 6)) + "...";
-        }
-        return name;
+    // Add labels for larger segments
+    g.selectAll("text")
+      .data(pieData.filter(d => d.data.percentage >= 8)) // Only label segments that are large enough
+      .join("text")
+      .attr("transform", d => {
+        const [x, y] = arc.centroid(d);
+        const labelRadius = radius * 0.7; // Position labels slightly outside the arcs
+        const angle = (d.startAngle + d.endAngle) / 2;
+        const labelX = labelRadius * Math.sin(angle);
+        const labelY = -labelRadius * Math.cos(angle);
+        return `translate(${labelX},${labelY})`;
       })
-      .style("pointer-events", "none");
+      .attr("dy", "0.35em")
+      .attr("text-anchor", "middle")
+      .attr("fill", "white")
+      .attr("font-size", isMobile ? "8px" : "10px")
+      .attr("font-weight", "bold")
+      .text(d => d.data.name.split(' ')[0]); // Just show first name to save space
     
-  }, [goalInvolvements, chartRef]);
+    // Add center text
+    g.append("text")
+      .attr("text-anchor", "middle")
+      .attr("dy", "-0.2em")
+      .attr("fill", "white")
+      .attr("font-size", isMobile ? "14px" : "16px")
+      .attr("font-weight", "bold")
+      .text(`${totalInvolvements}`);
+    
+    g.append("text")
+      .attr("text-anchor", "middle")
+      .attr("dy", "1em")
+      .attr("fill", "rgba(255, 255, 255, 0.7)")
+      .attr("font-size", isMobile ? "10px" : "12px")
+      .text("Goal Involvements");
+    
+  }, [goalInvolvements, chartRef, isMobile]);
+
+  const totalInvolvements = goalInvolvements.reduce((sum, player) => sum + player.total, 0);
 
   const closePopup = () => {
     setSelectedPlayer(null);
   };
 
   return (
-    <Card className="glass-card">
+    <Card className="glass-card static-element">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-white">
           <PieChart className="h-5 w-5 text-fifa-blue" />
@@ -231,20 +246,21 @@ const GoalInvolvementChart = () => {
           </div>
         ) : goalInvolvements.length > 0 ? (
           <div className="space-y-6">
-            {/* Custom Voronoi Treemap */}
+            {/* Optimized Chart Container */}
             <div 
               ref={chartRef} 
-              className="h-[300px] w-full"
+              className="w-full"
+              style={{ height: isMobile ? '250px' : '300px' }}
             />
             
             {/* Tooltip/popup div */}
             <div ref={tooltipRef} className="hidden"></div>
             
-            {/* Player popup */}
+            {/* Player popup - Mobile optimized */}
             {selectedPlayer && (
               <div 
-                className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-4 rounded-lg border border-white/20 shadow-xl z-50 w-64"
-                style={{ borderColor: selectedPlayer.color }}
+                className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-4 rounded-lg border border-white/20 shadow-xl z-50 w-64 md:w-80"
+                style={{ borderColor: selectedPlayer.color, maxWidth: isMobile ? '85%' : '320px' }}
               >
                 <div className="flex justify-between items-center mb-2">
                   <h3 className="text-white font-bold">{selectedPlayer.name}</h3>
@@ -280,7 +296,8 @@ const GoalInvolvementChart = () => {
               </div>
             )}
             
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+            {/* Mobile-optimized player list */}
+            <div className={`grid ${isMobile ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4'} gap-2`}>
               {goalInvolvements.map((involvement, index) => (
                 <div 
                   key={index}
