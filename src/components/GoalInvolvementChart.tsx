@@ -24,6 +24,7 @@ interface VoronoiCell {
   percentage: number;
   x: number;
   y: number;
+  weight: number;
 }
 
 const GoalInvolvementChart = () => {
@@ -131,107 +132,152 @@ const GoalInvolvementChart = () => {
     const centerX = 150;
     const centerY = 150;
     const radius = 140;
+    
+    // Create cells array
     const cells: VoronoiCell[] = [];
     
-    // Create random points for each player based on their percentage
-    const totalPoints = 500; // Total number of points to distribute
-    const points: Array<{x: number, y: number, player: string}> = [];
+    // Calculate total weight
+    const totalWeight = involvements.reduce((sum, player) => sum + player.percentage, 0);
     
-    // Distribute points based on player percentages
-    involvements.forEach(player => {
-      const playerPoints = Math.max(5, Math.round((player.percentage / 100) * totalPoints));
+    // Generate initial seed points based on sunburst layout
+    // This gives us a better starting distribution than random points
+    let currentAngle = 0;
+    involvements.forEach((player, index) => {
+      // Calculate angle based on percentage
+      const angleSize = (player.percentage / totalWeight) * (2 * Math.PI);
+      const angle = currentAngle + (angleSize / 2);
       
-      for (let i = 0; i < playerPoints; i++) {
-        // Generate random point within the circle
-        const angle = Math.random() * 2 * Math.PI;
-        const distance = Math.random() * radius;
-        const x = centerX + Math.cos(angle) * distance;
-        const y = centerY + Math.sin(angle) * distance;
-        
-        points.push({
-          x,
-          y,
-          player: player.name
-        });
-      }
-    });
-    
-    // Create Voronoi cells using a simplified approach
-    // For each player, find their territory by checking which points belong to them
-    involvements.forEach((player, playerIndex) => {
-      const playerPoints = points.filter(point => point.player === player.name);
+      // Calculate distance from center based on weight
+      // Larger percentages are closer to center
+      const distance = radius * (0.3 + (Math.random() * 0.4));
       
-      if (playerPoints.length === 0) return;
+      // Calculate position
+      const x = centerX + Math.cos(angle) * distance;
+      const y = centerY + Math.sin(angle) * distance;
       
-      // Find the centroid of the player's points
-      const centroidX = playerPoints.reduce((sum, point) => sum + point.x, 0) / playerPoints.length;
-      const centroidY = playerPoints.reduce((sum, point) => sum + point.y, 0) / playerPoints.length;
-      
-      // Find the boundary points of the player's territory
-      const boundaryPoints: Array<[number, number]> = [];
-      
-      // Divide the circle into sectors and find the farthest point in each sector
-      const numSectors = 16;
-      for (let i = 0; i < numSectors; i++) {
-        const sectorAngle = (i / numSectors) * 2 * Math.PI;
-        const sectorStart = sectorAngle - (Math.PI / numSectors);
-        const sectorEnd = sectorAngle + (Math.PI / numSectors);
-        
-        // Find points in this sector
-        const sectorPoints = playerPoints.filter(point => {
-          const angle = Math.atan2(point.y - centerY, point.x - centerX);
-          const normalizedAngle = angle < 0 ? angle + 2 * Math.PI : angle;
-          return normalizedAngle >= sectorStart && normalizedAngle <= sectorEnd;
-        });
-        
-        if (sectorPoints.length > 0) {
-          // Find the point farthest from the center in this sector
-          let farthestPoint = sectorPoints[0];
-          let maxDistance = Math.sqrt(
-            Math.pow(farthestPoint.x - centerX, 2) + 
-            Math.pow(farthestPoint.y - centerY, 2)
-          );
-          
-          sectorPoints.forEach(point => {
-            const distance = Math.sqrt(
-              Math.pow(point.x - centerX, 2) + 
-              Math.pow(point.y - centerY, 2)
-            );
-            
-            if (distance > maxDistance) {
-              farthestPoint = point;
-              maxDistance = distance;
-            }
-          });
-          
-          boundaryPoints.push([farthestPoint.x, farthestPoint.y]);
-        } else {
-          // If no points in this sector, add a point on the circle boundary
-          const x = centerX + Math.cos(sectorAngle) * radius * 0.9;
-          const y = centerY + Math.sin(sectorAngle) * radius * 0.9;
-          boundaryPoints.push([x, y]);
-        }
-      }
-      
-      // Create a path from the boundary points
-      const pathData = boundaryPoints.map((point, i) => 
-        (i === 0 ? 'M' : 'L') + point[0] + ',' + point[1]
-      ).join(' ') + 'Z';
-      
+      // Create cell
       cells.push({
-        id: `cell-${playerIndex}`,
-        path: pathData,
+        id: `cell-${index}`,
+        path: '', // Will be calculated later
         color: player.color,
         name: player.name,
         goals: player.goals,
         assists: player.assists,
         percentage: player.percentage,
-        x: centroidX,
-        y: centroidY
+        x: x,
+        y: y,
+        weight: player.percentage
       });
+      
+      // Update angle for next player
+      currentAngle += angleSize;
     });
     
+    // Generate Voronoi cells using weighted Voronoi algorithm
+    generateWeightedVoronoiCells(cells, centerX, centerY, radius);
+    
     setVoronoiCells(cells);
+  };
+  
+  // Generate weighted Voronoi cells
+  const generateWeightedVoronoiCells = (cells: VoronoiCell[], centerX: number, centerY: number, radius: number) => {
+    // Number of points to sample for cell boundaries
+    const numSamplePoints = 360;
+    
+    // For each cell, calculate its boundary
+    cells.forEach(cell => {
+      const boundaryPoints: [number, number][] = [];
+      
+      // Sample points around the circle
+      for (let i = 0; i < numSamplePoints; i++) {
+        const angle = (i / numSamplePoints) * (2 * Math.PI);
+        const sampleX = centerX + Math.cos(angle) * radius;
+        const sampleY = centerY + Math.sin(angle) * radius;
+        
+        // Find which cell this point belongs to
+        let minDistanceRatio = Infinity;
+        let closestCellIndex = -1;
+        
+        cells.forEach((otherCell, index) => {
+          // Calculate weighted distance
+          // Distance is divided by square root of weight to give larger cells more influence
+          const dx = sampleX - otherCell.x;
+          const dy = sampleY - otherCell.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          const weightedDistance = distance / Math.sqrt(otherCell.weight);
+          
+          if (weightedDistance < minDistanceRatio) {
+            minDistanceRatio = weightedDistance;
+            closestCellIndex = index;
+          }
+        });
+        
+        // If this point belongs to our cell, add it to boundary
+        if (closestCellIndex === cells.indexOf(cell)) {
+          boundaryPoints.push([sampleX, sampleY]);
+        }
+      }
+      
+      // Add points for the cell center
+      boundaryPoints.push([cell.x, cell.y]);
+      
+      // Sort boundary points by angle from cell center
+      boundaryPoints.sort((a, b) => {
+        const angleA = Math.atan2(a[1] - cell.y, a[0] - cell.x);
+        const angleB = Math.atan2(b[1] - cell.y, b[0] - cell.x);
+        return angleA - angleB;
+      });
+      
+      // Remove duplicate points
+      const uniquePoints: [number, number][] = [];
+      for (let i = 0; i < boundaryPoints.length; i++) {
+        const point = boundaryPoints[i];
+        const nextPoint = boundaryPoints[(i + 1) % boundaryPoints.length];
+        
+        // Skip if too close to next point
+        if (Math.abs(point[0] - nextPoint[0]) < 0.1 && Math.abs(point[1] - nextPoint[1]) < 0.1) {
+          continue;
+        }
+        
+        uniquePoints.push(point);
+      }
+      
+      // Create SVG path from boundary points
+      if (uniquePoints.length > 2) {
+        const pathData = uniquePoints.map((point, i) => 
+          (i === 0 ? 'M' : 'L') + point[0] + ',' + point[1]
+        ).join(' ') + 'Z';
+        
+        cell.path = pathData;
+      } else {
+        // Fallback for cells with too few points - create a small circle
+        const radius = 5;
+        cell.path = `M ${cell.x - radius},${cell.y} a ${radius},${radius} 0 1,0 ${radius * 2},0 a ${radius},${radius} 0 1,0 ${-radius * 2},0`;
+      }
+    });
+    
+    // Calculate cell centers based on boundary points
+    cells.forEach(cell => {
+      if (!cell.path) return;
+      
+      // Parse path to get points
+      const pointsRegex = /[ML]([0-9.-]+),([0-9.-]+)/g;
+      const points: [number, number][] = [];
+      let match;
+      
+      while ((match = pointsRegex.exec(cell.path)) !== null) {
+        points.push([parseFloat(match[1]), parseFloat(match[2])]);
+      }
+      
+      // Calculate centroid
+      if (points.length > 0) {
+        const sumX = points.reduce((sum, point) => sum + point[0], 0);
+        const sumY = points.reduce((sum, point) => sum + point[1], 0);
+        
+        cell.x = sumX / points.length;
+        cell.y = sumY / points.length;
+      }
+    });
   };
 
   const handleCellClick = (cell: VoronoiCell) => {
