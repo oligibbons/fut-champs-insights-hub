@@ -11,7 +11,15 @@ export function useSupabaseData() {
   // Fetch weekly performances from Supabase
   const fetchWeeklyData = async () => {
     if (!user) {
-      setWeeklyData([]);
+      // If no user, try to load from localStorage for backward compatibility
+      const savedWeeks = localStorage.getItem('futChampions_weeks');
+      if (savedWeeks) {
+        try {
+          setWeeklyData(JSON.parse(savedWeeks));
+        } catch (e) {
+          console.error('Error parsing saved weeks:', e);
+        }
+      }
       setLoading(false);
       return;
     }
@@ -210,7 +218,8 @@ export function useSupabaseData() {
               .eq('id', week.id);
           }
 
-          return {
+          // Also save to localStorage for backward compatibility
+          const weekData = {
             id: week.id,
             weekNumber: week.week_number,
             customName: week.custom_name,
@@ -242,9 +251,14 @@ export function useSupabaseData() {
               minimumRank: week.minimum_rank
             }
           } as WeeklyPerformance;
+
+          return weekData;
         })
       );
 
+      // Save to localStorage for backward compatibility
+      localStorage.setItem('futChampions_weeks', JSON.stringify(weeklyDataWithGames));
+      
       setWeeklyData(weeklyDataWithGames);
     } catch (error) {
       console.error('Error fetching weekly data:', error);
@@ -255,7 +269,33 @@ export function useSupabaseData() {
 
   // Save new game to Supabase
   const saveGame = async (weekId: string, gameData: Omit<GameResult, 'id'>) => {
-    if (!user) return;
+    if (!user) {
+      // If no user, save to localStorage for backward compatibility
+      const savedWeeks = localStorage.getItem('futChampions_weeks');
+      let weeks: WeeklyPerformance[] = [];
+      
+      if (savedWeeks) {
+        try {
+          weeks = JSON.parse(savedWeeks);
+        } catch (e) {
+          console.error('Error parsing saved weeks:', e);
+        }
+      }
+      
+      const weekIndex = weeks.findIndex(w => w.id === weekId);
+      if (weekIndex >= 0) {
+        const newGame = {
+          ...gameData,
+          id: `local-game-${Date.now()}`
+        };
+        
+        weeks[weekIndex].games.push(newGame);
+        localStorage.setItem('futChampions_weeks', JSON.stringify(weeks));
+        setWeeklyData(weeks);
+      }
+      
+      return;
+    }
 
     try {
       const { data: game, error } = await supabase
@@ -335,7 +375,52 @@ export function useSupabaseData() {
 
   // Create new week
   const createWeek = async (weekData: Partial<WeeklyPerformance>) => {
-    if (!user) return;
+    if (!user) {
+      // If no user, save to localStorage for backward compatibility
+      const savedWeeks = localStorage.getItem('futChampions_weeks');
+      let weeks: WeeklyPerformance[] = [];
+      
+      if (savedWeeks) {
+        try {
+          weeks = JSON.parse(savedWeeks);
+        } catch (e) {
+          console.error('Error parsing saved weeks:', e);
+        }
+      }
+      
+      const newWeek: WeeklyPerformance = {
+        id: `local-week-${Date.now()}`,
+        weekNumber: weekData.weekNumber || 1,
+        customName: weekData.customName,
+        startDate: weekData.startDate || new Date().toISOString(),
+        endDate: '',
+        games: [],
+        totalWins: 0,
+        totalLosses: 0,
+        totalGoals: 0,
+        totalConceded: 0,
+        totalExpectedGoals: 0,
+        totalExpectedGoalsAgainst: 0,
+        averageOpponentSkill: 0,
+        squadUsed: '',
+        weeklyRating: 0,
+        isCompleted: false,
+        winTarget: weekData.winTarget || {
+          wins: 10,
+          goalsScored: undefined,
+          cleanSheets: undefined,
+          minimumRank: undefined
+        },
+        gamesPlayed: 0,
+        currentStreak: 0
+      };
+      
+      weeks.push(newWeek);
+      localStorage.setItem('futChampions_weeks', JSON.stringify(weeks));
+      setWeeklyData(weeks);
+      
+      return newWeek;
+    }
 
     try {
       const { data: week, error } = await supabase
@@ -365,7 +450,28 @@ export function useSupabaseData() {
 
   // Update week
   const updateWeek = async (weekId: string, updates: Partial<WeeklyPerformance>) => {
-    if (!user) return;
+    if (!user) {
+      // If no user, update in localStorage for backward compatibility
+      const savedWeeks = localStorage.getItem('futChampions_weeks');
+      let weeks: WeeklyPerformance[] = [];
+      
+      if (savedWeeks) {
+        try {
+          weeks = JSON.parse(savedWeeks);
+          const weekIndex = weeks.findIndex(w => w.id === weekId);
+          
+          if (weekIndex >= 0) {
+            weeks[weekIndex] = { ...weeks[weekIndex], ...updates };
+            localStorage.setItem('futChampions_weeks', JSON.stringify(weeks));
+            setWeeklyData(weeks);
+          }
+        } catch (e) {
+          console.error('Error updating week in localStorage:', e);
+        }
+      }
+      
+      return;
+    }
 
     try {
       const { error } = await supabase
@@ -397,7 +503,32 @@ export function useSupabaseData() {
 
   // Update game
   const updateGame = async (gameId: string, gameData: Partial<GameResult>) => {
-    if (!user) return;
+    if (!user) {
+      // If no user, update in localStorage for backward compatibility
+      const savedWeeks = localStorage.getItem('futChampions_weeks');
+      let weeks: WeeklyPerformance[] = [];
+      
+      if (savedWeeks) {
+        try {
+          weeks = JSON.parse(savedWeeks);
+          
+          for (let i = 0; i < weeks.length; i++) {
+            const gameIndex = weeks[i].games.findIndex(g => g.id === gameId);
+            
+            if (gameIndex >= 0) {
+              weeks[i].games[gameIndex] = { ...weeks[i].games[gameIndex], ...gameData };
+              localStorage.setItem('futChampions_weeks', JSON.stringify(weeks));
+              setWeeklyData(weeks);
+              break;
+            }
+          }
+        } catch (e) {
+          console.error('Error updating game in localStorage:', e);
+        }
+      }
+      
+      return;
+    }
 
     try {
       const { error } = await supabase

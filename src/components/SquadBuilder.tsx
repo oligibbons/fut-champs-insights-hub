@@ -11,6 +11,7 @@ import { UserSettings } from '@/types/futChampions';
 import PlayerSearchModal from './PlayerSearchModal';
 import { Plus, Users, Save, Star, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface SquadBuilderProps {
   squad?: Squad;
@@ -20,6 +21,7 @@ interface SquadBuilderProps {
 
 const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const { squads, getDefaultSquad } = useSquadData();
   const [settings] = useLocalStorage<UserSettings>('futChampions_settings', {
     preferredFormation: '4-3-3',
@@ -237,7 +239,13 @@ const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
       return;
     }
 
-    onSave(squadData);
+    // Ensure we have a user ID for Supabase
+    const squadToSave = {
+      ...squadData,
+      userId: user?.id || 'local-user'
+    };
+
+    onSave(squadToSave);
     toast({
       title: "Success",
       description: `Squad "${squadData.name}" saved successfully`,

@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
@@ -28,8 +27,8 @@ const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecord
   const [userGoals, setUserGoals] = useState('');
   const [opponentGoals, setOpponentGoals] = useState('');
   const [result, setResult] = useState<'win' | 'loss'>('win');
-  const [opponentSkill, setOpponentSkill] = useState(5);
-  const [duration, setDuration] = useState(90);
+  const [opponentSkill, setOpponentSkill] = useState<number | string>(5);
+  const [duration, setDuration] = useState<number | string>(90);
   const [gameContext, setGameContext] = useState<string>('normal');
   const [crossPlayEnabled, setCrossPlayEnabled] = useState(false);
   const [comments, setComments] = useState('');
@@ -62,6 +61,7 @@ const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecord
     if (!isInitialized) {
       const defaultSquad = getDefaultSquad();
       if (defaultSquad && defaultSquad.startingXI) {
+        // Add starting XI players
         const startingPlayers: PlayerPerformance[] = defaultSquad.startingXI
           .filter(pos => pos.player)
           .map((pos, index) => ({
@@ -74,20 +74,37 @@ const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecord
             yellowCards: 0,
             redCards: 0,
             ownGoals: 0,
-            minutesPlayed: duration,
+            minutesPlayed: duration === '' ? 90 : Number(duration),
             wasSubstituted: false
           }));
 
-        setPlayerStats(startingPlayers);
+        // Add substitutes with 0 minutes played
+        const substitutePlayers: PlayerPerformance[] = defaultSquad.substitutes
+          .filter(pos => pos.player)
+          .map((pos, index) => ({
+            id: `${pos.player!.id}-sub-${index}`,
+            name: pos.player!.name,
+            position: 'SUB',
+            rating: 6.0,
+            goals: 0,
+            assists: 0,
+            yellowCards: 0,
+            redCards: 0,
+            ownGoals: 0,
+            minutesPlayed: 0, // Substitutes start with 0 minutes
+            wasSubstituted: false
+          }));
+
+        setPlayerStats([...startingPlayers, ...substitutePlayers]);
       } else {
         // Create default players if no squad data
         const defaultPlayers: PlayerPerformance[] = [
-          { id: 'gk-1', name: 'Goalkeeper', position: 'GK', rating: 7.0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, ownGoals: 0, minutesPlayed: duration, wasSubstituted: false },
-          { id: 'def-1', name: 'Defender 1', position: 'CB', rating: 7.0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, ownGoals: 0, minutesPlayed: duration, wasSubstituted: false },
-          { id: 'def-2', name: 'Defender 2', position: 'CB', rating: 7.0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, ownGoals: 0, minutesPlayed: duration, wasSubstituted: false },
-          { id: 'mid-1', name: 'Midfielder 1', position: 'CM', rating: 7.0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, ownGoals: 0, minutesPlayed: duration, wasSubstituted: false },
-          { id: 'mid-2', name: 'Midfielder 2', position: 'CM', rating: 7.0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, ownGoals: 0, minutesPlayed: duration, wasSubstituted: false },
-          { id: 'att-1', name: 'Attacker 1', position: 'ST', rating: 7.0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, ownGoals: 0, minutesPlayed: duration, wasSubstituted: false }
+          { id: 'gk-1', name: 'Goalkeeper', position: 'GK', rating: 7.0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, ownGoals: 0, minutesPlayed: duration === '' ? 90 : Number(duration), wasSubstituted: false },
+          { id: 'def-1', name: 'Defender 1', position: 'CB', rating: 7.0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, ownGoals: 0, minutesPlayed: duration === '' ? 90 : Number(duration), wasSubstituted: false },
+          { id: 'def-2', name: 'Defender 2', position: 'CB', rating: 7.0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, ownGoals: 0, minutesPlayed: duration === '' ? 90 : Number(duration), wasSubstituted: false },
+          { id: 'mid-1', name: 'Midfielder 1', position: 'CM', rating: 7.0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, ownGoals: 0, minutesPlayed: duration === '' ? 90 : Number(duration), wasSubstituted: false },
+          { id: 'mid-2', name: 'Midfielder 2', position: 'CM', rating: 7.0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, ownGoals: 0, minutesPlayed: duration === '' ? 90 : Number(duration), wasSubstituted: false },
+          { id: 'att-1', name: 'Attacker 1', position: 'ST', rating: 7.0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, ownGoals: 0, minutesPlayed: duration === '' ? 90 : Number(duration), wasSubstituted: false }
         ];
         setPlayerStats(defaultPlayers);
       }
@@ -98,15 +115,17 @@ const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecord
   // Add substitute from squad
   const addSubstituteFromSquad = () => {
     const defaultSquad = getDefaultSquad();
-    if (defaultSquad && defaultSquad.startingXI) {
-      // Find unused players from the squad
+    if (defaultSquad && defaultSquad.substitutes) {
+      // Find unused substitutes from the squad
       const usedPlayerIds = playerStats.map(p => p.id.split('-')[0]);
-      const unusedPlayers = defaultSquad.startingXI.filter(pos => 
+      
+      // First check substitutes
+      const unusedSubs = defaultSquad.substitutes.filter(pos => 
         pos.player && !usedPlayerIds.includes(pos.player.id)
       );
       
-      if (unusedPlayers.length > 0) {
-        const substitute = unusedPlayers[0];
+      if (unusedSubs.length > 0) {
+        const substitute = unusedSubs[0];
         const newPlayer: PlayerPerformance = {
           id: `${substitute.player!.id}-sub-${Date.now()}`,
           name: substitute.player!.name,
@@ -117,15 +136,23 @@ const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecord
           yellowCards: 0,
           redCards: 0,
           ownGoals: 0,
-          minutesPlayed: 0,
+          minutesPlayed: 0, // Substitutes start with 0 minutes
           wasSubstituted: false
         };
         setPlayerStats(prev => [...prev, newPlayer]);
-      } else {
-        // Create generic substitute if no unused players
+        return;
+      }
+      
+      // Then check reserves
+      const unusedReserves = defaultSquad.reserves.filter(pos => 
+        pos.player && !usedPlayerIds.includes(pos.player.id)
+      );
+      
+      if (unusedReserves.length > 0) {
+        const reserve = unusedReserves[0];
         const newPlayer: PlayerPerformance = {
-          id: `sub-${Date.now()}`,
-          name: `Substitute ${playerStats.filter(p => p.position === 'SUB').length + 1}`,
+          id: `${reserve.player!.id}-sub-${Date.now()}`,
+          name: reserve.player!.name,
           position: 'SUB',
           rating: 6.0,
           goals: 0,
@@ -133,12 +160,29 @@ const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecord
           yellowCards: 0,
           redCards: 0,
           ownGoals: 0,
-          minutesPlayed: 0,
+          minutesPlayed: 0, // Substitutes start with 0 minutes
           wasSubstituted: false
         };
         setPlayerStats(prev => [...prev, newPlayer]);
+        return;
       }
     }
+    
+    // Create generic substitute if no unused players
+    const newPlayer: PlayerPerformance = {
+      id: `sub-${Date.now()}`,
+      name: `Substitute ${playerStats.filter(p => p.position === 'SUB').length + 1}`,
+      position: 'SUB',
+      rating: 6.0,
+      goals: 0,
+      assists: 0,
+      yellowCards: 0,
+      redCards: 0,
+      ownGoals: 0,
+      minutesPlayed: 0, // Substitutes start with 0 minutes
+      wasSubstituted: false
+    };
+    setPlayerStats(prev => [...prev, newPlayer]);
   };
 
   // Update actual goals when user/opponent goals change
@@ -163,14 +207,12 @@ const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecord
     } else if (field === 'opponentGoals') {
       setOpponentGoals(value);
     } else if (field === 'opponentSkill') {
-      const numValue = parseInt(value);
-      if (!isNaN(numValue) || value === '') {
-        setOpponentSkill(value === '' ? '' as any : Math.min(10, Math.max(1, numValue)));
+      if (value === '' || !isNaN(parseInt(value))) {
+        setOpponentSkill(value === '' ? '' : parseInt(value));
       }
     } else if (field === 'duration') {
-      const numValue = parseInt(value);
-      if (!isNaN(numValue) || value === '') {
-        setDuration(value === '' ? '' as any : Math.min(120, Math.max(1, numValue)));
+      if (value === '' || !isNaN(parseInt(value))) {
+        setDuration(value === '' ? '' : parseInt(value));
       }
     }
   };
@@ -215,18 +257,40 @@ const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecord
       }
     });
 
+    // Filter out substitutes with 0 minutes played
+    const filteredPlayerStats = playerStats.filter(player => {
+      // Keep all starting players
+      if (player.position !== 'SUB') return true;
+      
+      // Only keep substitutes with minutes played > 0
+      const minutes = player.minutesPlayed === '' ? 0 : Number(player.minutesPlayed);
+      return minutes > 0;
+    }).map(player => {
+      // Convert any empty string values to appropriate defaults
+      return {
+        ...player,
+        rating: player.rating === '' ? 7.0 : Number(player.rating),
+        goals: player.goals === '' ? 0 : Number(player.goals),
+        assists: player.assists === '' ? 0 : Number(player.assists),
+        yellowCards: player.yellowCards === '' ? 0 : Number(player.yellowCards),
+        redCards: player.redCards === '' ? 0 : Number(player.redCards),
+        ownGoals: player.ownGoals === '' ? 0 : Number(player.ownGoals),
+        minutesPlayed: player.minutesPlayed === '' ? 0 : Number(player.minutesPlayed)
+      };
+    });
+
     const gameData: Omit<GameResult, 'id'> = {
       gameNumber,
       result,
       scoreLine: `${userGoals}-${opponentGoals}`,
       date: new Date().toISOString(),
-      opponentSkill: opponentSkill === '' ? 5 : opponentSkill,
-      duration: duration === '' ? 90 : duration,
+      opponentSkill: opponentSkill === '' ? 5 : Number(opponentSkill),
+      duration: duration === '' ? 90 : Number(duration),
       gameContext: gameContext as any,
       comments: comments || undefined,
       crossPlayEnabled,
       teamStats: finalTeamStats,
-      playerStats
+      playerStats: filteredPlayerStats
     };
 
     onGameSaved(gameData);
@@ -551,7 +615,7 @@ const GameRecordForm = ({ onGameSaved, gameNumber, onClose, weekId }: GameRecord
                   <PlayerStatsForm 
                     playerStats={playerStats}
                     onPlayerStatsChange={setPlayerStats}
-                    gameDuration={duration === '' ? 90 : duration}
+                    gameDuration={duration === '' ? 90 : Number(duration)}
                   />
                 )}
               </div>
