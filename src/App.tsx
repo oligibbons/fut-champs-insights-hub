@@ -33,12 +33,12 @@ function App() {
           }}
         >
           {/* Brand Header - visible on all pages */}
-          <div className="fixed top-0 left-0 right-0 z-20 backdrop-blur-md border-b" 
+          <div className="fixed top-0 left-0 right-0 z-20 backdrop-blur-md border-b h-16" 
                style={{ 
                  borderColor: currentTheme.colors.border, 
                  backgroundColor: `${currentTheme.colors.cardBg}80` 
                }}>
-            <div className="px-4 py-2 flex items-center justify-between">
+            <div className="px-4 py-2 flex items-center justify-between h-full">
               <div className="flex items-center gap-3">
                 <img 
                   src="/lovable-uploads/6b6465f4-e466-4f3b-9761-8a829fbe395c.png" 
@@ -120,7 +120,7 @@ function App() {
               <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
               <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
               <Route path="/404" element={<NotFound />} />
-              <Route path="*" element={<Navigate to="/404\" replace />} />
+              <Route path="*" element={<Navigate to="/404" replace />} />
             </Routes>
           </div>
           <Toaster />
