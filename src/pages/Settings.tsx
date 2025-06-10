@@ -172,189 +172,186 @@ const Settings = () => {
             </div>
           </div>
 
-          <Tabs defaultValue="account" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 glass-card overflow-x-auto">
-              <TabsTrigger value="account" className="text-xs sm:text-sm">
-                <User className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Account</span>
-                <span className="sm:hidden">User</span>
-              </TabsTrigger>
-              <TabsTrigger value="fc25-accounts" className="text-xs sm:text-sm">
-                <Gamepad2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">FC25 Accounts</span>
-                <span className="sm:hidden">FC25</span>
-              </TabsTrigger>
-              <TabsTrigger value="appearance" className="text-xs sm:text-sm">
-                <Palette className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Appearance</span>
-                <span className="sm:hidden">Theme</span>
-              </TabsTrigger>
-              <TabsTrigger value="dashboard" className="text-xs sm:text-sm">
-                <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                <span className="hidden lg:inline">Dashboard</span>
-                <span className="lg:hidden">Dash</span>
-              </TabsTrigger>
-              <TabsTrigger value="targets" className="text-xs sm:text-sm">
-                <Target className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                <span className="hidden lg:inline">Targets</span>
-                <span className="lg:hidden">Goals</span>
-              </TabsTrigger>
-            </TabsList>
+          <div className="overflow-x-auto">
+            <Tabs defaultValue="account" className="w-full">
+              <TabsList className="flex w-full overflow-x-auto glass-card">
+                <TabsTrigger value="account" className="flex-shrink-0">
+                  <User className="h-4 w-4 mr-2" />
+                  <span>Account</span>
+                </TabsTrigger>
+                <TabsTrigger value="fc25-accounts" className="flex-shrink-0">
+                  <Gamepad2 className="h-4 w-4 mr-2" />
+                  <span>FC25 Accounts</span>
+                </TabsTrigger>
+                <TabsTrigger value="appearance" className="flex-shrink-0">
+                  <Palette className="h-4 w-4 mr-2" />
+                  <span>Appearance</span>
+                </TabsTrigger>
+                <TabsTrigger value="dashboard" className="flex-shrink-0">
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  <span>Dashboard</span>
+                </TabsTrigger>
+                <TabsTrigger value="targets" className="flex-shrink-0">
+                  <Target className="h-4 w-4 mr-2" />
+                  <span>Targets</span>
+                </TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="account" className="space-y-4 mt-4">
-              <UserAccountSettings />
-            </TabsContent>
+              <TabsContent value="account" className="space-y-4 mt-4">
+                <UserAccountSettings />
+              </TabsContent>
 
-            <TabsContent value="fc25-accounts" className="space-y-4 mt-4">
-              <AccountManager />
-            </TabsContent>
+              <TabsContent value="fc25-accounts" className="space-y-4 mt-4">
+                <AccountManager />
+              </TabsContent>
 
-            <TabsContent value="appearance" className="space-y-4 mt-4">
-              <Card className="glass-card">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-white">
-                    <Palette className="h-5 w-5 text-fifa-gold" />
-                    Theme & Appearance
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-4">
-                    <div>
-                      <Label className="text-white font-medium">Choose Theme</Label>
-                      <Select value={currentThemeName} onValueChange={handleThemeChange}>
-                        <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {themes.map((themeName) => (
-                            <SelectItem key={themeName} value={themeName}>
-                              <div className="flex items-center gap-2">
-                                <Sparkles className="h-4 w-4" />
-                                {themeData[themeName]?.name || themeName}
+              <TabsContent value="appearance" className="space-y-4 mt-4">
+                <Card className="glass-card">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-white">
+                      <Palette className="h-5 w-5 text-fifa-gold" />
+                      Theme & Appearance
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="space-y-4">
+                      <div>
+                        <Label className="text-white font-medium">Choose Theme</Label>
+                        <Select value={currentThemeName} onValueChange={handleThemeChange}>
+                          <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {themes.map((themeName) => (
+                              <SelectItem key={themeName} value={themeName}>
+                                <div className="flex items-center gap-2">
+                                  <Sparkles className="h-4 w-4" />
+                                  {themeData[themeName]?.name || themeName}
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Enhanced Theme Preview */}
+                      <div className="p-6 rounded-xl border bg-gradient-to-br from-white/5 to-white/10" style={{ 
+                        borderColor: currentTheme.colors.border 
+                      }}>
+                        <h4 className="font-semibold mb-4 text-white flex items-center gap-2">
+                          <Sparkles className="h-4 w-4 text-fifa-gold" />
+                          Theme Preview
+                        </h4>
+                        <div className="space-y-4">
+                          <div className="flex flex-wrap gap-3">
+                            {Object.entries(currentTheme.colors.fifa).map(([name, color]) => (
+                              <div key={name} className="flex items-center gap-2">
+                                <div 
+                                  className="w-6 h-6 rounded-full border-2 border-white/20" 
+                                  style={{ backgroundColor: color }}
+                                />
+                                <span className="text-sm text-gray-300 capitalize">{name}</span>
                               </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Enhanced Theme Preview */}
-                    <div className="p-6 rounded-xl border bg-gradient-to-br from-white/5 to-white/10" style={{ 
-                      borderColor: currentTheme.colors.border 
-                    }}>
-                      <h4 className="font-semibold mb-4 text-white flex items-center gap-2">
-                        <Sparkles className="h-4 w-4 text-fifa-gold" />
-                        Theme Preview
-                      </h4>
-                      <div className="space-y-4">
-                        <div className="flex flex-wrap gap-3">
-                          {Object.entries(currentTheme.colors.fifa).map(([name, color]) => (
-                            <div key={name} className="flex items-center gap-2">
-                              <div 
-                                className="w-6 h-6 rounded-full border-2 border-white/20" 
-                                style={{ backgroundColor: color }}
-                              />
-                              <span className="text-sm text-gray-300 capitalize">{name}</span>
-                            </div>
-                          ))}
-                        </div>
-                        <div className="p-4 rounded-lg" style={{ backgroundColor: currentTheme.colors.cardBg }}>
-                          <p className="text-white font-medium">Sample Card</p>
-                          <p className="text-gray-400 text-sm mt-1">
-                            Current theme: {themeData[currentThemeName]?.name}
-                          </p>
+                            ))}
+                          </div>
+                          <div className="p-4 rounded-lg" style={{ backgroundColor: currentTheme.colors.cardBg }}>
+                            <p className="text-white font-medium">Sample Card</p>
+                            <p className="text-gray-400 text-sm mt-1">
+                              Current theme: {themeData[currentThemeName]?.name}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-            <TabsContent value="dashboard" className="space-y-4 mt-4">
-              <Card className="glass-card">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-white">
-                    <BarChart3 className="h-5 w-5 text-fifa-blue" />
-                    Dashboard Display Settings
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {Object.entries(dashboardSettings).map(([key, value]) => (
-                      <div key={key} className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-gray-700/50 hover:bg-white/10 transition-colors">
-                        <div>
-                          <p className="text-white font-medium">
-                            {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                          </p>
-                          <p className="text-gray-400 text-sm">
-                            {value ? 'Visible on dashboard' : 'Hidden from dashboard'}
-                          </p>
+              <TabsContent value="dashboard" className="space-y-4 mt-4">
+                <Card className="glass-card">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-white">
+                      <BarChart3 className="h-5 w-5 text-fifa-blue" />
+                      Dashboard Display Settings
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      {Object.entries(dashboardSettings).map(([key, value]) => (
+                        <div key={key} className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-gray-700/50 hover:bg-white/10 transition-colors">
+                          <div>
+                            <p className="text-white font-medium">
+                              {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                            </p>
+                            <p className="text-gray-400 text-sm">
+                              {value ? 'Visible on dashboard' : 'Hidden from dashboard'}
+                            </p>
+                          </div>
+                          <Switch
+                            checked={value}
+                            onCheckedChange={(checked) =>
+                              saveDashboardSettings({ ...dashboardSettings, [key]: checked })
+                            }
+                          />
                         </div>
-                        <Switch
-                          checked={value}
-                          onCheckedChange={(checked) =>
-                            saveDashboardSettings({ ...dashboardSettings, [key]: checked })
-                          }
-                        />
-                      </div>
-                    ))}
-                  </div>
-                  <div className="pt-4 border-t border-gray-700">
-                    <Button 
-                      onClick={resetSettings} 
-                      variant="outline"
-                      className="w-full sm:w-auto border-gray-600 text-gray-400 hover:text-white hover:border-gray-500"
-                    >
-                      Reset to Defaults
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
+                      ))}
+                    </div>
+                    <div className="pt-4 border-t border-gray-700">
+                      <Button 
+                        onClick={resetSettings} 
+                        variant="outline"
+                        className="w-full sm:w-auto border-gray-600 text-gray-400 hover:text-white hover:border-gray-500"
+                      >
+                        Reset to Defaults
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-            <TabsContent value="targets" className="space-y-4 mt-4">
-              <Card className="glass-card">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-white">
-                    <Target className="h-5 w-5 text-fifa-green" />
-                    Target & Goal Settings
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {Object.entries(currentWeekSettings).map(([key, value]) => (
-                      <div key={key} className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-gray-700/50 hover:bg-white/10 transition-colors">
-                        <div>
-                          <p className="text-white font-medium">
-                            {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                          </p>
-                          <p className="text-gray-400 text-sm">
-                            {value ? 'Enabled in current week view' : 'Disabled in current week view'}
-                          </p>
+              <TabsContent value="targets" className="space-y-4 mt-4">
+                <Card className="glass-card">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-white">
+                      <Target className="h-5 w-5 text-fifa-green" />
+                      Target & Goal Settings
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      {Object.entries(currentWeekSettings).map(([key, value]) => (
+                        <div key={key} className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-gray-700/50 hover:bg-white/10 transition-colors">
+                          <div>
+                            <p className="text-white font-medium">
+                              {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                            </p>
+                            <p className="text-gray-400 text-sm">
+                              {value ? 'Enabled in current week view' : 'Disabled in current week view'}
+                            </p>
+                          </div>
+                          <Switch
+                            checked={value}
+                            onCheckedChange={(checked) =>
+                              saveCurrentWeekSettings({ ...currentWeekSettings, [key]: checked })
+                            }
+                          />
                         </div>
-                        <Switch
-                          checked={value}
-                          onCheckedChange={(checked) =>
-                            saveCurrentWeekSettings({ ...currentWeekSettings, [key]: checked })
-                          }
-                        />
-                      </div>
-                    ))}
-                  </div>
-                  <div className="pt-4 border-t border-gray-700">
-                    <Button 
-                      onClick={resetSettings} 
-                      variant="outline"
-                      className="w-full sm:w-auto border-gray-600 text-gray-400 hover:text-white hover:border-gray-500"
-                    >
-                      Reset to Defaults
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+                      ))}
+                    </div>
+                    <div className="pt-4 border-t border-gray-700">
+                      <Button 
+                        onClick={resetSettings} 
+                        variant="outline"
+                        className="w-full sm:w-auto border-gray-600 text-gray-400 hover:text-white hover:border-gray-500"
+                      >
+                        Reset to Defaults
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
         </div>
       </main>
     </div>

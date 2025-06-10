@@ -1,8 +1,6 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSupabaseData } from '@/hooks/useSupabaseData';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -284,122 +282,99 @@ const CurrentWeek = () => {
           </div>
 
           {/* Main Content */}
-          <Tabs defaultValue="stats" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 glass-card static-element">
-              <TabsTrigger value="stats" className="data-[state=active]:bg-fifa-blue/20 text-xs sm:text-sm">
-                <Trophy className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Current Run Stats</span>
-                <span className="sm:hidden">Stats</span>
-              </TabsTrigger>
-              <TabsTrigger value="games" className="data-[state=active]:bg-fifa-blue/20 text-xs sm:text-sm">
-                <Calendar className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Recent Games</span>
-                <span className="sm:hidden">Games</span>
-              </TabsTrigger>
-              <TabsTrigger value="targets" className="data-[state=active]:bg-fifa-blue/20 text-xs sm:text-sm">
-                <Target className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Targets & Progress</span>
-                <span className="sm:hidden">Targets</span>
-              </TabsTrigger>
-            </TabsList>
+          <div className="space-y-6">
+            {/* Current Run Stats */}
+            <CurrentRunStats />
 
-            <TabsContent value="stats" className="space-y-4">
-              <CurrentRunStats />
-            </TabsContent>
-
-            <TabsContent value="games" className="space-y-4">
-              <Card className="glass-card static-element">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
-                    <Calendar className="h-5 w-5 text-fifa-blue" />
-                    Recent Games
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {currentWeek?.games && currentWeek.games.length > 0 ? (
-                    <div className="space-y-3">
-                      {currentWeek.games.slice().reverse().map((game, index) => (
-                        <div key={game.id} 
-                             className={`p-4 rounded-2xl border transition-all duration-300 hover:scale-[1.02] cursor-pointer static-element ${
-                               game.result === 'win' 
-                                 ? 'bg-gradient-to-r from-green-500/20 to-green-600/10 border-green-500/30 hover:border-green-500/50' 
-                                 : 'bg-gradient-to-r from-red-500/20 to-red-600/10 border-red-500/30 hover:border-red-500/50'
-                             }`}>
-                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                            <div className="flex items-center gap-4">
-                              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                                game.result === 'win' ? 'bg-green-500' : 'bg-red-500'
-                              }`}>
-                                <span className="text-white font-bold text-lg">
-                                  {game.result === 'win' ? '🏆' : '❌'}
-                                </span>
-                              </div>
-                              <div>
-                                <p className="text-xl font-bold text-white">{game.scoreLine}</p>
-                                <div className="flex flex-wrap items-center gap-2 text-sm text-gray-400">
-                                  <span>Game {game.gameNumber}</span>
-                                  <span>•</span>
-                                  <span>Opponent: {game.opponentSkill}/10</span>
-                                  {game.crossPlayEnabled && (
-                                    <>
-                                      <span>•</span>
-                                      <span className="text-fifa-blue">Cross-Platform</span>
-                                    </>
-                                  )}
-                                </div>
+            {/* Recent Games */}
+            <Card className="glass-card static-element">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-fifa-blue" />
+                  Recent Games
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {currentWeek?.games && currentWeek.games.length > 0 ? (
+                  <div className="space-y-3">
+                    {currentWeek.games.slice().reverse().map((game, index) => (
+                      <div key={game.id} 
+                           className={`p-4 rounded-2xl border transition-all duration-300 hover:scale-[1.02] cursor-pointer static-element ${
+                             game.result === 'win' 
+                               ? 'bg-gradient-to-r from-green-500/20 to-green-600/10 border-green-500/30 hover:border-green-500/50' 
+                               : 'bg-gradient-to-r from-red-500/20 to-red-600/10 border-red-500/30 hover:border-red-500/50'
+                           }`}>
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                          <div className="flex items-center gap-4">
+                            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                              game.result === 'win' ? 'bg-green-500' : 'bg-red-500'
+                            }`}>
+                              <span className="text-white font-bold text-lg">
+                                {game.result === 'win' ? '🏆' : '❌'}
+                              </span>
+                            </div>
+                            <div>
+                              <p className="text-xl font-bold text-white">{game.scoreLine}</p>
+                              <div className="flex flex-wrap items-center gap-2 text-sm text-gray-400">
+                                <span>Game {game.gameNumber}</span>
+                                <span>•</span>
+                                <span>Opponent: {game.opponentSkill}/10</span>
+                                {game.crossPlayEnabled && (
+                                  <>
+                                    <span>•</span>
+                                    <span className="text-fifa-blue">Cross-Platform</span>
+                                  </>
+                                )}
                               </div>
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setEditingGame(game)}
-                              className="text-gray-400 hover:text-white self-start sm:self-center"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
                           </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setEditingGame(game)}
+                            className="text-gray-400 hover:text-white self-start sm:self-center"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-16">
-                      <Calendar className="h-20 w-20 mx-auto mb-6 text-gray-500 opacity-50" />
-                      <h3 className="text-2xl font-semibold text-white mb-3">No Games Yet</h3>
-                      <p className="text-gray-400 mb-6 max-w-md mx-auto">
-                        Start your Champions League run by recording your first game and tracking your performance
-                      </p>
-                      <Button 
-                        onClick={() => setShowGameForm(true)} 
-                        className="bg-fifa-green hover:bg-fifa-green/80 text-white font-medium"
-                        size="lg"
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Record First Game
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-16">
+                    <Calendar className="h-20 w-20 mx-auto mb-6 text-gray-500 opacity-50" />
+                    <h3 className="text-2xl font-semibold text-white mb-3">No Games Yet</h3>
+                    <p className="text-gray-400 mb-6 max-w-md mx-auto">
+                      Start your Champions League run by recording your first game and tracking your performance
+                    </p>
+                    <Button 
+                      onClick={() => setShowGameForm(true)} 
+                      className="bg-fifa-green hover:bg-fifa-green/80 text-white font-medium"
+                      size="lg"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Record First Game
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
-            <TabsContent value="targets" className="space-y-4">
-              <WeeklyTargets />
-            </TabsContent>
-          </Tabs>
+            {/* Weekly Targets */}
+            <WeeklyTargets />
+          </div>
         </div>
       </main>
 
-      {/* Enhanced Game Form Modal */}
+      {/* Game Form Modal */}
       {showGameForm && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-gray-900/95 backdrop-blur-md rounded-2xl border border-gray-700/50 w-full max-w-5xl max-h-[95vh] overflow-y-auto">
-            <div className="p-6">
-              <GameRecordForm
-                onGameSaved={handleGameSubmit}
-                gameNumber={(currentWeek?.games?.length || 0) + 1}
-                onClose={() => setShowGameForm(false)}
-              />
-            </div>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="w-full max-w-5xl max-h-[90vh] overflow-y-auto">
+            <GameRecordForm
+              onGameSaved={handleGameSubmit}
+              gameNumber={(currentWeek?.games?.length || 0) + 1}
+              onClose={() => setShowGameForm(false)}
+            />
           </div>
         </div>
       )}

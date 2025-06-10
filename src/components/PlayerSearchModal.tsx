@@ -177,14 +177,18 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position }: Player
     }
   };
 
-  const handleNumberInputChange = (field: string, value: string) => {
-    // Parse the value to a number, defaulting to the current value if invalid
-    const numValue = parseInt(value);
-    const currentValue = newPlayer[field as keyof typeof newPlayer] as number || 0;
-    
-    // Only update if it's a valid number
-    if (!isNaN(numValue)) {
-      setNewPlayer(prev => ({ ...prev, [field]: numValue }));
+  const handleInputChange = (field: string, value: string) => {
+    if (field === 'name' || field === 'club' || field === 'nationality' || field === 'league') {
+      setNewPlayer(prev => ({ ...prev, [field]: value }));
+    } else {
+      // For numeric fields
+      const numValue = parseInt(value);
+      if (!isNaN(numValue) || value === '') {
+        setNewPlayer(prev => ({ 
+          ...prev, 
+          [field]: value === '' ? '' : numValue 
+        }));
+      }
     }
   };
 
@@ -263,7 +267,7 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position }: Player
                 <label className="block text-white text-sm font-medium mb-2">Player Name</label>
                 <Input
                   value={newPlayer.name || ''}
-                  onChange={(e) => setNewPlayer(prev => ({ ...prev, name: e.target.value }))}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
                   className="bg-gray-800 border-gray-600 text-white"
                   placeholder="Enter player name"
                 />
@@ -290,14 +294,12 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position }: Player
               <div>
                 <label className="block text-white text-sm font-medium mb-2">Rating</label>
                 <Input
-                  type="number"
+                  type="text"
                   inputMode="numeric"
-                  pattern="[0-9]*"
-                  min="1"
-                  max="99"
-                  value={newPlayer.rating || 75}
-                  onChange={(e) => handleNumberInputChange('rating', e.target.value)}
+                  value={newPlayer.rating === '' ? '' : newPlayer.rating}
+                  onChange={(e) => handleInputChange('rating', e.target.value)}
                   className="bg-gray-800 border-gray-600 text-white"
+                  placeholder="75"
                 />
               </div>
               <div>
@@ -334,7 +336,7 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position }: Player
                 <label className="block text-white text-sm font-medium mb-2">Club</label>
                 <Input
                   value={newPlayer.club || ''}
-                  onChange={(e) => setNewPlayer(prev => ({ ...prev, club: e.target.value }))}
+                  onChange={(e) => handleInputChange('club', e.target.value)}
                   className="bg-gray-800 border-gray-600 text-white"
                   placeholder="Club name"
                 />
@@ -343,7 +345,7 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position }: Player
                 <label className="block text-white text-sm font-medium mb-2">Nationality</label>
                 <Input
                   value={newPlayer.nationality || ''}
-                  onChange={(e) => setNewPlayer(prev => ({ ...prev, nationality: e.target.value }))}
+                  onChange={(e) => handleInputChange('nationality', e.target.value)}
                   className="bg-gray-800 border-gray-600 text-white"
                   placeholder="Country"
                 />
@@ -352,7 +354,7 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position }: Player
                 <label className="block text-white text-sm font-medium mb-2">League</label>
                 <Input
                   value={newPlayer.league || ''}
-                  onChange={(e) => setNewPlayer(prev => ({ ...prev, league: e.target.value }))}
+                  onChange={(e) => handleInputChange('league', e.target.value)}
                   className="bg-gray-800 border-gray-600 text-white"
                   placeholder="League name"
                 />
@@ -363,79 +365,67 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position }: Player
               <div>
                 <label className="block text-white text-sm font-medium mb-2">Pace</label>
                 <Input
-                  type="number"
+                  type="text"
                   inputMode="numeric"
-                  pattern="[0-9]*"
-                  min="1"
-                  max="99"
-                  value={newPlayer.pace || 75}
-                  onChange={(e) => handleNumberInputChange('pace', e.target.value)}
+                  value={newPlayer.pace === '' ? '' : newPlayer.pace}
+                  onChange={(e) => handleInputChange('pace', e.target.value)}
                   className="bg-gray-800 border-gray-600 text-white"
+                  placeholder="75"
                 />
               </div>
               <div>
                 <label className="block text-white text-sm font-medium mb-2">Shooting</label>
                 <Input
-                  type="number"
+                  type="text"
                   inputMode="numeric"
-                  pattern="[0-9]*"
-                  min="1"
-                  max="99"
-                  value={newPlayer.shooting || 75}
-                  onChange={(e) => handleNumberInputChange('shooting', e.target.value)}
+                  value={newPlayer.shooting === '' ? '' : newPlayer.shooting}
+                  onChange={(e) => handleInputChange('shooting', e.target.value)}
                   className="bg-gray-800 border-gray-600 text-white"
+                  placeholder="75"
                 />
               </div>
               <div>
                 <label className="block text-white text-sm font-medium mb-2">Passing</label>
                 <Input
-                  type="number"
+                  type="text"
                   inputMode="numeric"
-                  pattern="[0-9]*"
-                  min="1"
-                  max="99"
-                  value={newPlayer.passing || 75}
-                  onChange={(e) => handleNumberInputChange('passing', e.target.value)}
+                  value={newPlayer.passing === '' ? '' : newPlayer.passing}
+                  onChange={(e) => handleInputChange('passing', e.target.value)}
                   className="bg-gray-800 border-gray-600 text-white"
+                  placeholder="75"
                 />
               </div>
               <div>
                 <label className="block text-white text-sm font-medium mb-2">Dribbling</label>
                 <Input
-                  type="number"
+                  type="text"
                   inputMode="numeric"
-                  pattern="[0-9]*"
-                  min="1"
-                  max="99"
-                  value={newPlayer.dribbling || 75}
-                  onChange={(e) => handleNumberInputChange('dribbling', e.target.value)}
+                  value={newPlayer.dribbling === '' ? '' : newPlayer.dribbling}
+                  onChange={(e) => handleInputChange('dribbling', e.target.value)}
                   className="bg-gray-800 border-gray-600 text-white"
+                  placeholder="75"
                 />
               </div>
               <div>
                 <label className="block text-white text-sm font-medium mb-2">Defending</label>
                 <Input
-                  type="number"
+                  type="text"
                   inputMode="numeric"
-                  pattern="[0-9]*"
-                  min="1"
-                  max="99"
-                  value={newPlayer.defending || 75}
-                  onChange={(e) => handleNumberInputChange('defending', e.target.value)}
+                  value={newPlayer.defending === '' ? '' : newPlayer.defending}
+                  onChange={(e) => handleInputChange('defending', e.target.value)}
                   className="bg-gray-800 border-gray-600 text-white"
+                  placeholder="75"
                 />
               </div>
               <div>
                 <label className="block text-white text-sm font-medium mb-2">Physical</label>
                 <Input
-                  type="number"
+                  type="text"
                   inputMode="numeric"
-                  pattern="[0-9]*"
-                  min="1"
-                  max="99"
-                  value={newPlayer.physical || 75}
-                  onChange={(e) => handleNumberInputChange('physical', e.target.value)}
+                  value={newPlayer.physical === '' ? '' : newPlayer.physical}
+                  onChange={(e) => handleInputChange('physical', e.target.value)}
                   className="bg-gray-800 border-gray-600 text-white"
+                  placeholder="75"
                 />
               </div>
             </div>

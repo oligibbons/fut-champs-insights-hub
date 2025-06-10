@@ -20,9 +20,9 @@ const GameEditModal = ({ game, isOpen, onClose, onSave }: GameEditModalProps) =>
   const [userGoals, setUserGoals] = useState('');
   const [opponentGoals, setOpponentGoals] = useState('');
   const [result, setResult] = useState<'win' | 'loss'>('win');
-  const [opponentSkill, setOpponentSkill] = useState<number>(5);
-  const [duration, setDuration] = useState<number>(90);
-  const [opponentXG, setOpponentXG] = useState<number>(1.0);
+  const [opponentSkill, setOpponentSkill] = useState<number | string>(5);
+  const [duration, setDuration] = useState<number | string>(90);
+  const [opponentXG, setOpponentXG] = useState<number | string>(1.0);
 
   useEffect(() => {
     if (game) {
@@ -36,38 +36,49 @@ const GameEditModal = ({ game, isOpen, onClose, onSave }: GameEditModalProps) =>
     }
   }, [game]);
 
-  const handleNumberInputChange = (field: string, value: string) => {
-    // For number inputs, ensure we handle them properly on mobile
-    const numValue = parseInt(value);
-    if (!isNaN(numValue)) {
-      if (field === 'userGoals') setUserGoals(numValue.toString());
-      else if (field === 'opponentGoals') setOpponentGoals(numValue.toString());
-      else if (field === 'opponentSkill') setOpponentSkill(Math.min(10, Math.max(1, numValue)));
-      else if (field === 'duration') setDuration(Math.min(120, Math.max(1, numValue)));
+  const handleInputChange = (field: string, value: string) => {
+    if (field === 'userGoals') {
+      setUserGoals(value);
+    } else if (field === 'opponentGoals') {
+      setOpponentGoals(value);
+    } else if (field === 'opponentSkill') {
+      if (value === '' || !isNaN(parseInt(value))) {
+        setOpponentSkill(value === '' ? '' : parseInt(value));
+      }
+    } else if (field === 'duration') {
+      if (value === '' || !isNaN(parseInt(value))) {
+        setDuration(value === '' ? '' : parseInt(value));
+      }
     }
   };
 
   const handleXGChange = (value: string) => {
-    const numValue = parseFloat(value);
-    if (!isNaN(numValue)) {
-      setOpponentXG(numValue);
+    if (value === '' || !isNaN(parseFloat(value))) {
+      setOpponentXG(value === '' ? '' : parseFloat(value));
     }
   };
 
   const handleSave = () => {
     if (!game) return;
 
+    // Validate and convert empty strings to defaults
+    const finalUserGoals = userGoals === '' ? 0 : parseInt(userGoals);
+    const finalOpponentGoals = opponentGoals === '' ? 0 : parseInt(opponentGoals);
+    const finalOpponentSkill = opponentSkill === '' ? 5 : opponentSkill;
+    const finalDuration = duration === '' ? 90 : duration;
+    const finalOpponentXG = opponentXG === '' ? 1.0 : opponentXG;
+
     const updatedGame: GameResult = {
       ...game,
-      scoreLine: `${userGoals}-${opponentGoals}`,
+      scoreLine: `${finalUserGoals}-${finalOpponentGoals}`,
       result,
-      opponentSkill,
-      duration,
+      opponentSkill: finalOpponentSkill as number,
+      duration: finalDuration as number,
       teamStats: {
         ...game.teamStats,
-        expectedGoalsAgainst: opponentXG,
-        actualGoals: parseInt(userGoals),
-        actualGoalsAgainst: parseInt(opponentGoals)
+        expectedGoalsAgainst: finalOpponentXG as number,
+        actualGoals: finalUserGoals,
+        actualGoalsAgainst: finalOpponentGoals
       }
     };
 
@@ -83,7 +94,7 @@ const GameEditModal = ({ game, isOpen, onClose, onSave }: GameEditModalProps) =>
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-gray-900 border-gray-700 max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto bg-gray-900 border-gray-700">
         <DialogHeader>
           <DialogTitle className="text-white">Edit Game {game.gameNumber}</DialogTitle>
         </DialogHeader>
@@ -93,25 +104,23 @@ const GameEditModal = ({ game, isOpen, onClose, onSave }: GameEditModalProps) =>
             <div>
               <Label className="text-white">Your Goals</Label>
               <Input
-                type="number"
+                type="text"
                 inputMode="numeric"
-                pattern="[0-9]*"
-                min="0"
                 value={userGoals}
-                onChange={(e) => handleNumberInputChange('userGoals', e.target.value)}
+                onChange={(e) => handleInputChange('userGoals', e.target.value)}
                 className="bg-gray-800 border-gray-600 text-white"
+                placeholder="0"
               />
             </div>
             <div>
               <Label className="text-white">Opponent Goals</Label>
               <Input
-                type="number"
+                type="text"
                 inputMode="numeric"
-                pattern="[0-9]*"
-                min="0"
                 value={opponentGoals}
-                onChange={(e) => handleNumberInputChange('opponentGoals', e.target.value)}
+                onChange={(e) => handleInputChange('opponentGoals', e.target.value)}
                 className="bg-gray-800 border-gray-600 text-white"
+                placeholder="0"
               />
             </div>
           </div>
@@ -132,41 +141,36 @@ const GameEditModal = ({ game, isOpen, onClose, onSave }: GameEditModalProps) =>
           <div>
             <Label className="text-white">Opponent Skill (1-10)</Label>
             <Input
-              type="number"
+              type="text"
               inputMode="numeric"
-              pattern="[0-9]*"
-              min="1"
-              max="10"
-              value={opponentSkill}
-              onChange={(e) => handleNumberInputChange('opponentSkill', e.target.value)}
+              value={opponentSkill === '' ? '' : opponentSkill}
+              onChange={(e) => handleInputChange('opponentSkill', e.target.value)}
               className="bg-gray-800 border-gray-600 text-white"
+              placeholder="5"
             />
           </div>
 
           <div>
             <Label className="text-white">Game Duration (minutes)</Label>
             <Input
-              type="number"
+              type="text"
               inputMode="numeric"
-              pattern="[0-9]*"
-              min="1"
-              max="120"
-              value={duration}
-              onChange={(e) => handleNumberInputChange('duration', e.target.value)}
+              value={duration === '' ? '' : duration}
+              onChange={(e) => handleInputChange('duration', e.target.value)}
               className="bg-gray-800 border-gray-600 text-white"
+              placeholder="90"
             />
           </div>
 
           <div>
             <Label className="text-white">Opponent Expected Goals (XGa)</Label>
             <Input
-              type="number"
+              type="text"
               inputMode="decimal"
-              step="0.1"
-              min="0"
-              value={opponentXG}
+              value={opponentXG === '' ? '' : opponentXG}
               onChange={(e) => handleXGChange(e.target.value)}
               className="bg-gray-800 border-gray-600 text-white"
+              placeholder="1.0"
             />
           </div>
 

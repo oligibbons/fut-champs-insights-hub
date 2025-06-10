@@ -75,7 +75,7 @@ const Navigation = () => {
       {/* Navigation Sidebar - Dock Style */}
       <nav 
         className={`
-          fixed left-0 top-16 h-[calc(100%-4rem)] border-r z-30
+          fixed left-0 top-16 h-[calc(100vh-4rem)] border-r z-30
           transform transition-all duration-500 ease-in-out
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
           lg:translate-x-0
@@ -116,7 +116,7 @@ const Navigation = () => {
             </div>
           </div>
 
-          <div className="space-y-2 flex-1 overflow-y-auto pb-20">
+          <div className="space-y-2 flex-1 overflow-y-auto pb-32">
             {navigationItems.map((item) => {
               const isActive = location.pathname === item.path;
               return (

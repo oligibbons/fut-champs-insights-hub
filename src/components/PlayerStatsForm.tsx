@@ -43,27 +43,49 @@ const PlayerStatsForm = ({ playerStats, onPlayerStatsChange, gameDuration = 90 }
   };
 
   const handleInputChange = (index: number, field: keyof PlayerPerformance, value: string) => {
-    let processedValue: any = value;
-    
     if (field === 'name' || field === 'position') {
-      processedValue = value;
-    } else if (field === 'rating') {
-      const num = parseFloat(value);
-      processedValue = isNaN(num) ? 0 : Math.max(1, Math.min(10, num));
-    } else {
-      const num = parseInt(value);
-      processedValue = isNaN(num) ? 0 : Math.max(0, num);
-      if (field === 'minutesPlayed') {
-        processedValue = Math.min(120, processedValue);
-      }
+      updatePlayer(index, field, value);
+      return;
     }
     
-    updatePlayer(index, field, processedValue);
+    // For numeric fields
+    if (value === '') {
+      updatePlayer(index, field, '');
+      return;
+    }
+    
+    if (field === 'rating') {
+      const num = parseFloat(value);
+      if (!isNaN(num)) {
+        updatePlayer(index, field, Math.max(1, Math.min(10, num)));
+      }
+    } else {
+      const num = parseInt(value);
+      if (!isNaN(num)) {
+        if (field === 'minutesPlayed') {
+          updatePlayer(index, field, Math.max(0, Math.min(120, num)));
+        } else {
+          updatePlayer(index, field, Math.max(0, num));
+        }
+      }
+    }
   };
 
   const adjustValue = (index: number, field: keyof PlayerPerformance, delta: number) => {
-    const currentValue = playerStats[index][field] as number;
-    let newValue = currentValue + delta;
+    const currentValue = playerStats[index][field];
+    
+    // Handle empty string case
+    if (currentValue === '') {
+      if (field === 'rating') {
+        updatePlayer(index, field, Math.max(1, Math.min(10, delta)));
+      } else {
+        updatePlayer(index, field, Math.max(0, delta));
+      }
+      return;
+    }
+    
+    const numValue = typeof currentValue === 'number' ? currentValue : 0;
+    let newValue = numValue + delta;
     
     if (field === 'rating') {
       newValue = Math.max(1, Math.min(10, newValue));
@@ -163,14 +185,12 @@ const PlayerStatsForm = ({ playerStats, onPlayerStatsChange, gameDuration = 90 }
                       <Minus className="h-3 w-3" />
                     </Button>
                     <Input
-                      type="number"
+                      type="text"
                       inputMode="numeric"
-                      pattern="[0-9]*"
-                      min="0"
-                      max="120"
-                      value={player.minutesPlayed}
+                      value={player.minutesPlayed === '' ? '' : player.minutesPlayed}
                       onChange={(e) => handleInputChange(index, 'minutesPlayed', e.target.value)}
                       className="bg-gray-800 border-gray-600 text-white text-center h-10 w-16 text-sm font-semibold"
+                      placeholder="0"
                     />
                     <Button
                       type="button"
@@ -200,14 +220,12 @@ const PlayerStatsForm = ({ playerStats, onPlayerStatsChange, gameDuration = 90 }
                       <Minus className="h-3 w-3" />
                     </Button>
                     <Input
-                      type="number"
+                      type="text"
                       inputMode="decimal"
-                      step="0.1"
-                      min="1"
-                      max="10"
-                      value={player.rating}
+                      value={player.rating === '' ? '' : player.rating}
                       onChange={(e) => handleInputChange(index, 'rating', e.target.value)}
                       className="bg-gray-800 border-gray-600 text-white text-center h-8 w-16 text-xs font-semibold"
+                      placeholder="7.0"
                     />
                     <Button
                       type="button"
@@ -234,13 +252,12 @@ const PlayerStatsForm = ({ playerStats, onPlayerStatsChange, gameDuration = 90 }
                       <Minus className="h-3 w-3" />
                     </Button>
                     <Input
-                      type="number"
+                      type="text"
                       inputMode="numeric"
-                      pattern="[0-9]*"
-                      min="0"
-                      value={player.goals}
+                      value={player.goals === '' ? '' : player.goals}
                       onChange={(e) => handleInputChange(index, 'goals', e.target.value)}
                       className="bg-gray-800 border-gray-600 text-white text-center h-8 w-16 text-xs font-semibold"
+                      placeholder="0"
                     />
                     <Button
                       type="button"
@@ -267,13 +284,12 @@ const PlayerStatsForm = ({ playerStats, onPlayerStatsChange, gameDuration = 90 }
                       <Minus className="h-3 w-3" />
                     </Button>
                     <Input
-                      type="number"
+                      type="text"
                       inputMode="numeric"
-                      pattern="[0-9]*"
-                      min="0"
-                      value={player.assists}
+                      value={player.assists === '' ? '' : player.assists}
                       onChange={(e) => handleInputChange(index, 'assists', e.target.value)}
                       className="bg-gray-800 border-gray-600 text-white text-center h-8 w-16 text-xs font-semibold"
+                      placeholder="0"
                     />
                     <Button
                       type="button"
@@ -300,14 +316,12 @@ const PlayerStatsForm = ({ playerStats, onPlayerStatsChange, gameDuration = 90 }
                       <Minus className="h-3 w-3" />
                     </Button>
                     <Input
-                      type="number"
+                      type="text"
                       inputMode="numeric"
-                      pattern="[0-9]*"
-                      min="0"
-                      max="2"
-                      value={player.yellowCards}
+                      value={player.yellowCards === '' ? '' : player.yellowCards}
                       onChange={(e) => handleInputChange(index, 'yellowCards', e.target.value)}
                       className="bg-gray-800 border-gray-600 text-white text-center h-8 w-16 text-xs font-semibold"
+                      placeholder="0"
                     />
                     <Button
                       type="button"
@@ -334,14 +348,12 @@ const PlayerStatsForm = ({ playerStats, onPlayerStatsChange, gameDuration = 90 }
                       <Minus className="h-3 w-3" />
                     </Button>
                     <Input
-                      type="number"
+                      type="text"
                       inputMode="numeric"
-                      pattern="[0-9]*"
-                      min="0"
-                      max="1"
-                      value={player.redCards}
+                      value={player.redCards === '' ? '' : player.redCards}
                       onChange={(e) => handleInputChange(index, 'redCards', e.target.value)}
                       className="bg-gray-800 border-gray-600 text-white text-center h-8 w-16 text-xs font-semibold"
+                      placeholder="0"
                     />
                     <Button
                       type="button"
@@ -368,13 +380,12 @@ const PlayerStatsForm = ({ playerStats, onPlayerStatsChange, gameDuration = 90 }
                       <Minus className="h-3 w-3" />
                     </Button>
                     <Input
-                      type="number"
+                      type="text"
                       inputMode="numeric"
-                      pattern="[0-9]*"
-                      min="0"
-                      value={player.ownGoals || 0}
+                      value={player.ownGoals === '' ? '' : (player.ownGoals || 0)}
                       onChange={(e) => handleInputChange(index, 'ownGoals', e.target.value)}
                       className="bg-gray-800 border-gray-600 text-white text-center h-8 w-16 text-xs font-semibold"
+                      placeholder="0"
                     />
                     <Button
                       type="button"
