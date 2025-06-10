@@ -45,9 +45,10 @@ const AccountSelector = () => {
             .select('*')
             .eq('user_id', user.id);
             
-          if (error) throw error;
-          
-          if (data && data.length > 0) {
+          if (error) {
+            // If table doesn't exist or other error, fall back to localStorage
+            console.warn('Could not load accounts from Supabase, using localStorage:', error.message);
+          } else if (data && data.length > 0) {
             const formattedAccounts = data.map(acc => ({
               id: acc.id,
               name: acc.name,
@@ -63,7 +64,7 @@ const AccountSelector = () => {
             return;
           }
         } catch (error) {
-          console.error('Error loading accounts from Supabase:', error);
+          console.warn('Error loading accounts from Supabase, using localStorage:', error);
         }
       }
       
@@ -119,13 +120,17 @@ const AccountSelector = () => {
           gamertag: acc.gamertag || ''
         }));
         
-        const { error } = await supabase
-          .from('gaming_accounts')
-          .insert(accountsForSupabase);
-          
-        if (error) throw error;
+        if (accountsForSupabase.length > 0) {
+          const { error } = await supabase
+            .from('gaming_accounts')
+            .insert(accountsForSupabase);
+            
+          if (error) {
+            console.warn('Could not save accounts to Supabase:', error.message);
+          }
+        }
       } catch (error) {
-        console.error('Error saving accounts to Supabase:', error);
+        console.warn('Error saving accounts to Supabase:', error);
       }
     }
   };
