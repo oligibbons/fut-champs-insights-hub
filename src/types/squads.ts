@@ -1,4 +1,3 @@
-
 export type PlayerCardType = 'bronze' | 'silver' | 'gold' | 'inform' | 'totw' | 'toty' | 'tots' | 'icon' | 'hero';
 
 export const CARD_TYPES: PlayerCardType[] = ['bronze', 'silver', 'gold', 'inform', 'totw', 'toty', 'tots', 'icon', 'hero'];
@@ -8,7 +7,7 @@ export interface PlayerCard {
   name: string;
   position: string;
   rating: number;
-  cardType: PlayerCardType;
+  cardType: string;
   club: string;
   league: string;
   nationality: string;
