@@ -104,7 +104,7 @@ const GoalInvolvementChart = () => {
     
     // Create cells that fill the circle
     return (
-      <svg width="300" height="300" viewBox="0 0 300 300" className="mx-auto">
+      <svg width="300\" height="300\" viewBox="0 0 300 300\" className="mx-auto">
         {/* Circle background */}
         <circle cx="150" cy="150" r="140" fill="rgba(255,255,255,0.05)" />
         
