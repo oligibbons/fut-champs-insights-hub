@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Navigation from '@/components/Navigation';
 import PlayerHistoryTable from '@/components/PlayerHistoryTable';
 import ClubLegends from '@/components/ClubLegends';
@@ -26,9 +26,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ShareableCard from '@/components/ShareableCard';
 import WeekCompletionPopup from '@/components/WeekCompletionPopup';
 import GameCompletionModal from '@/components/GameCompletionModal';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 const History = () => {
   const { weeklyData, deleteWeek, endWeek } = useDataSync();
+  const [gameVersion] = useLocalStorage('gameVersion', 'FC26');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterResult, setFilterResult] = useState<'all' | 'win' | 'loss'>('all');
   const [filterWeek, setFilterWeek] = useState<string>('all');
@@ -47,20 +49,24 @@ const History = () => {
   const [showWeekPopup, setShowWeekPopup] = useState(false);
   const [showGamePopup, setShowGamePopup] = useState(false);
 
-  const filteredWeeks = weeklyData.filter(week => {
+  const gameVersionedData = useMemo(() => {
+    return weeklyData.filter(week => week.game_version === gameVersion);
+  }, [weeklyData, gameVersion]);
+
+  const filteredWeeks = gameVersionedData.filter(week => {
     if (filterWeek !== 'all' && week.id !== filterWeek) return false;
     return week.weekNumber.toString().includes(searchTerm.toLowerCase()) || 
            (week.customName && week.customName.toLowerCase().includes(searchTerm.toLowerCase()));
   });
 
-  const allGames = weeklyData.flatMap(week => 
+  const allGames = gameVersionedData.flatMap(week => 
     week.games.map(game => ({ ...game, weekNumber: week.weekNumber, weekId: week.id }))
   );
 
   const filteredGames = allGames.filter(game => {
     if (filterResult !== 'all' && game.result !== filterResult) return false;
     if (filterWeek !== 'all') {
-      const week = weeklyData.find(w => w.id === filterWeek);
+      const week = gameVersionedData.find(w => w.id === filterWeek);
       if (!week || game.weekNumber !== week.weekNumber) return false;
     }
     return (
@@ -79,9 +85,10 @@ const History = () => {
         const ratingB = b.playerStats?.reduce((sum, p) => sum + p.rating, 0) / (b.playerStats?.length || 1) || 0;
         return ratingB - ratingA;
       case 'score':
-        const week = weeklyData.find(w => w.weekNumber === a.weekNumber);
-        const gameRatingA = week ? calculateGameRating(a as GameResult, week) : { score: 0 };
-        const gameRatingB = week ? calculateGameRating(b as GameResult, week) : { score: 0 };
+        const weekA = gameVersionedData.find(w => w.weekNumber === a.weekNumber);
+        const weekB = gameVersionedData.find(w => w.weekNumber === b.weekNumber);
+        const gameRatingA = weekA ? calculateGameRating(a as GameResult, weekA) : { score: 0 };
+        const gameRatingB = weekB ? calculateGameRating(b as GameResult, weekB) : { score: 0 };
         return gameRatingB.score - gameRatingA.score;
       default:
         return 0;
@@ -155,7 +162,7 @@ const History = () => {
           {/* Header */}
           <div className="mb-6 lg:mb-8">
             <h1 className="text-2xl lg:text-3xl font-bold gradient-text mb-2">Match History</h1>
-            <p className="text-gray-400 text-sm">Review your past performance and analyze trends</p>
+            <p className="text-gray-400 text-sm">Review your past performance and analyze trends for {gameVersion}</p>
           </div>
 
           {/* Controls */}
@@ -231,7 +238,7 @@ const History = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Weeks</SelectItem>
-                      {weeklyData.map(week => (
+                      {gameVersionedData.map(week => (
                         <SelectItem key={week.id} value={week.id}>
                           Week {week.weekNumber}
                         </SelectItem>
@@ -247,7 +254,7 @@ const History = () => {
           {viewMode === 'legends' ? (
             <ClubLegends />
           ) : viewMode === 'players' ? (
-            <PlayerHistoryTable weeklyData={weeklyData} />
+            <PlayerHistoryTable weeklyData={gameVersionedData} />
           ) : viewMode === 'weeks' ? (
             <div className="grid gap-4 lg:gap-6">
               {filteredWeeks.length === 0 ? (
@@ -255,11 +262,11 @@ const History = () => {
                   <CardContent className="p-8 text-center">
                     <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-4 opacity-50" />
                     <h3 className="text-xl font-semibold text-white mb-2">No Weeks Found</h3>
-                    <p className="text-gray-400">No weeks match your current search criteria.</p>
+                    <p className="text-gray-400">No weeks for {gameVersion} match your current search criteria.</p>
                   </CardContent>
                 </Card>
               ) : (
-                filteredWeeks.reverse().map(week => {
+                filteredWeeks.slice().reverse().map(week => {
                   const weekRating = calculateWeekRating(week);
                   return (
                     <Card key={week.id} className="glass-card hover:shadow-2xl transition-all duration-300 cursor-pointer" onClick={() => handleViewWeek(week)}>
@@ -360,12 +367,12 @@ const History = () => {
                   <CardContent className="p-8 text-center">
                     <Trophy className="h-16 w-16 text-gray-400 mx-auto mb-4 opacity-50" />
                     <h3 className="text-xl font-semibold text-white mb-2">No Games Found</h3>
-                    <p className="text-gray-400">No games match your current search criteria.</p>
+                    <p className="text-gray-400">No games for {gameVersion} match your current search criteria.</p>
                   </CardContent>
                 </Card>
               ) : (
                 sortedGames.map(game => {
-                  const week = weeklyData.find(w => w.weekNumber === game.weekNumber);
+                  const week = gameVersionedData.find(w => w.weekNumber === game.weekNumber);
                   const gameRating = week ? calculateGameRating(game as GameResult, week) : { letter: 'F', score: 0, color: '#8B0000' };
                   const avgPlayerRating = game.playerStats?.reduce((sum, p) => sum + p.rating, 0) / (game.playerStats?.length || 1) || 0;
                   
@@ -535,11 +542,11 @@ const History = () => {
           onClose={() => setShowGamePopup(false)}
           game={selectedGame}
           weekStats={{
-            totalGames: weeklyData.find(w => w.id === (selectedGame as any).weekId)?.games.length || 0,
-            wins: weeklyData.find(w => w.id === (selectedGame as any).weekId)?.totalWins || 0,
-            losses: weeklyData.find(w => w.id === (selectedGame as any).weekId)?.totalLosses || 0,
+            totalGames: gameVersionedData.find(w => w.id === (selectedGame as any).weekId)?.games.length || 0,
+            wins: gameVersionedData.find(w => w.id === (selectedGame as any).weekId)?.totalWins || 0,
+            losses: gameVersionedData.find(w => w.id === (selectedGame as any).weekId)?.totalLosses || 0,
             winRate: 0,
-            currentStreak: weeklyData.find(w => w.id === (selectedGame as any).weekId)?.currentStreak || 0
+            currentStreak: gameVersionedData.find(w => w.id === (selectedGame as any).weekId)?.currentStreak || 0
           }}
         />
       )}
