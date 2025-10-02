@@ -211,7 +211,7 @@ export const useDataSync = () => {
         endDate: new Date().toISOString()
       });
     }
-  }, [supabaseData.weeklyData]);
+  }, [supabaseData.weeklyData, supabaseData]);
 
   // Mock functions for compatibility
   const deleteAllData = () => {
@@ -251,3 +251,4 @@ export const useDataSync = () => {
     deleteAllData,
   };
 };
+
