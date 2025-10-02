@@ -1,119 +1,139 @@
-
+import { WeeklyPerformance, getRewardRanks } from '@/types/futChampions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { WeeklyPerformance } from '@/types/futChampions';
-import { Calendar, Trophy, Target, TrendingUp } from 'lucide-react';
+import { Target, Trophy, TrendingUp } from 'lucide-react';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface WeekProgressProps {
-  weekData: WeeklyPerformance;
-  onNewWeek: () => void;
+  currentWeek: WeeklyPerformance | null;
 }
 
-const WeekProgress = ({ weekData, onNewWeek }: WeekProgressProps) => {
-  const gamesProgress = (weekData.games.length / 15) * 100;
-  const winsProgress = (weekData.totalWins / 8) * 100;
-  const winRate = weekData.games.length > 0 ? (weekData.totalWins / weekData.games.length) * 100 : 0;
+const WeekProgress = ({ currentWeek }: WeekProgressProps) => {
+  const [gameVersion] = useLocalStorage('gameVersion', 'FC26');
+  const rewardRanks = getRewardRanks(gameVersion);
+
+  // The total number of games in a weekend is 15 for both versions.
+  const TOTAL_GAMES = 15;
+  const MAX_WINS = 15;
+
+  if (!currentWeek) {
+    return (
+      <Card className="glass-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-white">
+            <TrendingUp className="h-5 w-5 text-fifa-blue" />
+            <span>Week Progress</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>No active week found.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const { totalWins, games } = currentWeek;
+  const gamesPlayed = games.length;
+  const progressPercentage = (gamesPlayed / TOTAL_GAMES) * 100;
+
+  const nextReward = rewardRanks.find(rank => rank.wins > totalWins);
+  const currentRank = rewardRanks.slice().reverse().find(rank => totalWins >= rank.wins);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Week Overview */}
-      <Card className="glass-card static-element">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Week Overview
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="text-center p-3 bg-white/5 rounded-lg">
-              <div className="text-2xl font-bold text-fifa-blue">{weekData.games.length}</div>
-              <div className="text-sm text-gray-400">Games Played</div>
-            </div>
-            <div className="text-center p-3 bg-white/5 rounded-lg">
-              <div className="text-2xl font-bold text-fifa-green">{weekData.totalWins}</div>
-              <div className="text-sm text-gray-400">Wins</div>
-            </div>
+    <Card className="glass-card">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-white">
+          <TrendingUp className="h-5 w-5 text-fifa-blue" />
+          <span>Week Progress</span>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div>
+          <div className="flex justify-between items-center mb-2 font-semibold">
+            <span className="text-fifa-gold">Games Played: {gamesPlayed} / {TOTAL_GAMES}</span>
+            <span className="text-white">{Math.round(progressPercentage)}%</span>
           </div>
-          
-          <div className="space-y-3">
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-300">Games Progress</span>
-                <span className="text-white">{weekData.games.length}/15</span>
-              </div>
-              <div className="w-full bg-gray-700 rounded-full h-2">
-                <div 
-                  className="bg-gradient-to-r from-fifa-blue to-fifa-purple h-2 rounded-full transition-all duration-500"
-                  style={{ width: `${Math.min(gamesProgress, 100)}%` }}
-                />
-              </div>
-            </div>
-            
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-300">Target Wins</span>
-                <span className="text-white">{weekData.totalWins}/8</span>
-              </div>
-              <div className="w-full bg-gray-700 rounded-full h-2">
-                <div 
-                  className="bg-gradient-to-r from-fifa-green to-fifa-gold h-2 rounded-full transition-all duration-500"
-                  style={{ width: `${Math.min(winsProgress, 100)}%` }}
-                />
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          <Progress value={progressPercentage} className="w-full" />
+        </div>
 
-      {/* Performance Stats */}
-      <Card className="glass-card static-element">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <TrendingUp className="h-5 w-5" />
-            Performance
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="text-center p-3 bg-white/5 rounded-lg">
-              <div className="text-2xl font-bold text-fifa-gold">{winRate.toFixed(0)}%</div>
-              <div className="text-sm text-gray-400">Win Rate</div>
-            </div>
-            <div className="text-center p-3 bg-white/5 rounded-lg">
-              <div className="text-2xl font-bold text-fifa-purple">{weekData.currentStreak || 0}</div>
-              <div className="text-sm text-gray-400">Current Streak</div>
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <span className="text-gray-300">Goals Scored</span>
-              <span className="text-fifa-green font-semibold">{weekData.totalGoals}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-300">Goals Conceded</span>
-              <span className="text-fifa-red font-semibold">{weekData.totalConceded}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-300">Goal Difference</span>
-              <span className={`font-semibold ${weekData.totalGoals - weekData.totalConceded >= 0 ? 'text-fifa-green' : 'text-fifa-red'}`}>
-                {weekData.totalGoals - weekData.totalConceded >= 0 ? '+' : ''}{weekData.totalGoals - weekData.totalConceded}
-              </span>
-            </div>
+        <div className="flex flex-col sm:flex-row justify-around items-center text-center gap-4">
+          <div>
+            <p className="text-gray-400">Current Rank</p>
+            <p className="text-2xl font-bold text-white flex items-center justify-center gap-2">
+              <Trophy className="h-6 w-6 text-fifa-gold" />
+              {currentRank ? currentRank.rank : 'Unranked'}
+            </p>
+            <p className="text-sm text-gray-400">({totalWins} wins)</p>
           </div>
 
-          {weekData.isCompleted && (
-            <Button onClick={onNewWeek} className="w-full modern-button-primary">
-              <Trophy className="h-4 w-4 mr-2" />
-              Start New Week
-            </Button>
+          {nextReward && gamesPlayed < TOTAL_GAMES && (
+            <div className="p-4 rounded-lg bg-white/5 border border-gray-700/50">
+              <p className="text-gray-400 flex items-center justify-center gap-2">
+                <Target className="h-5 w-5 text-fifa-green" />
+                Next Reward
+              </p>
+              <p className="text-xl font-bold text-white">{nextReward.rank}</p>
+              <p className="text-sm text-fifa-green">
+                {nextReward.wins - totalWins} more win(s) needed
+              </p>
+            </div>
           )}
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+
+        {/* Detailed Reward Timeline */}
+        <div>
+          <h4 className="font-semibold text-white mb-4 text-center">Reward Timeline</h4>
+          <div className="w-full overflow-x-auto pb-4">
+            <div className="relative flex items-center min-w-[600px] h-12 px-2">
+              {/* Background Line */}
+              <div className="absolute top-1/2 left-0 w-full h-1 bg-gray-700 -translate-y-1/2"></div>
+              {/* Progress Line */}
+              <div 
+                className="absolute top-1/2 left-0 h-1 bg-fifa-gold transition-all duration-500 -translate-y-1/2"
+                style={{ width: `${(totalWins / MAX_WINS) * 100}%` }}
+              ></div>
+              
+              <TooltipProvider>
+                {Array.from({ length: MAX_WINS + 1 }, (_, i) => i).map((winCount) => {
+                  const rankAtWin = rewardRanks.find(r => r.wins === winCount);
+                  const isAchieved = totalWins >= winCount;
+                  
+                  return (
+                    <div 
+                      key={winCount} 
+                      className="flex-1 flex justify-center"
+                    >
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="z-10 flex flex-col items-center group cursor-pointer">
+                            {/* Checkpoint Circle */}
+                            <div className={`
+                              w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all duration-300
+                              ${isAchieved ? 'bg-fifa-gold border-white' : 'bg-gray-800 border-gray-600'}
+                              ${rankAtWin ? 'w-6 h-6' : ''}
+                            `}>
+                              {isAchieved && rankAtWin && <Trophy className="h-3 w-3 text-gray-900" />}
+                            </div>
+                            {rankAtWin && <span className="text-xs mt-2 text-gray-400 group-hover:text-white">{rankAtWin.rank}</span>}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="font-bold">{winCount} Wins</p>
+                          {rankAtWin && <p>{rankAtWin.rank}</p>}
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                  );
+                })}
+              </TooltipProvider>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
 export default WeekProgress;
+
