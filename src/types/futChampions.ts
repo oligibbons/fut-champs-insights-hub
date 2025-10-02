@@ -100,6 +100,7 @@ export interface GameResult {
   opponentPlayStyle?: string; // Opponent play style
   opponentFormation?: string; // Opponent formation
   opponentSquadRating?: number; // Opponent squad rating
+  game_version?: string;
 }
 
 export interface Squad {
@@ -160,8 +161,8 @@ export interface WeeklyPerformance {
   startingRank?: string;
   bestStreak?: number;
   worstStreak?: number;
-  currentStreak?: number; // Add this missing property
-  gamesPlayed?: number; // Add this missing property
+  currentStreak?: number; 
+  gamesPlayed?: number; 
   averageGameDuration?: number;
   totalPlayTime?: number; // in minutes
   averageServerQuality?: number;
@@ -169,6 +170,7 @@ export interface WeeklyPerformance {
   targetWins?: number;
   personalNotes?: string;
   cpsScore?: number; // Champs Performance Score
+  game_version?: string;
 }
 
 export interface Achievement {
@@ -332,20 +334,6 @@ export interface MatchFeedback {
   context: 'win' | 'loss' | 'milestone' | 'streak';
 }
 
-// FC25 Rank System - Updated with correct win requirements
-export const FC25_RANKS = [
-  { name: 'Rank X', wins: 2, color: '#8B4513' },
-  { name: 'Rank IX', wins: 4, color: '#CD853F' },
-  { name: 'Rank VIII', wins: 6, color: '#DAA520' },
-  { name: 'Rank VII', wins: 7, color: '#FFD700' },
-  { name: 'Rank VI', wins: 8, color: '#00CED1' },
-  { name: 'Rank V', wins: 9, color: '#1E90FF' },
-  { name: 'Rank IV', wins: 10, color: '#9932CC' },
-  { name: 'Rank III', wins: 11, color: '#FF1493' },
-  { name: 'Rank II', wins: 13, color: '#FF4500' },
-  { name: 'Rank I', wins: 15, color: '#FF0000' }
-];
-
 // Game Rating System
 export const GAME_RATINGS = [
   { letter: 'F', minScore: 0, maxScore: 39, color: '#8B0000' },
@@ -358,10 +346,36 @@ export const GAME_RATINGS = [
 
 // CPS (Champs Performance Score) weights
 export const CPS_WEIGHTS = {
-  goalsScored: 0.30, // 30% weight for offensive output
-  xgDifferential: 0.25, // 25% weight for xG vs xGa differential
-  playerRating: 0.20, // 20% weight for average player rating
-  goalsConceded: 0.15, // 15% weight for goals conceded
-  cards: 0.10, // 10% weight for cards received
-  result: 0.30 // 30% weight for win/loss
+  goalsScored: 0.30, 
+  xgDifferential: 0.25,
+  playerRating: 0.20,
+  goalsConceded: 0.15,
+  cards: 0.10,
+  result: 0.30
 };
+
+// FC25 Reward Ranks (Old Style) - Renamed `name` to `rank` for consistency
+export const FC25_REWARD_RANKS = [
+  { rank: 'Rank X', wins: 2 },
+  { rank: 'Rank IX', wins: 4 },
+  { rank: 'Rank VIII', wins: 6 },
+  { rank: 'Rank VII', wins: 7 },
+  { rank: 'Rank VI', wins: 8 },
+  { rank: 'Rank V', wins: 9 },
+  { rank: 'Rank IV', wins: 10 },
+  { rank: 'Rank III', wins: 11 },
+  { rank: 'Rank II', wins: 13 },
+  { rank: 'Rank I', wins: 15 }
+];
+
+// FC26 Reward Ranks (New Style - Reversed)
+const romanNumerals = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV", "XV"];
+export const FC26_REWARD_RANKS = Array.from({ length: 15 }, (_, i) => ({
+  wins: i + 1,
+  rank: `Rank ${romanNumerals[14 - i]}` // Reverses numerals so 1 win = Rank XV, 15 wins = Rank I
+}));
+
+export const getRewardRanks = (gameVersion: string) => {
+  return gameVersion === 'FC25' ? FC25_REWARD_RANKS : FC26_REWARD_RANKS;
+};
+
