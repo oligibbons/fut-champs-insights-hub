@@ -8,12 +8,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTheme } from '@/hooks/useTheme';
 import { useToast } from '@/hooks/use-toast';
 import Navigation from '@/components/Navigation';
-import AccountManager from '@/components/AccountManager';
 import AccountSelector from '@/components/AccountSelector';
 import UserAccountSettings from '@/components/UserAccountSettings';
 import DataManagement from '@/components/DataManagement';
-import { Settings as SettingsIcon, Palette, Gamepad2, User, BarChart3, Target, Sparkles, Database } from 'lucide-react';
+import { Settings as SettingsIcon, Palette, Gamepad2, User, BarChart3, Target, Sparkles, Database, Trophy } from 'lucide-react';
 import { useDataSync } from '@/hooks/useDataSync';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 interface DashboardSettings {
   showTopPerformers: boolean;
@@ -53,6 +53,7 @@ const Settings = () => {
   const { currentTheme, currentThemeName, setTheme, themes, themeData } = useTheme();
   const { toast } = useToast();
   const { settings, setSettings } = useDataSync();
+  const [gameVersion, setGameVersion] = useLocalStorage('gameVersion', 'FC26');
 
   const [dashboardSettings, setDashboardSettings] = useState<DashboardSettings>(
     settings.dashboardSettings as DashboardSettings
@@ -67,6 +68,17 @@ const Settings = () => {
     setDashboardSettings(settings.dashboardSettings as DashboardSettings);
     setCurrentWeekSettings(settings.currentWeekSettings as CurrentWeekSettings);
   }, [settings]);
+
+  const handleGameVersionChange = (value: string) => {
+    setGameVersion(value);
+    toast({
+      title: "Game Version Switched",
+      description: `Now viewing data for ${value}. The page will now reload.`,
+    });
+    setTimeout(() => {
+        window.location.reload();
+    }, 1500);
+  };
 
   const saveDashboardSettings = (newSettings: DashboardSettings) => {
     setDashboardSettings(newSettings);
@@ -181,9 +193,13 @@ const Settings = () => {
                   <User className="h-4 w-4 mr-2" />
                   <span>Account</span>
                 </TabsTrigger>
-                <TabsTrigger value="fc25-accounts" className="flex-shrink-0">
+                 <TabsTrigger value="game" className="flex-shrink-0">
+                  <Trophy className="h-4 w-4 mr-2" />
+                  <span>Game</span>
+                </TabsTrigger>
+                <TabsTrigger value="gaming-accounts" className="flex-shrink-0">
                   <Gamepad2 className="h-4 w-4 mr-2" />
-                  <span>FC25 Accounts</span>
+                  <span>Gaming Accounts</span>
                 </TabsTrigger>
                 <TabsTrigger value="appearance" className="flex-shrink-0">
                   <Palette className="h-4 w-4 mr-2" />
@@ -207,7 +223,33 @@ const Settings = () => {
                 <UserAccountSettings />
               </TabsContent>
 
-              <TabsContent value="fc25-accounts" className="space-y-4 mt-4">
+               <TabsContent value="game" className="space-y-4 mt-4">
+                <Card className="glass-card">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-white">
+                      <Trophy className="h-5 w-5 text-fifa-gold" />
+                      Game Version
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <Label htmlFor="game-version" className="text-white">Select Game Version</Label>
+                    <Select value={gameVersion} onValueChange={handleGameVersionChange}>
+                      <SelectTrigger id="game-version" className="w-[180px] bg-gray-800 border-gray-600 text-white">
+                        <SelectValue placeholder="Select game..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="FC26">FC26</SelectItem>
+                        <SelectItem value="FC25">FC25</SelectItem>
+                      </SelectContent>
+                    </Select>
+                     <p className="text-gray-400 text-sm pt-2">
+                        Select the game you are currently playing. All data, stats, and squads are specific to the selected version.
+                    </p>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="gaming-accounts" className="space-y-4 mt-4">
                 <AccountSelector />
               </TabsContent>
 
