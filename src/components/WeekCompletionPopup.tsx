@@ -1,10 +1,11 @@
+import React, { useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { useTheme } from '@/hooks/useTheme';
-import { WeeklyPerformance, FC25_RANKS } from '@/types/futChampions';
-import { Trophy, Target, TrendingUp, TrendingDown, Star, BarChart3, Award, Calendar, PieChart, LineChart, Activity } from 'lucide-react';
+import { WeeklyPerformance, getRewardRanks } from '@/types/futChampions';
+import { Trophy, Target, TrendingUp, TrendingDown, Star, BarChart3, Award, Calendar, PieChart, LineChart, Activity, Users } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RePieChart, Pie, Cell, LineChart as ReLineChart, Line, AreaChart, Area, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 interface WeekCompletionPopupProps {
   isOpen: boolean;
@@ -13,14 +14,22 @@ interface WeekCompletionPopupProps {
   onNewWeek: () => void;
 }
 
-const WeekCompletionPopup = ({ isOpen, onClose, weekData, onNewWeek }: WeekCompletionPopupProps) => {
+const WeekCompletionPopup: React.FC<WeekCompletionPopupProps> = ({ isOpen, onClose, weekData, onNewWeek }) => {
   const { currentTheme } = useTheme();
+  const [gameVersion] = useLocalStorage('gameVersion', 'FC26');
+  const rewardRanks = getRewardRanks(gameVersion);
+
+  const { achievedRank, nextRank } = useMemo(() => {
+    if (!weekData) return { achievedRank: null, nextRank: null };
+    const currentRanks = getRewardRanks(gameVersion);
+    const achieved = currentRanks.slice().reverse().find(rank => weekData.totalWins >= rank.wins) || null;
+    const next = currentRanks.find(rank => weekData.totalWins < rank.wins) || null;
+    return { achievedRank: achieved, nextRank: next };
+  }, [weekData, gameVersion]);
 
   if (!isOpen || !weekData) return null;
 
   const winRate = weekData.games.length > 0 ? (weekData.totalWins / weekData.games.length) * 100 : 0;
-  const achievedRank = FC25_RANKS.find(rank => weekData.totalWins >= rank.wins);
-  const nextRank = FC25_RANKS.find(rank => weekData.totalWins < rank.wins);
   
   const xgPerformance = weekData.totalExpectedGoals > 0 
     ? ((weekData.totalGoals - weekData.totalExpectedGoals) / weekData.totalExpectedGoals) * 100 
@@ -34,7 +43,7 @@ const WeekCompletionPopup = ({ isOpen, onClose, weekData, onNewWeek }: WeekCompl
   const allPlayerRatings = weekData.games.flatMap(game => game.playerStats.map(p => ({...p, gameNumber: game.gameNumber})));
   const bestRating = Math.max(...allPlayerRatings.map(p => p.rating));
   const worstRating = Math.min(...allPlayerRatings.map(p => p.rating));
-  const avgRating = allPlayerRatings.reduce((a, b) => a + b.rating, 0) / allPlayerRatings.length;
+  const avgRating = allPlayerRatings.length > 0 ? allPlayerRatings.reduce((a, b) => a + b.rating, 0) / allPlayerRatings.length : 0;
   
   const bestPerformance = allPlayerRatings.find(p => p.rating === bestRating);
   const worstPerformance = allPlayerRatings.find(p => p.rating === worstRating);
@@ -65,7 +74,7 @@ const WeekCompletionPopup = ({ isOpen, onClose, weekData, onNewWeek }: WeekCompl
   const topPerformers = Array.from(playerPerformances.values())
     .map(p => ({
       ...p,
-      avgRating: p.totalRating / p.games,
+      avgRating: p.games > 0 ? p.totalRating / p.games : 0,
       goalContributions: p.goals + p.assists
     }))
     .sort((a, b) => b.avgRating - a.avgRating)
@@ -129,12 +138,12 @@ const WeekCompletionPopup = ({ isOpen, onClose, weekData, onNewWeek }: WeekCompl
 
   // Team stats averages
   const teamStatsAverages = {
-    possession: weekData.games.reduce((sum, game) => sum + (game.teamStats?.possession || 50), 0) / weekData.games.length,
-    passAccuracy: weekData.games.reduce((sum, game) => sum + (game.teamStats?.passAccuracy || 75), 0) / weekData.games.length,
-    shots: weekData.games.reduce((sum, game) => sum + (game.teamStats?.shots || 0), 0) / weekData.games.length,
-    shotsOnTarget: weekData.games.reduce((sum, game) => sum + (game.teamStats?.shotsOnTarget || 0), 0) / weekData.games.length,
-    corners: weekData.games.reduce((sum, game) => sum + (game.teamStats?.corners || 0), 0) / weekData.games.length,
-    fouls: weekData.games.reduce((sum, game) => sum + (game.teamStats?.fouls || 0), 0) / weekData.games.length
+    possession: weekData.games.reduce((sum, game) => sum + (game.teamStats?.possession || 50), 0) / (weekData.games.length || 1),
+    passAccuracy: weekData.games.reduce((sum, game) => sum + (game.teamStats?.passAccuracy || 75), 0) / (weekData.games.length || 1),
+    shots: weekData.games.reduce((sum, game) => sum + (game.teamStats?.shots || 0), 0) / (weekData.games.length || 1),
+    shotsOnTarget: weekData.games.reduce((sum, game) => sum + (game.teamStats?.shotsOnTarget || 0), 0) / (weekData.games.length || 1),
+    corners: weekData.games.reduce((sum, game) => sum + (game.teamStats?.corners || 0), 0) / (weekData.games.length || 1),
+    fouls: weekData.games.reduce((sum, game) => sum + (game.teamStats?.fouls || 0), 0) / (weekData.games.length || 1)
   };
 
   // Performance radar data
@@ -209,16 +218,16 @@ const WeekCompletionPopup = ({ isOpen, onClose, weekData, onNewWeek }: WeekCompl
               </div>
             </div>
 
-            <div className="text-center p-8 rounded-3xl" style={{ backgroundColor: achievedRank ? achievedRank.color + '20' : currentTheme.colors.surface }}>
-              <div className="text-3xl font-bold mb-4" style={{ color: achievedRank?.color || currentTheme.colors.text }}>
-                {achievedRank?.name || 'Unranked'}
+            <div className="text-center p-8 rounded-3xl" style={{ backgroundColor: achievedRank ? '#fbbf2420' : currentTheme.colors.surface }}>
+              <div className="text-3xl font-bold mb-4" style={{ color: achievedRank ? '#fbbf24' : currentTheme.colors.text }}>
+                {achievedRank?.rank || 'Unranked'}
               </div>
               <div className="text-2xl font-semibold" style={{ color: currentTheme.colors.text }}>
                 Final Rank
               </div>
               {nextRank && (
                 <div className="text-lg" style={{ color: currentTheme.colors.muted }}>
-                  {nextRank.wins - weekData.totalWins} wins to {nextRank.name}
+                  {nextRank.wins - weekData.totalWins} wins to {nextRank.rank}
                 </div>
               )}
             </div>
@@ -310,7 +319,7 @@ const WeekCompletionPopup = ({ isOpen, onClose, weekData, onNewWeek }: WeekCompl
                 {weekData.totalGoals}
               </div>
               <div className="text-sm" style={{ color: currentTheme.colors.muted }}>
-                {(weekData.totalGoals / weekData.games.length).toFixed(1)} per game
+                {(weekData.totalGoals / (weekData.games.length || 1)).toFixed(1)} per game
               </div>
             </div>
 
@@ -491,7 +500,7 @@ const WeekCompletionPopup = ({ isOpen, onClose, weekData, onNewWeek }: WeekCompl
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold" style={{ color: currentTheme.colors.secondary }}>
-                  {(teamStatsAverages.shotsOnTarget / teamStatsAverages.shots * 100).toFixed(1)}%
+                  {(teamStatsAverages.shotsOnTarget / (teamStatsAverages.shots || 1) * 100).toFixed(1)}%
                 </div>
                 <div className="text-sm" style={{ color: currentTheme.colors.muted }}>
                   Shot Accuracy
@@ -673,7 +682,7 @@ const WeekCompletionPopup = ({ isOpen, onClose, weekData, onNewWeek }: WeekCompl
                     <p>✅ Standout performance from {topPerformers[0].name} with {topPerformers[0].avgRating.toFixed(1)} rating</p>}
                   {teamStatsAverages.possession >= 60 && <p>✅ Excellent possession control ({teamStatsAverages.possession.toFixed(1)}%)</p>}
                   {teamStatsAverages.passAccuracy >= 85 && <p>✅ Exceptional passing accuracy ({teamStatsAverages.passAccuracy.toFixed(1)}%)</p>}
-                  {(teamStatsAverages.shotsOnTarget / teamStatsAverages.shots) >= 0.6 && <p>✅ High shot accuracy ({(teamStatsAverages.shotsOnTarget / teamStatsAverages.shots * 100).toFixed(1)}%)</p>}
+                  {(teamStatsAverages.shotsOnTarget / (teamStatsAverages.shots || 1)) >= 0.6 && <p>✅ High shot accuracy ({(teamStatsAverages.shotsOnTarget / (teamStatsAverages.shots || 1) * 100).toFixed(1)}%)</p>}
                 </div>
               </div>
               
@@ -691,7 +700,7 @@ const WeekCompletionPopup = ({ isOpen, onClose, weekData, onNewWeek }: WeekCompl
                     <p>⚠️ Lost multiple games to lower-skilled opponents</p>}
                   {teamStatsAverages.possession < 45 && <p>⚠️ Low possession ({teamStatsAverages.possession.toFixed(1)}%) - work on ball retention</p>}
                   {teamStatsAverages.passAccuracy < 70 && <p>⚠️ Poor passing accuracy ({teamStatsAverages.passAccuracy.toFixed(1)}%)</p>}
-                  {(teamStatsAverages.shotsOnTarget / teamStatsAverages.shots) < 0.4 && <p>⚠️ Low shot accuracy ({(teamStatsAverages.shotsOnTarget / teamStatsAverages.shots * 100).toFixed(1)}%)</p>}
+                  {(teamStatsAverages.shotsOnTarget / (teamStatsAverages.shots || 1)) < 0.4 && <p>⚠️ Low shot accuracy ({(teamStatsAverages.shotsOnTarget / (teamStatsAverages.shots || 1) * 100).toFixed(1)}%)</p>}
                 </div>
               </div>
             </div>
@@ -714,3 +723,4 @@ const WeekCompletionPopup = ({ isOpen, onClose, weekData, onNewWeek }: WeekCompl
 };
 
 export default WeekCompletionPopup;
+
