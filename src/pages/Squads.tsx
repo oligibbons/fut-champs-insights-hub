@@ -1,26 +1,31 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import Navigation from '@/components/Navigation';
 import SquadBuilder from '@/components/SquadBuilder';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useSquadData } from '@/hooks/useSquadData';
-import { useAccountData } from '@/hooks/useAccountData';
 import { Squad } from '@/types/squads';
-import { Plus, Users, Trophy, Edit, Copy, Trash2, Star, Calendar, Target, TrendingUp, Shield } from 'lucide-react';
+import { Plus, Users, Trophy, Edit, Copy, Trash2, Star, Calendar, TrendingUp, MoreVertical } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
 import { recoverSquads, SquadSelectionDialog } from '@/utils/squadRecovery';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 const Squads = () => {
-  const { squads, saveSquad, deleteSquad, setDefaultSquad, fetchSquadsFromSupabase } = useSquadData();
-  const { activeAccount } = useAccountData();
+  const { squads, saveSquad, deleteSquad, setDefaultSquad } = useSquadData();
   const { currentTheme } = useTheme();
   const { toast } = useToast();
   const { user } = useAuth();
+  const [gameVersion] = useLocalStorage('gameVersion', 'FC26');
   
   const [showBuilder, setShowBuilder] = useState(false);
   const [editingSquad, setEditingSquad] = useState<Squad | undefined>();
@@ -29,8 +34,14 @@ const Squads = () => {
   const [showSquadSelectionDialog, setShowSquadSelectionDialog] = useState(false);
   const [recoveredSquads, setRecoveredSquads] = useState<Squad[]>([]);
 
+  const gameVersionedSquads = useMemo(() => {
+    return squads.filter(squad => squad.game_version === gameVersion);
+  }, [squads, gameVersion]);
+
   const handleSaveSquad = (squad: Squad) => {
-    saveSquad(squad);
+    // Ensure the squad is tagged with the current game version on save
+    const squadToSave = { ...squad, game_version: gameVersion };
+    saveSquad(squadToSave);
     setShowBuilder(false);
     setEditingSquad(undefined);
   };
@@ -50,12 +61,13 @@ const Squads = () => {
       gamesPlayed: 0,
       wins: 0,
       losses: 0,
-      isDefault: false
+      isDefault: false,
+      game_version: gameVersion, // Ensure copy is for the current game version
     };
     saveSquad(copiedSquad);
     toast({
       title: "Squad Copied",
-      description: `${copiedSquad.name} has been created.`
+      description: `${copiedSquad.name} has been created for ${gameVersion}.`
     });
   };
 
@@ -72,19 +84,16 @@ const Squads = () => {
     setDefaultSquad(squad.id);
     toast({
       title: "Default Squad Set",
-      description: `${squad.name} is now your default squad.`
+      description: `${squad.name} is now your default squad for ${gameVersion}.`
     });
   };
 
   const getSquadCompleteness = (squad: Squad) => {
     const startingCount = squad.startingXI.filter(pos => pos.player).length;
     const subCount = squad.substitutes.filter(pos => pos.player).length;
-    const reserveCount = squad.reserves.filter(pos => pos.player).length;
-    
     return {
       starting: startingCount,
       substitutes: subCount,
-      reserves: reserveCount,
       isComplete: startingCount === 11 && subCount === 7
     };
   };
@@ -106,19 +115,14 @@ const Squads = () => {
 
     const winRate = squad.gamesPlayed > 0 ? (squad.wins / squad.gamesPlayed) * 100 : 0;
 
-    return {
-      averageRating,
-      topRatedPlayers,
-      winRate,
-      totalPlayers: allPlayers.length
-    };
+    return { averageRating, topRatedPlayers, winRate, totalPlayers: allPlayers.length };
   };
 
   const handleRecoverSquads = async () => {
     setIsRecovering(true);
     try {
-      const recoveredSquads = await recoverSquads(user?.id);
-      setRecoveredSquads(recoveredSquads);
+      const recovered = await recoverSquads(user?.id);
+      setRecoveredSquads(recovered);
       setShowSquadSelectionDialog(true);
     } catch (error) {
       console.error('Error recovering squads:', error);
@@ -133,11 +137,12 @@ const Squads = () => {
   };
 
   const handleSelectRecoveredSquad = (squad: Squad) => {
-    saveSquad(squad);
+    const squadToSave = { ...squad, game_version: gameVersion };
+    saveSquad(squadToSave);
     setShowSquadSelectionDialog(false);
     toast({
       title: "Squad Recovered",
-      description: `${squad.name} has been restored.`
+      description: `${squad.name} has been restored for ${gameVersion}.`
     });
   };
 
@@ -149,6 +154,7 @@ const Squads = () => {
           <div className="max-w-7xl mx-auto">
             <SquadBuilder
               squad={editingSquad}
+              gameVersion={gameVersion} // Pass gameVersion to the builder
               onSave={handleSaveSquad}
               onCancel={() => {
                 setShowBuilder(false);
@@ -167,12 +173,17 @@ const Squads = () => {
       
       <main className="lg:ml-64 p-6">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h1 className="text-4xl font-bold text-white mb-3">Squad Management</h1>
-              <p className="text-lg" style={{ color: currentTheme.colors.muted }}>
-                Build and manage your ultimate teams for {activeAccount}
-              </p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
+            <div className="flex items-center gap-4 mb-4 sm:mb-0">
+              <div className="p-3 rounded-2xl bg-gradient-to-br from-fifa-purple/20 to-fifa-blue/20 border border-fifa-purple/30">
+                <Users className="h-8 w-8 text-fifa-purple" />
+              </div>
+              <div>
+                <h1 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-fifa-purple via-fifa-blue to-fifa-gold bg-clip-text text-transparent">
+                  Squad Management
+                </h1>
+                <p className="text-gray-400 mt-1">Build and manage your {gameVersion} ultimate teams</p>
+              </div>
             </div>
             <div className="flex gap-2">
               <Button
@@ -194,7 +205,7 @@ const Squads = () => {
             </div>
           </div>
 
-          {squads.length === 0 ? (
+          {gameVersionedSquads.length === 0 ? (
             <Card style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }} 
                   className="rounded-3xl shadow-depth-lg border-0 animate-fade-in">
               <CardContent className="text-center py-16">
@@ -202,9 +213,9 @@ const Squads = () => {
                      style={{ backgroundColor: currentTheme.colors.primary + '20' }}>
                   <Users className="h-12 w-12" style={{ color: currentTheme.colors.primary }} />
                 </div>
-                <h3 className="text-2xl font-semibold text-white mb-3">No Squads Created</h3>
+                <h3 className="text-2xl font-semibold text-white mb-3">No {gameVersion} Squads Found</h3>
                 <p className="text-lg max-w-md mx-auto mb-6" style={{ color: currentTheme.colors.muted }}>
-                  Start building your ultimate team with our advanced squad builder. Choose formations, assign players, and create winning combinations.
+                  Start by building your ultimate team for {gameVersion} with our advanced squad builder.
                 </p>
                 <Button
                   onClick={() => setShowBuilder(true)}
@@ -218,14 +229,15 @@ const Squads = () => {
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {squads.map((squad) => {
+              {gameVersionedSquads.map((squad) => {
                 const completeness = getSquadCompleteness(squad);
                 const stats = getSquadStats(squad);
                 
                 return (
                   <Card key={squad.id} 
                         style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: squad.isDefault ? currentTheme.colors.primary : currentTheme.colors.border }} 
-                        className={`rounded-3xl shadow-depth-lg border-2 hover:scale-105 transition-all duration-300 group ${squad.isDefault ? 'ring-2' : ''}`}>
+                        className={`rounded-3xl shadow-depth-lg border-2 group transition-all duration-300 ${squad.isDefault ? 'ring-2 ring-offset-2 ring-offset-background' : ''}`}
+                        style={{'--tw-ring-color': currentTheme.colors.primary}}>
                     <CardHeader className="pb-4">
                       <div className="flex items-start justify-between">
                         <div className="space-y-2">
@@ -234,7 +246,16 @@ const Squads = () => {
                               {squad.name}
                             </CardTitle>
                             {squad.isDefault && (
-                              <Star className="h-5 w-5 text-yellow-400 fill-current" />
+                               <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger>
+                                     <Star className="h-5 w-5 text-yellow-400 fill-current" />
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Default Squad</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                             )}
                           </div>
                           <div className="flex items-center gap-2">
@@ -251,50 +272,23 @@ const Squads = () => {
                             )}
                           </div>
                         </div>
-                        <div className="flex gap-2">
-                          {!squad.isDefault && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleSetDefault(squad)}
-                              style={{ backgroundColor: currentTheme.colors.surface, borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}
-                              className="rounded-xl hover:scale-110 transition-transform"
-                            >
-                              <Star className="h-3 w-3" />
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                               <MoreVertical className="h-4 w-4" />
                             </Button>
-                          )}
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEditSquad(squad)}
-                            style={{ backgroundColor: currentTheme.colors.surface, borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}
-                            className="rounded-xl hover:scale-110 transition-transform"
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleCopySquad(squad)}
-                            style={{ backgroundColor: currentTheme.colors.surface, borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}
-                            className="rounded-xl hover:scale-110 transition-transform"
-                          >
-                            <Copy className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setShowDeleteDialog(squad)}
-                            className="bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20 rounded-xl hover:scale-110 transition-transform"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleEditSquad(squad)}><Edit className="mr-2 h-4 w-4" /> Edit</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleCopySquad(squad)}><Copy className="mr-2 h-4 w-4" /> Copy</DropdownMenuItem>
+                            {!squad.isDefault && <DropdownMenuItem onClick={() => handleSetDefault(squad)}><Star className="mr-2 h-4 w-4" /> Set as Default</DropdownMenuItem>}
+                            <DropdownMenuItem onClick={() => setShowDeleteDialog(squad)} className="text-red-500"><Trash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </CardHeader>
                     
                     <CardContent className="space-y-6">
-                      {/* Squad Completeness */}
                       <div className="grid grid-cols-3 gap-4">
                         <div className="text-center">
                           <p className="text-2xl font-bold" style={{ color: currentTheme.colors.primary }}>{completeness.starting}</p>
@@ -305,12 +299,11 @@ const Squads = () => {
                           <p className="text-xs" style={{ color: currentTheme.colors.muted }}>Substitutes</p>
                         </div>
                         <div className="text-center">
-                          <p className="text-2xl font-bold" style={{ color: currentTheme.colors.accent }}>{completeness.reserves}</p>
-                          <p className="text-xs" style={{ color: currentTheme.colors.muted }}>Reserves</p>
+                          <p className="text-2xl font-bold" style={{ color: currentTheme.colors.accent }}>{stats.totalPlayers}</p>
+                          <p className="text-xs" style={{ color: currentTheme.colors.muted }}>Total Players</p>
                         </div>
                       </div>
 
-                      {/* Squad Stats */}
                       <div className="p-4 rounded-2xl border" style={{ backgroundColor: currentTheme.colors.surface, borderColor: currentTheme.colors.border }}>
                         <div className="flex items-center justify-between mb-3">
                           <span className="text-sm font-medium" style={{ color: currentTheme.colors.text }}>Squad Overview</span>
@@ -322,21 +315,15 @@ const Squads = () => {
                         <div className="space-y-2">
                           {stats.topRatedPlayers.length > 0 && (
                             <div>
-                              <p className="text-xs\" style={{ color: currentTheme.colors.muted }}>Key Players:</p>
-                              <p className="text-sm font-medium" style={{ color: currentTheme.colors.text }}>
-                                {stats.topRatedPlayers.slice(0, 2).join(', ')}
+                              <p className="text-xs" style={{ color: currentTheme.colors.muted }}>Key Players:</p>
+                              <p className="text-sm font-medium truncate" style={{ color: currentTheme.colors.text }}>
+                                {stats.topRatedPlayers.join(', ')}
                               </p>
                             </div>
                           )}
-                          
-                          <div className="flex items-center justify-between text-sm">
-                            <span style={{ color: currentTheme.colors.muted }}>Total Players</span>
-                            <span style={{ color: currentTheme.colors.text }}>{stats.totalPlayers}</span>
-                          </div>
                         </div>
                       </div>
 
-                      {/* Performance Stats */}
                       {squad.gamesPlayed > 0 && (
                         <div className="p-4 rounded-2xl border" style={{ backgroundColor: currentTheme.colors.surface, borderColor: currentTheme.colors.border }}>
                           <div className="flex items-center gap-2 mb-3">
@@ -360,7 +347,6 @@ const Squads = () => {
                         </div>
                       )}
 
-                      {/* Last Modified */}
                       <div className="flex items-center gap-2 text-xs" style={{ color: currentTheme.colors.muted }}>
                         <Calendar className="h-3 w-3" />
                         Modified {new Date(squad.lastModified).toLocaleDateString()}
@@ -372,7 +358,6 @@ const Squads = () => {
             </div>
           )}
 
-          {/* Delete Confirmation Dialog */}
           <Dialog open={!!showDeleteDialog} onOpenChange={() => setShowDeleteDialog(null)}>
             <DialogContent style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }} 
                            className="border-red-500/30 rounded-3xl shadow-3xl">
@@ -404,7 +389,6 @@ const Squads = () => {
             </DialogContent>
           </Dialog>
 
-          {/* Squad Selection Dialog */}
           <SquadSelectionDialog
             isOpen={showSquadSelectionDialog}
             onClose={() => setShowSquadSelectionDialog(false)}
