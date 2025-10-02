@@ -2,11 +2,10 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-
-NEXT_PUBLIC_SUPABASE_URL=https://ardrynpfkpjxvdoojloa.supabase.co ;
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyZHJ5bnBma3BqeHZkb29qbG9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg1MDk3ODMsImV4cCI6MjA2NDA4NTc4M30.G262KECNFrAdArZMYLQEojfMgDsyo8c9BorChk0RhIs ;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+export const supabase = createClient<Database>(supabaseUrl, supabaseKey);
