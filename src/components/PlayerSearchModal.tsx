@@ -8,6 +8,8 @@ import { PlayerCard, CARD_TYPES } from '@/types/squads';
 import { useSquadData } from '@/hooks/useSquadData';
 import { Search, Plus, User, Edit } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 
 interface PlayerSearchModalProps {
   isOpen: boolean;
@@ -40,7 +42,8 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position }: Player
     dribbling: 75,
     defending: 75,
     physical: 75,
-    price: 0
+    price: 0,
+    isEvolution: false
   });
 
   useEffect(() => {
@@ -96,7 +99,8 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position }: Player
       losses: 0,
       cleanSheets: 0,
       imageUrl: '',
-      lastUsed: new Date().toISOString()
+      lastUsed: new Date().toISOString(),
+      isEvolution: newPlayer.isEvolution
     };
 
     savePlayer(player);
@@ -116,7 +120,8 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position }: Player
       dribbling: 75,
       defending: 75,
       physical: 75,
-      price: 0
+      price: 0,
+      isEvolution: false
     });
     
     toast({
@@ -329,6 +334,15 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position }: Player
                   </Button>
                 </div>
               </div>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="isEvolution"
+                checked={newPlayer.isEvolution}
+                onCheckedChange={(checked) => setNewPlayer(prev => ({ ...prev, isEvolution: !!checked }))}
+              />
+              <Label htmlFor="isEvolution" className="text-white">Is Evolution Card?</Label>
             </div>
 
             <div className="grid grid-cols-3 gap-4">
