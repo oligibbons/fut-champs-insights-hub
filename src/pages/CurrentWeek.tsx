@@ -15,6 +15,7 @@ import TopPerformers from '@/components/TopPerformers';
 import AIInsights from '@/pages/AIInsights';
 import GameCompletionPopup from '@/components/GameCompletionPopup';
 import WeekCompletionPopup from '@/components/WeekCompletionPopup';
+import AchievementSystem from '@/components/AchievementSystem'; // Import the new system
 
 const CurrentWeek = () => {
   const { weeklyData, createWeek, saveGame, endWeek, loading, refreshData } = useSupabaseData();
@@ -23,11 +24,15 @@ const CurrentWeek = () => {
   const [completedWeek, setCompletedWeek] = useState<WeeklyPerformance | null>(null);
   const navigate = useNavigate();
 
+  // This state will act as our trigger for the achievement system
+  const [lastUpdate, setLastUpdate] = useState<number>(0);
+
   const currentWeek = weeklyData.find(w => !w.isCompleted) || null;
 
   const handleCreateWeek = async () => {
     const nextWeekNumber = weeklyData.length > 0 ? Math.max(...weeklyData.map(w => w.weekNumber)) + 1 : 1;
     await createWeek({ weekNumber: nextWeekNumber, startDate: new Date().toISOString() });
+    setLastUpdate(Date.now()); // Trigger on new week creation
   };
 
   const handleSaveGame = async (gameData: Omit<GameResult, 'id'>) => {
@@ -41,6 +46,7 @@ const CurrentWeek = () => {
       const newGame = updatedWeek?.games.find(g => g.gameNumber === gameData.gameNumber);
       
       setCompletedGame(newGame || { ...gameData, id: 'temp' } as GameResult);
+      setLastUpdate(Date.now()); // <<< KEY CHANGE: Update the trigger to process achievements
 
       if ((updatedWeek?.gamesPlayed ?? 0) >= 20) {
         await handleEndWeek(currentWeek.id);
@@ -53,7 +59,8 @@ const CurrentWeek = () => {
     // After ending the week, refresh data again to get the final week object
     const finalData = await refreshData();
     const finishedWeek = finalData.find(w => w.id === weekId);
-    setCompletedWeek(finishedWeek || null); 
+    setCompletedWeek(finishedWeek || null);
+    setLastUpdate(Date.now()); // Trigger on week end as well
   };
 
   const closeWeekModal = () => {
@@ -80,10 +87,13 @@ const CurrentWeek = () => {
     );
   }
   
-  const winRate = currentWeek.gamesPlayed > 0 ? Math.round((currentWeek.totalWins / currentWeek.gamesPlayed) * 100) : 0;
+  const winRate = (currentWeek.gamesPlayed ?? 0) > 0 ? Math.round(((currentWeek.totalWins ?? 0) / (currentWeek.gamesPlayed ?? 1)) * 100) : 0;
 
   return (
     <>
+      {/* This component is invisible but will handle all achievement logic */}
+      <AchievementSystem trigger={lastUpdate} />
+
       <div className="space-y-8">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{currentWeek.customName || `Week ${currentWeek.weekNumber} Run`}</h1>
@@ -92,7 +102,7 @@ const CurrentWeek = () => {
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           <StatCard title="Current Record" value={`${currentWeek.totalWins}-${currentWeek.totalLosses}`} icon={Trophy} />
           <StatCard title="Win Rate" value={`${winRate}%`} icon={BarChart2} />
-          <StatCard title="Games Played" value={currentWeek.gamesPlayed} icon={Calendar} />
+          <StatCard title="Games Played" value={currentWeek.gamesPlayed ?? 0} icon={Calendar} />
           <Card className="flex flex-col items-center justify-center bg-secondary/50"><CPSGauge games={currentWeek.games} size={100} /></Card>
         </div>
         <WeekProgress wins={currentWeek.totalWins} losses={currentWeek.totalLosses} target={currentWeek.winTarget?.wins || 20} />
@@ -114,7 +124,7 @@ const CurrentWeek = () => {
           <TabsContent value="gamelog" className="mt-4">
             <Card>
               <CardHeader><CardTitle>Game Log</CardTitle></CardHeader>
-              <CardContent><div className="space-y-2">{currentWeek.games.map(game => (<div key={game.id} className="flex justify-between items-center p-3 bg-secondary/50 rounded-lg"><div className="flex items-center gap-4"><span className={`font-bold ${game.result === 'win' ? 'text-green-500' : 'text-red-500'}`}>{game.result.toUpperCase()}</span><span>Game {game.gameNumber}</span><span className="font-mono">{game.scoreLine}</span></div><div className="text-xs text-muted-foreground">vs Skill: {game.opponentSkill}/10</div></div>))}</div></CardContent>
+              <CardContent><div className="space-y-2">{currentWeek.games.slice().reverse().map(game => (<div key={game.id} className="flex justify-between items-center p-3 bg-secondary/50 rounded-lg"><div className="flex items-center gap-4"><span className={`font-bold ${game.result === 'win' ? 'text-green-500' : 'text-red-500'}`}>{game.result.toUpperCase()}</span><span>Game {game.gameNumber}</span><span className="font-mono">{game.scoreLine}</span></div><div className="text-xs text-muted-foreground">vs Skill: {game.opponentSkill}/10</div></div>))}</div></CardContent>
             </Card>
           </TabsContent>
           <TabsContent value="performers" className="mt-4"><TopPerformers games={currentWeek.games} /></TabsContent>
