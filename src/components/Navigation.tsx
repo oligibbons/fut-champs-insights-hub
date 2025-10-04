@@ -26,11 +26,11 @@ const Navigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { currentTheme } = useTheme();
-  const { signOut, user, isAdmin } = useAuth(); // Correctly get isAdmin from context
+  const { signOut, user, isAdmin } = useAuth();
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 1024); // Use lg breakpoint
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -60,11 +60,9 @@ const Navigation = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Don't render anything if there's no user (except on the auth page)
   if (!user && location.pathname !== '/auth') {
     return null;
   }
-  // Don't render on the auth page
   if (location.pathname === '/auth') {
     return null;
   }
@@ -111,6 +109,22 @@ const Navigation = () => {
         onMouseLeave={() => !isMobile && setIsHovered(false)}
       >
         <div className={`p-6 h-full flex flex-col ${!isHovered && !isMobile ? 'lg:items-center' : ''}`}>
+          <div className={`flex items-center mb-8 ${!isHovered && !isMobile ? 'lg:justify-center' : 'space-x-2'}`}>
+            <img 
+              src="/lovable-uploads/6b6465f4-e466-4f3b-9761-8a829fbe395c.png" 
+              alt="FUTTrackr Logo" 
+              className="w-10 h-10 object-contain flex-shrink-0"
+            />
+            <div className={`transition-all duration-300 overflow-hidden ${!isHovered && !isMobile ? 'lg:w-0 lg:opacity-0' : 'lg:w-auto lg:opacity-100'}`}>
+              <h1 
+                className="text-xl font-bold whitespace-nowrap"
+                style={{ color: currentTheme.colors.text }}
+              >
+                FUTTrackr
+              </h1>
+            </div>
+          </div>
+
           <div className="flex-1 space-y-2 overflow-y-auto pb-32">
             {navigationItems.map((item) => {
               const isActive = location.pathname === item.path;
