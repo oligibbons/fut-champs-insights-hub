@@ -31,19 +31,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const navigate = useNavigate();
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    // Start with an immediate check of the current session
+    const getInitialSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       setSession(session);
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-
-      if (currentUser) {
+      setUser(session?.user ?? null);
+      if (session?.user) {
         try {
           const { data, error } = await supabase
             .from('profiles')
             .select('is_admin')
-            .eq('id', currentUser.id)
-            .maybeSingle(); // Use maybeSingle() to prevent errors if no profile is found
-
+            .eq('id', session.user.id)
+            .maybeSingle(); // Use maybeSingle() to prevent errors
+            
           if (error) throw error;
           setIsAdmin(data?.is_admin || false);
         } catch (error) {
@@ -53,8 +53,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         setIsAdmin(false);
       }
-      
       setLoading(false);
+    };
+
+    getInitialSession();
+
+    // Then, listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      setSession(session);
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+
+      if (currentUser) {
+        // No need to fetch profile again here unless you expect it to change
+        // The initial load handles the admin check.
+      } else {
+        setIsAdmin(false);
+      }
+      // If the user logs in or out, the loading state should already be false.
+      // We only want the initial page load to show the spinner.
     });
 
     return () => {
