@@ -1,42 +1,48 @@
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from './useAuth';
+import { WeeklyPerformance } from '@/types/futChampions';
+import { useGameVersion } from '@/contexts/GameVersionContext'; // Import the context hook
 
-import { useDataSync } from './useDataSync';
+export const useAccountData = () => {
+  const { user } = useAuth();
+  const { gameVersion } = useGameVersion(); // Get the current game version
+  const [weeks, setWeeks] = useState<WeeklyPerformance[]>([]);
+  const [activeAccount, setActiveAccount] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-export function useAccountData() {
-  // This hook now serves as a simple alias to useDataSync for backward compatibility
-  // We removed the circular dependency by making this a simple passthrough
-  const dataSync = useDataSync();
-  
-  const addNewWeek = () => {
-    const newWeekNumber = dataSync.weeklyData.length + 1;
-    const newWeek = {
-      weekNumber: newWeekNumber,
-      startDate: new Date().toISOString(),
-      winTarget: {
-        wins: 10,
-        goalsScored: undefined,
-        cleanSheets: undefined,
-        minimumRank: undefined
+  useEffect(() => {
+    const fetchData = async () => {
+      if (user) {
+        setLoading(true);
+        // FIX: Added .eq('game_version', gameVersion) to filter the data correctly
+        const { data, error } = await supabase
+          .from('weekly_performances')
+          .select('*, games:game_results(*, player_performances(*))')
+          .eq('user_id', user.id)
+          .eq('game_version', gameVersion)
+          .order('week_number', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching weekly data:', error);
+        } else {
+          // Add a gamesPlayed property to each week for easier calculations
+          const weeksWithGamesPlayed = data.map(week => ({
+            ...week,
+            gamesPlayed: week.games?.length || 0,
+          }));
+          setWeeks(weeksWithGamesPlayed);
+        }
+        
+        // Assuming active account logic remains the same
+        const storedAccount = localStorage.getItem('activeAccount');
+        setActiveAccount(storedAccount);
+        setLoading(false);
       }
     };
-    
-    return dataSync.createWeek(newWeek);
-  };
 
-  const updateWeek = (weekId: string, updatedWeek: any) => {
-    return dataSync.updateWeek(weekId, updatedWeek);
-  };
+    fetchData();
+  }, [user, gameVersion]); // Add gameVersion as a dependency
 
-  const getDefaultSquad = () => {
-    return null; // Legacy function - no longer used with Supabase
-  };
-
-  return {
-    activeAccount: dataSync.activeAccount,
-    weeks: dataSync.weeklyData,
-    setWeeks: dataSync.setWeeklyData,
-    getCurrentWeek: dataSync.getCurrentWeek,
-    addNewWeek,
-    updateWeek,
-    getDefaultSquad
-  };
-}
+  return { weeks, activeAccount, loading };
+};
