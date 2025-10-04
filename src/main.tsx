@@ -7,11 +7,7 @@ import { GameVersionProvider } from './contexts/GameVersionContext';
 import { ThemeProvider } from './hooks/useTheme';
 import { Toaster } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-
-// --- THE DEFINITIVE FIX ---
-// This imports the base styles for all components.
 import './index.css'; 
-// This imports your custom styles on top of the base styles.
 import './App.css';
 
 // Create a client for react-query
