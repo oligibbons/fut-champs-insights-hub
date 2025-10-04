@@ -20,9 +20,28 @@ import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import "./App.css";
 
-const AppContent = () => {
+function App() {
+  return (
+    <Router basename="/">
+      <AuthProvider>
+        <MainContent />
+      </AuthProvider>
+    </Router>
+  );
+}
+
+const MainContent = () => {
   const { currentTheme } = useTheme();
-  const { user } = useAuth();
+  const { loading, user } = useAuth();
+
+  if (loading) {
+    // You can replace this with a more sophisticated loading spinner
+    return (
+      <div className="flex items-center justify-center h-screen" style={{ background: currentTheme.colors.background }}>
+        <p style={{ color: currentTheme.colors.text }}>Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div 
@@ -33,11 +52,11 @@ const AppContent = () => {
       }}
     >
       {user && (
-        <div className="fixed top-0 left-0 right-0 z-20 backdrop-blur-md border-b h-16" 
-             style={{ 
-               borderColor: currentTheme.colors.border, 
-               backgroundColor: `${currentTheme.colors.cardBg}80` 
-             }}>
+        <header className="fixed top-0 left-0 right-0 z-20 backdrop-blur-md border-b h-16" 
+               style={{ 
+                 borderColor: currentTheme.colors.border, 
+                 backgroundColor: `${currentTheme.colors.cardBg}80` 
+               }}>
           <div className="px-4 py-2 flex items-center justify-between h-full">
             <div className="flex items-center gap-3">
               <img 
@@ -47,7 +66,7 @@ const AppContent = () => {
               />
             </div>
           </div>
-        </div>
+        </header>
       )}
       
       <Navigation />
@@ -75,16 +94,6 @@ const AppContent = () => {
       </main>
       <Toaster />
     </div>
-  );
-}
-
-function App() {
-  return (
-    <Router basename="/">
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
-    </Router>
   );
 }
 
