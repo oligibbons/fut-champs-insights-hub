@@ -1,5 +1,6 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Routes, Route, Navigate } from "react-router-dom";
+// FIX: Corrected the import path to use the '@/' alias
 import { useTheme } from "@/hooks/useTheme.tsx";
 import { useAuth } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -25,7 +26,6 @@ function App() {
   const { currentTheme } = useTheme();
   const { loading, user } = useAuth();
 
-  // This is now the single, authoritative loading screen for the entire app.
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen" style={{ background: currentTheme.colors.background }}>
@@ -42,10 +42,8 @@ function App() {
         color: currentTheme.colors.text
       }}
     >
-      {/* The Navigation component will only render if a user is logged in */}
       {user && <Navigation />}
       
-      {/* The main content area where all pages will be rendered */}
       <main className={`transition-all duration-300 ${user ? 'lg:pl-[5.5rem]' : ''}`}>
         <div className="p-4 md:p-8">
           <Routes>
