@@ -398,13 +398,34 @@ const Admin = () => {
                         
                         <TabsContent value="overview" className="mt-4">
                             <Card className="glass-card">
-                                <CardHeader><CardTitle className="flex items-center gap-2" style={{ color: currentTheme.colors.text }}><BarChart3 className="h-5 w-5" style={{ color: currentTheme.colors.primary }} /> System Overview</CardTitle></CardHeader>
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2" style={{ color: currentTheme.colors.text }}>
+                                        <BarChart3 className="h-5 w-5" style={{ color: currentTheme.colors.primary }} />
+                                        System Overview
+                                    </CardTitle>
+                                </CardHeader>
                                 <CardContent>
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                        <div className="p-4 rounded-xl" style={{ backgroundColor: currentTheme.colors.surface }}><div className="flex items-center gap-3 mb-2"><Users className="h-5 w-5" style={{ color: currentTheme.colors.primary }} /><span className="font-medium" style={{ color: currentTheme.colors.text }}>Users</span></div><p className="text-2xl font-bold" style={{ color: currentTheme.colors.text }}>{systemStats.totalUsers}</p><p className="text-sm" style={{ color: currentTheme.colors.muted }}>{systemStats.activeUsers} active</p></div>
-                                        <div className="p-4 rounded-xl" style={{ backgroundColor: currentTheme.colors.surface }}><div className="flex items-center gap-3 mb-2"><Trophy className="h-5 w-5" style={{ color: currentTheme.colors.accent }} /><span className="font-medium" style={{ color: currentTheme.colors.text }}>Games</span></div><p className="text-2xl font-bold" style={{ color: currentTheme.colors.text }}>{systemStats.totalGames}</p><p className="text-sm" style={{ color: currentTheme.colors.muted }}>Total recorded</p></div>
-                                        <div className="p-4 rounded-xl" style={{ backgroundColor: currentTheme.colors.surface }}><div className="flex items-center gap-3 mb-2"><Database className="h-5 w-5" style={{ color: currentTheme.colors.secondary }} /><span className="font-medium" style={{ color: currentTheme.colors.text }}>Database</span></div><p className="text-2xl font-bold" style={{ color: currentTheme.colors.text }}>{systemStats.databaseSize}</p><p className="text-sm" style={{ color: currentTheme.colors.muted }}>Last backup: {new Date(systemStats.lastBackup).toLocaleDateString()}</p></div>
-                                        <div className="p-4 rounded-xl" style={{ backgroundColor: currentTheme.colors.surface }}><div className="flex items-center gap-3 mb-2"><Shield className="h-5 w-5" style={{ color: systemStats.serverStatus === 'online' ? '#10b981' : '#ef4444' }} /><span className="font-medium" style={{ color: currentTheme.colors.text }}>Server Status</span></div><p className="text-2xl font-bold capitalize" style={{ color: systemStats.serverStatus === 'online' ? '#10b981' : systemStats.serverStatus === 'degraded' ? '#f59e0b' : '#ef4444' }}>{systemStats.serverStatus}</p><p className="text-sm" style={{ color: currentTheme.colors.muted }}>All systems operational</p></div>
+                                        <div className="p-4 rounded-xl" style={{ backgroundColor: currentTheme.colors.surface }}>
+                                            <div className="flex items-center gap-3 mb-2"><Users className="h-5 w-5" style={{ color: currentTheme.colors.primary }} /><span className="font-medium" style={{ color: currentTheme.colors.text }}>Users</span></div>
+                                            <p className="text-2xl font-bold" style={{ color: currentTheme.colors.text }}>{systemStats.totalUsers}</p>
+                                            <p className="text-sm" style={{ color: currentTheme.colors.muted }}>{systemStats.activeUsers} active</p>
+                                        </div>
+                                        <div className="p-4 rounded-xl" style={{ backgroundColor: currentTheme.colors.surface }}>
+                                            <div className="flex items-center gap-3 mb-2"><Trophy className="h-5 w-5" style={{ color: currentTheme.colors.accent }} /><span className="font-medium" style={{ color: currentTheme.colors.text }}>Games</span></div>
+                                            <p className="text-2xl font-bold" style={{ color: currentTheme.colors.text }}>{systemStats.totalGames}</p>
+                                            <p className="text-sm" style={{ color: currentTheme.colors.muted }}>Total recorded</p>
+                                        </div>
+                                        <div className="p-4 rounded-xl" style={{ backgroundColor: currentTheme.colors.surface }}>
+                                            <div className="flex items-center gap-3 mb-2"><Database className="h-5 w-5" style={{ color: currentTheme.colors.secondary }} /><span className="font-medium" style={{ color: currentTheme.colors.text }}>Database</span></div>
+                                            <p className="text-2xl font-bold" style={{ color: currentTheme.colors.text }}>{systemStats.databaseSize}</p>
+                                            <p className="text-sm" style={{ color: currentTheme.colors.muted }}>Last backup: {new Date(systemStats.lastBackup).toLocaleDateString()}</p>
+                                        </div>
+                                        <div className="p-4 rounded-xl" style={{ backgroundColor: currentTheme.colors.surface }}>
+                                            <div className="flex items-center gap-3 mb-2"><Shield className="h-5 w-5" style={{ color: systemStats.serverStatus === 'online' ? '#10b981' : '#ef4444' }} /><span className="font-medium" style={{ color: currentTheme.colors.text }}>Server Status</span></div>
+                                            <p className="text-2xl font-bold capitalize" style={{ color: systemStats.serverStatus === 'online' ? '#10b981' : systemStats.serverStatus === 'degraded' ? '#f59e0b' : '#ef4444' }}>{systemStats.serverStatus}</p>
+                                            <p className="text-sm" style={{ color: currentTheme.colors.muted }}>All systems operational</p>
+                                        </div>
                                     </div>
                                 </CardContent>
                             </Card>
@@ -412,10 +433,58 @@ const Admin = () => {
 
                         <TabsContent value="users" className="mt-4">
                             <Card className="glass-card">
-                                <CardHeader><CardTitle className="flex items-center gap-2" style={{ color: currentTheme.colors.text }}><Users className="h-5 w-5" style={{ color: currentTheme.colors.primary }} /> User Management <Badge variant="outline" className="ml-2 text-xs">Limited Access</Badge></CardTitle></CardHeader>
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2" style={{ color: currentTheme.colors.text }}>
+                                        <Users className="h-5 w-5" style={{ color: currentTheme.colors.primary }} />
+                                        User Management
+                                        <Badge variant="outline" className="ml-2 text-xs">Limited Access</Badge>
+                                    </CardTitle>
+                                </CardHeader>
                                 <CardContent className="space-y-4">
-                                    <div className="relative"><Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4" style={{ color: currentTheme.colors.muted }} /><Input placeholder="Search users..." value={searchQuery} onChange={(e) => handleUserSearch(e.target.value)} className="pl-10" style={{ backgroundColor: currentTheme.colors.surface, borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}/></div>
-                                    <div className="rounded-lg overflow-hidden" style={{ backgroundColor: currentTheme.colors.surface }}><div className="overflow-x-auto"><table className="w-full"><thead><tr style={{ borderColor: currentTheme.colors.border }}><th className="px-4 py-3 text-left" style={{ color: currentTheme.colors.text }}>User</th><th className="px-4 py-3 text-left" style={{ color: currentTheme.colors.text }}>Created</th><th className="px-4 py-3 text-left" style={{ color: currentTheme.colors.text }}>Games</th><th className="px-4 py-3 text-left" style={{ color: currentTheme.colors.text }}>Status</th><th className="px-4 py-3 text-left" style={{ color: currentTheme.colors.text }}>Actions</th></tr></thead><tbody>{filteredUsers.map((u) => (<tr key={u.id} style={{ borderColor: currentTheme.colors.border }}><td className="px-4 py-3"><div><p className="font-medium" style={{ color: currentTheme.colors.text }}>{u.display_name || u.username || 'N/A'}</p><p className="text-sm" style={{ color: currentTheme.colors.muted }}>@{u.username || 'N/A'}</p></div></td><td className="px-4 py-3" style={{ color: currentTheme.colors.text }}>{new Date(u.created_at).toLocaleDateString()}</td><td className="px-4 py-3" style={{ color: currentTheme.colors.text }}>{u.total_games || 0} ({u.total_wins || 0}W)</td><td className="px-4 py-3"><div className="flex items-center gap-2">{u.is_admin && (<Badge className="bg-fifa-blue text-white">Admin</Badge>)}{u.is_banned ? (<Badge className="bg-fifa-red text-white">Banned</Badge>) : (<Badge className="bg-fifa-green text-white">Active</Badge>)}</div></td><td className="px-4 py-3"><div className="flex items-center gap-2"><Button size="sm" variant="outline" onClick={() => handleEditUser(u)} style={{ borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}><Edit className="h-4 w-4" /></Button><Button size="sm" variant="outline" onClick={() => setDeleteConfirmation(u)} className="border-fifa-red text-fifa-red hover:bg-fifa-red/10"><Trash2 className="h-4 w-4" /></Button></div></td></tr>))}</tbody></table></div>{filteredUsers.length === 0 && (<div className="text-center py-8"><Users className="h-12 w-12 mx-auto mb-4 opacity-50" style={{ color: currentTheme.colors.muted }} /><p style={{ color: currentTheme.colors.muted }}>No users found.</p></div>)}</div>
+                                    <div className="relative">
+                                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4" style={{ color: currentTheme.colors.muted }} />
+                                        <Input
+                                            placeholder="Search users..."
+                                            value={searchQuery}
+                                            onChange={(e) => handleUserSearch(e.target.value)}
+                                            className="pl-10"
+                                            style={{ backgroundColor: currentTheme.colors.surface, borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}
+                                        />
+                                    </div>
+                                    <div className="rounded-lg overflow-hidden" style={{ backgroundColor: currentTheme.colors.surface }}>
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full">
+                                                <thead>
+                                                    <tr style={{ borderColor: currentTheme.colors.border }}>
+                                                        <th className="px-4 py-3 text-left" style={{ color: currentTheme.colors.text }}>User</th>
+                                                        <th className="px-4 py-3 text-left" style={{ color: currentTheme.colors.text }}>Created</th>
+                                                        <th className="px-4 py-3 text-left" style={{ color: currentTheme.colors.text }}>Games</th>
+                                                        <th className="px-4 py-3 text-left" style={{ color: currentTheme.colors.text }}>Status</th>
+                                                        <th className="px-4 py-3 text-left" style={{ color: currentTheme.colors.text }}>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {filteredUsers.map((u) => (
+                                                        <tr key={u.id} style={{ borderColor: currentTheme.colors.border }}>
+                                                            <td className="px-4 py-3">
+                                                                <div>
+                                                                    <p className="font-medium" style={{ color: currentTheme.colors.text }}>{u.display_name || u.username || 'N/A'}</p>
+                                                                    <p className="text-sm" style={{ color: currentTheme.colors.muted }}>@{u.username || 'N/A'}</p>
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-4 py-3" style={{ color: currentTheme.colors.text }}>{new Date(u.created_at).toLocaleDateString()}</td>
+                                                            <td className="px-4 py-3" style={{ color: currentTheme.colors.text }}>{u.total_games || 0} ({u.total_wins || 0}W)</td>
+                                                            <td className="px-4 py-3"><div className="flex items-center gap-2">{u.is_admin && (<Badge className="bg-fifa-blue text-white">Admin</Badge>)}{u.is_banned ? (<Badge className="bg-fifa-red text-white">Banned</Badge>) : (<Badge className="bg-fifa-green text-white">Active</Badge>)}</div></td>
+                                                            <td className="px-4 py-3"><div className="flex items-center gap-2"><Button size="sm" variant="outline" onClick={() => handleEditUser(u)} style={{ borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}><Edit className="h-4 w-4" /></Button><Button size="sm" variant="outline" onClick={() => setDeleteConfirmation(u)} className="border-fifa-red text-fifa-red hover:bg-fifa-red/10"><Trash2 className="h-4 w-4" /></Button></div></td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        {filteredUsers.length === 0 && (
+                                            <div className="text-center py-8"><Users className="h-12 w-12 mx-auto mb-4 opacity-50" style={{ color: currentTheme.colors.muted }} /><p style={{ color: currentTheme.colors.muted }}>No users found.</p></div>
+                                        )}
+                                    </div>
                                     <div className="p-4 rounded-lg border border-yellow-500/20 bg-yellow-500/10"><div className="flex items-start gap-3"><AlertTriangle className="h-5 w-5 text-yellow-500 mt-0.5" /><div><p className="font-medium text-yellow-500 mb-1">Limited Functionality</p><p className="text-sm text-yellow-400">Full user management requires a secure backend API.</p></div></div></div>
                                 </CardContent>
                             </Card>
@@ -450,10 +519,10 @@ const Admin = () => {
                                 <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
                                         <h3 className="font-semibold text-white mb-2">Achievement Definitions</h3>
-                                        <div className="space-y-2 max-h-96 overflow-y-auto pr-2">{achievements.map(ach => (<div key={ach.id} className="flex items-center justify-between p-2 rounded-md hover:bg-white/10" style={{ backgroundColor: currentTheme.colors.surface }}><div><p className="font-medium text-white">{ach.title} <span className="text-xs text-gray-400">({ach.game_version})</span></p><p className="text-sm text-gray-400">{ach.description}</p></div><div className="flex items-center gap-2"><Button variant="ghost" size="icon" onClick={() => handleSelectAchievementToEdit(ach)}><Edit className="h-4 w-4 text-gray-400 hover:text-white"/></Button><Button variant="ghost" size="icon" onClick={() => handleDeleteAchievement(ach.id)}><Trash2 className="h-4 w-4 text-gray-400 hover:text-red-500"/></Button></div></div>))}</div>
+                                        <div className="space-y-2 max-h-[600px] overflow-y-auto pr-2">{achievements.map(ach => (<div key={ach.id} className="flex items-center justify-between p-2 rounded-md hover:bg-white/10" style={{ backgroundColor: currentTheme.colors.surface }}><div><p className="font-medium text-white">{ach.title} <span className="text-xs text-gray-400">({ach.game_version})</span></p><p className="text-sm text-gray-400">{ach.description}</p></div><div className="flex items-center gap-2"><Button variant="ghost" size="icon" onClick={() => handleSelectAchievementToEdit(ach)}><Edit className="h-4 w-4 text-gray-400 hover:text-white"/></Button><Button variant="ghost" size="icon" onClick={() => handleDeleteAchievement(ach.id)}><Trash2 className="h-4 w-4 text-gray-400 hover:text-red-500"/></Button></div></div>))}</div>
                                     </div>
                                     <div className="space-y-4">
-                                        <h3 className="font-semibold text-white flex items-center gap-2"><FileJson className="h-5 w-5" /> {editingAchievement ? 'Edit Achievement' : 'Create New Achievement'}</h3>
+                                        <h3 className="font-semibold text-white flex items-center gap-2"><FileJson className="h-5 w-5" /> {editingAchievement ? `Editing: ${editingAchievement.title}` : 'Create New Achievement'}</h3>
                                         <Textarea value={achievementJson} onChange={(e) => handleAchievementJsonChange(e.target.value)} rows={20} className={`font-mono text-sm ${!isJsonValid ? 'border-red-500' : ''}`} style={{ backgroundColor: currentTheme.colors.surface, color: currentTheme.colors.text }}/>
                                         {!isJsonValid && <p className="text-red-500 text-sm">Invalid JSON format.</p>}
                                         <div className="flex gap-2"><Button onClick={() => { setEditingAchievement(null); setAchievementJson(JSON.stringify(defaultAchievementJSON, null, 2)); }} variant="outline" className="w-full"><Plus className="h-4 w-4 mr-2"/> New</Button><Button onClick={handleSaveAchievement} disabled={!isJsonValid} className="w-full bg-fifa-blue hover:bg-fifa-blue/80"><Save className="h-4 w-4 mr-2" />{editingAchievement ? 'Update' : 'Save'}</Button></div>
