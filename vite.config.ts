@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
+import postcss from "./postcss.config.js"; // Import your postcss config
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -18,6 +19,9 @@ export default defineConfig(({ mode }) => ({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+  },
+  css: { // This is the crucial addition!
+    postcss,
   },
   build: {
     // Optimize for mobile
