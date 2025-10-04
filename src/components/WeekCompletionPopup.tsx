@@ -1,16 +1,17 @@
 import { WeeklyPerformance } from '@/types/futChampions';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Trophy, Star, Shield, Target, Users } from 'lucide-react';
+import { Trophy, Target, Users } from 'lucide-react';
 import CPSGauge from './CPSGauge';
 
 interface WeekCompletionPopupProps {
-  week: WeeklyPerformance | null;
+  weekData: WeeklyPerformance | null;
   isOpen: boolean;
   onClose: () => void;
+  onNewWeek: () => void; // Kept this prop from your original file
 }
 
-const WeekCompletionPopup = ({ week, isOpen, onClose }: WeekCompletionPopupProps) => {
+const WeekCompletionPopup = ({ weekData: week, isOpen, onClose }: WeekCompletionPopupProps) => {
   if (!week) return null;
 
   const winRate = week.gamesPlayed > 0 ? (week.totalWins / week.gamesPlayed) * 100 : 0;
