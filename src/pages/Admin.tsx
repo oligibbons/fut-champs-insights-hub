@@ -180,7 +180,7 @@ const Admin = () => {
             toast({ title: "Error", description: "Failed to load system statistics.", variant: "destructive" });
         }
     };
-    
+
     const fetchCardTypes = async () => {
         if (!isAdmin) return;
         const { data, error } = await supabase.from('card_types').select('*');
@@ -238,18 +238,26 @@ const Admin = () => {
     };
 
     const handleUserSearch = (query: string) => setSearchQuery(query);
-    const filteredUsers = users.filter(u => (u.username && u.username.toLowerCase().includes(searchQuery.toLowerCase())) || (u.display_name && u.display_name.toLowerCase().includes(searchQuery.toLowerCase())));
+
+    const filteredUsers = users.filter(user => 
+        (user.username && user.username.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (user.display_name && user.display_name.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
+
     const handleEditUser = (user: User) => setEditingUser(user);
-    
+
     const handleSaveUser = async () => {
         if (!editingUser) return;
         try {
-            const { error } = await supabase.from('profiles').update({
-                username: editingUser.username,
-                display_name: editingUser.display_name,
-                is_admin: editingUser.is_admin,
-                is_banned: editingUser.is_banned
-            }).eq('id', editingUser.id);
+            const { error } = await supabase
+                .from('profiles')
+                .update({
+                    username: editingUser.username,
+                    display_name: editingUser.display_name,
+                    is_admin: editingUser.is_admin,
+                    is_banned: editingUser.is_banned
+                })
+                .eq('id', editingUser.id);
             if (error) throw error;
             toast({ title: "User Updated", description: "User information has been updated successfully." });
             setEditingUser(null);
@@ -263,9 +271,12 @@ const Admin = () => {
     const handleDeleteUser = async () => {
         if (!deleteConfirmation) return;
         try {
-            const { error } = await supabase.from('profiles').delete().eq('id', deleteConfirmation.id);
+            const { error } = await supabase
+                .from('profiles')
+                .delete()
+                .eq('id', deleteConfirmation.id);
             if (error) throw error;
-            toast({ title: "Profile Deleted", description: "User profile has been deleted.", variant: "destructive" });
+            toast({ title: "Profile Deleted", description: "User profile has been deleted. Note: Authentication account still exists and requires backend deletion.", variant: "destructive" });
             setDeleteConfirmation(null);
             fetchUsers();
         } catch (error) {
@@ -278,7 +289,7 @@ const Admin = () => {
         setBackupInProgress(true);
         try {
             await new Promise(resolve => setTimeout(resolve, 2000));
-            toast({ title: "Backup Simulated", description: "Database backup simulation completed." });
+            toast({ title: "Backup Simulated", description: "Database backup simulation completed. Real backups require backend implementation." });
             setSystemStats(prev => ({ ...prev, lastBackup: new Date().toISOString() }));
         } catch (error) {
             console.error('Error simulating backup:', error);
@@ -292,7 +303,7 @@ const Admin = () => {
         setRestoreInProgress(true);
         try {
             await new Promise(resolve => setTimeout(resolve, 3000));
-            toast({ title: "Restore Simulated", description: "Database restore simulation completed." });
+            toast({ title: "Restore Simulated", description: "Database restore simulation completed. Real restores require backend implementation." });
         } catch (error) {
             console.error('Error simulating restore:', error);
             toast({ title: "Restore Failed", description: "Failed to simulate database restore.", variant: "destructive" });
@@ -338,7 +349,8 @@ const Admin = () => {
                     <Card className="glass-card">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2" style={{ color: currentTheme.colors.text }}>
-                                <BarChart3 className="h-5 w-5" style={{ color: currentTheme.colors.primary }} /> System Overview
+                                <BarChart3 className="h-5 w-5" style={{ color: currentTheme.colors.primary }} />
+                                System Overview
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -439,7 +451,7 @@ const Admin = () => {
                             <div className="p-4 rounded-lg border border-yellow-500/20 bg-yellow-500/10"><div className="flex items-start gap-3"><AlertTriangle className="h-5 w-5 text-yellow-500 mt-0.5" /><div><p className="font-medium text-yellow-500 mb-1">Limited Functionality</p><p className="text-sm text-yellow-400">This admin panel has limited functionality due to security restrictions. Full user management (including email access and complete user deletion) requires a secure backend API with service role access.</p></div></div></div>
                         </CardContent>
                     </Card>
-                    
+
                     <Card className="glass-card">
                         <CardHeader>
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
@@ -477,7 +489,7 @@ const Admin = () => {
                             </div>
                         </CardContent>
                     </Card>
-
+                    
                     <Card className="glass-card">
                         <CardHeader><CardTitle className="flex items-center gap-2" style={{ color: currentTheme.colors.text }}><Search className="h-5 w-5" style={{ color: currentTheme.colors.primary }} /> SEO Management</CardTitle></CardHeader>
                         <CardContent className="space-y-4">
