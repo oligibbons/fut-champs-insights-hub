@@ -1,3 +1,4 @@
+import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Home, BarChart2, Calendar, Trophy, Users, Settings, LogOut, Menu, LogIn, Shield } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -35,37 +36,23 @@ const Navigation = () => {
     }
   };
 
-  const navItems = user ? [
-    { to: '/', icon: <Home />, text: 'Dashboard' },
-    { to: '/current-week', icon: <Calendar />, text: 'Current Week' },
-    { to: '/squads', icon: <Users />, text: 'Squads' },
-    { to: '/players', icon: <Trophy />, text: 'Players' },
-    { to: '/analytics', icon: <BarChart2 />, text: 'Analytics' },
-    { to: '/settings', icon: <Settings />, text: 'Settings' },
-  ] : [
-    { to: '/auth', icon: <LogIn />, text: 'Login' },
-  ];
-  
-  if (user && isAdmin) {
-    navItems.push({ to: '/admin', icon: <Shield />, text: 'Admin' });
-  }
-
-
-  if (loading && !isMobile) {
-    return (
-      <aside className="hidden md:flex w-16 md:w-64 bg-gray-900 text-white p-4 flex-col transition-all duration-300">
-        <div className="mb-10 flex items-center gap-2">
-            <img src="/lovable-uploads/6b6465f4-e466-4f3b-9761-8a829fbe395c.png" alt="FUTALYST Logo" className="h-10 w-10" />
-            <h1 className="text-2xl font-bold hidden md:block">FUTALYST</h1>
-        </div>
-        <nav className="flex-1 space-y-2">
-          {Array(6).fill(0).map((_, i) => (
-            <div key={i} className="h-12 bg-gray-800 rounded animate-pulse" />
-          ))}
-        </nav>
-      </aside>
-    );
-  }
+  const navItems = React.useMemo(() => {
+    if (!user) {
+      return [{ to: '/auth', icon: <LogIn />, text: 'Login' }];
+    }
+    const items = [
+      { to: '/', icon: <Home />, text: 'Dashboard' },
+      { to: '/current-week', icon: <Calendar />, text: 'Current Week' },
+      { to: '/squads', icon: <Users />, text: 'Squads' },
+      { to: '/players', icon: <Trophy />, text: 'Players' },
+      { to: '/analytics', icon: <BarChart2 />, text: 'Analytics' },
+      { to: '/settings', icon: <Settings />, text: 'Settings' },
+    ];
+    if (isAdmin) {
+      items.push({ to: '/admin', icon: <Shield />, text: 'Admin' });
+    }
+    return items;
+  }, [user, isAdmin]);
 
   const isActive = (path: string) => location.pathname === path;
   
@@ -76,7 +63,7 @@ const Navigation = () => {
   }`;
 
   const MobileNav = () => (
-    <header className="md:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between h-16 px-4 bg-gray-900/80 backdrop-blur-lg border-b border-white/10">
+    <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between h-16 px-4 bg-gray-900/80 backdrop-blur-lg border-b border-white/10">
          <div className="flex items-center gap-2">
             <img src="/lovable-uploads/6b6465f4-e466-4f3b-9761-8a829fbe395c.png" alt="FUTALYST Logo" className="h-8 w-8" />
             <h1 className="text-xl font-bold">FUTALYST</h1>
@@ -125,7 +112,7 @@ const Navigation = () => {
 
   const DesktopNav = () => (
     <TooltipProvider>
-        <aside className="hidden md:flex w-16 md:w-64 bg-gray-900/50 backdrop-blur-lg border-r border-white/10 text-white p-4 flex-col transition-all duration-300 fixed h-full z-40">
+        <aside className="w-16 md:w-64 bg-gray-900/50 backdrop-blur-lg border-r border-white/10 text-white p-4 flex-col transition-all duration-300 fixed h-full z-40 hidden md:flex">
           <div className="mb-10 flex items-center gap-2">
             <img src="/lovable-uploads/6b6465f4-e466-4f3b-9761-8a829fbe395c.png" alt="FUTALYST Logo" className="h-10 w-10" />
             <h1 className="text-2xl font-bold hidden md:block">FUTALYST</h1>
@@ -170,12 +157,28 @@ const Navigation = () => {
     </TooltipProvider>
   );
 
-  return (
-    <>
-      <MobileNav />
-      <DesktopNav />
-    </>
-  );
+  // Prevents rendering the wrong nav bar during initial load and hydration.
+  if (isMobile === undefined) {
+    return null; 
+  }
+
+  if (loading && !isMobile) {
+    return (
+      <aside className="hidden md:flex w-16 md:w-64 bg-gray-900 text-white p-4 flex-col transition-all duration-300">
+        <div className="mb-10 flex items-center gap-2">
+            <img src="/lovable-uploads/6b6465f4-e466-4f3b-9761-8a829fbe395c.png" alt="FUTALYST Logo" className="h-10 w-10" />
+            <h1 className="text-2xl font-bold hidden md:block">FUTALYST</h1>
+        </div>
+        <nav className="flex-1 space-y-2">
+          {Array(6).fill(0).map((_, i) => (
+            <div key={i} className="h-12 bg-gray-800 rounded animate-pulse" />
+          ))}
+        </nav>
+      </aside>
+    );
+  }
+
+  return isMobile ? <MobileNav /> : <DesktopNav />;
 };
 
 export default Navigation;
