@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 
 export interface Theme {
   name: string;
@@ -42,13 +41,7 @@ const themes: Record<string, Theme> = {
       success: '#10b981',
       warning: '#f59e0b',
       error: '#ef4444',
-      fifa: {
-        blue: '#3b82f6',
-        green: '#10b981',
-        gold: '#f59e0b',
-        red: '#ef4444',
-        purple: '#8b5cf6'
-      }
+      fifa: { blue: '#3b82f6', green: '#10b981', gold: '#f59e0b', red: '#ef4444', purple: '#8b5cf6' }
     }
   },
   dark: {
@@ -66,13 +59,7 @@ const themes: Record<string, Theme> = {
       success: '#34d399',
       warning: '#fbbf24',
       error: '#f87171',
-      fifa: {
-        blue: '#6366f1',
-        green: '#34d399',
-        gold: '#fbbf24',
-        red: '#f87171',
-        purple: '#ec4899'
-      }
+      fifa: { blue: '#6366f1', green: '#34d399', gold: '#fbbf24', red: '#f87171', purple: '#ec4899' }
     }
   },
   light: {
@@ -90,13 +77,7 @@ const themes: Record<string, Theme> = {
       success: '#059669',
       warning: '#d97706',
       error: '#dc2626',
-      fifa: {
-        blue: '#2563eb',
-        green: '#059669',
-        gold: '#d97706',
-        red: '#dc2626',
-        purple: '#7c3aed'
-      }
+      fifa: { blue: '#2563eb', green: '#059669', gold: '#d97706', red: '#dc2626', purple: '#7c3aed' }
     }
   },
   champions: {
@@ -114,13 +95,7 @@ const themes: Record<string, Theme> = {
       success: '#16a34a',
       warning: '#eab308',
       error: '#dc2626',
-      fifa: {
-        blue: '#1e40af',
-        green: '#16a34a',
-        gold: '#eab308',
-        red: '#dc2626',
-        purple: '#7c2d12'
-      }
+      fifa: { blue: '#1e40af', green: '#16a34a', gold: '#eab308', red: '#dc2626', purple: '#7c2d12' }
     }
   },
   neon: {
@@ -138,18 +113,22 @@ const themes: Record<string, Theme> = {
       success: '#06ffa5',
       warning: '#ffbe0b',
       error: '#ff006e',
-      fifa: {
-        blue: '#3b82f6',
-        green: '#06ffa5',
-        gold: '#ffbe0b',
-        red: '#ff006e',
-        purple: '#a855f7'
-      }
+      fifa: { blue: '#3b82f6', green: '#06ffa5', gold: '#ffbe0b', red: '#ff006e', purple: '#a855f7' }
     }
   }
 };
 
-export const useTheme = () => {
+interface ThemeContextType {
+  currentTheme: Theme;
+  currentThemeName: string;
+  setTheme: (themeName: string) => void;
+  themes: string[];
+  themeData: Record<string, Theme>;
+}
+
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+
+export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [currentThemeName, setCurrentThemeName] = useState<string>('futvisionary');
 
   useEffect(() => {
@@ -162,23 +141,10 @@ export const useTheme = () => {
   useEffect(() => {
     localStorage.setItem('futalyst-theme', currentThemeName);
     
-    // Apply theme to document root
     const theme = themes[currentThemeName];
-    const root = document.documentElement;
-    
-    // Update CSS custom properties
-    root.style.setProperty('--color-primary', theme.colors.primary);
-    root.style.setProperty('--color-secondary', theme.colors.secondary);
-    root.style.setProperty('--color-accent', theme.colors.accent);
-    root.style.setProperty('--color-text', theme.colors.text);
-    root.style.setProperty('--color-muted', theme.colors.muted);
-    root.style.setProperty('--color-success', theme.colors.success);
-    root.style.setProperty('--color-warning', theme.colors.warning);
-    root.style.setProperty('--color-error', theme.colors.error);
-    
-    // Apply background gradient to body
     document.body.style.background = theme.colors.background;
     document.body.style.color = theme.colors.text;
+
   }, [currentThemeName]);
 
   const setTheme = (themeName: string) => {
@@ -189,11 +155,21 @@ export const useTheme = () => {
 
   const currentTheme = themes[currentThemeName];
 
-  return {
+  const value = {
     currentTheme,
     currentThemeName,
     setTheme,
     themes: Object.keys(themes),
-    themeData: themes
+    themeData: themes,
   };
+
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+};
+
+export const useTheme = () => {
+  const context = useContext(ThemeContext);
+  if (context === undefined) {
+    throw new Error('useTheme must be used within a ThemeProvider');
+  }
+  return context;
 };
