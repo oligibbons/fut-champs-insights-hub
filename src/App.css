@@ -1,3 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap');
+
+
 /* Global theme variables */
 :root {
   --theme-primary: #00D4FF;
@@ -19,8 +22,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Import FUT Visionary brand fonts */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap');
 
 /* Base body styling with brand fonts */
 body {
