@@ -5,7 +5,7 @@ import App from './App';
 import { AuthProvider } from './contexts/AuthContext';
 import { GameVersionProvider } from './contexts/GameVersionContext';
 // FIX: Corrected the import path to use the '@/' alias
-import { ThemeProvider } from '@/hooks/useTheme.ts';
+import { ThemeProvider } from '@/hooks/useTheme.tsx';
 import './App.css';
 import { Toaster } from "@/components/ui/sonner";
 
