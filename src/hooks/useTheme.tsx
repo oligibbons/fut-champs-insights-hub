@@ -1,78 +1,79 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 
-// Color conversion utility to bridge your theme and the ShadCN theme
-const hexToHSL = (hex: string): string => {
-  let r = 0, g = 0, b = 0;
-  if (hex.length === 4) {
-    r = parseInt(hex[1] + hex[1], 16);
-    g = parseInt(hex[2] + hex[2], 16);
-    b = parseInt(hex[3] + hex[3], 16);
-  } else if (hex.length === 7) {
-    r = parseInt(hex.substring(1, 3), 16);
-    g = parseInt(hex.substring(3, 5), 16);
-    b = parseInt(hex.substring(5, 7), 16);
-  }
-  r /= 255; g /= 255; b /= 255;
-  const max = Math.max(r, g, b), min = Math.min(r, g, b);
-  let h = 0, s = 0, l = (max + min) / 2;
-  if (max !== min) {
-    const d = max - min;
-    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-    switch (max) {
-      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-      case g: h = (b - r) / d + 2; break;
-      case b: h = (r - g) / d + 4; break;
-    }
-    h /= 6;
-  }
-  return `${(h * 360).toFixed(1)} ${(s * 100).toFixed(1)}% ${(l * 100).toFixed(1)}%`;
-};
-
-
+// The original Theme interface your components expect
 export interface Theme {
   name: string;
-  isDark: boolean; // Add a property to know if it's a dark or light theme
   colors: {
-    primary: string; // hex
-    background: string; // Can be a gradient or solid color
-    card: string; // hex for card background
-    text: string; // hex
-    border: string; // hex for borders
-    // Add other colors if they map to ShadCN variables
+    primary: string;
+    secondary: string;
+    accent: string;
+    background: string;
+    surface: string;
+    cardBg: string;
+    text: string;
+    muted: string;
+    border: string;
+    success: string;
+    warning: string;
+    error: string;
+    fifa: {
+      blue: string;
+      green: string;
+      gold: string;
+      red: string;
+      purple: string;
+    };
   };
 }
 
-// Updated themes with HSL values for ShadCN compatibility
+// Your original, complete theme definitions
 const themes: Record<string, Theme> = {
   futvisionary: {
     name: 'FUT Visionary',
-    isDark: true,
     colors: {
       primary: '#3b82f6',
+      secondary: '#8b5cf6',
+      accent: '#f59e0b',
       background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)',
-      card: '#0f172a',
+      surface: 'rgba(30, 41, 59, 0.8)',
+      cardBg: 'rgba(15, 23, 42, 0.9)',
       text: '#ffffff',
-      border: '#2c3e50',
+      muted: '#94a3b8',
+      border: 'rgba(59, 130, 246, 0.3)',
+      success: '#10b981',
+      warning: '#f59e0b',
+      error: '#ef4444',
+      fifa: { blue: '#3b82f6', green: '#10b981', gold: '#f59e0b', red: '#ef4444', purple: '#8b5cf6' }
     }
   },
-  light: {
-    name: 'Clean White',
-    isDark: false,
+  dark: {
+    name: 'Midnight',
     colors: {
-      primary: '#2563eb',
-      background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%)',
-      card: '#ffffff',
-      text: '#1e293b',
-      border: '#e2e8f0',
+        primary: '#6366f1',
+        secondary: '#ec4899',
+        accent: '#06b6d4',
+        background: 'linear-gradient(135deg, #111827 0%, #1f2937 50%, #374151 100%)',
+        surface: 'rgba(31, 41, 55, 0.8)',
+        cardBg: 'rgba(17, 24, 39, 0.9)',
+        text: '#f9fafb',
+        muted: '#9ca3af',
+        border: 'rgba(99, 102, 241, 0.3)',
+        success: '#34d399',
+        warning: '#fbbf24',
+        error: '#f87171',
+        fifa: { blue: '#6366f1', green: '#34d399', gold: '#fbbf24', red: '#f87171', purple: '#ec4899' }
     }
   },
-  // Add other themes here in the same format
+  // ... include all your other themes here (light, champions, neon)
 };
 
+// The original context type your components expect
 interface ThemeContextType {
+  currentTheme: Theme;
+  currentThemeName: string;
   setTheme: (themeName: string) => void;
-  theme: string;
-  themeData: Theme | null;
+  themes: string[];
+  themeData: Record<string, Theme>;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -87,30 +88,27 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
+  // This useEffect now correctly applies the theme colors as CSS variables
   useEffect(() => {
+    localStorage.setItem('futalyst-theme', currentThemeName);
+    
     const theme = themes[currentThemeName];
     if (!theme) return;
 
-    localStorage.setItem('futalyst-theme', currentThemeName);
     const root = document.documentElement;
 
-    // Remove old theme class and add the new one
-    root.classList.remove('dark', 'light');
-    root.classList.add(theme.isDark ? 'dark' : 'light');
-
-    // Set the body background for gradients
+    // Set CSS variables for App.css to use
+    root.style.setProperty('--theme-primary', theme.colors.primary);
+    root.style.setProperty('--theme-secondary', theme.colors.secondary);
+    root.style.setProperty('--theme-accent', theme.colors.accent);
+    root.style.setProperty('--theme-surface', theme.colors.surface);
+    root.style.setProperty('--theme-card-bg', theme.colors.cardBg);
+    root.style.setProperty('--theme-text', theme.colors.text);
+    root.style.setProperty('--theme-muted', theme.colors.muted);
+    root.style.setProperty('--theme-border', theme.colors.border);
+    
+    // Set body background for the gradient
     document.body.style.background = theme.colors.background;
-
-    // CRITICAL: Update ShadCN variables
-    root.style.setProperty('--background', hexToHSL(theme.isDark ? '#0f172a' : '#f8fafc'));
-    root.style.setProperty('--foreground', hexToHSL(theme.colors.text));
-    root.style.setProperty('--card', hexToHSL(theme.colors.card));
-    root.style.setProperty('--card-foreground', hexToHSL(theme.colors.text));
-    root.style.setProperty('--primary', hexToHSL(theme.colors.primary));
-    root.style.setProperty('--primary-foreground', hexToHSL(theme.colors.text));
-    root.style.setProperty('--border', hexToHSL(theme.colors.border));
-    root.style.setProperty('--input', hexToHSL(theme.colors.border));
-    root.style.setProperty('--ring', hexToHSL(theme.colors.primary));
 
   }, [currentThemeName]);
 
@@ -121,9 +119,12 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const value = {
-    theme: currentThemeName,
+    // This provides the `currentTheme` object that App.tsx needs
+    currentTheme: themes[currentThemeName], 
+    currentThemeName,
     setTheme,
-    themeData: themes[currentThemeName] || null
+    themes: Object.keys(themes),
+    themeData: themes,
   };
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
