@@ -31,10 +31,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const navigate = useNavigate();
 
   useEffect(() => {
-    setLoading(true);
-
-    // onAuthStateChange is called on load and whenever the auth state changes.
-    // This is the single source of truth for the user's session.
+    // onAuthStateChange is the recommended way to handle auth state.
+    // It is called on initial load and whenever the auth state changes.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session);
       const currentUser = session?.user ?? null;
@@ -42,6 +40,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (currentUser) {
         try {
+          // Fetch the user's profile to check for admin status
           const { data, error } = await supabase
             .from('profiles')
             .select('is_admin')
@@ -59,21 +58,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setIsAdmin(false);
         }
       } else {
+        // If there's no user, they can't be an admin.
         setIsAdmin(false);
       }
 
-      // Set loading to false once the session and profile have been checked.
+      // The authentication check is complete, so we can stop loading.
       setLoading(false);
-
-      if (event === 'SIGNED_OUT') {
-        navigate('/auth');
-      }
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, []);
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -93,7 +89,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    // The onAuthStateChange listener will handle navigation
+    // The onAuthStateChange listener will handle navigation to '/auth'
+    navigate('/auth');
   };
 
   const value = {
