@@ -18,8 +18,8 @@ const Admin: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen" style={{ background: currentTheme.colors.background }}>
-        <Loader2 className="h-8 w-8 animate-spin" style={{ color: currentTheme.colors.primary }}/>
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary"/>
       </div>
     );
   }
@@ -37,11 +37,11 @@ const Admin: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4 md:p-8">
-      <h1 className="text-4xl font-bold mb-8 gradient-text">Admin Dashboard</h1>
+      <h1 className="text-4xl font-bold mb-8 text-foreground">Admin Dashboard</h1>
 
       {/* Platform Overview Section */}
       <section className="mb-12">
-        <h2 className="text-2xl font-semibold mb-4 border-b pb-2">Platform Overview</h2>
+        <h2 className="text-2xl font-semibold mb-4 border-b border-border pb-2 text-muted-foreground">Platform Overview</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           
           <Card>
@@ -75,7 +75,7 @@ const Admin: React.FC = () => {
 
       {/* User Management Section */}
       <section>
-        <h2 className="text-2xl font-semibold mb-4 border-b pb-2">User Management</h2>
+        <h2 className="text-2xl font-semibold mb-4 border-b border-border pb-2 text-muted-foreground">User Management</h2>
         <Card>
             <CardHeader>
               <CardTitle>Recent Users</CardTitle>
