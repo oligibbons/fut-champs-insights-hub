@@ -1,7 +1,8 @@
 import type { WeeklyPerformance, GameResult, AIInsight } from "@/types/futChampions";
 
 // --- HELPER FUNCTIONS ---
-const calculateAllTimeStats = (weeklyData: WeeklyPerformance[]) => {
+// FIX: Added 'export' so this function can be used in other files like Analytics.tsx
+export const calculateAllTimeStats = (weeklyData: WeeklyPerformance[]) => {
   const allGames: GameResult[] = weeklyData.flatMap(w => w.games || []);
   const totalGames = allGames.length;
   if (totalGames === 0) return null;
@@ -180,7 +181,7 @@ export const generateEnhancedAIInsights = (weeklyData: WeeklyPerformance[]): AII
 
   const strengthInsights = generateStrengthInsights(allTimeStats);
   const weaknessInsights = generateWeaknessInsights(allTimeStats);
-  const trendInsights = generateTrendInsights(weeklyData);
+  const trendInsights = generateTrendInsights(allTimeStats);
 
   // Combine and sort by priority
   const allInsights = [...strengthInsights, ...weaknessInsights, ...trendInsights];
@@ -190,3 +191,4 @@ export const generateEnhancedAIInsights = (weeklyData: WeeklyPerformance[]): AII
 
   return allInsights;
 };
+
