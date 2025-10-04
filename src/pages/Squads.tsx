@@ -18,8 +18,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { useToast } from '@/hooks/use-toast';
-import { DndProvider } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
+// import { DndProvider } from 'react-dnd';
+// import { HTML5Backend } from 'react-dnd-html5-backend';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '@/hooks/useTheme';
 
@@ -66,14 +66,14 @@ const Squads = () => {
 
   if (isBuilding) {
     return (
-      <DndProvider backend={HTML5Backend}>
+      // <DndProvider backend={HTML5Backend}>
         <SquadBuilder
           squad={editingSquad || undefined}
           gameVersion={selectedGameVersion}
           onSave={handleSaveSquad}
           onCancel={() => setIsBuilding(false)}
         />
-      </DndProvider>
+      // </DndProvider>
     );
   }
 
