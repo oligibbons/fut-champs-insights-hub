@@ -9,22 +9,23 @@ interface ProtectedRouteProps {
 const ProtectedRoute = ({ children, adminOnly = false }: ProtectedRouteProps) => {
   const { user, loading, isAdmin } = useAuth();
 
-  // The loading screen is now handled by App.tsx, so we just wait here.
+  // The main loading screen is now handled by App.tsx, so we just wait here.
+  // If we are still in the initial loading state, render nothing to prevent a flicker.
   if (loading) {
-    return null; // Render nothing while waiting for auth state
+    return null;
   }
 
-  // If not loading and no user, redirect to login
+  // If loading is complete and there's no user, redirect to the login page.
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
   
-  // If this is an admin-only route and the user is not an admin, redirect to home
+  // If this is an admin-only route and the user is not an admin, redirect to the homepage.
   if (adminOnly && !isAdmin) {
     return <Navigate to="/" replace />;
   }
 
-  // If checks pass, render the protected component
+  // If all checks pass, render the protected component.
   return <>{children}</>;
 };
 
