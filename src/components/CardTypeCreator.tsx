@@ -7,7 +7,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useGameVersion } from '@/contexts/GameVersionContext';
-import { Paintbrush, Plus, Trash2 } from 'lucide-react';
+import { Paintbrush, Plus, Trash2, Edit, Copy } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface CardType {
   id: string;
@@ -22,6 +29,7 @@ const CardTypeCreator = () => {
   const { toast } = useToast();
   const [cardTypes, setCardTypes] = useState<CardType[]>([]);
   const [newCardType, setNewCardType] = useState({ name: '', color: '#ffffff', text_color: '#000000' });
+  const [editingCardType, setEditingCardType] = useState<CardType | null>(null);
 
   const fetchCardTypes = async () => {
     if (!user) return;
@@ -69,6 +77,46 @@ const CardTypeCreator = () => {
     }
   };
 
+  const handleEdit = (card: CardType) => {
+    setEditingCardType(card);
+  };
+
+  const handleUpdate = async () => {
+    if (!editingCardType) return;
+
+    const { error } = await supabase
+      .from('card_types')
+      .update({ name: editingCardType.name, color: editingCardType.color, text_color: editingCardType.text_color })
+      .eq('id', editingCardType.id);
+
+    if (error) {
+      toast({ title: "Error updating card type", description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: "Card Type Updated!", description: `${editingCardType.name} has been updated.` });
+      setEditingCardType(null);
+      fetchCardTypes();
+    }
+  };
+
+  const handleDuplicate = async (card: CardType) => {
+    if (!user) return;
+    const { error } = await supabase.from('card_types').insert({
+      name: `${card.name} (Copy)`,
+      color: card.color,
+      text_color: card.text_color,
+      id: `${card.name.toLowerCase().replace(/\s+/g, '-')}-copy`,
+      user_id: user.id,
+      game_version: gameVersion,
+    });
+
+    if (error) {
+      toast({ title: "Error duplicating card type", description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: "Card Type Duplicated!", description: `${card.name} has been duplicated.` });
+      fetchCardTypes();
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -108,9 +156,45 @@ const CardTypeCreator = () => {
                             <div className="w-4 h-4 rounded-full border border-border" style={{backgroundColor: card.color}}></div>
                             <span className="font-medium">{card.name}</span>
                         </div>
-                        <Button variant="destructive" size="icon" className="h-7 w-7" onClick={() => handleDelete(card.id)}>
-                            <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => handleEdit(card)}>
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Edit Card Type</DialogTitle>
+                              </DialogHeader>
+                              {editingCardType && (
+                                <div className="space-y-4">
+                                  <div className="space-y-2">
+                                    <Label htmlFor="edit-card-name">Card Name</Label>
+                                    <Input id="edit-card-name" value={editingCardType.name} onChange={(e) => setEditingCardType({ ...editingCardType, name: e.target.value })} />
+                                  </div>
+                                  <div className="flex gap-4">
+                                    <div className="space-y-2">
+                                      <Label htmlFor="edit-card-color">Card Color</Label>
+                                      <Input id="edit-card-color" type="color" value={editingCardType.color} onChange={(e) => setEditingCardType({ ...editingCardType, color: e.target.value })} />
+                                    </div>
+                                    <div className="space-y-2">
+                                      <Label htmlFor="edit-text-color">Text Color</Label>
+                                      <Input id="edit-text-color" type="color" value={editingCardType.text_color} onChange={(e) => setEditingCardType({ ...editingCardType, text_color: e.target.value })} />
+                                    </div>
+                                  </div>
+                                  <Button onClick={handleUpdate}>Save Changes</Button>
+                                </div>
+                              )}
+                            </DialogContent>
+                          </Dialog>
+                          <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => handleDuplicate(card)}>
+                              <Copy className="h-4 w-4" />
+                          </Button>
+                          <Button variant="destructive" size="icon" className="h-7 w-7" onClick={() => handleDelete(card.id)}>
+                              <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                     </div>
                 ))}
             </div>
