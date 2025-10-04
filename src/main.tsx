@@ -4,10 +4,12 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import { AuthProvider } from './contexts/AuthContext';
 import { GameVersionProvider } from './contexts/GameVersionContext';
-// FIX: Corrected the import path to use the '@/' alias
-import { ThemeProvider } from '@/hooks/useTheme.tsx';
-import './App.css';
+import { ThemeProvider } from './hooks/useTheme.tsx'; // Corrected path
 import { Toaster } from "@/components/ui/sonner";
+
+// Correct CSS Import Order
+import './index.css'; // Tailwind base styles
+import './App.css'; // Your custom styles
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
