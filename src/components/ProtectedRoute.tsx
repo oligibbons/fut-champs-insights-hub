@@ -5,7 +5,7 @@ import { Loader2 } from 'lucide-react';
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
 
-  // While the initial authentication check is running, show a full-screen loader.
+  // While the auth state is being determined, show a full-screen loader.
   if (loading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-gray-900">
@@ -14,12 +14,12 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  // After loading, if there is no user, redirect to the /auth page immediately.
+  // If loading is complete and there is no user, navigate to the auth page.
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
 
-  // If loading is complete and a user exists, render the requested component.
+  // If loading is complete and a user exists, render the protected content.
   return <>{children}</>;
 };
 
