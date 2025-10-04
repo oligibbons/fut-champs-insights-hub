@@ -1,6 +1,6 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { useTheme } from "@/hooks/useTheme.tsx"; // Ensure path is to .tsx file
+import { useTheme } from "@/hooks/useTheme.tsx";
 import { useAuth } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Navigation from "@/components/Navigation";
@@ -21,11 +21,11 @@ import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
 import "./App.css";
 
-// Your MainContent component is preserved
-const MainContent = () => {
+function App() {
   const { currentTheme } = useTheme();
-  const { loading, user, isAdmin } = useAuth();
+  const { loading, user } = useAuth();
 
+  // This is now the single, authoritative loading screen for the entire app.
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen" style={{ background: currentTheme.colors.background }}>
@@ -42,9 +42,11 @@ const MainContent = () => {
         color: currentTheme.colors.text
       }}
     >
+      {/* The Navigation component will only render if a user is logged in */}
       {user && <Navigation />}
       
-      <main className={`transition-all duration-300 ${user ? 'pt-16 lg:pl-[5.5rem]' : ''}`}>
+      {/* The main content area where all pages will be rendered */}
+      <main className={`transition-all duration-300 ${user ? 'lg:pl-[5.5rem]' : ''}`}>
         <div className="p-4 md:p-8">
           <Routes>
             <Route path="/auth" element={<Auth />} />
@@ -67,14 +69,6 @@ const MainContent = () => {
       </main>
       <Toaster />
     </div>
-  );
-}
-
-function App() {
-  // FIX: The <Router> component is removed from here.
-  // The providers now wrap the MainContent directly.
-  return (
-      <MainContent />
   );
 }
 
