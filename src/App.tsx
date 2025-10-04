@@ -59,10 +59,14 @@ const MainContent = () => {
           <div className="px-4 py-2 flex items-center justify-between h-full">
             <div className="flex items-center gap-3">
               <img 
-                src="/lovable-uploads/6b6465f4-e466-4f-3b-9761-8a829fbe395c.png" 
-                alt="FUTALYST Logo" 
+                src="/lovable-uploads/6b6465f4-e466-4f3b-9761-8a829fbe395c.png" 
+                alt="FUTTrackr Logo" 
                 className="w-10 h-10 object-contain"
               />
+              <div>
+                <h1 className="text-lg font-bold" style={{ color: currentTheme.colors.text }}>FUTTrackr</h1>
+                <p className="text-xs" style={{ color: currentTheme.colors.muted }}>AI-Powered FUT Analytics</p>
+              </div>
             </div>
           </div>
         </header>
