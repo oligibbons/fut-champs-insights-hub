@@ -2,6 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { GameVersionProvider } from "@/contexts/GameVersionContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Navigation from "@/components/Navigation";
 import Index from "./pages/Index";
@@ -24,7 +25,9 @@ function App() {
   return (
     <Router basename="/">
       <AuthProvider>
-        <MainContent />
+        <GameVersionProvider>
+          <MainContent />
+        </GameVersionProvider>
       </AuthProvider>
     </Router>
   );
@@ -63,10 +66,6 @@ const MainContent = () => {
                 alt="FUTTrackr Logo" 
                 className="w-10 h-10 object-contain"
               />
-              <div>
-                <h1 className="text-lg font-bold" style={{ color: currentTheme.colors.text }}>FUTTrackr</h1>
-                <p className="text-xs" style={{ color: currentTheme.colors.muted }}>AI-Powered FUT Analytics</p>
-              </div>
             </div>
           </div>
         </header>
