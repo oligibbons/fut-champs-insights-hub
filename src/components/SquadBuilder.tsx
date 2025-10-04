@@ -220,6 +220,9 @@ const SquadBuilder = ({ squad, gameVersion, onSave, onCancel }: SquadBuilderProp
                       {position.player ? (
                         <div className="relative w-16 text-center">
                           <div className={cn("w-12 h-12 rounded-full mx-auto flex flex-col items-center justify-center text-xs font-bold transition-all duration-200 group-hover:scale-110", getCardTypeClasses(position.player.cardType))}>
+                            {position.player.isEvolution && (
+                                <div className="absolute inset-0 rounded-full border-2 border-teal-400 animate-ping"></div>
+                            )}
                             <div className="text-sm font-bold">{position.player.rating}</div>
                             <div className="text-xs -mt-1">{position.position}</div>
                           </div>
