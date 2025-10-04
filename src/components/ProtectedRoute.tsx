@@ -1,25 +1,30 @@
 import { useAuth } from '@/hooks/useAuth';
 import { Navigate } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
 
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+  adminOnly?: boolean;
+}
 
-  // While the auth state is being determined, show a full-screen loader.
+const ProtectedRoute = ({ children, adminOnly = false }: ProtectedRouteProps) => {
+  const { user, loading, isAdmin } = useAuth();
+
+  // The loading screen is now handled by App.tsx, so we just wait here.
   if (loading) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-gray-900">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-      </div>
-    );
+    return null; // Render nothing while waiting for auth state
   }
 
-  // If loading is complete and there is no user, navigate to the auth page.
+  // If not loading and no user, redirect to login
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
+  
+  // If this is an admin-only route and the user is not an admin, redirect to home
+  if (adminOnly && !isAdmin) {
+    return <Navigate to="/" replace />;
+  }
 
-  // If loading is complete and a user exists, render the protected content.
+  // If checks pass, render the protected component
   return <>{children}</>;
 };
 
