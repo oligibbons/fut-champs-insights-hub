@@ -31,7 +31,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const navigate = useNavigate();
 
   useEffect(() => {
-    let isMounted = true;
+    setLoading(true);
 
     const fetchUserProfile = async (user: User | null) => {
       if (!user) {
@@ -44,55 +44,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .select('is_admin')
           .eq('id', user.id)
           .single();
+        
         if (error) {
-          console.error('Error fetching user profile:', error);
+          console.error('Error fetching user profile:', error.message);
           setIsAdmin(false);
         } else if (data) {
-          setIsAdmin(data.is_admin);
+          setIsAdmin(data.is_admin || false);
         }
-      } catch (error) {
-        console.error('Error fetching user profile:', error);
+      } catch (e) {
+        console.error('Exception fetching user profile:', e);
         setIsAdmin(false);
       }
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (!isMounted) return;
-        
         setSession(session);
-        setUser(session?.user ?? null);
-        await fetchUserProfile(session?.user ?? null);
-        
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
+        await fetchUserProfile(currentUser);
+        setLoading(false);
+
         if (event === 'SIGNED_OUT') {
           navigate('/auth');
         }
-        
-        setLoading(false);
       }
     );
 
-    const initializeAuth = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) throw error;
-
-        if (isMounted) {
-          setSession(session);
-          setUser(session?.user ?? null);
-          await fetchUserProfile(session?.user ?? null);
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error('Error initializing auth:', error);
-        if (isMounted) setLoading(false);
-      }
-    };
-
-    initializeAuth();
-
     return () => {
-      isMounted = false;
       subscription.unsubscribe();
     };
   }, [navigate]);
@@ -128,7 +107,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signOut,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
 };
 
-export { AuthContext }
+export { AuthContext };
