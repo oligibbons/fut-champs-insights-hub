@@ -26,45 +26,80 @@ export interface Theme {
   };
 }
 
-// Your original, complete theme definitions
+// --- REVISED & ENHANCED THEMES ---
 const themes: Record<string, Theme> = {
   futvisionary: {
     name: 'FUT Visionary',
     colors: {
-      primary: '#3b82f6',
-      secondary: '#8b5cf6',
-      accent: '#f59e0b',
-      background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)',
-      surface: 'rgba(30, 41, 59, 0.8)',
-      cardBg: 'rgba(15, 23, 42, 0.9)',
-      text: '#ffffff',
-      muted: '#94a3b8',
-      border: 'rgba(59, 130, 246, 0.3)',
-      success: '#10b981',
-      warning: '#f59e0b',
-      error: '#ef4444',
-      fifa: { blue: '#3b82f6', green: '#10b981', gold: '#f59e0b', red: '#ef4444', purple: '#8b5cf6' }
+      primary: '#00D4FF', // Brighter, more energetic cyan
+      secondary: '#6C5CE7', // Deep violet
+      accent: '#00FF88', // Sharp, data-vis green
+      background: 'linear-gradient(145deg, #0D1117 0%, #161B22 100%)', // Deeper, more subtle space gradient
+      surface: 'rgba(22, 27, 34, 0.8)',
+      cardBg: 'rgba(13, 17, 23, 0.7)',
+      text: '#EAEAEA',
+      muted: '#8892B0',
+      border: 'rgba(0, 212, 255, 0.2)',
+      success: '#28A745',
+      warning: '#FFC107',
+      error: '#DC3545',
+      fifa: { blue: '#00D4FF', green: '#00FF88', gold: '#FFC107', red: '#DC3545', purple: '#6C5CE7' }
     }
   },
-  dark: {
-    name: 'Midnight',
+  champions: {
+    name: 'Champions',
     colors: {
-        primary: '#6366f1',
-        secondary: '#ec4899',
-        accent: '#06b6d4',
-        background: 'linear-gradient(135deg, #111827 0%, #1f2937 50%, #374151 100%)',
-        surface: 'rgba(31, 41, 55, 0.8)',
-        cardBg: 'rgba(17, 24, 39, 0.9)',
-        text: '#f9fafb',
-        muted: '#9ca3af',
-        border: 'rgba(99, 102, 241, 0.3)',
-        success: '#34d399',
-        warning: '#fbbf24',
-        error: '#f87171',
-        fifa: { blue: '#6366f1', green: '#34d399', gold: '#fbbf24', red: '#f87171', purple: '#ec4899' }
+      primary: '#FBC02D', // Iconic Champions League Gold
+      secondary: '#0D47A1', // Deep Champions League Blue
+      accent: '#FFFFFF',
+      background: 'linear-gradient(135deg, #001f3f 0%, #000b1a 100%)', // Very dark navy
+      surface: 'rgba(13, 71, 161, 0.5)',
+      cardBg: 'rgba(0, 31, 63, 0.7)',
+      text: '#FFFFFF',
+      muted: '#B0BEC5',
+      border: 'rgba(251, 192, 45, 0.3)',
+      success: '#4CAF50',
+      warning: '#FBC02D',
+      error: '#F44336',
+      fifa: { blue: '#0D47A1', green: '#4CAF50', gold: '#FBC02D', red: '#F44336', purple: '#5E35B1' }
     }
   },
-  // ... include all your other themes here (light, champions, neon)
+  volt: {
+    name: 'Volt',
+    colors: {
+      primary: '#DFFF00', // Electric "Volt" Green/Yellow
+      secondary: '#FF00FF', // Hot Magenta
+      accent: '#00FFFF', // Cyan accent
+      background: 'linear-gradient(135deg, #050505 0%, #1C1C1C 100%)', // Near-black for max contrast
+      surface: 'rgba(28, 28, 28, 0.8)',
+      cardBg: 'rgba(10, 10, 10, 0.7)',
+      text: '#FFFFFF',
+      muted: '#A0A0A0',
+      border: 'rgba(223, 255, 0, 0.3)',
+      success: '#DFFF00',
+      warning: '#FFBE0B',
+      error: '#FF00FF',
+      fifa: { blue: '#00FFFF', green: '#DFFF00', gold: '#FFBE0B', red: '#FF00FF', purple: '#7f00ff' }
+    }
+  },
+  light: {
+    name: 'Day Mode',
+    colors: {
+      primary: '#0052CC', // Professional, strong blue
+      secondary: '#5E4DB2',
+      accent: '#DE350B',
+      background: '#F4F5F7', // Soft, off-white to reduce eye-strain
+      surface: 'rgba(255, 255, 255, 0.9)',
+      cardBg: 'rgba(255, 255, 255, 1)',
+      text: '#172B4D', // Dark navy for crisp text
+      muted: '#6B778C',
+      border: 'rgba(0, 82, 204, 0.2)',
+      success: '#00875A',
+      warning: '#FFAB00',
+      error: '#DE350B',
+      fifa: { blue: '#0052CC', green: '#00875A', gold: '#FFAB00', red: '#DE350B', purple: '#5E4DB2' }
+    }
+  },
 };
 
 // The original context type your components expect
