@@ -50,21 +50,23 @@ const MainContent = () => {
         color: currentTheme.colors.text
       }}
     >
-      <header className="fixed top-0 left-0 right-0 z-20 backdrop-blur-md border-b h-16" 
-             style={{ 
-               borderColor: currentTheme.colors.border, 
-               backgroundColor: `${currentTheme.colors.cardBg}80` 
-             }}>
-        <div className="px-4 py-2 flex items-center justify-between h-full">
-          <div className="flex items-center gap-3">
-            <img 
-              src="/lovable-uploads/6b6465f4-e466-4f3b-9761-8a829fbe395c.png" 
-              alt="FUTALYST Logo" 
-              className="w-10 h-10 object-contain"
-            />
+      {user && (
+        <header className="fixed top-0 left-0 right-0 z-20 backdrop-blur-md border-b h-16" 
+               style={{ 
+                 borderColor: currentTheme.colors.border, 
+                 backgroundColor: `${currentTheme.colors.cardBg}80` 
+               }}>
+          <div className="px-4 py-2 flex items-center justify-between h-full">
+            <div className="flex items-center gap-3">
+              <img 
+                src="/lovable-uploads/6b6465f4-e466-4f-3b-9761-8a829fbe395c.png" 
+                alt="FUTALYST Logo" 
+                className="w-10 h-10 object-contain"
+              />
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
+      )}
       
       <Navigation />
       
