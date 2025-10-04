@@ -1,6 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap');
 
-
 /* Global theme variables */
 :root {
   --theme-primary: #00D4FF;
@@ -17,11 +16,6 @@
   --font-primary: 'Poppins', sans-serif;
   --font-mono: 'Space Mono', monospace;
 }
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 
 /* Base body styling with brand fonts */
 body {
@@ -44,7 +38,7 @@ body {
   border-color: var(--theme-border);
   backdrop-filter: blur(20px);
   border-width: 1px;
-  box-shadow:
+  box-shadow: 
     0 25px 50px -12px rgba(0, 0, 0, 0.4),
     0 15px 30px -5px rgba(0, 212, 255, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
@@ -54,7 +48,7 @@ body {
 /* Only apply hover effects to elements with the interactive-card class */
 .interactive-card.glass-card:hover {
   transform: translateY(-8px) scale(1.02);
-  box-shadow:
+  box-shadow: 
     0 35px 70px -12px rgba(0, 0, 0, 0.5),
     0 25px 50px -5px rgba(0, 212, 255, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.15);
@@ -215,7 +209,7 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background:
+  background: 
     radial-gradient(circle at 20% 20%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
     radial-gradient(circle at 80% 80%, rgba(108, 92, 231, 0.1) 0%, transparent 50%),
     radial-gradient(circle at 40% 90%, rgba(0, 255, 136, 0.05) 0%, transparent 50%);
@@ -241,19 +235,19 @@ body {
 
 /* Depth and shadow effects */
 .shadow-depth-sm {
-  box-shadow:
+  box-shadow: 
     0 2px 8px rgba(0, 0, 0, 0.1),
     0 4px 16px rgba(0, 212, 255, 0.05);
 }
 
 .shadow-depth-md {
-  box-shadow:
+  box-shadow: 
     0 8px 32px rgba(0, 0, 0, 0.2),
     0 16px 64px rgba(0, 212, 255, 0.1);
 }
 
 .shadow-depth-lg {
-  box-shadow:
+  box-shadow: 
     0 16px 64px rgba(0, 0, 0, 0.3),
     0 32px 128px rgba(0, 212, 255, 0.15);
 }
@@ -376,7 +370,7 @@ body {
   background: rgba(255, 255, 255, 0.8);
   border-color: rgba(108, 92, 231, 0.15);
   backdrop-filter: blur(20px);
-  box-shadow:
+  box-shadow: 
     0 25px 50px -12px rgba(0, 0, 0, 0.1),
     0 15px 30px -5px rgba(108, 92, 231, 0.05),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
@@ -895,6 +889,13 @@ input::-webkit-inner-spin-button {
   border-radius: 1rem;
   padding: 1.5rem;
   margin-bottom: 1rem;
+  transition: all 0.3s ease;
+}
+
+.admin-card:hover {
+  border-color: var(--theme-primary);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2), 0 0 20px var(--theme-primary);
 }
 
 .admin-card-header {
@@ -927,9 +928,9 @@ input::-webkit-inner-spin-button {
 }
 
 .admin-stat-value {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--theme-text);
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--theme-primary);
 }
 
 
@@ -979,3 +980,4 @@ input::-webkit-inner-spin-button {
     font-size: 0.875rem;
   }
 }
+
