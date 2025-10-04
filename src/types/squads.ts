@@ -29,6 +29,7 @@ export interface PlayerCard {
   cleanSheets: number;
   imageUrl: string;
   lastUsed?: string;
+  isEvolution?: boolean;
 }
 
 export interface SquadPosition {
