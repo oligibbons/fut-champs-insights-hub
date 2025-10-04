@@ -35,7 +35,6 @@ const MainContent = () => {
   const { loading, user } = useAuth();
 
   if (loading) {
-    // You can replace this with a more sophisticated loading spinner
     return (
       <div className="flex items-center justify-center h-screen" style={{ background: currentTheme.colors.background }}>
         <p style={{ color: currentTheme.colors.text }}>Loading...</p>
