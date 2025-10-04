@@ -19,15 +19,13 @@ import Achievements from "./pages/Achievements";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
-import { Toaster } from "@/components/ui/sonner"; // Use only one toaster
-import "./App.css"; // Keep this for any future global styles
+import { Toaster } from "@/components/ui/sonner";
+import "./App.css";
 
 function App() {
   const { setTheme } = useTheme();
   const { loading, user } = useAuth();
 
-  // This is the CORRECT way to apply the theme.
-  // It adds 'dark' or 'light' to the root element, allowing Tailwind to work.
   useEffect(() => {
     const storedTheme = localStorage.getItem("vite-ui-theme") || "dark";
     setTheme(storedTheme as "light" | "dark" | "system");
@@ -42,12 +40,8 @@ function App() {
   }
 
   return (
-    // This div NO LONGER has an inline style tag.
-    // It uses Tailwind classes, which will now work correctly.
     <div className="min-h-screen bg-background text-foreground transition-colors duration-500">
-      
       {user && <Navigation />}
-      
       <main className={`transition-all duration-300 ${user ? 'lg:pl-[5.5rem]' : ''}`}>
         <div className="p-4 md:p-8">
           <Routes>
