@@ -25,6 +25,7 @@ export interface Theme {
   };
 }
 
+// Your existing theme definitions are perfect, no changes needed here.
 const themes: Record<string, Theme> = {
   futvisionary: {
     name: 'FUT Visionary',
@@ -138,12 +139,26 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
+  // THIS IS THE CORRECTED SECTION
   useEffect(() => {
     localStorage.setItem('futalyst-theme', currentThemeName);
     
     const theme = themes[currentThemeName];
+    const root = document.documentElement; // Get the root element (<html>)
+
+    // Apply the theme by setting the CSS custom properties
+    root.style.setProperty('--theme-primary', theme.colors.primary);
+    root.style.setProperty('--theme-secondary', theme.colors.secondary);
+    root.style.setProperty('--theme-accent', theme.colors.accent);
+    root.style.setProperty('--theme-background', theme.colors.background);
+    root.style.setProperty('--theme-surface', theme.colors.surface);
+    root.style.setProperty('--theme-card-bg', theme.colors.cardBg);
+    root.style.setProperty('--theme-text', theme.colors.text);
+    root.style.setProperty('--theme-muted', theme.colors.muted);
+    root.style.setProperty('--theme-border', theme.colors.border);
+    
+    // Also set the body background for the gradient to work correctly
     document.body.style.background = theme.colors.background;
-    document.body.style.color = theme.colors.text;
 
   }, [currentThemeName]);
 
