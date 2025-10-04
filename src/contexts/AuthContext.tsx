@@ -55,7 +55,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsAdmin(false);
       }
       
-      // This will now reliably set loading to false after the first check.
       setLoading(false);
     });
 
