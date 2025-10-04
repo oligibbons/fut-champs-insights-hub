@@ -23,7 +23,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const checkUser = async (currentUser: User | null) => {
+    // Rely on onAuthStateChange for both initial session and subsequent changes.
+    // It fires once immediately with the current session state.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      setSession(session);
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+
+      // Check for admin status
       if (currentUser) {
         try {
           const { data, error } = await supabase
@@ -38,26 +45,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setIsAdmin(false);
         }
       } else {
+        // Not logged in, so not an admin
         setIsAdmin(false);
       }
-    };
-    
-    // Initial session check
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-      await checkUser(currentUser);
-      setLoading(false);
-    });
-
-    // Set up a listener for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setSession(session);
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-      setLoading(true); // Set loading while we check the new user's profile
-      await checkUser(currentUser);
+      
+      // The initial check is done, so we can stop loading.
       setLoading(false);
     });
 
@@ -97,8 +89,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     signOut,
   };
 
-  // Render children only when the initial loading is complete
-  return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
+  // FIX: Always render children. The consuming components (like ProtectedRoute)
+  // will use the 'loading' state to decide what to display.
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {
