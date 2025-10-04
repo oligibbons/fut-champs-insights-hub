@@ -5,22 +5,12 @@ import { Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTheme } from '@/hooks/useTheme';
 
-// Helper function to fetch admin statistics
+// This helper function fetches the data for the dashboard
 const fetchAdminStats = async () => {
-  const { data: users, error: usersError } = await supabase.from('profiles').select('id', { count: 'exact' });
-  if (usersError) throw new Error(usersError.message);
-
-  const { data: weeks, error: weeksError } = await supabase.from('weekly_performances').select('id', { count: 'exact' });
-  if (weeksError) throw new Error(weeksError.message);
-
-  const { data: games, error: gamesError } = await supabase.from('game_results').select('id', { count: 'exact' });
-  if (gamesError) throw new Error(gamesError.message);
-
-  return {
-    totalUsers: users?.length || 0,
-    totalWeeks: weeks?.length || 0,
-    totalGames: games?.length || 0,
-  };
+  const { count: totalUsers } = await supabase.from('profiles').select('id', { count: 'exact', head: true });
+  const { count: totalWeeks } = await supabase.from('weekly_performances').select('id', { count: 'exact', head: true });
+  const { count: totalGames } = await supabase.from('game_results').select('id', { count: 'exact', head: true });
+  return { totalUsers, totalWeeks, totalGames };
 };
 
 const Admin: React.FC = () => {
@@ -45,31 +35,37 @@ const Admin: React.FC = () => {
 
       {/* Overview Section */}
       <section className="admin-section">
+        {/* This title will now be colored by the .admin-section-title class */}
         <h2 className="admin-section-title">Platform Overview</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Apply the .admin-card class to each Card component */}
+          
+          {/* This Card will now have the colored border and background from .admin-card */}
           <Card className="admin-card">
             <CardHeader className="admin-card-header">
               <CardTitle className="admin-card-title">Total Users</CardTitle>
             </CardHeader>
             <CardContent className="admin-card-content">
-              <p className="admin-stat-value">{stats?.totalUsers}</p>
+              <p className="admin-stat-value">{stats?.totalUsers ?? 0}</p>
             </CardContent>
           </Card>
+
+          {/* This Card will now have the colored border and background from .admin-card */}
           <Card className="admin-card">
             <CardHeader className="admin-card-header">
               <CardTitle className="admin-card-title">Total Weeks Logged</CardTitle>
             </CardHeader>
             <CardContent className="admin-card-content">
-              <p className="admin-stat-value">{stats?.totalWeeks}</p>
+              <p className="admin-stat-value">{stats?.totalWeeks ?? 0}</p>
             </CardContent>
           </Card>
+
+          {/* This Card will now have the colored border and background from .admin-card */}
           <Card className="admin-card">
             <CardHeader className="admin-card-header">
               <CardTitle className="admin-card-title">Total Games Recorded</CardTitle>
             </CardHeader>
             <CardContent className="admin-card-content">
-              <p className="admin-stat-value">{stats?.totalGames}</p>
+              <p className="admin-stat-value">{stats?.totalGames ?? 0}</p>
             </CardContent>
           </Card>
         </div>
