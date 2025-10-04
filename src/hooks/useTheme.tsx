@@ -1,130 +1,78 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 
+// Color conversion utility to bridge your theme and the ShadCN theme
+const hexToHSL = (hex: string): string => {
+  let r = 0, g = 0, b = 0;
+  if (hex.length === 4) {
+    r = parseInt(hex[1] + hex[1], 16);
+    g = parseInt(hex[2] + hex[2], 16);
+    b = parseInt(hex[3] + hex[3], 16);
+  } else if (hex.length === 7) {
+    r = parseInt(hex.substring(1, 3), 16);
+    g = parseInt(hex.substring(3, 5), 16);
+    b = parseInt(hex.substring(5, 7), 16);
+  }
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0, l = (max + min) / 2;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      case b: h = (r - g) / d + 4; break;
+    }
+    h /= 6;
+  }
+  return `${(h * 360).toFixed(1)} ${(s * 100).toFixed(1)}% ${(l * 100).toFixed(1)}%`;
+};
+
+
 export interface Theme {
   name: string;
+  isDark: boolean; // Add a property to know if it's a dark or light theme
   colors: {
-    primary: string;
-    secondary: string;
-    accent: string;
-    background: string;
-    surface: string;
-    cardBg: string;
-    text: string;
-    muted: string;
-    border: string;
-    success: string;
-    warning: string;
-    error: string;
-    fifa: {
-      blue: string;
-      green: string;
-      gold: string;
-      red: string;
-      purple: string;
-    };
+    primary: string; // hex
+    background: string; // Can be a gradient or solid color
+    card: string; // hex for card background
+    text: string; // hex
+    border: string; // hex for borders
+    // Add other colors if they map to ShadCN variables
   };
 }
 
-// Your existing theme definitions are perfect, no changes needed here.
+// Updated themes with HSL values for ShadCN compatibility
 const themes: Record<string, Theme> = {
   futvisionary: {
     name: 'FUT Visionary',
+    isDark: true,
     colors: {
       primary: '#3b82f6',
-      secondary: '#8b5cf6',
-      accent: '#f59e0b',
       background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)',
-      surface: 'rgba(30, 41, 59, 0.8)',
-      cardBg: 'rgba(15, 23, 42, 0.9)',
+      card: '#0f172a',
       text: '#ffffff',
-      muted: '#94a3b8',
-      border: 'rgba(59, 130, 246, 0.3)',
-      success: '#10b981',
-      warning: '#f59e0b',
-      error: '#ef4444',
-      fifa: { blue: '#3b82f6', green: '#10b981', gold: '#f59e0b', red: '#ef4444', purple: '#8b5cf6' }
-    }
-  },
-  dark: {
-    name: 'Midnight',
-    colors: {
-      primary: '#6366f1',
-      secondary: '#ec4899',
-      accent: '#06b6d4',
-      background: 'linear-gradient(135deg, #111827 0%, #1f2937 50%, #374151 100%)',
-      surface: 'rgba(31, 41, 55, 0.8)',
-      cardBg: 'rgba(17, 24, 39, 0.9)',
-      text: '#f9fafb',
-      muted: '#9ca3af',
-      border: 'rgba(99, 102, 241, 0.3)',
-      success: '#34d399',
-      warning: '#fbbf24',
-      error: '#f87171',
-      fifa: { blue: '#6366f1', green: '#34d399', gold: '#fbbf24', red: '#f87171', purple: '#ec4899' }
+      border: '#2c3e50',
     }
   },
   light: {
     name: 'Clean White',
+    isDark: false,
     colors: {
       primary: '#2563eb',
-      secondary: '#7c3aed',
-      accent: '#dc2626',
       background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%)',
-      surface: 'rgba(248, 250, 252, 0.9)',
-      cardBg: 'rgba(255, 255, 255, 0.9)',
+      card: '#ffffff',
       text: '#1e293b',
-      muted: '#64748b',
-      border: 'rgba(37, 99, 235, 0.2)',
-      success: '#059669',
-      warning: '#d97706',
-      error: '#dc2626',
-      fifa: { blue: '#2563eb', green: '#059669', gold: '#d97706', red: '#dc2626', purple: '#7c3aed' }
+      border: '#e2e8f0',
     }
   },
-  champions: {
-    name: 'Champions League',
-    colors: {
-      primary: '#1e40af',
-      secondary: '#7c2d12',
-      accent: '#eab308',
-      background: 'linear-gradient(135deg, #1e3a8a 0%, #3730a3 50%, #5b21b6 100%)',
-      surface: 'rgba(30, 58, 138, 0.8)',
-      cardBg: 'rgba(30, 64, 175, 0.9)',
-      text: '#ffffff',
-      muted: '#cbd5e1',
-      border: 'rgba(234, 179, 8, 0.4)',
-      success: '#16a34a',
-      warning: '#eab308',
-      error: '#dc2626',
-      fifa: { blue: '#1e40af', green: '#16a34a', gold: '#eab308', red: '#dc2626', purple: '#7c2d12' }
-    }
-  },
-  neon: {
-    name: 'Neon Gaming',
-    colors: {
-      primary: '#06ffa5',
-      secondary: '#ff006e',
-      accent: '#ffbe0b',
-      background: 'linear-gradient(135deg, #0a0a0a 0%, #1a0033 50%, #330066 100%)',
-      surface: 'rgba(26, 0, 51, 0.8)',
-      cardBg: 'rgba(10, 10, 10, 0.9)',
-      text: '#ffffff',
-      muted: '#a855f7',
-      border: 'rgba(6, 255, 165, 0.4)',
-      success: '#06ffa5',
-      warning: '#ffbe0b',
-      error: '#ff006e',
-      fifa: { blue: '#3b82f6', green: '#06ffa5', gold: '#ffbe0b', red: '#ff006e', purple: '#a855f7' }
-    }
-  }
+  // Add other themes here in the same format
 };
 
 interface ThemeContextType {
-  currentTheme: Theme;
-  currentThemeName: string;
   setTheme: (themeName: string) => void;
-  themes: string[];
-  themeData: Record<string, Theme>;
+  theme: string;
+  themeData: Theme | null;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -139,26 +87,30 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  // THIS IS THE CORRECTED SECTION
   useEffect(() => {
-    localStorage.setItem('futalyst-theme', currentThemeName);
-    
     const theme = themes[currentThemeName];
-    const root = document.documentElement; // Get the root element (<html>)
+    if (!theme) return;
 
-    // Apply the theme by setting the CSS custom properties
-    root.style.setProperty('--theme-primary', theme.colors.primary);
-    root.style.setProperty('--theme-secondary', theme.colors.secondary);
-    root.style.setProperty('--theme-accent', theme.colors.accent);
-    root.style.setProperty('--theme-background', theme.colors.background);
-    root.style.setProperty('--theme-surface', theme.colors.surface);
-    root.style.setProperty('--theme-card-bg', theme.colors.cardBg);
-    root.style.setProperty('--theme-text', theme.colors.text);
-    root.style.setProperty('--theme-muted', theme.colors.muted);
-    root.style.setProperty('--theme-border', theme.colors.border);
-    
-    // Also set the body background for the gradient to work correctly
+    localStorage.setItem('futalyst-theme', currentThemeName);
+    const root = document.documentElement;
+
+    // Remove old theme class and add the new one
+    root.classList.remove('dark', 'light');
+    root.classList.add(theme.isDark ? 'dark' : 'light');
+
+    // Set the body background for gradients
     document.body.style.background = theme.colors.background;
+
+    // CRITICAL: Update ShadCN variables
+    root.style.setProperty('--background', hexToHSL(theme.isDark ? '#0f172a' : '#f8fafc'));
+    root.style.setProperty('--foreground', hexToHSL(theme.colors.text));
+    root.style.setProperty('--card', hexToHSL(theme.colors.card));
+    root.style.setProperty('--card-foreground', hexToHSL(theme.colors.text));
+    root.style.setProperty('--primary', hexToHSL(theme.colors.primary));
+    root.style.setProperty('--primary-foreground', hexToHSL(theme.colors.text));
+    root.style.setProperty('--border', hexToHSL(theme.colors.border));
+    root.style.setProperty('--input', hexToHSL(theme.colors.border));
+    root.style.setProperty('--ring', hexToHSL(theme.colors.primary));
 
   }, [currentThemeName]);
 
@@ -168,14 +120,10 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const currentTheme = themes[currentThemeName];
-
   const value = {
-    currentTheme,
-    currentThemeName,
+    theme: currentThemeName,
     setTheme,
-    themes: Object.keys(themes),
-    themeData: themes,
+    themeData: themes[currentThemeName] || null
   };
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
