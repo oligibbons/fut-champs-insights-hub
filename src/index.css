@@ -1,53 +1,35 @@
+/* src/index.css */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* This is the definitive fix.
+  We are now defining the shadcn/ui variables using the custom theme 
+  variables that are being set by your useTheme.tsx hook.
+*/
 @layer base {
   :root {
-    --background: 222 84% 4%;
-    --foreground: 210 40% 98%;
-    --card: 222 84% 4%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 84% 4%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 195 91% 55%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 217 33% 17%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62% 30%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
-    --ring: 195 91% 55%;
+    --background: var(--theme-background);
+    --foreground: var(--theme-text);
+    --card: var(--theme-card-bg);
+    --card-foreground: var(--theme-text);
+    --popover: var(--theme-card-bg);
+    --popover-foreground: var(--theme-text);
+    --primary: var(--theme-primary);
+    --primary-foreground: var(--theme-text);
+    --secondary: var(--theme-secondary);
+    --secondary-foreground: var(--theme-text);
+    --muted: var(--theme-muted);
+    --muted-foreground: var(--theme-text);
+    --accent: var(--theme-accent);
+    --accent-foreground: var(--theme-text);
+    --destructive: var(--theme-error);
+    --border: var(--theme-border);
+    --input: var(--theme-border);
+    --ring: var(--theme-primary);
     --radius: 0.75rem;
-  }
-
-  .dark {
-    --background: 222 84% 4%;
-    --foreground: 210 40% 98%;
-    --card: 222 84% 4%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 84% 4%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 195 91% 55%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 217 33% 17%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62% 30%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
-    --ring: 195 91% 55%;
   }
 }
 
@@ -56,7 +38,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    /* Let the useTheme hook handle the background gradient */
     font-feature-settings: "rlig" 1, "calt" 1;
     font-family: 'Poppins', sans-serif;
   }
