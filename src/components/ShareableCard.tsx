@@ -29,9 +29,8 @@ const ShareableCard = ({ weekData, gameData, type }: ShareableCardProps) => {
         bgcolor: '#000'
       });
       
-      // Download the image
       const link = document.createElement('a');
-      link.download = `futalyst-${type}-${new Date().toISOString().split('T')[0]}.png`;
+      link.download = `futtrackr-${type}-${new Date().toISOString().split('T')[0]}.png`;
       link.href = dataUrl;
       link.click();
       
@@ -60,10 +59,8 @@ const ShareableCard = ({ weekData, gameData, type }: ShareableCardProps) => {
         bgcolor: '#000'
       });
       
-      // Create a blob from the data URL
       const blob = await fetch(dataUrl).then(res => res.blob());
       
-      // Copy to clipboard
       await navigator.clipboard.write([
         new ClipboardItem({
           'image/png': blob
@@ -96,17 +93,15 @@ const ShareableCard = ({ weekData, gameData, type }: ShareableCardProps) => {
         bgcolor: '#000'
       });
       
-      // Create tweet text
       let tweetText = '';
       
       if (type === 'week' && weekData) {
-        tweetText = `Just finished my FUT Champions week with ${weekData.totalWins} wins! Check out my stats on FUTALYST! #FIFA #FUTChampions`;
+        tweetText = `Just finished my FUT Champions week with ${weekData.totalWins} wins! Check out my stats on FUTTrackr! #FIFA #FUTChampions`;
       } else if (type === 'game' && gameData) {
         tweetText = `Just ${gameData.result === 'win' ? 'won' : 'played'} a FUT Champions game ${gameData.scoreLine}! #FIFA #FUTChampions`;
       }
       
-      // Open Twitter share dialog
-      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent('https://futalyst.com')}`, '_blank');
+      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent('https://futtrackr.com')}`, '_blank');
     } catch (error) {
       console.error('Error sharing to Twitter:', error);
       toast({
@@ -126,7 +121,6 @@ const ShareableCard = ({ weekData, gameData, type }: ShareableCardProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Shareable Card Preview */}
         <div className="overflow-hidden rounded-xl border border-white/20">
           <div 
             ref={cardRef}
@@ -137,7 +131,7 @@ const ShareableCard = ({ weekData, gameData, type }: ShareableCardProps) => {
               <div className="shareable-card-header">
                 <img 
                   src="/lovable-uploads/6b6465f4-e466-4f3b-9761-8a829fbe395c.png" 
-                  alt="FUTALYST Logo" 
+                  alt="FUTTrackr Logo" 
                   className="shareable-card-logo"
                 />
                 <div className="text-sm text-white/70">
@@ -150,7 +144,7 @@ const ShareableCard = ({ weekData, gameData, type }: ShareableCardProps) => {
                   ? `Week ${weekData.weekNumber} Summary` 
                   : type === 'game' && gameData
                   ? `Game ${gameData.gameNumber} Result`
-                  : 'FUTALYST Stats'
+                  : 'FUTTrackr Stats'
                 }
               </h1>
               
@@ -229,14 +223,13 @@ const ShareableCard = ({ weekData, gameData, type }: ShareableCardProps) => {
               )}
               
               <div className="shareable-card-footer">
-                <div>Generated with FUTALYST</div>
-                <div>futalyst.com</div>
+                <div>Generated with FUTTrackr</div>
+                <div>futtrackr.com</div>
               </div>
             </div>
           </div>
         </div>
         
-        {/* Share Options */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <Button
             onClick={generateImage}
