@@ -1,5 +1,5 @@
 import React from 'react';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,7 +16,6 @@ const fetchAdminStats = async () => {
   const { data: games, error: gamesError } = await supabase.from('game_results').select('id', { count: 'exact' });
   if (gamesError) throw new Error(gamesError.message);
 
-  // Add more stats as needed
   return {
     totalUsers: users?.length || 0,
     totalWeeks: weeks?.length || 0,
@@ -26,7 +25,7 @@ const fetchAdminStats = async () => {
 
 const Admin: React.FC = () => {
   const { currentTheme } = useTheme();
-  const { data: stats, isLoading, error } = useQuery('adminStats', fetchAdminStats);
+  const { data: stats, isLoading, error } = useQuery({ queryKey: ['adminStats'], queryFn: fetchAdminStats });
 
   if (isLoading) {
     return (
@@ -76,8 +75,7 @@ const Admin: React.FC = () => {
         </div>
       </section>
 
-      {/* Add other admin sections here */}
-      {/* For example: User Management, Content Management, etc. */}
+      {/* User Management Section */}
       <section className="admin-section">
         <h2 className="admin-section-title">User Management</h2>
         <Card className="admin-card">
@@ -85,12 +83,10 @@ const Admin: React.FC = () => {
               <CardTitle className="admin-card-title">Recent Users</CardTitle>
             </CardHeader>
             <CardContent className="admin-card-content">
-              {/* User list would go here */}
               <p>User management interface coming soon.</p>
             </CardContent>
           </Card>
       </section>
-
     </div>
   );
 };
