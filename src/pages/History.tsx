@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { WeeklyPerformance, GameResult } from '@/types/futChampions';
-import { Search, Calendar, Trophy, Clock, Star, Users, Trash2, StopCircle, History as HistoryIcon, BarChart3, LayoutGrid } from 'lucide-react';
+import { Search, Calendar, Trophy, Users, Trash2, StopCircle, History as HistoryIcon, Star } from 'lucide-react';
 import { useDataSync } from '@/hooks/useDataSync';
 import { toast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -56,7 +56,6 @@ const History = () => {
 
         return filtered.sort((a, b) => {
             if (sortBy === 'date') return new Date(b.date).getTime() - new Date(a.date).getTime();
-            // Add other sorting logic back if needed
             return 0;
         });
     }
@@ -158,11 +157,9 @@ const History = () => {
         {viewMode === 'legends' && <ClubLegends />}
       </div>
 
-      {/* Dialogs */}
       <AlertDialog open={deleteWeekDialog.isOpen} onOpenChange={(open) => setDeleteWeekDialog({ isOpen: open, weekId: null })}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Delete Week?</AlertDialogTitle><AlertDialogDescription>This action cannot be undone. All games within this week will be permanently deleted.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={confirmDeleteWeek}>Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
       <AlertDialog open={endWeekDialog.isOpen} onOpenChange={(open) => setEndWeekDialog({ isOpen: open, weekId: null })}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>End Week?</AlertDialogTitle><AlertDialogDescription>This will mark the week as completed. You won't be able to add more games.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={confirmEndWeek}>End Week</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
       
-      {/* Popups */}
       <WeekCompletionPopup isOpen={!!selectedWeek} onClose={() => setSelectedWeek(null)} weekData={selectedWeek} onNewWeek={() => {}}/>
       <GameCompletionPopup isOpen={!!selectedGame} onClose={() => setSelectedGame(null)} game={selectedGame} weekStats={selectedGame ? getWeekStatsForGame(selectedGame) : {winRate: 0, currentStreak: 0}} />
     </>
