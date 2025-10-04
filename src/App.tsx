@@ -1,4 +1,4 @@
-import { Toaster } from "@/components/ui/sonner"; // Using sonner as per your main.tsx
+import { useEffect } from 'react';
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/contexts/AuthContext";
@@ -19,29 +19,32 @@ import Achievements from "./pages/Achievements";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
-import "./App.css";
+import { Toaster } from "@/components/ui/sonner"; // Use only one toaster
+import "./App.css"; // Keep this for any future global styles
 
 function App() {
-  const { currentTheme } = useTheme();
+  const { setTheme } = useTheme();
   const { loading, user } = useAuth();
+
+  // This is the CORRECT way to apply the theme.
+  // It adds 'dark' or 'light' to the root element, allowing Tailwind to work.
+  useEffect(() => {
+    const storedTheme = localStorage.getItem("vite-ui-theme") || "dark";
+    setTheme(storedTheme as "light" | "dark" | "system");
+  }, [setTheme]);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen" style={{ background: currentTheme.colors.background }}>
-        <Loader2 className="h-8 w-8 animate-spin" style={{ color: currentTheme.colors.primary }}/>
+      <div className="flex items-center justify-center h-screen bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary"/>
       </div>
     );
   }
 
   return (
-    <div
-      className="min-h-screen transition-all duration-500 relative"
-      style={{
-        background: currentTheme.colors.background,
-        color: currentTheme.colors.text
-      }}
-    >
-    
+    // This div NO LONGER has an inline style tag.
+    // It uses Tailwind classes, which will now work correctly.
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-500">
       
       {user && <Navigation />}
       
