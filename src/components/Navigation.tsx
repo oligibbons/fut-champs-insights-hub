@@ -1,264 +1,174 @@
-import { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { useTheme } from '@/hooks/useTheme';
+import { NavLink, useLocation } from 'react-router-dom';
+import { Home, BarChart2, Calendar, Trophy, Users, Settings, LogOut, Menu, LogIn } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import {
-  Home,
-  Calendar,
-  Users,
-  TrendingUp,
-  Settings,
-  Menu,
-  X,
-  Trophy,
-  History,
-  UserPlus,
-  Crown,
-  LogOut,
-  Award,
-  Shield
-} from 'lucide-react';
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { useMobile } from '@/hooks/use-mobile';
+import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet"
+import { Button } from './ui/button';
 
 const Navigation = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
+  const { user, loading } = useAuth();
+  const { toast } = useToast();
   const location = useLocation();
-  const navigate = useNavigate();
-  const { currentTheme } = useTheme();
-  const { signOut, user } = useAuth();
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useMobile();
 
-  // Check if device is mobile
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    
-    return () => {
-      window.removeEventListener('resize', checkMobile);
-    };
-  }, []);
-
-  const navigationItems = [
-    { name: 'Dashboard', path: '/', icon: Home },
-    { name: 'Current Run', path: '/current-week', icon: Calendar },
-    { name: 'History', path: '/history', icon: History },
-    { name: 'Squads', path: '/squads', icon: Users },
-    { name: 'Players', path: '/players', icon: TrendingUp },
-    { name: 'Analytics', path: '/analytics', icon: TrendingUp },
-    { name: 'AI Insights', path: '/insights', icon: Trophy },
-    { name: 'Achievements', path: '/achievements', icon: Award },
-    { name: 'Friends', path: '/friends', icon: UserPlus },
-    { name: 'Leaderboards', path: '/leaderboards', icon: Crown },
-    { name: 'Settings', path: '/settings', icon: Settings },
-  ];
-
-  // Check if user is admin
-  const [isAdmin, setIsAdmin] = useState(false);
-  
-  useEffect(() => {
-    const checkAdmin = async () => {
-      if (user && user.email === 'olipg@hotmail.co.uk') {
-        setIsAdmin(true);
-      }
-    };
-    
-    checkAdmin();
-  }, [user]);
-
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      navigate('/auth');
-    } catch (error) {
-      console.error('Error signing out:', error);
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to log out. Please try again.",
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "You have been successfully logged out."
+      });
     }
   };
 
-  const handleNavClick = () => {
-    setIsOpen(false);
-    // Scroll to top when navigating
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  const navItems = user ? [
+    { to: '/', icon: <Home />, text: 'Dashboard' },
+    { to: '/current-week', icon: <Calendar />, text: 'Current Week' },
+    { to: '/squads', icon: <Users />, text: 'Squads' },
+    { to: '/players', icon: <Trophy />, text: 'Players' },
+    { to: '/analytics', icon: <BarChart2 />, text: 'Analytics' },
+    { to: '/settings', icon: <Settings />, text: 'Settings' },
+  ] : [
+    { to: '/auth', icon: <LogIn />, text: 'Login' },
+  ];
+
+  if (loading && !isMobile) {
+    return (
+      <aside className="hidden md:flex w-16 md:w-64 bg-gray-900 text-white p-4 flex-col transition-all duration-300">
+        <div className="mb-10 flex items-center gap-2">
+            <img src="/lovable-uploads/6b6465f4-e466-4f3b-9761-8a829fbe395c.png" alt="FUTALYST Logo" className="h-10 w-10" />
+            <h1 className="text-2xl font-bold hidden md:block">FUTALYST</h1>
+        </div>
+        <nav className="flex-1 space-y-2">
+          {Array(6).fill(0).map((_, i) => (
+            <div key={i} className="h-12 bg-gray-800 rounded animate-pulse" />
+          ))}
+        </nav>
+      </aside>
+    );
+  }
+
+  const isActive = (path: string) => location.pathname === path;
+  
+  const navLinkClasses = (path: string) => `flex items-center p-3 rounded-lg transition-colors ${
+      isActive(path)
+        ? 'bg-fifa-blue text-white'
+        : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+  }`;
+
+  const MobileNav = () => (
+    <header className="md:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between h-16 px-4 bg-gray-900/80 backdrop-blur-lg border-b border-white/10">
+         <div className="flex items-center gap-2">
+            <img src="/lovable-uploads/6b6465f4-e466-4f3b-9761-8a829fbe395c.png" alt="FUTALYST Logo" className="h-8 w-8" />
+            <h1 className="text-xl font-bold">FUTALYST</h1>
+         </div>
+         <Sheet>
+            <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                    <Menu className="h-6 w-6" />
+                </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="bg-gray-900 border-l-gray-800 text-white w-72 p-4 flex flex-col">
+                 <div className="mb-10 flex items-center gap-2 border-b border-white/10 pb-4">
+                    <img src="/lovable-uploads/6b6465f4-e466-4f3b-9761-8a829fbe395c.png" alt="FUTALYST Logo" className="h-10 w-10" />
+                    <h1 className="text-2xl font-bold">FUTALYST</h1>
+                </div>
+                <nav className="flex-1 space-y-2">
+                    {navItems.map((item) => (
+                        <SheetClose asChild key={item.to}>
+                            <NavLink
+                                to={item.to}
+                                className={navLinkClasses(item.to)}
+                            >
+                                <div className="w-6 h-6">{item.icon}</div>
+                                <span className="ml-4 text-base font-medium">{item.text}</span>
+                            </NavLink>
+                        </SheetClose>
+                    ))}
+                </nav>
+                {user && (
+                    <div className="mt-auto">
+                        <SheetClose asChild>
+                            <button
+                                onClick={handleLogout}
+                                className="flex items-center p-3 rounded-lg text-gray-400 hover:bg-red-500/20 hover:text-red-400 w-full transition-colors"
+                            >
+                                <LogOut />
+                                <span className="ml-4 text-base font-medium">Logout</span>
+                            </button>
+                        </SheetClose>
+                    </div>
+                )}
+            </SheetContent>
+         </Sheet>
+    </header>
+  );
+
+  const DesktopNav = () => (
+    <TooltipProvider>
+        <aside className="hidden md:flex w-16 md:w-64 bg-gray-900/50 backdrop-blur-lg border-r border-white/10 text-white p-4 flex-col transition-all duration-300 fixed h-full z-40">
+          <div className="mb-10 flex items-center gap-2">
+            <img src="/lovable-uploads/6b6465f4-e466-4f3b-9761-8a829fbe395c.png" alt="FUTALYST Logo" className="h-10 w-10" />
+            <h1 className="text-2xl font-bold hidden md:block">FUTALYST</h1>
+          </div>
+          <nav className="flex-1 space-y-2">
+            {navItems.map((item) => (
+              <Tooltip key={item.to}>
+                <TooltipTrigger asChild>
+                  <NavLink
+                    to={item.to}
+                    className={navLinkClasses(item.to)}
+                  >
+                    <div className="w-6 h-6">{item.icon}</div>
+                    <span className="ml-4 hidden md:block">{item.text}</span>
+                  </NavLink>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="block md:hidden bg-gray-800 border-none text-white">
+                  <p>{item.text}</p>
+                </TooltipContent>
+              </Tooltip>
+            ))}
+          </nav>
+          {user && (
+            <div className="mt-auto">
+               <Tooltip>
+                <TooltipTrigger asChild>
+                    <button
+                        onClick={handleLogout}
+                        className="flex items-center p-3 rounded-lg text-gray-400 hover:bg-red-500/20 hover:text-red-400 w-full transition-colors"
+                    >
+                        <LogOut />
+                        <span className="ml-4 hidden md:block">Logout</span>
+                    </button>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="block md:hidden bg-gray-800 border-none text-white">
+                  <p>Logout</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          )}
+        </aside>
+    </TooltipProvider>
+  );
 
   return (
     <>
-      {/* Mobile Menu Button */}
-      <div className="lg:hidden fixed top-20 left-4 z-40">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => setIsOpen(!isOpen)}
-          style={{
-            backgroundColor: currentTheme.colors.surface,
-            borderColor: currentTheme.colors.border,
-            color: currentTheme.colors.text
-          }}
-          className="static-element"
-        >
-          {isOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-        </Button>
-      </div>
-
-      {/* Mobile Navigation Overlay */}
-      {isOpen && isMobile && (
-        <div
-          className="fixed inset-0 bg-black/50 z-20 backdrop-blur-sm"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
-
-      {/* Navigation Sidebar - Mobile Optimized */}
-      <nav 
-        className={`
-          fixed left-0 top-16 h-[calc(100vh-4rem)] border-r z-30
-          transform transition-all duration-300 ease-in-out
-          ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-          lg:translate-x-0
-          overflow-y-auto
-          static-element
-          ${isMobile ? 'mobile-nav' : ''}
-        `}
-        style={{
-          backgroundColor: currentTheme.colors.surface,
-          borderColor: currentTheme.colors.border,
-          backdropFilter: 'blur(12px)',
-          width: isMobile ? '80%' : (!isHovered && !isOpen ? '5.5rem' : '16rem'),
-          maxWidth: isMobile ? '300px' : 'none'
-        }}
-        onMouseEnter={() => !isMobile && setIsHovered(true)}
-        onMouseLeave={() => !isMobile && setIsHovered(false)}
-      >
-        {/* Close button for mobile */}
-        {isMobile && isOpen && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsOpen(false)}
-            className="absolute top-4 right-4 text-gray-400 hover:text-white"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        )}
-        
-        {/* Hover trigger area - invisible but extends beyond sidebar */}
-        {!isMobile && (
-          <div 
-            className="absolute -right-4 top-0 w-8 h-full bg-transparent hidden lg:block"
-            onMouseEnter={() => setIsHovered(true)}
-          />
-        )}
-        
-        <div className={`p-6 h-full flex flex-col ${!isHovered && !isOpen && !isMobile ? 'lg:items-center' : ''}`}>
-          <div className={`flex items-center mb-8 ${!isHovered && !isOpen && !isMobile ? 'lg:justify-center' : 'space-x-2'}`}>
-            <img 
-              src="/lovable-uploads/6b6465f4-e466-4f3b-9761-8a829fbe395c.png" 
-              alt="FUTALYST Logo" 
-              className="w-10 h-10 object-contain flex-shrink-0"
-            />
-            <div className={`transition-all duration-300 overflow-hidden ${!isHovered && !isOpen && !isMobile ? 'lg:w-0 lg:opacity-0' : 'lg:w-auto lg:opacity-100'}`}>
-              <h1 
-                className="text-xl font-bold whitespace-nowrap"
-                style={{ color: currentTheme.colors.text }}
-              >
-                FUTALYST
-              </h1>
-              <p className="text-xs whitespace-nowrap" style={{ color: currentTheme.colors.muted }}>
-                AI-Powered FUT Analytics
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-2 flex-1 overflow-y-auto pb-32">
-            {navigationItems.map((item) => {
-              const isActive = location.pathname === item.path;
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  onClick={handleNavClick}
-                  className={`
-                    flex items-center px-4 py-3 rounded-lg transition-all duration-200 nav-element
-                    ${!isHovered && !isOpen && !isMobile ? 'lg:justify-center lg:px-3' : 'space-x-3'}
-                    ${isActive 
-                      ? 'shadow-lg' 
-                      : 'hover:opacity-80'
-                    }
-                  `}
-                  style={{
-                    backgroundColor: isActive ? currentTheme.colors.primary : 'transparent',
-                    color: isActive ? '#ffffff' : currentTheme.colors.text
-                  }}
-                >
-                  <item.icon className="h-5 w-5 flex-shrink-0" />
-                  <span className={`font-medium transition-all duration-300 overflow-hidden whitespace-nowrap ${!isHovered && !isOpen && !isMobile ? 'lg:w-0 lg:opacity-0' : 'lg:w-auto lg:opacity-100'}`}>
-                    {item.name}
-                  </span>
-                </Link>
-              );
-            })}
-            
-            {/* Admin link - only visible for admin users */}
-            {isAdmin && (
-              <Link
-                to="/admin"
-                onClick={handleNavClick}
-                className={`
-                  flex items-center px-4 py-3 rounded-lg transition-all duration-200 nav-element
-                  ${!isHovered && !isOpen && !isMobile ? 'lg:justify-center lg:px-3' : 'space-x-3'}
-                  ${location.pathname === '/admin' ? 'shadow-lg' : 'hover:opacity-80'}
-                `}
-                style={{
-                  backgroundColor: location.pathname === '/admin' ? currentTheme.colors.primary : 'transparent',
-                  color: location.pathname === '/admin' ? '#ffffff' : currentTheme.colors.text
-                }}
-              >
-                <Shield className="h-5 w-5 flex-shrink-0" />
-                <span className={`font-medium transition-all duration-300 overflow-hidden whitespace-nowrap ${!isHovered && !isOpen && !isMobile ? 'lg:w-0 lg:opacity-0' : 'lg:w-auto lg:opacity-100'}`}>
-                  Admin
-                </span>
-              </Link>
-            )}
-          </div>
-
-          {/* User Section */}
-          {user && (
-            <div className="mt-auto pt-4 border-t absolute bottom-0 left-0 right-0 bg-inherit px-6 pb-6" style={{ borderColor: currentTheme.colors.border }}>
-              <div className={`mb-4 p-3 rounded-lg transition-all duration-300 overflow-hidden ${!isHovered && !isOpen && !isMobile ? 'lg:w-0 lg:opacity-0 lg:hidden' : 'lg:w-auto lg:opacity-100 lg:block'}`} 
-                   style={{ backgroundColor: currentTheme.colors.cardBg }}>
-                <p className="text-sm font-medium text-white whitespace-nowrap">{user.email}</p>
-                <p className="text-xs whitespace-nowrap" style={{ color: currentTheme.colors.muted }}>
-                  Signed in
-                </p>
-              </div>
-              <Button
-                onClick={handleSignOut}
-                variant="outline"
-                className={`w-full flex items-center gap-2 rounded-lg transition-all duration-300 nav-element ${!isHovered && !isOpen && !isMobile ? 'lg:w-12 lg:justify-center lg:px-2' : ''}`}
-                style={{
-                  backgroundColor: 'transparent',
-                  borderColor: currentTheme.colors.border,
-                  color: currentTheme.colors.text
-                }}
-              >
-                <LogOut className="h-4 w-4 flex-shrink-0" />
-                <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${!isHovered && !isOpen && !isMobile ? 'lg:w-0 lg:opacity-0' : 'lg:w-auto lg:opacity-100'}`}>
-                  Sign Out
-                </span>
-              </Button>
-            </div>
-          )}
-        </div>
-
-        {/* Dock indicator */}
-        {!isMobile && (
-          <div className={`absolute right-0 top-1/2 transform -translate-y-1/2 w-1 h-12 bg-gradient-to-b from-transparent via-white/30 to-transparent rounded-l-full transition-opacity duration-300 ${!isHovered && !isOpen ? 'lg:opacity-100' : 'lg:opacity-0'}`} />
-        )}
-      </nav>
+      <MobileNav />
+      <DesktopNav />
     </>
   );
 };
