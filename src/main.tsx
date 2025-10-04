@@ -4,17 +4,18 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import { AuthProvider } from './contexts/AuthContext';
 import { GameVersionProvider } from './contexts/GameVersionContext';
-import { ThemeProvider } from './hooks/useTheme.tsx'; // Ensure path is to .tsx file
+import { ThemeProvider } from './hooks/useTheme.tsx';
 import './App.css';
+import { Toaster } from "@/components/ui/sonner";
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    {/* This is now the single router for the entire application */}
     <BrowserRouter>
       <AuthProvider>
         <GameVersionProvider>
           <ThemeProvider>
             <App />
+            <Toaster />
           </ThemeProvider>
         </GameVersionProvider>
       </AuthProvider>
