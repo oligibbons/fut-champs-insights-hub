@@ -1,6 +1,6 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { useTheme } from "@/hooks/useTheme";
+import { useTheme } from "@/hooks/useTheme.tsx"; // Ensure path is to .tsx file
 import { useAuth } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Navigation from "@/components/Navigation";
@@ -21,14 +21,15 @@ import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
 import "./App.css";
 
-function App() {
+// Your MainContent component is preserved
+const MainContent = () => {
   const { currentTheme } = useTheme();
   const { loading, user, isAdmin } = useAuth();
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen" style={{ background: currentTheme.colors.background }}>
-        <Loader2 className="h-8 w-8 animate-spin" style={{ color: currentTheme.colors.primary }} />
+        <Loader2 className="h-8 w-8 animate-spin" style={{ color: currentTheme.colors.primary }}/>
       </div>
     );
   }
@@ -43,7 +44,7 @@ function App() {
     >
       {user && <Navigation />}
       
-      <main className={`transition-all duration-300 ${user ? 'lg:pl-[5.5rem]' : ''}`}>
+      <main className={`transition-all duration-300 ${user ? 'pt-16 lg:pl-[5.5rem]' : ''}`}>
         <div className="p-4 md:p-8">
           <Routes>
             <Route path="/auth" element={<Auth />} />
@@ -58,10 +59,7 @@ function App() {
             <Route path="/friends" element={<ProtectedRoute><Friends /></ProtectedRoute>} />
             <Route path="/leaderboards" element={<ProtectedRoute><Leaderboards /></ProtectedRoute>} />
             <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
-            
-            {/* Admin Route, protected by the isAdmin flag */}
             <Route path="/admin" element={<ProtectedRoute adminOnly={true}><Admin /></ProtectedRoute>} />
-
             <Route path="/404" element={<NotFound />} />
             <Route path="*" element={<Navigate to="/404" replace />} />
           </Routes>
@@ -69,6 +67,14 @@ function App() {
       </main>
       <Toaster />
     </div>
+  );
+}
+
+function App() {
+  // FIX: The <Router> component is removed from here.
+  // The providers now wrap the MainContent directly.
+  return (
+      <MainContent />
   );
 }
 
