@@ -7,14 +7,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTheme } from '@/hooks/useTheme';
 import { useToast } from '@/hooks/use-toast';
-import Navigation from '@/components/Navigation';
+import { useGameVersion } from '@/contexts/GameVersionContext';
+import { useDataSync } from '@/hooks/useDataSync';
 import AccountSelector from '@/components/AccountSelector';
 import UserAccountSettings from '@/components/UserAccountSettings';
 import DataManagement from '@/components/DataManagement';
-import { Settings as SettingsIcon, Palette, Gamepad2, User, BarChart3, Target, Sparkles, Database, Trophy } from 'lucide-react';
-import { useDataSync } from '@/hooks/useDataSync';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { Settings as SettingsIcon, Palette, Gamepad2, User, BarChart3, Target, Database, Trophy, Sparkles } from 'lucide-react';
 
+// Interfaces for settings, derived from your original file
 interface DashboardSettings {
   showTopPerformers: boolean;
   showXGAnalysis: boolean;
@@ -50,10 +50,10 @@ interface CurrentWeekSettings {
 }
 
 const Settings = () => {
-  const { currentTheme, currentThemeName, setTheme, themes, themeData } = useTheme();
+  const { theme, setTheme } = useTheme();
   const { toast } = useToast();
+  const { gameVersion, setGameVersion } = useGameVersion();
   const { settings, setSettings } = useDataSync();
-  const [gameVersion, setGameVersion] = useLocalStorage('gameVersion', 'FC26');
 
   const [dashboardSettings, setDashboardSettings] = useState<DashboardSettings>(
     settings.dashboardSettings as DashboardSettings
@@ -63,7 +63,6 @@ const Settings = () => {
     settings.currentWeekSettings as CurrentWeekSettings
   );
 
-  // Load settings from dataSync
   useEffect(() => {
     setDashboardSettings(settings.dashboardSettings as DashboardSettings);
     setCurrentWeekSettings(settings.currentWeekSettings as CurrentWeekSettings);
@@ -72,340 +71,186 @@ const Settings = () => {
   const handleGameVersionChange = (value: string) => {
     setGameVersion(value);
     toast({
-      title: "Game Version Switched",
-      description: `Now viewing data for ${value}. The page will now reload.`,
+      title: "Game Version Updated",
+      description: `Now viewing data for ${value}.`,
     });
-    setTimeout(() => {
-        window.location.reload();
-    }, 1500);
   };
 
   const saveDashboardSettings = (newSettings: DashboardSettings) => {
     setDashboardSettings(newSettings);
-    setSettings({
-      ...settings,
-      dashboardSettings: newSettings
-    });
+    setSettings({ ...settings, dashboardSettings: newSettings });
     toast({
-      title: "Dashboard Settings Updated",
-      description: "Your dashboard preferences have been saved.",
+      title: "Dashboard Settings Saved",
+      description: "Your dashboard preferences have been updated.",
     });
   };
 
   const saveCurrentWeekSettings = (newSettings: CurrentWeekSettings) => {
     setCurrentWeekSettings(newSettings);
-    setSettings({
-      ...settings,
-      currentWeekSettings: newSettings
-    });
+    setSettings({ ...settings, currentWeekSettings: newSettings });
     toast({
-      title: "Current Week Settings Updated",
-      description: "Your current week preferences have been saved.",
+      title: "Current Week Settings Saved",
+      description: "Your preferences for the Current Week page have been updated.",
     });
   };
-
+  
   const resetSettings = () => {
+    // Note: Re-declaring defaults as they were in your original file.
     const defaultDashboard: DashboardSettings = {
-      showTopPerformers: true,
-      showXGAnalysis: true,
-      showAIInsights: true,
-      showFormAnalysis: true,
-      showWeaknesses: true,
-      showOpponentAnalysis: true,
-      showPositionalAnalysis: true,
-      showRecentTrends: true,
-      showAchievements: true,
-      showTargetProgress: true,
-      showTimeAnalysis: true,
-      showStressAnalysis: true,
-      showMatchFacts: true,
-      showWeeklyScores: true,
-      showRecentForm: true
+      showTopPerformers: true, showXGAnalysis: true, showAIInsights: true, showFormAnalysis: true,
+      showWeaknesses: true, showOpponentAnalysis: true, showPositionalAnalysis: true, showRecentTrends: true,
+      showAchievements: true, showTargetProgress: true, showTimeAnalysis: true, showStressAnalysis: true,
+      showMatchFacts: true, showWeeklyScores: true, showRecentForm: true
     };
-
     const defaultCurrentWeek: CurrentWeekSettings = {
-      showTopPerformers: true,
-      showXGAnalysis: true,
-      showAIInsights: true,
-      showFormAnalysis: true,
-      showWeaknesses: true,
-      showOpponentAnalysis: true,
-      showPositionalAnalysis: true,
-      showRecentTrends: true,
-      showAchievements: true,
-      showTargetProgress: true,
-      showTimeAnalysis: true,
-      showStressAnalysis: true,
+      showTopPerformers: true, showXGAnalysis: true, showAIInsights: true, showFormAnalysis: true,
+      showWeaknesses: true, showOpponentAnalysis: true, showPositionalAnalysis: true, showRecentTrends: true,
+      showAchievements: true, showTargetProgress: true, showTimeAnalysis: true, showStressAnalysis: true,
       showCurrentRunStats: true
     };
-
     setDashboardSettings(defaultDashboard);
     setCurrentWeekSettings(defaultCurrentWeek);
-    setSettings({
-      ...settings,
-      dashboardSettings: defaultDashboard,
-      currentWeekSettings: defaultCurrentWeek
-    });
-    
+    setSettings({ ...settings, dashboardSettings: defaultDashboard, currentWeekSettings: defaultCurrentWeek });
     toast({
       title: "Settings Reset",
-      description: "All settings have been reset to their default values.",
+      description: "All display settings have been reset to their default values.",
     });
   };
 
-  const handleThemeChange = (themeName: string) => {
-    setTheme(themeName);
-    setSettings({
-      ...settings,
-      theme: themeName
-    });
-    toast({
-      title: "Theme Updated",
-      description: `Switched to ${themeData[themeName]?.name || themeName} theme.`,
-    });
-  };
 
   return (
-    <div className="min-h-screen">
-      <Navigation />
-      
-      <main className="lg:ml-20 lg:hover:ml-64 transition-all duration-500 p-4 lg:p-6 pb-24">
-        <div className="max-w-6xl mx-auto space-y-8">
-          {/* Enhanced Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-8">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-2xl bg-gradient-to-br from-fifa-purple/20 to-fifa-blue/20 border border-fifa-purple/30">
-                <SettingsIcon className="h-8 w-8 text-fifa-purple" />
-              </div>
-              <div>
-                <h1 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-fifa-purple via-fifa-blue to-fifa-gold bg-clip-text text-transparent">
-                  Settings
-                </h1>
-                <p className="text-gray-400 mt-1">Customize your FUTALYST experience</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto">
-            <Tabs defaultValue="account" className="w-full">
-              <TabsList className="flex w-full overflow-x-auto glass-card">
-                <TabsTrigger value="account" className="flex-shrink-0">
-                  <User className="h-4 w-4 mr-2" />
-                  <span>Account</span>
-                </TabsTrigger>
-                 <TabsTrigger value="game" className="flex-shrink-0">
-                  <Trophy className="h-4 w-4 mr-2" />
-                  <span>Game</span>
-                </TabsTrigger>
-                <TabsTrigger value="gaming-accounts" className="flex-shrink-0">
-                  <Gamepad2 className="h-4 w-4 mr-2" />
-                  <span>Gaming Accounts</span>
-                </TabsTrigger>
-                <TabsTrigger value="appearance" className="flex-shrink-0">
-                  <Palette className="h-4 w-4 mr-2" />
-                  <span>Appearance</span>
-                </TabsTrigger>
-                <TabsTrigger value="dashboard" className="flex-shrink-0">
-                  <BarChart3 className="h-4 w-4 mr-2" />
-                  <span>Dashboard</span>
-                </TabsTrigger>
-                <TabsTrigger value="targets" className="flex-shrink-0">
-                  <Target className="h-4 w-4 mr-2" />
-                  <span>Targets</span>
-                </TabsTrigger>
-                <TabsTrigger value="data" className="flex-shrink-0">
-                  <Database className="h-4 w-4 mr-2" />
-                  <span>Data</span>
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="account" className="space-y-4 mt-4">
-                <UserAccountSettings />
-              </TabsContent>
-
-               <TabsContent value="game" className="space-y-4 mt-4">
-                <Card className="glass-card">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-white">
-                      <Trophy className="h-5 w-5 text-fifa-gold" />
-                      Game Version
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    <Label htmlFor="game-version" className="text-white">Select Game Version</Label>
-                    <Select value={gameVersion} onValueChange={handleGameVersionChange}>
-                      <SelectTrigger id="game-version" className="w-[180px] bg-gray-800 border-gray-600 text-white">
-                        <SelectValue placeholder="Select game..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="FC26">FC26</SelectItem>
-                        <SelectItem value="FC25">FC25</SelectItem>
-                      </SelectContent>
-                    </Select>
-                     <p className="text-gray-400 text-sm pt-2">
-                        Select the game you are currently playing. All data, stats, and squads are specific to the selected version.
-                    </p>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="gaming-accounts" className="space-y-4 mt-4">
-                <AccountSelector />
-              </TabsContent>
-
-              <TabsContent value="appearance" className="space-y-4 mt-4">
-                <Card className="glass-card">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-white">
-                      <Palette className="h-5 w-5 text-fifa-gold" />
-                      Theme & Appearance
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="space-y-4">
-                      <div>
-                        <Label className="text-white font-medium">Choose Theme</Label>
-                        <Select value={currentThemeName} onValueChange={handleThemeChange}>
-                          <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {themes.map((themeName) => (
-                              <SelectItem key={themeName} value={themeName}>
-                                <div className="flex items-center gap-2">
-                                  <Sparkles className="h-4 w-4" />
-                                  {themeData[themeName]?.name || themeName}
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* Enhanced Theme Preview */}
-                      <div className="p-6 rounded-xl border bg-gradient-to-br from-white/5 to-white/10" style={{ 
-                        borderColor: currentTheme.colors.border 
-                      }}>
-                        <h4 className="font-semibold mb-4 text-white flex items-center gap-2">
-                          <Sparkles className="h-4 w-4 text-fifa-gold" />
-                          Theme Preview
-                        </h4>
-                        <div className="space-y-4">
-                          <div className="flex flex-wrap gap-3">
-                            {Object.entries(currentTheme.colors.fifa).map(([name, color]) => (
-                              <div key={name} className="flex items-center gap-2">
-                                <div 
-                                  className="w-6 h-6 rounded-full border-2 border-white/20" 
-                                  style={{ backgroundColor: color }}
-                                />
-                                <span className="text-sm text-gray-300 capitalize">{name}</span>
-                              </div>
-                            ))}
-                          </div>
-                          <div className="p-4 rounded-lg" style={{ backgroundColor: currentTheme.colors.cardBg }}>
-                            <p className="text-white font-medium">Sample Card</p>
-                            <p className="text-gray-400 text-sm mt-1">
-                              Current theme: {themeData[currentThemeName]?.name}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="dashboard" className="space-y-4 mt-4">
-                <Card className="glass-card">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-white">
-                      <BarChart3 className="h-5 w-5 text-fifa-blue" />
-                      Dashboard Display Settings
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                      {Object.entries(dashboardSettings).map(([key, value]) => (
-                        <div key={key} className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-gray-700/50 hover:bg-white/10 transition-colors">
-                          <div>
-                            <p className="text-white font-medium">
-                              {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                            </p>
-                            <p className="text-gray-400 text-sm">
-                              {value ? 'Visible on dashboard' : 'Hidden from dashboard'}
-                            </p>
-                          </div>
-                          <Switch
-                            checked={value}
-                            onCheckedChange={(checked) =>
-                              saveDashboardSettings({ ...dashboardSettings, [key]: checked })
-                            }
-                          />
-                        </div>
-                      ))}
-                    </div>
-                    <div className="pt-4 border-t border-gray-700">
-                      <Button 
-                        onClick={resetSettings} 
-                        variant="outline"
-                        className="w-full sm:w-auto border-gray-600 text-gray-400 hover:text-white hover:border-gray-500"
-                      >
-                        Reset to Defaults
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="targets" className="space-y-4 mt-4">
-                <Card className="glass-card">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-white">
-                      <Target className="h-5 w-5 text-fifa-green" />
-                      Target & Goal Settings
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                      {Object.entries(currentWeekSettings).map(([key, value]) => (
-                        <div key={key} className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-gray-700/50 hover:bg-white/10 transition-colors">
-                          <div>
-                            <p className="text-white font-medium">
-                              {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                            </p>
-                            <p className="text-gray-400 text-sm">
-                              {value ? 'Enabled in current week view' : 'Disabled in current week view'}
-                            </p>
-                          </div>
-                          <Switch
-                            checked={value}
-                            onCheckedChange={(checked) =>
-                              saveCurrentWeekSettings({ ...currentWeekSettings, [key]: checked })
-                            }
-                          />
-                        </div>
-                      ))}
-                    </div>
-                    <div className="pt-4 border-t border-gray-700">
-                      <Button 
-                        onClick={resetSettings} 
-                        variant="outline"
-                        className="w-full sm:w-auto border-gray-600 text-gray-400 hover:text-white hover:border-gray-500"
-                      >
-                        Reset to Defaults
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="data" className="space-y-4 mt-4">
-                <DataManagement />
-              </TabsContent>
-            </Tabs>
-          </div>
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
+            <SettingsIcon className="h-8 w-8 text-primary" />
+            Settings
+          </h1>
+          <p className="text-muted-foreground">Customize your FUTTrackr experience.</p>
         </div>
-      </main>
+      </div>
+
+      <Tabs defaultValue="account" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
+          <TabsTrigger value="account"><User className="h-4 w-4 mr-2" />Account</TabsTrigger>
+          <TabsTrigger value="game"><Trophy className="h-4 w-4 mr-2" />Game</TabsTrigger>
+          <TabsTrigger value="gaming-accounts"><Gamepad2 className="h-4 w-4 mr-2" />Gaming</TabsTrigger>
+          <TabsTrigger value="appearance"><Palette className="h-4 w-4 mr-2" />Appearance</TabsTrigger>
+          <TabsTrigger value="dashboard"><BarChart3 className="h-4 w-4 mr-2" />Dashboard</TabsTrigger>
+          <TabsTrigger value="targets"><Target className="h-4 w-4 mr-2" />Current Week</TabsTrigger>
+          <TabsTrigger value="data"><Database className="h-4 w-4 mr-2" />Data</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="account" className="mt-6">
+          <UserAccountSettings />
+        </TabsContent>
+
+        <TabsContent value="game" className="mt-6">
+          <Card>
+            <CardHeader><CardTitle>Game Version</CardTitle></CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <Label htmlFor="game-version">Select Active Game Version</Label>
+                <Select value={gameVersion} onValueChange={handleGameVersionChange}>
+                  <SelectTrigger id="game-version" className="w-full md:w-[240px]"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="FC26">FC26</SelectItem>
+                    <SelectItem value="FC25">FC25</SelectItem>
+                    <SelectItem value="FC24">FC24</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-sm text-muted-foreground">This filters all data across the app to the selected game version.</p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="gaming-accounts" className="mt-6">
+          <AccountSelector />
+        </TabsContent>
+
+        <TabsContent value="appearance" className="mt-6">
+          <Card>
+            <CardHeader><CardTitle>Theme & Appearance</CardTitle></CardHeader>
+            <CardContent>
+               <div className="space-y-2">
+                <Label htmlFor="theme-selector">Theme</Label>
+                <Select value={theme} onValueChange={(value) => setTheme(value as 'light' | 'dark' | 'system')}>
+                  <SelectTrigger id="theme-selector" className="w-full md:w-[240px]"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="light">Light</SelectItem>
+                    <SelectItem value="dark">Dark</SelectItem>
+                    <SelectItem value="system">System</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-sm text-muted-foreground">Choose how FUTTrackr looks to you.</p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="dashboard" className="mt-6">
+          <Card>
+            <CardHeader><CardTitle>Dashboard Display Settings</CardTitle></CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {Object.entries(dashboardSettings).map(([key, value]) => (
+                  <div key={key} className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
+                    <Label htmlFor={key} className="flex-1 cursor-pointer">
+                      {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                    </Label>
+                    <Switch
+                      id={key}
+                      checked={value}
+                      onCheckedChange={(checked) => saveDashboardSettings({ ...dashboardSettings, [key]: checked })}
+                    />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="targets" className="mt-6">
+          <Card>
+            <CardHeader><CardTitle>Current Week Display Settings</CardTitle></CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {Object.entries(currentWeekSettings).map(([key, value]) => (
+                  <div key={key} className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
+                    <Label htmlFor={`cw-${key}`} className="flex-1 cursor-pointer">
+                      {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                    </Label>
+                    <Switch
+                      id={`cw-${key}`}
+                      checked={value}
+                      onCheckedChange={(checked) => saveCurrentWeekSettings({ ...currentWeekSettings, [key]: checked })}
+                    />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="data" className="mt-6">
+          <DataManagement />
+        </TabsContent>
+        
+      </Tabs>
+      
+      <Card className="border-destructive/50">
+        <CardHeader>
+          <CardTitle className="text-destructive">Reset Settings</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground mb-4">
+            Reset all dashboard and current week display settings to their default values. This action cannot be undone.
+          </p>
+          <Button variant="destructive" onClick={resetSettings}>Reset All Display Settings</Button>
+        </CardContent>
+      </Card>
+
     </div>
   );
 };
