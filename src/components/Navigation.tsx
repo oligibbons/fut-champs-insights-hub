@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, BarChart2, Calendar, Trophy, Users, Settings, LogOut, Menu, LogIn } from 'lucide-react';
+import { Home, BarChart2, Calendar, Trophy, Users, Settings, LogOut, Menu, LogIn, Shield } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -14,7 +14,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/s
 import { Button } from './ui/button';
 
 const Navigation = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
   const { toast } = useToast();
   const location = useLocation();
   const isMobile = useMobile();
@@ -45,6 +45,11 @@ const Navigation = () => {
   ] : [
     { to: '/auth', icon: <LogIn />, text: 'Login' },
   ];
+  
+  if (user && isAdmin) {
+    navItems.push({ to: '/admin', icon: <Shield />, text: 'Admin' });
+  }
+
 
   if (loading && !isMobile) {
     return (
