@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Routes, Route, Navigate } from "react-router-dom";
 // FIX: Corrected the import path to use the '@/' alias
-import { useTheme } from "@/hooks/useTheme.ts";
+import { useTheme } from "@/hooks/useTheme.tsx";
 import { useAuth } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Navigation from "@/components/Navigation";
