@@ -41,10 +41,7 @@ function App() {
         color: currentTheme.colors.text
       }}
     >
-      {/* THIS IS THE TEST BANNER */}
-      <h1 style={{ color: 'red', fontSize: '32px', textAlign: 'center', backgroundColor: 'yellow', padding: '10px' }}>
-        CAN YOU SEE THIS TEST?
-      </h1>
+    
       
       {user && <Navigation />}
       
