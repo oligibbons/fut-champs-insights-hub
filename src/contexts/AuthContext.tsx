@@ -24,52 +24,68 @@ export const useAuth = () => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    setLoading(true);
-
-    const fetchUserProfile = async (user: User | null) => {
-      if (!user) {
-        setIsAdmin(false);
-        return;
-      }
+    const fetchSessionAndProfile = async () => {
       try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('is_admin')
-          .eq('id', user.id)
-          .single();
-        
-        if (error) {
-          console.error('Error fetching user profile:', error.message);
-          setIsAdmin(false);
-        } else if (data) {
-          setIsAdmin(data.is_admin || false);
-        }
-      } catch (e) {
-        console.error('Exception fetching user profile:', e);
-        setIsAdmin(false);
-      }
-    };
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+        const { data: { session } } = await supabase.auth.getSession();
         setSession(session);
         const currentUser = session?.user ?? null;
         setUser(currentUser);
-        await fetchUserProfile(currentUser);
-        setLoading(false);
 
-        if (event === 'SIGNED_OUT') {
-          navigate('/auth');
+        if (currentUser) {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('is_admin')
+            .eq('id', currentUser.id)
+            .single();
+          if (error) {
+            console.error('Error fetching admin status:', error.message);
+            setIsAdmin(false);
+          } else {
+            setIsAdmin(data?.is_admin || false);
+          }
+        } else {
+          setIsAdmin(false);
         }
+      } catch (error) {
+        console.error("Error fetching initial session:", error);
+      } finally {
+        setLoading(false);
       }
-    );
+    };
+
+    fetchSessionAndProfile();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setSession(session);
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+
+      if (currentUser) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', currentUser.id)
+          .single();
+        if (error) {
+          setIsAdmin(false);
+        } else {
+          setIsAdmin(data?.is_admin || false);
+        }
+      } else {
+        setIsAdmin(false);
+      }
+
+      if (event === 'SIGNED_OUT') {
+        navigate('/auth');
+      }
+    });
 
     return () => {
       subscription.unsubscribe();
@@ -107,7 +123,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signOut,
   };
 
-  return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
-
-export { AuthContext };
