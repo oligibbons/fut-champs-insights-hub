@@ -5,7 +5,6 @@ import { Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTheme } from '@/hooks/useTheme';
 
-// This helper function fetches the data for the dashboard
 const fetchAdminStats = async () => {
   const { count: totalUsers } = await supabase.from('profiles').select('id', { count: 'exact', head: true });
   const { count: totalWeeks } = await supabase.from('weekly_performances').select('id', { count: 'exact', head: true });
@@ -31,15 +30,14 @@ const Admin: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4 md:p-8">
+      {/* This will now have the theme's gradient color */}
       <h1 className="text-4xl font-bold mb-8 gradient-text">Admin Dashboard</h1>
 
-      {/* Overview Section */}
       <section className="admin-section">
-        {/* This title will now be colored by the .admin-section-title class */}
         <h2 className="admin-section-title">Platform Overview</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           
-          {/* This Card will now have the colored border and background from .admin-card */}
+          {/* These cards will now receive the custom border and background styles */}
           <Card className="admin-card">
             <CardHeader className="admin-card-header">
               <CardTitle className="admin-card-title">Total Users</CardTitle>
@@ -49,7 +47,6 @@ const Admin: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* This Card will now have the colored border and background from .admin-card */}
           <Card className="admin-card">
             <CardHeader className="admin-card-header">
               <CardTitle className="admin-card-title">Total Weeks Logged</CardTitle>
@@ -59,7 +56,6 @@ const Admin: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* This Card will now have the colored border and background from .admin-card */}
           <Card className="admin-card">
             <CardHeader className="admin-card-header">
               <CardTitle className="admin-card-title">Total Games Recorded</CardTitle>
@@ -71,7 +67,6 @@ const Admin: React.FC = () => {
         </div>
       </section>
 
-      {/* User Management Section */}
       <section className="admin-section">
         <h2 className="admin-section-title">User Management</h2>
         <Card className="admin-card">
