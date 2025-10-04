@@ -42,6 +42,12 @@ function App() {
         color: currentTheme.colors.text
       }}
     >
+
+      return (
+    <div className="flex flex-col min-h-screen">
+      {/* ADD THIS LINE FOR THE TEST */}
+      <h1 style={{ color: 'red', fontSize: '48px', textAlign: 'center', backgroundColor: 'yellow' }}>CAN YOU SEE THIS TEST?</h1>
+      
       {user && <Navigation />}
       
       <main className={`transition-all duration-300 ${user ? 'lg:pl-[5.5rem]' : ''}`}>
