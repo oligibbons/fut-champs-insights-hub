@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import { GameResult } from '@/types/futChampions';
-import { motion } from 'framer-motion';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface CPSGaugeProps {
@@ -16,9 +15,7 @@ const CPSGauge: React.FC<CPSGaugeProps> = ({ games, size = 150 }) => {
 
     // --- 1. Win Rate & Dominance (Max 45 points) ---
     const wins = games.filter(g => g.result === 'win').length;
-    // Bonus for forcing early quits (dominance)
     const rageQuitsForced = games.filter(g => g.result === 'win' && g.duration < 45).length;
-    // Penalty for quitting early
     const rageQuitsByUser = games.filter(g => g.result === 'loss' && g.duration < 45).length;
     const adjustedWinRate = ((wins + rageQuitsForced * 0.5 - rageQuitsByUser * 0.5) / totalGames);
     const winRateComponent = Math.max(0, adjustedWinRate) * 45;
@@ -27,9 +24,7 @@ const CPSGauge: React.FC<CPSGaugeProps> = ({ games, size = 150 }) => {
     const totalGoalsFor = games.reduce((sum, g) => sum + (g.teamStats?.actualGoals || 0), 0);
     const totalXGFor = games.reduce((sum, g) => sum + (g.teamStats?.expectedGoals || 0), 0);
     const goalsPerGame = totalGoalsFor / totalGames;
-    // Score based on goals per game, capped at 4.5 for max points
     const gpgScore = Math.min(goalsPerGame / 4.5, 1) * 15;
-    // Bonus for outperforming xG, capped at +2 goal difference
     const goalEfficiency = Math.max(0, Math.min((totalGoalsFor - totalXGFor) / totalGames, 2) / 2) * 10;
     const attackComponent = gpgScore + goalEfficiency;
 
@@ -37,26 +32,19 @@ const CPSGauge: React.FC<CPSGaugeProps> = ({ games, size = 150 }) => {
     const totalGoalsAgainst = games.reduce((sum, g) => sum + (g.teamStats?.actualGoalsAgainst || 0), 0);
     const totalXGAgainst = games.reduce((sum, g) => sum + (g.teamStats?.expectedGoalsAgainst || 0), 0);
     const goalsAgainstPerGame = totalGoalsAgainst / totalGames;
-    // Score based on goals conceded (lower is better), capped at 3 GAG for 0 points
     const gagScore = Math.max(0, 1 - (goalsAgainstPerGame / 3.0)) * 15;
-    // Bonus for conceding less than xG Against, capped at -2 goal difference
     const defenseEfficiency = Math.max(0, Math.min((totalXGAgainst - totalGoalsAgainst) / totalGames, 2) / 2) * 10;
     const defenseComponent = gagScore + defenseEfficiency;
 
     // --- 4. Quality & Composure (Max 5 points) ---
     const avgOpponentSkill = games.reduce((sum, g) => sum + g.opponentSkill, 0) / totalGames;
-    // Score based on opponent skill (normalized 1-10)
     const opponentQualityScore = (avgOpponentSkill / 10) * 3;
     const avgStress = games.reduce((sum, g) => sum + (g.stressLevel || 5), 0) / totalGames;
-    // Score based on stress level (lower is better)
     const composureScore = Math.max(0, 1 - (avgStress / 10)) * 2;
     const qualityComponent = opponentQualityScore + composureScore;
 
     // --- Final Calculation ---
     const rawScore = winRateComponent + attackComponent + defenseComponent + qualityComponent;
-    
-    // Apply a mastery curve to make 100 harder to get.
-    // A raw score of 100 becomes ~97. You need ~108 raw points to hit 100.
     const finalScore = Math.min(100, Math.round(103 * Math.pow(rawScore / 100, 1.2)));
 
     return {
@@ -73,10 +61,10 @@ const CPSGauge: React.FC<CPSGaugeProps> = ({ games, size = 150 }) => {
   const strokeDashoffset = circumference - (finalScore / 100) * circumference;
 
   const getStrokeColor = (s: number) => {
-    if (s > 90) return 'hsl(var(--primary))'; // Elite
-    if (s > 75) return 'hsl(190, 80%, 50%)'; // Great
-    if (s > 50) return 'hsl(48, 90%, 50%)'; // Average
-    return 'hsl(var(--destructive))'; // Needs Improvement
+    if (s > 90) return 'hsl(var(--primary))';
+    if (s > 75) return 'hsl(190, 80%, 50%)';
+    if (s > 50) return 'hsl(48, 90%, 50%)';
+    return 'hsl(var(--destructive))';
   };
 
   return (
@@ -86,19 +74,14 @@ const CPSGauge: React.FC<CPSGaugeProps> = ({ games, size = 150 }) => {
           <div className="relative flex items-center justify-center cursor-pointer" style={{ width: size, height: size }}>
             <svg className="absolute inset-0" width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
               <circle cx={size / 2} cy={size / 2} r={size * 0.4} stroke="hsl(var(--border))" strokeWidth="8" fill="transparent" />
-              <motion.circle
+              <circle
                 cx={size / 2} cy={size / 2} r={size * 0.4} stroke={getStrokeColor(finalScore)} strokeWidth="8"
-                fill="transparent" strokeLinecap="round" strokeDasharray={circumference}
+                fill="transparent" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset}
                 transform={`rotate(-90 ${size / 2} ${size / 2})`}
-                initial={{ strokeDashoffset: circumference }}
-                animate={{ strokeDashoffset }}
-                transition={{ duration: 1.2, ease: "circOut" }}
               />
             </svg>
             <div className="text-center">
-              <motion.div className="text-3xl font-bold" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
-                {finalScore}
-              </motion.div>
+              <div className="text-3xl font-bold">{finalScore}</div>
               <div className="text-xs text-muted-foreground -mt-1">CPS</div>
             </div>
           </div>
