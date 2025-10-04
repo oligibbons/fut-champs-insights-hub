@@ -1,7 +1,6 @@
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "@/components/ui/sonner"; // Using sonner as per your main.tsx
 import { Routes, Route, Navigate } from "react-router-dom";
-// FIX: Corrected the import path to use the '@/' alias
-import { useTheme } from "@/hooks/useTheme.tsx";
+import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Navigation from "@/components/Navigation";
@@ -42,11 +41,10 @@ function App() {
         color: currentTheme.colors.text
       }}
     >
-
-      return (
-    <div className="flex flex-col min-h-screen">
-      {/* ADD THIS LINE FOR THE TEST */}
-      <h1 style={{ color: 'red', fontSize: '48px', textAlign: 'center', backgroundColor: 'yellow' }}>CAN YOU SEE THIS TEST?</h1>
+      {/* THIS IS THE TEST BANNER */}
+      <h1 style={{ color: 'red', fontSize: '32px', textAlign: 'center', backgroundColor: 'yellow', padding: '10px' }}>
+        CAN YOU SEE THIS TEST?
+      </h1>
       
       {user && <Navigation />}
       
