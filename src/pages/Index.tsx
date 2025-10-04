@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, BarChart2, Calendar, Users, Trophy } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useFutChampsData } from "@/hooks/useFutChampsData";
+import { useSupabaseData } from "@/hooks/useSupabaseData";
 import { Link } from "react-router-dom";
 import DashboardOverview from "@/components/DashboardOverview";
 import TopPerformers from "@/components/TopPerformers";
@@ -11,7 +11,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const Index = () => {
   const { user } = useAuth();
-  const { games, wins, losses, winRate, currentStreak, loading } = useFutChampsData();
+  const { weeklyData, loading } = useSupabaseData();
+
+  // Aggregate stats from weeklyData
+  const totalWins = weeklyData.reduce((acc, week) => acc + week.totalWins, 0);
+  const totalGames = weeklyData.reduce((acc, week) => acc + week.gamesPlayed, 0);
+  const winRate = totalGames > 0 ? Math.round((totalWins / totalGames) * 100) : 0;
+  const currentWeek = weeklyData.find(week => !week.isCompleted);
+  const currentStreak = currentWeek?.currentStreak || 0;
 
   const StatCard = ({ title, value, icon: Icon, change, changeType }: { title: string, value: string | number, icon: React.ElementType, change?: string, changeType?: 'increase' | 'decrease' }) => (
     <Card className="bg-secondary/50 border-border/50 backdrop-blur-sm">
@@ -35,11 +42,11 @@ const Index = () => {
       </CardContent>
     </Card>
   );
-
+  
   const formatWinStreak = () => {
-    if (!currentStreak) return "N/A";
-    const streakType = currentStreak.type === 'win' ? 'W' : 'L';
-    return `${streakType}${currentStreak.count}`;
+    if (currentStreak > 0) return `W${currentStreak}`;
+    if (currentStreak < 0) return `L${Math.abs(currentStreak)}`;
+    return "N/A";
   }
 
   return (
@@ -68,18 +75,18 @@ const Index = () => {
 
       {/* Main Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Total Wins" value={wins} icon={Trophy} />
+        <StatCard title="Total Wins" value={totalWins} icon={Trophy} />
         <StatCard title="Win Rate" value={`${winRate}%`} icon={BarChart2} />
-        <StatCard title="Total Games" value={games.length} icon={Users} />
+        <StatCard title="Total Games" value={totalGames} icon={Users} />
         <StatCard title="Current Streak" value={formatWinStreak()} icon={Calendar} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <DashboardOverview games={games} />
+          <DashboardOverview games={weeklyData.flatMap(w => w.games)} />
         </div>
         <div>
-          <TopPerformers games={games} />
+          <TopPerformers games={weeklyData.flatMap(w => w.games)} />
         </div>
       </div>
       
