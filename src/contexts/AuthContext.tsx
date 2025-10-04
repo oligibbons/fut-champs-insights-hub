@@ -1,100 +1,114 @@
-import { Toaster } from "@/components/ui/toaster";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { useTheme } from "@/hooks/useTheme";
-import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import ProtectedRoute from "@/components/ProtectedRoute";
-import Navigation from "@/components/Navigation";
-import Index from "./pages/Index";
-import CurrentWeek from "./pages/CurrentWeek";
-import Analytics from "./pages/Analytics";
-import Settings from "./pages/Settings";
-import Squads from "./pages/Squads";
-import Players from "./pages/Players";
-import Insights from "./pages/Insights";
-import History from "./pages/History";
-import Auth from "./pages/Auth";
-import Friends from "./pages/Friends";
-import Leaderboards from "./pages/Leaderboards";
-import Achievements from "./pages/Achievements";
-import Admin from "./pages/Admin";
-import NotFound from "./pages/NotFound";
-import "./App.css";
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 
-function App() {
-  return (
-    <Router basename="/">
-      <AuthProvider>
-        <MainContent />
-      </AuthProvider>
-    </Router>
-  );
+interface AuthContextType {
+  user: User | null;
+  session: Session | null;
+  loading: boolean;
+  isAdmin: boolean;
+  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, username?: string) => Promise<{ error: any }>;
+  signOut: () => Promise<void>;
 }
 
-const MainContent = () => {
-  const { currentTheme } = useTheme();
-  const { loading, user } = useAuth();
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-  if (loading) {
-    // You can replace this with a more sophisticated loading spinner
-    return (
-      <div className="flex items-center justify-center h-screen" style={{ background: currentTheme.colors.background }}>
-        <p style={{ color: currentTheme.colors.text }}>Loading...</p>
-      </div>
-    );
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
   }
+  return context;
+};
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    setLoading(true);
+
+    // onAuthStateChange is called on load and whenever the auth state changes.
+    // This is the single source of truth for the user's session.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setSession(session);
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+
+      if (currentUser) {
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('is_admin')
+            .eq('id', currentUser.id)
+            .single();
+          
+          if (error) {
+            console.error("Error fetching admin status:", error.message);
+            setIsAdmin(false);
+          } else {
+            setIsAdmin(data?.is_admin || false);
+          }
+        } catch (e) {
+          console.error("Exception fetching profile:", e);
+          setIsAdmin(false);
+        }
+      } else {
+        setIsAdmin(false);
+      }
+
+      // Set loading to false once the session and profile have been checked.
+      setLoading(false);
+
+      if (event === 'SIGNED_OUT') {
+        navigate('/auth');
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
+
+  const signIn = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (!error) navigate('/');
+    return { error };
+  };
+
+  const signUp = async (email: string, password: string, username?: string) => {
+    const redirectUrl = `${window.location.origin}/`;
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: redirectUrl, data: username ? { username } : undefined }
+    });
+    return { error };
+  };
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    // The onAuthStateChange listener will handle navigation
+  };
+
+  const value = {
+    user,
+    session,
+    loading,
+    isAdmin,
+    signIn,
+    signUp,
+    signOut,
+  };
 
   return (
-    <div 
-      className="min-h-screen transition-all duration-500 relative"
-      style={{
-        background: currentTheme.colors.background,
-        color: currentTheme.colors.text
-      }}
-    >
-      {user && (
-        <header className="fixed top-0 left-0 right-0 z-20 backdrop-blur-md border-b h-16" 
-               style={{ 
-                 borderColor: currentTheme.colors.border, 
-                 backgroundColor: `${currentTheme.colors.cardBg}80` 
-               }}>
-          <div className="px-4 py-2 flex items-center justify-between h-full">
-            <div className="flex items-center gap-3">
-              <img 
-                src="/lovable-uploads/6b6465f4-e466-4f3b-9761-8a829fbe395c.png" 
-                alt="FUTALYST Logo" 
-                className="w-10 h-10 object-contain"
-              />
-            </div>
-          </div>
-        </header>
-      )}
-      
-      <Navigation />
-      
-      <main className={`transition-all duration-300 ${user ? 'pt-16 lg:pl-[5.5rem]' : ''}`}>
-        <div className="p-4 md:p-8">
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-            <Route path="/current-week" element={<ProtectedRoute><CurrentWeek /></ProtectedRoute>} />
-            <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-            <Route path="/squads" element={<ProtectedRoute><Squads /></ProtectedRoute>} />
-            <Route path="/players" element={<ProtectedRoute><Players /></ProtectedRoute>} />
-            <Route path="/insights" element={<ProtectedRoute><Insights /></ProtectedRoute>} />
-            <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
-            <Route path="/friends" element={<ProtectedRoute><Friends /></ProtectedRoute>} />
-            <Route path="/leaderboards" element={<ProtectedRoute><Leaderboards /></ProtectedRoute>} />
-            <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
-            <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
-            <Route path="/404" element={<NotFound />} />
-            <Route path="*" element={<Navigate to="/404" replace />} />
-          </Routes>
-        </div>
-      </main>
-      <Toaster />
-    </div>
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
   );
-}
-
-export default App;
+};
