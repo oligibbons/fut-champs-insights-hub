@@ -68,9 +68,9 @@ export function useSupabaseData() {
             redCards: teamStatsData.red_cards || 0,
             distanceCovered: 0
           } : {
-             shots: 0, shotsOnTarget: 0, possession: 50, expectedGoals: 0, actualGoals: game.user_goals || 0,
-             expectedGoalsAgainst: 0, actualGoalsAgainst: game.opponent_goals || 0, passes: 0, passAccuracy: 0,
-             corners: 0, fouls: 0, yellowCards: 0, redCards: 0, distanceCovered: 0
+              shots: 0, shotsOnTarget: 0, possession: 50, expectedGoals: 0, actualGoals: game.user_goals || 0,
+              expectedGoalsAgainst: 0, actualGoalsAgainst: game.opponent_goals || 0, passes: 0, passAccuracy: 0,
+              corners: 0, fouls: 0, yellowCards: 0, redCards: 0, distanceCovered: 0
           };
           
           return {
