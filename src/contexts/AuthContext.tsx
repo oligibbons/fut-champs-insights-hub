@@ -1,6 +1,6 @@
-import { createContext, useState, useEffect, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { Session, User } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
 
 interface AuthContextType {
@@ -13,24 +13,32 @@ interface AuthContextType {
   signOut: () => Promise<void>;
 }
 
+// FIX: Export the context itself so it can be imported by the provider.
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Rely on onAuthStateChange for both initial session and subsequent changes.
-    // It fires once immediately with the current session state.
+    // onAuthStateChange fires on the initial load and whenever the auth state changes.
+    // This is the single source of truth for the user's session.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       const currentUser = session?.user ?? null;
       setUser(currentUser);
 
-      // Check for admin status
       if (currentUser) {
         try {
           const { data, error } = await supabase
@@ -41,15 +49,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           if (error) throw error;
           setIsAdmin(data?.is_admin || false);
         } catch (error) {
-          console.error("Error fetching user profile for admin check:", error);
+          console.error("Error checking admin status:", error);
           setIsAdmin(false);
         }
       } else {
-        // Not logged in, so not an admin
         setIsAdmin(false);
       }
       
-      // The initial check is done, so we can stop loading.
+      // This will now reliably set loading to false after the first check.
       setLoading(false);
     });
 
@@ -88,17 +95,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     signUp,
     signOut,
   };
-
-  // FIX: Always render children. The consuming components (like ProtectedRoute)
-  // will use the 'loading' state to decide what to display.
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  
+  // FIX: Always render children and let ProtectedRoute handle the loading/redirect logic.
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
-
