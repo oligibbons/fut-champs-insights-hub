@@ -11,6 +11,7 @@ import Auth from './pages/Auth';
 import NotFound from './pages/NotFound';
 import Squads from './pages/Squads';
 import Players from './pages/Players';
+import Admin from './pages/Admin';
 import { Toaster } from "@/components/ui/toaster"
 
 function App() {
@@ -30,6 +31,7 @@ function App() {
                 <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
                 <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </div>
