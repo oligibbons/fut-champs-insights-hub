@@ -54,7 +54,8 @@ const AchievementsPage = () => {
       setLoading(true);
       const [defRes, userRes] = await Promise.all([
         supabase.from('achievement_definitions').select('*').eq('game_version', gameVersion),
-        supabase.from('user_achievements').select('*').eq('user_id', user.id),
+        // FIX: Corrected table name from 'user_achievements' to 'achievements'
+        supabase.from('achievements').select('*').eq('user_id', user.id),
       ]);
 
       if (defRes.data) setDefinitions(defRes.data as AchievementDefinition[]);
@@ -88,7 +89,6 @@ const AchievementsPage = () => {
     .sort((a, b) => {
       if (sort === 'progress') return b.progressInfo.percent - a.progressInfo.percent;
       if (sort === 'name') return a.title.localeCompare(b.title);
-      // Add more sorting logic if needed, e.g., by rarity
       return 0;
     });
 
