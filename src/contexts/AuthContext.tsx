@@ -31,39 +31,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const navigate = useNavigate();
 
   useEffect(() => {
-    // onAuthStateChange is the recommended way to handle auth state.
-    // It is called on initial load and whenever the auth state changes.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    // 1. Perform the initial session check on mount
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       const currentUser = session?.user ?? null;
       setUser(currentUser);
 
+      // Check for admin status if the user is logged in
       if (currentUser) {
         try {
-          // Fetch the user's profile to check for admin status
           const { data, error } = await supabase
             .from('profiles')
             .select('is_admin')
             .eq('id', currentUser.id)
             .single();
-          
-          if (error) {
-            console.error("Error fetching admin status:", error.message);
-            setIsAdmin(false);
-          } else {
-            setIsAdmin(data?.is_admin || false);
-          }
-        } catch (e) {
-          console.error("Exception fetching profile:", e);
+          if (error) throw error;
+          setIsAdmin(data?.is_admin || false);
+        } catch (error) {
+          console.error("Error fetching user profile:", error);
           setIsAdmin(false);
         }
-      } else {
-        // If there's no user, they can't be an admin.
-        setIsAdmin(false);
       }
-
-      // The authentication check is complete, so we can stop loading.
+      // 2. Once the initial check is complete, set loading to false
       setLoading(false);
+    });
+
+    // 3. Set up a listener for future auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
     });
 
     return () => {
@@ -89,7 +85,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    // The onAuthStateChange listener will handle navigation to '/auth'
     navigate('/auth');
   };
 
