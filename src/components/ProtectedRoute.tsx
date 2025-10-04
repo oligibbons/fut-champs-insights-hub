@@ -1,27 +1,34 @@
+import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Loader2 } from 'lucide-react';
 
-import { useAuth } from '@/contexts/AuthContext';
-import { Navigate } from 'react-router-dom';
-
-interface ProtectedRouteProps {
-  children: React.ReactNode;
-}
-
-const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
+  const navigate = useNavigate();
 
+  useEffect(() => {
+    // This effect runs whenever the loading or user state changes.
+    if (!loading) {
+      if (!user) {
+        // If loading is finished and there's no user, redirect to auth.
+        navigate('/auth');
+      }
+    }
+  }, [user, loading, navigate]); // Dependencies for the effect
+
+  // While the initial auth check is running, show a full-screen loader.
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
+      <div className="flex h-screen w-full items-center justify-center bg-gray-900">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
       </div>
     );
   }
 
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
-
-  return <>{children}</>;
+  // If loading is done and there IS a user, render the children.
+  // The useEffect above handles the redirect case for non-users.
+  return user ? <>{children}</> : null;
 };
 
 export default ProtectedRoute;
