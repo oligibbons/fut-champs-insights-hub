@@ -1,219 +1,160 @@
 import { useState, useEffect } from 'react';
-import Navigation from '@/components/Navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { useTheme } from '@/hooks/useTheme';
-import { Trophy, Star, Target, Zap, Clock, Shield, Crown, Sword, Flame, Award } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { ACHIEVEMENTS, checkAchievements, calculateAchievementProgress } from '@/utils/achievements';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { WeeklyPerformance } from '@/types/futChampions';
-import { useDataSync } from '@/hooks/useDataSync';
+import { useAuth } from '@/contexts/AuthContext';
+import { Progress } from '@/components/ui/progress';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Award, CheckCircle, Lock } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+interface AchievementDefinition {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+}
+
+interface UserAchievement {
+  achievement_id: string;
+  progress: { current: number; target: number };
+  unlocked_at: string | null;
+}
+
+const RarityBadge = ({ rarity }: { rarity: string }) => {
+  const rarityColors = {
+    common: 'bg-gray-500',
+    rare: 'bg-blue-500',
+    epic: 'bg-purple-600',
+    legendary: 'bg-orange-500',
+  };
+  return (
+    <span className={`px-2 py-1 text-xs font-semibold text-white rounded-full ${rarityColors[rarity] || 'bg-gray-400'}`}>
+      {rarity}
+    </span>
+  );
+};
 
 const Achievements = () => {
   const { user } = useAuth();
-  const { currentTheme } = useTheme();
-  const { toast } = useToast();
-  const { weeklyData } = useDataSync();
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [definitions, setDefinitions] = useState<AchievementDefinition[]>([]);
+  const [userAchievements, setUserAchievements] = useState<Map<string, UserAchievement>>(new Map());
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('all'); // all, unlocked, in-progress
+  const [sort, setSort] = useState('progress'); // progress, rarity, name
 
-  // Calculate achievements and progress
-  const allAchievements = ACHIEVEMENTS.map(achievement => {
-    const progress = calculateAchievementProgress(achievement, weeklyData);
-    const isUnlocked = progress >= achievement.threshold;
-    
-    return {
-      ...achievement,
-      unlocked: isUnlocked,
-      currentProgress: progress,
-      target: achievement.threshold
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user) return;
+      setLoading(true);
+      const [defRes, userRes] = await Promise.all([
+        supabase.from('achievement_definitions').select('*'),
+        supabase.from('user_achievements').select('*').eq('user_id', user.id),
+      ]);
+
+      if (defRes.data) setDefinitions(defRes.data);
+      if (userRes.data) {
+        const userMap = new Map(userRes.data.map(ach => [ach.achievement_id, ach]));
+        setUserAchievements(userMap);
+      }
+      setLoading(false);
     };
-  });
+    fetchData();
+  }, [user]);
 
-  const getRarityColor = (rarity: string) => {
-    switch (rarity) {
-      case 'common': return 'text-gray-400 border-gray-400';
-      case 'rare': return 'text-fifa-blue border-fifa-blue';
-      case 'epic': return 'text-fifa-purple border-fifa-purple';
-      case 'legendary': return 'text-fifa-gold border-fifa-gold';
-      case 'mythic': return 'text-pink-400 border-pink-400';
-      default: return 'text-gray-400 border-gray-400';
-    }
+  const getProgress = (def: AchievementDefinition) => {
+    const userAch = userAchievements.get(def.id);
+    if (!userAch) return { current: 0, target: def.conditions?.target || 1, percent: 0, unlocked: false };
+    const { current, target } = userAch.progress || { current: 0, target: 1 };
+    return {
+      current,
+      target,
+      percent: target > 0 ? (current / target) * 100 : 100,
+      unlocked: !!userAch.unlocked_at,
+    };
   };
 
-  const getIconComponent = (category: string) => {
-    switch (category) {
-      case 'wins': return Trophy;
-      case 'goals': return Target;
-      case 'streaks': return Flame;
-      case 'performance': return Star;
-      case 'milestone': return Crown;
-      default: return Award;
-    }
-  };
+  const filteredAndSortedDefs = definitions
+    .map(def => ({ ...def, progressInfo: getProgress(def) }))
+    .filter(def => {
+      if (filter === 'unlocked') return def.progressInfo.unlocked;
+      if (filter === 'in-progress') return !def.progressInfo.unlocked;
+      return true;
+    })
+    .sort((a, b) => {
+      if (sort === 'progress') return b.progressInfo.percent - a.progressInfo.percent;
+      if (sort === 'name') return a.title.localeCompare(b.title);
+      // Add more sorting if needed
+      return 0;
+    });
 
-  const categories = ['all', 'wins', 'goals', 'streaks', 'performance', 'milestone', 'games', 'weekly', 'cleanSheets', 'assists', 'playTime', 'consistency', 'improvement', 'domination', 'comeback', 'teamwork', 'possession', 'passing', 'shooting', 'defending', 'attacking', 'midfield', 'seasonal', 'special', 'hidden'];
+  const groupedAchievements = filteredAndSortedDefs.reduce((acc, ach) => {
+    const category = ach.category || 'general';
+    if (!acc[category]) acc[category] = [];
+    acc[category].push(ach);
+    return acc;
+  }, {} as Record<string, typeof filteredAndSortedDefs>);
 
-  const filteredAchievements = allAchievements.filter(achievement => 
-    selectedCategory === 'all' || achievement.category === selectedCategory
-  );
-
-  const unlockedCount = allAchievements.filter(a => a.unlocked).length;
-  const totalCount = allAchievements.length;
+  if (loading) return <p>Loading achievements...</p>;
 
   return (
-    <div className="min-h-screen">
-      <Navigation />
-      
-      <main className="lg:ml-20 lg:hover:ml-64 transition-all duration-500 p-4 lg:p-6">
-        <div className="max-w-6xl mx-auto space-y-6">
-          {/* Header */}
-          <div className="flex items-center gap-4 mb-8">
-            <div className="p-3 rounded-2xl" style={{ backgroundColor: `${currentTheme.colors.primary}20` }}>
-              <Trophy className="h-8 w-8" style={{ color: currentTheme.colors.primary }} />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-white">Achievements</h1>
-              <p className="text-gray-400 mt-1">Track your progress and unlock rewards</p>
-            </div>
-          </div>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold tracking-tight">Achievements</h1>
+        <div className="flex items-center gap-4">
+          <Tabs value={filter} onValueChange={setFilter}>
+            <TabsList>
+              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="in-progress">In Progress</TabsTrigger>
+              <TabsTrigger value="unlocked">Unlocked</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <Select value={sort} onValueChange={setSort}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Sort by..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="progress">Progress</SelectItem>
+              <SelectItem value="name">Name</SelectItem>
+              <SelectItem value="rarity">Rarity</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
-          {/* Progress Overview */}
-          <Card className="glass-card">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="text-xl font-semibold text-white">Overall Progress</h3>
-                  <p className="text-gray-400">
-                    {unlockedCount} of {totalCount} achievements unlocked
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-3xl font-bold text-fifa-gold">
-                    {Math.round((unlockedCount / totalCount) * 100)}%
-                  </p>
-                  <p className="text-sm text-gray-400">Complete</p>
-                </div>
-              </div>
-              <div className="w-full bg-white/10 rounded-full h-3">
-                <div 
-                  className="h-3 bg-fifa-gold rounded-full transition-all duration-500"
-                  style={{ width: `${(unlockedCount / totalCount) * 100}%` }}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Category Filter */}
-          <div className="flex flex-wrap gap-2">
-            {categories.map(category => (
-              <Button
-                key={category}
-                variant={selectedCategory === category ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedCategory(category)}
-                className="capitalize"
-                style={{
-                  backgroundColor: selectedCategory === category ? currentTheme.colors.primary : 'transparent',
-                  borderColor: currentTheme.colors.border,
-                  color: selectedCategory === category ? '#ffffff' : currentTheme.colors.text
-                }}
-              >
-                {category}
-              </Button>
-            ))}
-          </div>
-
-          {/* Achievement Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredAchievements.map((achievement) => {
-              const IconComponent = getIconComponent(achievement.category);
-              const progressPercentage = achievement.target 
-                ? Math.min((achievement.currentProgress / achievement.target) * 100, 100)
-                : achievement.unlocked ? 100 : 0;
-
+      {Object.entries(groupedAchievements).map(([category, achievements]) => (
+        <Card key={category}>
+          <CardHeader>
+            <CardTitle className="capitalize">{category}</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {achievements.map(def => {
+              const { current, target, percent, unlocked } = def.progressInfo;
               return (
-                <Card
-                  key={achievement.id}
-                  className={`relative overflow-hidden transition-all duration-300 ${
-                    achievement.unlocked 
-                      ? 'bg-gradient-to-br from-fifa-gold/20 to-fifa-blue/20 border-fifa-gold/30' 
-                      : 'bg-white/5 border-white/10'
-                  }`}
-                >
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-4">
-                      <div className={`p-3 rounded-full ${achievement.unlocked ? 'bg-fifa-gold/20' : 'bg-white/10'}`}>
-                        <IconComponent 
-                          className={`h-6 w-6 ${achievement.unlocked ? 'text-fifa-gold' : 'text-gray-400'}`} 
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className={`font-semibold ${achievement.unlocked ? 'text-white' : 'text-gray-400'}`}>
-                            {achievement.title}
-                          </h3>
-                          <Badge 
-                            variant="outline" 
-                            className={`text-xs ${getRarityColor(achievement.rarity)}`}
-                          >
-                            {achievement.rarity}
-                          </Badge>
-                        </div>
-                        <p className={`text-sm mb-4 ${achievement.unlocked ? 'text-gray-300' : 'text-gray-500'}`}>
-                          {achievement.description}
-                        </p>
-                        
-                        {/* Progress Bar */}
-                        {achievement.target && (
-                          <div className="space-y-2">
-                            <div className="flex justify-between text-xs">
-                              <span className="text-gray-400">
-                                {achievement.currentProgress}/{achievement.target}
-                              </span>
-                              <span className="text-gray-400">
-                                {progressPercentage.toFixed(0)}%
-                              </span>
-                            </div>
-                            <div className="w-full bg-white/10 rounded-full h-2">
-                              <div 
-                                className={`h-2 rounded-full transition-all duration-500 ${
-                                  achievement.unlocked ? 'bg-fifa-gold' : 'bg-fifa-blue'
-                                }`}
-                                style={{ width: `${progressPercentage}%` }}
-                              />
-                            </div>
-                          </div>
-                        )}
-                      </div>
+                <div key={def.id} className={`p-4 rounded-lg border flex gap-4 ${unlocked ? 'bg-green-100 dark:bg-green-900/30 border-green-500' : 'bg-card'}`}>
+                  {unlocked ? <CheckCircle className="h-8 w-8 text-green-500 mt-1" /> : <Lock className="h-8 w-8 text-muted-foreground mt-1" />}
+                  <div className="flex-1">
+                    <div className="flex justify-between items-start mb-1">
+                      <h3 className="font-semibold">{def.title}</h3>
+                      <RarityBadge rarity={def.rarity} />
                     </div>
-                    
-                    {achievement.unlocked && (
-                      <div className="absolute top-3 right-3">
-                        <Badge className="bg-fifa-gold text-black">
-                          ✓ Unlocked
-                        </Badge>
+                    <p className="text-sm text-muted-foreground mb-2">{def.description}</p>
+                    {!unlocked && (
+                      <div>
+                        <div className="flex justify-between text-xs mb-1">
+                          <span>Progress</span>
+                          <span>{current} / {target}</span>
+                        </div>
+                        <Progress value={percent} className="h-2" />
                       </div>
                     )}
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               );
             })}
-          </div>
-
-          {filteredAchievements.length === 0 && (
-            <div className="text-center py-8">
-              <Trophy className="h-16 w-16 text-gray-400 mx-auto mb-4 opacity-50" />
-              <h3 className="text-xl font-semibold text-white mb-2">No Achievements</h3>
-              <p className="text-gray-400">No achievements found in this category.</p>
-            </div>
-          )}
-        </div>
-      </main>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 };
