@@ -2,7 +2,6 @@ import { supabase } from "@/integrations/supabase/client";
 import type { GameResult } from "@/types/futChampions";
 
 // --- METRIC CALCULATION ---
-// Calculates a comprehensive set of statistics from all of the user's game data.
 const calculateMetrics = (allGames: GameResult[]) => {
   let totalWins = 0;
   let totalGoals = 0;
@@ -10,7 +9,6 @@ const calculateMetrics = (allGames: GameResult[]) => {
   let longestWinStreak = 0;
   let tempStreak = 0;
 
-  // Ensure games are processed in chronological order
   allGames.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   allGames.forEach(game => {
@@ -23,7 +21,7 @@ const calculateMetrics = (allGames: GameResult[]) => {
       if (tempStreak > longestWinStreak) {
         longestWinStreak = tempStreak;
       }
-      tempStreak = 0; // Reset streak on loss
+      tempStreak = 0;
     }
 
     totalGoals += userScore;
@@ -32,7 +30,6 @@ const calculateMetrics = (allGames: GameResult[]) => {
     }
   });
 
-  // Final check in case the streak is ongoing
   if (tempStreak > longestWinStreak) {
     longestWinStreak = tempStreak;
   }
@@ -43,16 +40,16 @@ const calculateMetrics = (allGames: GameResult[]) => {
     total_goals: totalGoals,
     total_clean_sheets: totalCleanSheets,
     longest_win_streak: longestWinStreak,
-    current_win_streak: tempStreak, // The current ongoing streak
+    current_win_streak: tempStreak,
   };
 };
 
 // --- ACHIEVEMENT PROCESSING ---
 export const processAchievements = async (userId: string, gameVersion: string) => {
-  // 1. Fetch all necessary data in parallel for efficiency
   const [definitionsRes, userAchievementsRes, performancesRes] = await Promise.all([
     supabase.from('achievement_definitions').select('*').eq('game_version', gameVersion),
-    supabase.from('user_achievements').select('achievement_id, progress, unlocked_at').eq('user_id', userId),
+    // FIX: Corrected table name from 'user_achievements' to 'achievements'
+    supabase.from('achievements').select('achievement_id, progress, unlocked_at').eq('user_id', userId),
     supabase.from('weekly_performances').select('games').eq('user_id', userId).eq('game_version', gameVersion)
   ]);
 
@@ -65,9 +62,8 @@ export const processAchievements = async (userId: string, gameVersion: string) =
     return [];
   }
 
-  // 2. Aggregate all games from all weeks and calculate metrics
   const allGames: GameResult[] = performances?.flatMap(p => p.games || []) || [];
-  if (allGames.length === 0) return []; // No games to process
+  if (allGames.length === 0) return [];
 
   const metrics = calculateMetrics(allGames);
   const userAchievementsMap = new Map(userAchievements?.map(a => [a.achievement_id, a]));
@@ -75,12 +71,10 @@ export const processAchievements = async (userId: string, gameVersion: string) =
   const newAchievementsToInsert = [];
   const newlyUnlocked: string[] = [];
 
-  // 3. Iterate through each achievement definition to check progress
   for (const definition of definitions) {
     const userAchievement = userAchievementsMap.get(definition.id);
     const isAlreadyUnlocked = !!userAchievement?.unlocked_at;
 
-    // Skip if already unlocked
     if (isAlreadyUnlocked) {
       continue;
     }
@@ -94,31 +88,35 @@ export const processAchievements = async (userId: string, gameVersion: string) =
       achievement_id: definition.id,
       progress: { current: currentProgress, target: target },
       unlocked_at: null as string | null,
+      // Add other required fields from your 'achievements' table schema
+      title: definition.title,
+      description: definition.description,
+      category: definition.category,
+      rarity: definition.rarity,
+      target: target,
     };
 
     if (currentProgress >= target) {
-      // Achievement is now unlocked!
       achievementRecord.unlocked_at = new Date().toISOString();
-      newlyUnlocked.push(definition.title); // Track for notification
+      newlyUnlocked.push(definition.title);
     }
 
     if (userAchievement) {
-      // Only update if progress has changed or it's newly unlocked
       if (userAchievement.progress?.current !== currentProgress || achievementRecord.unlocked_at) {
         achievementsToUpdate.push(achievementRecord);
       }
     } else {
-      // This is a new achievement for the user, so insert it
       newAchievementsToInsert.push(achievementRecord);
     }
   }
 
-  // 4. Batch update/insert records in the database
   if (achievementsToUpdate.length > 0) {
-    await supabase.from('user_achievements').upsert(achievementsToUpdate, { onConflict: 'user_id,achievement_id' });
+    // FIX: Corrected table name from 'user_achievements' to 'achievements'
+    await supabase.from('achievements').upsert(achievementsToUpdate, { onConflict: 'user_id,achievement_id' });
   }
   if (newAchievementsToInsert.length > 0) {
-    await supabase.from('user_achievements').insert(newAchievementsToInsert);
+    // FIX: Corrected table name from 'user_achievements' to 'achievements'
+    await supabase.from('achievements').insert(newAchievementsToInsert);
   }
   
   return newlyUnlocked;
