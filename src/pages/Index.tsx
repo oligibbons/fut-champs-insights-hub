@@ -1,167 +1,91 @@
-import { useState, useEffect } from 'react';
-import { useDataSync } from '@/hooks/useDataSync';
-import Navigation from '@/components/Navigation';
-import DashboardCarousel from '@/components/DashboardCarousel';
-import DashboardOverview from '@/components/DashboardOverview';
-import AnalyticsDashboard from '@/components/AnalyticsDashboard';
-import PositionalHeatMap from '@/components/PositionalHeatMap';
-import GoalInvolvementChart from '@/components/GoalInvolvementChart';
-import CPSGauge from '@/components/CPSGauge';
-import FormationTracker from '@/components/FormationTracker';
-import PerformanceRadar from '@/components/PerformanceRadar';
-import MatchTagAnalysis from '@/components/MatchTagAnalysis';
-import AnalyticsTooltip from '@/components/AnalyticsTooltip';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { TrendingUp, Trophy, Target, Users, Calendar, BarChart3, Zap, Award, Clock, Star, Activity, PieChart, LineChart } from 'lucide-react';
-import { useTheme } from '@/hooks/useTheme';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ArrowRight, BarChart2, Calendar, Users, Trophy } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useFutChampsData } from "@/hooks/useFutChampsData";
+import { Link } from "react-router-dom";
+import DashboardOverview from "@/components/DashboardOverview";
+import TopPerformers from "@/components/TopPerformers";
+import WeeklyOverview from "@/components/WeeklyOverview";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Index = () => {
-  const { currentTheme } = useTheme();
-  const navigate = useNavigate();
-  const { weeklyData, getCurrentWeek, calculatePlayerStats, settings } = useDataSync();
   const { user } = useAuth();
+  const { games, wins, losses, winRate, currentStreak, loading } = useFutChampsData();
 
-  const currentRun = getCurrentWeek();
-  const playerStats = calculatePlayerStats();
+  const StatCard = ({ title, value, icon: Icon, change, changeType }: { title: string, value: string | number, icon: React.ElementType, change?: string, changeType?: 'increase' | 'decrease' }) => (
+    <Card className="bg-secondary/50 border-border/50 backdrop-blur-sm">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
+        <Icon className="h-4 w-4 text-muted-foreground" />
+      </CardHeader>
+      <CardContent>
+        {loading ? (
+          <Skeleton className="h-8 w-24 mt-1" />
+        ) : (
+          <>
+            <div className="text-2xl font-bold">{value}</div>
+            {change && (
+              <p className={`text-xs ${changeType === 'increase' ? 'text-green-500' : 'text-red-500'}`}>
+                {change}
+              </p>
+            )}
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+
+  const formatWinStreak = () => {
+    if (!currentStreak) return "N/A";
+    const streakType = currentStreak.type === 'win' ? 'W' : 'L';
+    return `${streakType}${currentStreak.count}`;
+  }
 
   return (
-    <div className="min-h-screen">
-      <Navigation />
-      
-      <main className="lg:ml-20 lg:hover:ml-64 transition-all duration-500 p-4 lg:p-6">
-        <div className="max-w-7xl mx-auto space-y-8">
-          {/* Header */}
-          <div className="flex items-center gap-4 mb-8">
-            <div className="p-3 rounded-2xl bg-gradient-to-r from-fifa-blue/20 to-fifa-purple/20">
-              <BarChart3 className="h-8 w-8 text-fifa-blue" />
-            </div>
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-fifa-blue via-fifa-purple to-fifa-gold bg-clip-text text-transparent">
-                FUTALYST Analytics Hub
-              </h1>
-              <p className="text-gray-400 mt-1">Welcome back! Here's your performance overview</p>
-            </div>
-          </div>
-
-          {/* Dashboard Carousel */}
-          <AnalyticsTooltip
-            title="Performance Overview Carousel"
-            description="Rotating dashboard showing key metrics including top performers, match facts, weekly scores, recent form, and progress towards targets. Auto-rotates every 12 seconds."
-            showIcon={false}
-          >
-            <DashboardCarousel
-              weeklyData={weeklyData}
-              currentWeek={currentRun}
-              enabledTiles={Object.keys(settings.dashboardSettings).filter(key => 
-                settings.dashboardSettings[key as keyof typeof settings.dashboardSettings]
-              )}
-            />
-          </AnalyticsTooltip>
-
-          {/* Match Tag Analysis */}
-          <MatchTagAnalysis />
-
-          {/* Performance Radar */}
-          <PerformanceRadar />
-
-          {/* Formation Tracker */}
-          <FormationTracker />
-
-          {/* Goal Involvement Chart */}
-          <GoalInvolvementChart />
-
-          {/* CPS Gauge */}
-          {currentRun && currentRun.games.length > 0 && (
-            <CPSGauge weekData={currentRun} historicalData={weeklyData.filter(w => w.isCompleted)} />
-          )}
-
-          {/* Comprehensive Dashboard Overview */}
-          <DashboardOverview />
-
-          {/* Positional Heat Map */}
-          <PositionalHeatMap />
-
-          {/* Comprehensive Analytics Dashboard */}
-          <Card className="glass-card">
-            <CardHeader>
-              <AnalyticsTooltip
-                title="Performance Analytics Dashboard"
-                description="Comprehensive analysis including performance charts, AI-generated insights based on your gameplay patterns, and personalized tips to improve your FIFA Champions performance."
-                showIcon={false}
-              >
-                <CardTitle className="text-white flex items-center gap-2">
-                  <BarChart3 className="h-6 w-6 text-fifa-blue" />
-                  Performance Analytics
-                </CardTitle>
-              </AnalyticsTooltip>
-            </CardHeader>
-            <CardContent>
-              <AnalyticsDashboard />
-            </CardContent>
-          </Card>
-
-          {/* Quick Actions */}
-          <Card className="glass-card static-element">
-            <CardHeader>
-              <AnalyticsTooltip
-                title="Quick Actions"
-                description="Fast access to key features: record new games, manage your squad setups, view achievements, and adjust application settings."
-                showIcon={false}
-              >
-                <CardTitle className="text-white">Quick Actions</CardTitle>
-              </AnalyticsTooltip>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <AnalyticsTooltip
-                title="Record New Game"
-                description="Start recording a new FIFA Champions match. Input scores, opponent details, player performance, and detailed match statistics."
-                showIcon={false}
-              >
-                <Button onClick={() => navigate('/current-week')} className="modern-button-primary">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Record New Game
-                </Button>
-              </AnalyticsTooltip>
-              
-              <AnalyticsTooltip
-                title="Manage Squads"
-                description="Create, edit, and organize your FIFA Ultimate Team squads. Track performance by formation and analyze which setups work best."
-                showIcon={false}
-              >
-                <Button onClick={() => navigate('/squads')} className="modern-button-secondary">
-                  <Users className="h-4 w-4 mr-2" />
-                  Manage Squads
-                </Button>
-              </AnalyticsTooltip>
-              
-              <AnalyticsTooltip
-                title="View Achievements"
-                description="Track your progress through various milestones and achievements. See what goals you've completed and what challenges await."
-                showIcon={false}
-              >
-                <Button onClick={() => navigate('/achievements')} className="modern-button-secondary">
-                  <Trophy className="h-4 w-4 mr-2" />
-                  View Achievements
-                </Button>
-              </AnalyticsTooltip>
-              
-              <AnalyticsTooltip
-                title="Adjust Settings"
-                description="Customize your tracking preferences, dashboard layout, notification settings, and analytical display options."
-                showIcon={false}
-              >
-                <Button onClick={() => navigate('/settings')} className="modern-button-secondary">
-                  <Target className="h-4 w-4 mr-2" />
-                  Adjust Settings
-                </Button>
-              </AnalyticsTooltip>
-            </CardContent>
-          </Card>
+    <div className="space-y-8">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Welcome back, {user?.user_metadata?.username || 'Player'}!</h1>
+          <p className="text-muted-foreground">Here's your performance snapshot.</p>
         </div>
-      </main>
+        <div className="flex items-center space-x-2">
+          <Button asChild>
+            <Link to="/current-week">
+              Log a Game
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link to="/analytics">
+              Deep Dive
+              <BarChart2 className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
+      </div>
+
+      {/* Main Grid */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <StatCard title="Total Wins" value={wins} icon={Trophy} />
+        <StatCard title="Win Rate" value={`${winRate}%`} icon={BarChart2} />
+        <StatCard title="Total Games" value={games.length} icon={Users} />
+        <StatCard title="Current Streak" value={formatWinStreak()} icon={Calendar} />
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <DashboardOverview games={games} />
+        </div>
+        <div>
+          <TopPerformers games={games} />
+        </div>
+      </div>
+      
+      <div>
+        <WeeklyOverview />
+      </div>
     </div>
   );
 };
