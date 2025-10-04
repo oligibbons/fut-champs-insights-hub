@@ -2,15 +2,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { WeeklyPerformance, GameResult, PlayerPerformance, TeamStats } from '@/types/futChampions';
-import { useLocalStorage } from './useLocalStorage';
+import { useGameVersion } from '@/contexts/GameVersionContext';
 
 export function useSupabaseData() {
   const { user } = useAuth();
   const [weeklyData, setWeeklyData] = useState<WeeklyPerformance[]>([]);
   const [loading, setLoading] = useState(true);
-  const [gameVersion] = useLocalStorage('gameVersion', 'FC26');
+  const { gameVersion } = useGameVersion();
 
-  // Fetch all data from Supabase in a more optimized way
   const fetchWeeklyData = useCallback(async () => {
     if (!user) {
       setLoading(false);
@@ -30,12 +29,11 @@ export function useSupabaseData() {
           )
         `)
         .eq('user_id', user.id)
-        .eq('game_version', gameVersion) // Filter by the selected game version
+        .eq('game_version', gameVersion)
         .order('week_number', { ascending: false });
 
       if (error) throw error;
 
-      // Transform the fetched data into the shape your application expects
       const transformedData = weeks.map((week): WeeklyPerformance => {
         const games = (week.game_results || []).map((game): GameResult => {
           const playerStats: PlayerPerformance[] = (game.player_performances || []).map(p => ({
@@ -165,14 +163,13 @@ export function useSupabaseData() {
           stress_level: gameData.stressLevel,
           server_quality: gameData.serverQuality,
           tags: gameData.tags || [],
-          game_version: gameVersion // Add game version on save
+          game_version: gameVersion
         })
         .select()
         .single();
 
       if (error) throw error;
 
-      // Save related stats...
       if (gameData.teamStats) {
         await supabase.from('team_statistics').insert({ ...gameData.teamStats, user_id: user.id, game_id: game.id });
       }
@@ -181,7 +178,7 @@ export function useSupabaseData() {
         await supabase.from('player_performances').insert(perfs);
       }
 
-      await fetchWeeklyData(); // Refresh all data
+      await fetchWeeklyData();
     } catch (error) {
       console.error('Error saving game:', error);
       throw error;
@@ -199,7 +196,7 @@ export function useSupabaseData() {
           custom_name: weekData.customName,
           start_date: weekData.startDate || new Date().toISOString(),
           target_wins: weekData.winTarget?.wins || 10,
-          game_version: gameVersion // Add game version on create
+          game_version: gameVersion
         })
         .select()
         .single();
@@ -251,7 +248,6 @@ export function useSupabaseData() {
   const deleteWeek = async (weekId: string) => {
     if (!user) return;
     try {
-      // Supabase cascade delete should handle related games, etc.
       await supabase.from('weekly_performances').delete().eq('id', weekId);
       await fetchWeeklyData();
     } catch (error) {
@@ -284,4 +280,3 @@ export function useSupabaseData() {
     refreshData: fetchWeeklyData
   };
 }
-
