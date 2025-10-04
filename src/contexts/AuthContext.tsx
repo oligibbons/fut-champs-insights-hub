@@ -13,7 +13,6 @@ interface AuthContextType {
   signOut: () => Promise<void>;
 }
 
-// FIX: Export the context itself so it can be imported by the provider.
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
@@ -32,8 +31,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const navigate = useNavigate();
 
   useEffect(() => {
-    // onAuthStateChange fires on the initial load and whenever the auth state changes.
-    // This is the single source of truth for the user's session.
+    // onAuthStateChange is the single source of truth. It fires immediately
+    // with the current session, and then again whenever it changes.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       const currentUser = session?.user ?? null;
@@ -96,7 +95,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signOut,
   };
   
-  // FIX: Always render children and let ProtectedRoute handle the loading/redirect logic.
   return (
     <AuthContext.Provider value={value}>
       {children}
