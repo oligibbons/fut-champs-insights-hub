@@ -20,7 +20,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 // import { DndProvider } from 'react-dnd';
 // import { HTML5Backend } from 'react-dnd-html5-backend';
-import { motion, AnimatePresence } from 'framer-motion';
+// import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '@/hooks/useTheme';
 
 const Squads = () => {
@@ -107,22 +107,22 @@ const Squads = () => {
         </div>
       </header>
       
-      <AnimatePresence>
+      {/* <AnimatePresence> */}
         {filteredSquads.length > 0 ? (
-          <motion.div 
+          <div 
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            // initial={{ opacity: 0 }}
+            // animate={{ opacity: 1 }}
+            // exit={{ opacity: 0 }}
           >
             {filteredSquads.map((squad) => (
-              <motion.div
+              <div
                 key={squad.id}
-                layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.3 }}
+                // layout
+                // initial={{ opacity: 0, scale: 0.9 }}
+                // animate={{ opacity: 1, scale: 1 }}
+                // exit={{ opacity: 0, scale: 0.9 }}
+                // transition={{ duration: 0.3 }}
               >
                 <Card
                   style={{ 
@@ -201,14 +201,14 @@ const Squads = () => {
                     </div>
                   </CardFooter>
                 </Card>
-              </motion.div>
+              </div>
             ))}
-          </motion.div>
+          </div>
         ) : (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
+          <div 
+            // initial={{ opacity: 0, y: 20 }}
+            // animate={{ opacity: 1, y: 0 }}
+            // exit={{ opacity: 0, y: -20 }}
             className="text-center py-16 rounded-xl"
             style={{backgroundColor: currentTheme.colors.cardBg}}
           >
@@ -223,9 +223,9 @@ const Squads = () => {
                 Create First Squad
               </Button>
             </div>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
+      {/* </AnimatePresence> */}
     </div>
   );
 };
