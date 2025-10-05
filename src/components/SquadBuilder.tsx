@@ -10,7 +10,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from '@/lib/utils';
-import { supabase } from '@/integrations/supabase/client'; // Assuming supabase client is here
+import { supabase } from '@/integrations/supabase/client';
+import { Badge } from './ui/badge';
 
 interface SquadBuilderProps {
   squad?: Squad;
@@ -23,7 +24,6 @@ const SquadBuilder = ({ squad, gameVersion, onSave, onCancel }: SquadBuilderProp
   const { toast } = useToast();
   const { user } = useAuth();
 
-  // State to hold the custom card types
   const [cardTypes, setCardTypes] = useState<CardType[]>([]);
 
   const [squadData, setSquadData] = useState<Squad>(() => {
@@ -56,22 +56,20 @@ const SquadBuilder = ({ squad, gameVersion, onSave, onCancel }: SquadBuilderProp
         y: 0
       })),
       createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       lastModified: new Date().toISOString(),
       gamesPlayed: 0,
       wins: 0,
       losses: 0,
       isDefault: false,
-      user_id: user?.id, 
       totalRating: 0,
-      chemistry: 0,
-      updatedAt: new Date().toISOString(),
+      chemistry: 0
     };
   });
 
   const [selectedPosition, setSelectedPosition] = useState<SquadPosition | null>(null);
   const [showPlayerModal, setShowPlayerModal] = useState(false);
-  
-  // Fetch custom card types when the component mounts or game version changes
+
   useEffect(() => {
     const fetchCardTypes = async () => {
         if (!user) return;
@@ -90,7 +88,6 @@ const SquadBuilder = ({ squad, gameVersion, onSave, onCancel }: SquadBuilderProp
     };
     fetchCardTypes();
   }, [user, gameVersion, toast]);
-
 
   const handleFormationChange = (formationName: string) => {
     const formationData = FORMATIONS.find(f => f.name === formationName);
@@ -175,15 +172,10 @@ const SquadBuilder = ({ squad, gameVersion, onSave, onCancel }: SquadBuilderProp
           return {
               background: `linear-gradient(135deg, ${cardType.primary_color} 50%, ${cardType.secondary_color} 50%)`,
               color: cardType.highlight_color,
-              border: `2px solid ${cardType.highlight_color}33` // Adding a subtle border from the highlight color
           };
       }
-      // Fallback for default card types if needed
-      return {
-          background: 'linear-gradient(135deg, #333 50%, #555 50%)',
-          color: '#FFFFFF',
-          border: '2px solid #FFFFFF33'
-      };
+      // Fallback style for default cards
+      return { background: `linear-gradient(135deg, #333 50%, #555 50%)`, color: '#FFFFFF' };
   };
 
   return (
@@ -252,13 +244,13 @@ const SquadBuilder = ({ squad, gameVersion, onSave, onCancel }: SquadBuilderProp
                     >
                       {position.player ? (
                         <div className="relative w-16 text-center">
-                          <div 
-                            className="w-12 h-12 rounded-full mx-auto flex flex-col items-center justify-center text-xs font-bold transition-all duration-200 group-hover:scale-110"
-                            style={getCardStyle(position.player)}
-                           >
-                            {position.player.isEvolution && (
-                                <div className="absolute inset-0 rounded-full border-2 border-teal-400 animate-ping"></div>
+                           <div 
+                            className={cn(
+                                "w-12 h-12 rounded-full mx-auto flex flex-col items-center justify-center text-xs font-bold transition-all duration-200 group-hover:scale-110",
+                                position.player.isEvolution && "border-2 border-teal-400" // UPDATED: Static border for Evo
                             )}
+                            style={getCardStyle(position.player)} // UPDATED: Dynamic style from function
+                           >
                             <div className="text-sm font-bold">{position.player.rating}</div>
                             <div className="text-xs -mt-1">{position.position}</div>
                           </div>
@@ -283,12 +275,12 @@ const SquadBuilder = ({ squad, gameVersion, onSave, onCancel }: SquadBuilderProp
             </TabsContent>
             <TabsContent value="substitutes" className="mt-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {squadData.substitutes.map((pos) => <BenchPlayerSlot key={pos.id} position={pos} onPositionClick={handlePositionClick} onRemovePlayer={handleRemovePlayer} cardTypes={cardTypes}/>)}
+                {squadData.substitutes.map((pos) => <BenchPlayerSlot key={pos.id} position={pos} onPositionClick={handlePositionClick} onRemovePlayer={handleRemovePlayer} cardTypes={cardTypes} />)}
               </div>
             </TabsContent>
             <TabsContent value="reserves" className="mt-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {squadData.reserves.map((pos) => <BenchPlayerSlot key={pos.id} position={pos} onPositionClick={handlePositionClick} onRemovePlayer={handleRemovePlayer} cardTypes={cardTypes}/>)}
+                {squadData.reserves.map((pos) => <BenchPlayerSlot key={pos.id} position={pos} onPositionClick={handlePositionClick} onRemovePlayer={handleRemovePlayer} cardTypes={cardTypes} />)}
               </div>
             </TabsContent>
           </Tabs>
@@ -303,8 +295,7 @@ const SquadBuilder = ({ squad, gameVersion, onSave, onCancel }: SquadBuilderProp
         }}
         onPlayerSelect={handlePlayerSelect}
         position={selectedPosition?.position}
-        // Pass card types to the modal so it can display them correctly
-        cardTypes={cardTypes}
+        cardTypes={cardTypes} // Pass card types to the modal
       />
     </div>
   );
@@ -313,7 +304,7 @@ const SquadBuilder = ({ squad, gameVersion, onSave, onCancel }: SquadBuilderProp
 const BenchPlayerSlot = ({ position, onPositionClick, onRemovePlayer, cardTypes }: { position: SquadPosition, onPositionClick: (pos: SquadPosition) => void, onRemovePlayer: (id: string) => void, cardTypes: CardType[]}) => {
     
     const getBenchBadgeStyle = (player: PlayerCard) => {
-        const cardType = cardTypes.find(ct => ct.id === player.cardType);
+        const cardType = cardTypes.find(ct => ct.id === player.cardType); // CORRECTED: Checks player.cardType
         if (cardType) {
             return {
                 backgroundColor: cardType.primary_color,
@@ -321,12 +312,7 @@ const BenchPlayerSlot = ({ position, onPositionClick, onRemovePlayer, cardTypes 
                 borderColor: cardType.secondary_color
             };
         }
-        // Fallback style
-        return {
-            backgroundColor: '#555',
-            color: '#FFF',
-            borderColor: '#888'
-        }
+        return { backgroundColor: '#555', color: '#FFF', borderColor: '#888' };
     };
     
     return (
