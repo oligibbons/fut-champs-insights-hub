@@ -99,14 +99,18 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [currentThemeName, setCurrentThemeName] = useState<string>(() => {
-    // Default to the new 'Midnight Pitch' dark theme
-    return localStorage.getItem('futalyst-theme') || 'midnightPitch';
+    // THIS IS THE FIX: Check if the saved theme is valid before using it.
+    const savedTheme = localStorage.getItem('futalyst-theme');
+    if (savedTheme && themes[savedTheme]) {
+      return savedTheme;
+    }
+    // If not, fall back to the new default theme.
+    return 'midnightPitch';
   });
 
   useEffect(() => {
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark');
-    // All themes except 'Tactics Board' are dark themes
     root.classList.add(currentThemeName === 'tacticsBoard' ? 'light' : 'dark');
   }, [currentThemeName]);
 
@@ -119,6 +123,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
 
   const value = {
     currentThemeName,
+    // This is now safe because currentThemeName is guaranteed to be a valid key
     currentTheme: themes[currentThemeName],
     setTheme,
     themes: Object.keys(themes),
