@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Trophy, Star, TrendingUp } from 'lucide-react';
+// FIX: Added 'Users' to the import list from lucide-react to resolve the ReferenceError.
+import { Trophy, Star, TrendingUp, Users } from 'lucide-react'; 
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGameVersion } from '@/contexts/GameVersionContext'; // Import the hook
 
@@ -95,7 +96,8 @@ const TopPerformers = () => {
                      <div className="flex items-center gap-4 mt-1">
                         <PerformerStat icon={Star} value={player.average_rating.toFixed(1)} label="Rating" />
                         <PerformerStat icon={TrendingUp} value={player.goals} label="Goals" />
-                        <PerformerStat icon={Users} value={player.games_played} label="Games" />
+                        {/* The component below requires 'Users' to be imported */}
+                        <PerformerStat icon={Users} value={player.games_played} label="Games" /> 
                      </div>
                    </div>
                 </div>
