@@ -1,4 +1,4 @@
-// REMOVED: The old hardcoded types are no longer needed as we now fetch all card types from Supabase.
+// REMOVED: These hardcoded types are no longer needed as we fetch all card types from Supabase.
 // export type PlayerCardType = 'bronze' | 'silver' | 'gold' | 'inform' | 'totw' | 'toty' | 'tots' | 'icon' | 'hero';
 // export const CARD_TYPES: PlayerCardType[] = ['bronze', 'silver', 'gold', 'inform', 'totw', 'toty', 'tots', 'icon', 'hero'];
 
