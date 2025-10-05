@@ -61,9 +61,6 @@ const SquadBuilder = ({ squad, gameVersion, onSave, onCancel }: SquadBuilderProp
       wins: 0,
       losses: 0,
       isDefault: false,
-      // The user object from useAuth might be null initially
-      // `userId` is not a standard field in the Squad interface from squads.ts
-      // I'll assume it should be user_id if it's stored in the DB
       user_id: user?.id, 
       totalRating: 0,
       chemistry: 0,
@@ -165,8 +162,6 @@ const SquadBuilder = ({ squad, gameVersion, onSave, onCancel }: SquadBuilderProp
       });
       return;
     }
-    // The onSave prop expects a 'Squad' object. Ensure all required fields are present.
-    // The original component had `userId`, but the interface has `user_id`. Let's assume the latter.
     onSave({ ...squadData, user_id: user?.id || 'local-user' });
     toast({
       title: "Success",
