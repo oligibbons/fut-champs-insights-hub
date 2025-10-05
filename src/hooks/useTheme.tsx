@@ -67,15 +67,14 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    const root = document.documentElement;
     const theme = themes[currentThemeName];
     if (!theme) return;
 
-    // Remove old theme class and add the new one
+    const root = document.documentElement;
     root.classList.remove('light', 'dark');
     root.classList.add(currentThemeName === 'light' ? 'light' : 'dark');
-
-    // Set the CSS variables that shadcn/ui and tailwindcss are expecting
+    
+    // This part is for your custom inline styles, if you use them.
     root.style.setProperty('--background', theme.colors.background);
     root.style.setProperty('--foreground', theme.colors.text);
     root.style.setProperty('--card', theme.colors.cardBg);
@@ -99,6 +98,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
 
   const setTheme = (themeName: string) => {
     if (themes[themeName]) {
+      // THIS IS THE CRITICAL FIX: Save the theme to localStorage
       localStorage.setItem('futalyst-theme', themeName);
       setCurrentThemeName(themeName);
     }
