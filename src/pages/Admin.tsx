@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'; // Corrected Import
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Users, BarChart, Bug, ShieldCheck, Paintbrush, Award, Search, Edit, Trash2, Save, Lock, Unlock, RefreshCw, Plus, X, Database, Trophy, Download, Upload } from "lucide-react";
 import Navigation from '@/components/Navigation';
@@ -134,7 +134,6 @@ const StatCard = ({ icon: Icon, title, value, isStatus }: { icon: React.ElementT
         <p className={`text-2xl font-bold capitalize ${isStatus && value === 'online' ? 'text-green-500' : 'text-foreground'}`}>{value}</p>
     </div>
 );
-
 
 // --- CARD TYPE CREATOR COMPONENT (with 3 colors) ---
 const CardTypeCreator = () => {
