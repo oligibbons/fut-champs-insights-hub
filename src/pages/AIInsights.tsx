@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { useTheme } from '@/hooks/useTheme';
 import { useAccountData } from '@/hooks/useAccountData';
 // Corrected the import path to use the correct file
-import { EnhancedAIGenerateInsights, Insight } from '@/utils/enhancedAiInsights'; 
+import { EnhancedAIGenerateInsights, Insight } from '@/utils/enhancedAiInsights';
 import {
   Brain,
   TrendingUp,
@@ -58,9 +58,10 @@ const AIInsights = () => {
         acc[tag] = (acc[tag] || 0) + 1;
         return acc;
       }, {});
-      
+
     const sortedTags = Object.entries(tagCounts).sort(([, a]: any, [, b]: any) => b - a);
 
+    // Create a detailed prompt for the AI
     let prompt = `
       Analyze the following FIFA/FC Champions performance data. Based on this data, identify 3 key strengths, 3 areas for improvement, and 2 notable opportunities or patterns.
       
@@ -85,6 +86,7 @@ const AIInsights = () => {
   };
 
   const getInsightTypeColor = (category: string) => {
+    // Assuming you have these colors defined in your theme or CSS
     switch (category) {
       case 'strength': return 'text-green-500';
       case 'weakness': return 'text-red-500';
@@ -97,7 +99,7 @@ const AIInsights = () => {
     const priorityOrder: Record<string, number> = { high: 3, medium: 2, low: 1 };
     return (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0);
   });
-  
+
   const mostUsedTags = useMemo(() => {
     const tagCounts = allGames
       .flatMap(game => game.tags || [])
@@ -238,7 +240,7 @@ const AIInsights = () => {
                     </div>
                   );
                 })}
-              </CardContent>.
+              </CardContent>
             </Card>
           </>
       )}
@@ -254,7 +256,7 @@ const AIInsights = () => {
            </CardContent>
          </Card>
       )}
-      
+
       {dataLoading && (
         <div className="flex justify-center items-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
