@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import { useState, useEffect, useCallback } from 'react';
+import { useForm, Controller, FieldValues } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Toggle } from '@/components/ui/toggle';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-// FIX: Added 'Users' to imports
+// FIX: Added 'Users', 'Plus', and 'Minus' to imports
 import { ArrowLeft, ArrowRight, Save, Loader2, UserPlus, Users, Plus, Minus } from 'lucide-react'; 
 import PlayerStatsForm from './PlayerStatsForm';
 import { useSquadData } from '@/hooks/useSquadData';
@@ -22,6 +22,7 @@ import { Squad } from '@/types/squads';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from './ui/scroll-area';
 import { PlayerPerformance } from '@/types/futChampions';
+import { get } from 'lodash';
 
 // Schema for form validation using Zod
 const gameFormSchema = z.object({
@@ -35,11 +36,9 @@ const gameFormSchema = z.object({
     opponent_play_style: z.string(),
     opponent_formation: z.string().optional(),
     opponent_squad_rating: z.coerce.number().min(50).max(99),
-    // FIX: Added squad_id
     squad_id: z.string().min(1, { message: "Please select a squad." }),
     tags: z.array(z.string()).optional(),
     comments: z.string().optional(),
-    // FIX: Full team_stats schema
     team_stats: z.object({
         shots: z.coerce.number().min(0),
         shotsOnTarget: z.coerce.number().min(0),
@@ -125,11 +124,9 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
       opponent_play_style: 'balanced',
       opponent_formation: '',
       opponent_squad_rating: 85,
-      // FIX: Set default squad ID
       squad_id: defaultSquad?.id || '',
       tags: [],
       comments: '',
-      // FIX: Default values for all team stats
       team_stats: {
         shots: 8, 
         shotsOnTarget: 4, 
@@ -148,27 +145,105 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
   });
 
   const watchedValues = watch();
-  // FIX: Use the selected squad for player population
   const selectedSquad = squads.find(s => s.id === watchedValues.squad_id);
 
-  // Helper function for custom steppers (score inputs)
-  const adjustScore = (fieldName: 'user_goals' | 'opponent_goals', delta: number) => {
-    const currentValue = getValues(fieldName);
-    const newValue = Math.max(0, currentValue + delta);
-    setValue(fieldName, newValue, { shouldValidate: true, shouldDirty: true });
-  };
+  // FIX: Centralized logic for numerical input adjustments (Steppers)
+  const adjustNumericalValue = useCallback((fieldName: keyof z.infer<typeof gameFormSchema> | `team_stats.${string}`, delta: number, stepValue: number = 1) => {
+    
+    // Use lodash get for nested field names
+    let currentValue = get(getValues(), fieldName);
 
-  // FIX: Auto-populate players when the selected squad or duration changes
+    if (typeof currentValue !== 'number') {
+        currentValue = Number(currentValue) || 0;
+    }
+    
+    // Handle floating point arithmetic precisely
+    let newValue = (currentValue * 10 + delta * stepValue * 10) / 10;
+    
+    // Apply constraints based on field name
+    let min = 0;
+    let max = Infinity;
+
+    if (fieldName.includes('opponent_skill') || fieldName.includes('server_quality') || fieldName.includes('stress_level')) {
+        max = 10;
+        min = 1;
+    } else if (fieldName.includes('possession') || fieldName.includes('passAccuracy')) {
+        max = 100;
+        min = 0;
+    } else if (fieldName.includes('opponent_squad_rating')) {
+        max = 99;
+        min = 50;
+    } else if (fieldName.includes('duration')) {
+        min = 1;
+    }
+
+    newValue = Math.max(min, Math.min(max, newValue));
+    
+    // Round to step precision if step is decimal
+    if (stepValue < 1) {
+        newValue = Math.round(newValue / stepValue) * stepValue;
+        newValue = parseFloat(newValue.toFixed(1)); // Keep it at 1 decimal place
+    } else {
+        newValue = Math.round(newValue); // For integer fields
+    }
+
+    setValue(fieldName as any, newValue, { shouldValidate: true, shouldDirty: true });
+  }, [getValues, setValue]);
+
+
+  // Reusable Number Input Component with Steppers
+  const NumberInputWithSteppers = ({ name, label, step = 1, className = '', inputClassName = 'text-center' }: { name: keyof z.infer<typeof gameFormSchema> | `team_stats.${string}`, label: string, step?: number, className?: string, inputClassName?: string }) => (
+    <div className={`space-y-2 ${className}`}>
+        <Label>{label}</Label>
+        <div className="flex items-center gap-1">
+            <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="w-8 h-8 p-0"
+                onClick={() => adjustNumericalValue(name, -1, step)}
+                disabled={get(getValues(), name) <= (name === 'opponent_skill' || name === 'server_quality' || name === 'stress_level' ? 1 : 0)}
+            >
+                <Minus className="h-3 w-3" />
+            </Button>
+            <Controller 
+                name={name as any} 
+                control={control} 
+                render={({ field }) => (
+                    <Input 
+                        {...field} 
+                        type="number" 
+                        step={step} 
+                        className={`h-8 w-14 text-sm font-semibold ${inputClassName}`}
+                        onChange={(e) => {
+                            // Ensure empty strings are handled correctly by Zod coercion
+                            field.onChange(e.target.value === '' ? '' : e.target.value);
+                        }}
+                    />
+                )} 
+            />
+            <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="w-8 h-8 p-0"
+                onClick={() => adjustNumericalValue(name, 1, step)}
+            >
+                <Plus className="h-3 w-3" />
+            </Button>
+        </div>
+    </div>
+  );
+
+
   useEffect(() => {
-    // If a default squad is loaded and nothing is selected, select it.
     if (!watchedValues.squad_id && defaultSquad) {
         setValue('squad_id', defaultSquad.id);
     }
 
     if (selectedSquad) {
-      // Get only starting players
       const startingPlayers = (selectedSquad.squad_players?.filter(p => p.slot_id?.startsWith('starting-')) || [])
-        .map(p => p.players) // Access the nested player object from the join
+        .map(p => p.players) 
         .map(player => ({
           id: player.id,
           name: player.name,
@@ -176,7 +251,6 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
           rating: 7.0, 
           goals: 0,
           assists: 0,
-          // FIX: Auto-populate minutesPlayed with the game duration
           minutesPlayed: watchedValues.duration || 90, 
           yellowCards: 0,
           redCards: 0,
@@ -185,14 +259,12 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
       
       setValue('player_stats', startingPlayers);
     } else if (squads.length > 0) {
-        // If squads are loaded but none is selected, clear player stats
         setValue('player_stats', []);
     }
     
   }, [selectedSquad, watchedValues.duration, defaultSquad, setValue, squads.length, watchedValues.squad_id]);
 
   const addSubstitute = () => {
-    // FIX: Check selectedSquad instead of defaultSquad and show toast
     if (!selectedSquad) {
       toast({ title: "Please select a squad first in Step 1.", variant: "destructive" });
       return;
@@ -208,7 +280,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
         id: subToAdd.id, name: subToAdd.name, position: 'SUB', 
         rating: 6.0, 
         goals: 0, assists: 0, 
-        minutesPlayed: 0, // Subs start at 0 mins
+        minutesPlayed: 0, 
         yellowCards: 0, redCards: 0, ownGoals: 0,
       };
       setValue('player_stats', [...(watchedValues.player_stats || []), newPlayerStat]);
@@ -239,7 +311,6 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                 duration: data.duration,
                 comments: data.comments,
                 tags: data.tags,
-                // FIX: Use the selected squad_id from the form data
                 squad_used: data.squad_id 
             })
             .select('id')
@@ -250,7 +321,6 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
         const hasNoStatsTag = data.tags?.some(tagName => matchTags.find(t => t.name === tagName)?.specialRule === 'no_stats');
 
         if (!hasNoStatsTag) {
-            // FIX: Insert all required team stats fields (converted to snake_case for Supabase)
             const { error: teamStatsError } = await supabase
                 .from('team_statistics')
                 .insert({
@@ -277,7 +347,6 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                     user_id: user.id,
                     player_name: p.name,
                     position: p.position,
-                    // FIX: Ensure rating is explicitly saved to 1 decimal place
                     rating: parseFloat(p.rating.toFixed(1)), 
                     goals: p.goals,
                     assists: p.assists,
@@ -312,7 +381,6 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                 <ScrollArea className="h-[60vh] -mr-6 pr-6">
                     <div className={step === 1 ? 'block' : 'hidden'}>
                         <div className="space-y-8 animate-in fade-in">
-                             {/* FIX: Squad Selection Dropdown restored */}
                             <Controller
                                 name="squad_id"
                                 control={control}
@@ -338,41 +406,38 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                                     </div>
                                 )}
                             />
-                            {/* End Squad Selection */}
 
                             <div className="text-center">
                                 <Label className="text-lg font-semibold">Final Score</Label>
                                 <div className="flex items-center justify-center gap-2 md:gap-4 mt-2">
                                     {/* User Goals Input with Steppers */}
                                     <div className="flex items-center space-x-1">
-                                      <Button type="button" variant="outline" size="icon" onClick={() => adjustScore('user_goals', -1)}><Minus className="h-4 w-4" /></Button>
+                                      <Button type="button" variant="outline" size="icon" onClick={() => adjustNumericalValue('user_goals', -1)}><Minus className="h-4 w-4" /></Button>
                                       <Controller name="user_goals" control={control} render={({ field }) => <Input {...field} type="number" className="modern-input text-4xl h-20 w-24 text-center" />} />
-                                      <Button type="button" variant="outline" size="icon" onClick={() => adjustScore('user_goals', 1)}><Plus className="h-4 w-4" /></Button>
+                                      <Button type="button" variant="outline" size="icon" onClick={() => adjustNumericalValue('user_goals', 1)}><Plus className="h-4 w-4" /></Button>
                                     </div>
                                     
                                     <span className="text-5xl font-bold text-muted-foreground mx-2">:</span>
                                     
                                     {/* Opponent Goals Input with Steppers */}
                                     <div className="flex items-center space-x-1">
-                                      <Button type="button" variant="outline" size="icon" onClick={() => adjustScore('opponent_goals', -1)}><Minus className="h-4 w-4" /></Button>
+                                      <Button type="button" variant="outline" size="icon" onClick={() => adjustNumericalValue('opponent_goals', -1)}><Minus className="h-4 w-4" /></Button>
                                       <Controller name="opponent_goals" control={control} render={({ field }) => <Input {...field} type="number" className="modern-input text-4xl h-20 w-24 text-center" />} />
-                                      <Button type="button" variant="outline" size="icon" onClick={() => adjustScore('opponent_goals', 1)}><Plus className="h-4 w-4" /></Button>
+                                      <Button type="button" variant="outline" size="icon" onClick={() => adjustNumericalValue('opponent_goals', 1)}><Plus className="h-4 w-4" /></Button>
                                     </div>
                                 </div>
                             </div>
                             
-                            <div className="space-y-2">
-                                <Label htmlFor="duration">Match Duration (Mins)</Label>
-                                {/* Added type="number" to enable native browser arrows (if not disabled by CSS) */}
-                                <Controller name="duration" control={control} render={({ field }) => <Input {...field} id="duration" type="number" placeholder="e.g., 90 for a full game" />} />
-                                <p className="text-xs text-muted-foreground">Enter less than 90 if the match ended early.</p>
-                            </div>
+                            {/* Duration with Steppers */}
+                            <NumberInputWithSteppers name="duration" label="Match Duration (Mins)" step={5} className="space-y-2" inputClassName="h-10 text-base" />
+                            <p className="text-xs text-muted-foreground">Enter less than 90 if the match ended early.</p>
                         </div>
                     </div>
 
                     <div className={step === 2 ? 'block' : 'hidden'}>
                         <div className="space-y-6 animate-in fade-in">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Sliders for Skill, Quality, Stress */}
                                 <Controller name="opponent_skill" control={control} render={({ field }) => <div className="space-y-2"><Label>Opponent Skill: <span className="font-bold text-primary">{field.value}</span>/10</Label><Slider value={[field.value]} onValueChange={(v) => field.onChange(v[0])} max={10} step={1} /></div>} />
                                 <Controller name="server_quality" control={control} render={({ field }) => <div className="space-y-2"><Label>Server Quality: <span className="font-bold text-primary">{field.value}</span>/10</Label><Slider value={[field.value]} onValueChange={(v) => field.onChange(v[0])} max={10} step={1} /></div>} />
                                 <Controller name="stress_level" control={control} render={({ field }) => <div className="space-y-2"><Label>Stress Level: <span className="font-bold text-primary">{field.value}</span>/10</Label><Slider value={[field.value]} onValueChange={(v) => field.onChange(v[0])} max={10} step={1} /></div>} />
@@ -381,27 +446,28 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-border">
                                 <Controller name="opponent_play_style" control={control} render={({ field }) => <div><Label>Opponent Play Style</Label><Select value={field.value} onValueChange={field.onChange}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{['balanced', 'possession', 'counter-attack', 'high-press', 'drop-back'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></div>} />
                                 <Controller name="opponent_formation" control={control} render={({ field }) => <div><Label>Opponent Formation</Label><Input {...field} placeholder="e.g. 4-2-3-1" /></div>} />
-                                <Controller name="opponent_squad_rating" control={control} render={({ field }) => <div><Label>Opponent Squad Rating</Label><Input {...field} type="number" /></div>} />
+                                {/* Opponent Squad Rating with Steppers */}
+                                <NumberInputWithSteppers name="opponent_squad_rating" label="Opponent Squad Rating" step={1} />
                             </div>
                         </div>
                     </div>
                     
                     <div className={step === 3 ? 'block' : 'hidden'}>
                         <div className="space-y-6 animate-in fade-in">
-                            {/* FIX: Full team stats inputs restored */}
                             <h3 className="text-lg font-semibold border-b pb-2">Team Statistics</h3>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <Controller name="team_stats.shots" control={control} render={({ field }) => <div className="space-y-2"><Label>Shots</Label><Input {...field} type="number" /></div>} />
-                                <Controller name="team_stats.shotsOnTarget" control={control} render={({ field }) => <div className="space-y-2"><Label>Shots on Target</Label><Input {...field} type="number" /></div>} />
-                                <Controller name="team_stats.possession" control={control} render={({ field }) => <div className="space-y-2"><Label>Possession %</Label><Input {...field} type="number" /></div>} />
-                                <Controller name="team_stats.passes" control={control} render={({ field }) => <div className="space-y-2"><Label>Passes</Label><Input {...field} type="number" /></div>} />
-                                <Controller name="team_stats.passAccuracy" control={control} render={({ field }) => <div className="space-y-2"><Label>Pass Accuracy %</Label><Input {...field} type="number" /></div>} />
-                                <Controller name="team_stats.fouls" control={control} render={({ field }) => <div className="space-y-2"><Label>Fouls</Label><Input {...field} type="number" /></div>} />
-                                <Controller name="team_stats.yellowCards" control={control} render={({ field }) => <div className="space-y-2"><Label>Yellow Cards</Label><Input {...field} type="number" /></div>} />
-                                <Controller name="team_stats.redCards" control={control} render={({ field }) => <div className="space-y-2"><Label>Red Cards</Label><Input {...field} type="number" /></div>} />
-                                <Controller name="team_stats.expectedGoals" control={control} render={({ field }) => <div className="space-y-2"><Label>Your xG</Label><Input {...field} type="number" step="0.1" /></div>} />
-                                <Controller name="team_stats.expectedGoalsAgainst" control={control} render={({ field }) => <div className="space-y-2"><Label>Opponent xG</Label><Input {...field} type="number" step="0.1" /></div>} />
-                                <Controller name="team_stats.corners" control={control} render={({ field }) => <div className="space-y-2"><Label>Corners</Label><Input {...field} type="number" /></div>} />
+                                {/* All numerical fields now use the custom stepper component */}
+                                <NumberInputWithSteppers name="team_stats.shots" label="Shots" />
+                                <NumberInputWithSteppers name="team_stats.shotsOnTarget" label="Shots on Target" />
+                                <NumberInputWithSteppers name="team_stats.possession" label="Possession %" />
+                                <NumberInputWithSteppers name="team_stats.passes" label="Passes" step={10} />
+                                <NumberInputWithSteppers name="team_stats.passAccuracy" label="Pass Accuracy %" />
+                                <NumberInputWithSteppers name="team_stats.fouls" label="Fouls" />
+                                <NumberInputWithSteppers name="team_stats.yellowCards" label="Yellow Cards" />
+                                <NumberInputWithSteppers name="team_stats.redCards" label="Red Cards" />
+                                <NumberInputWithSteppers name="team_stats.expectedGoals" label="Your xG" step={0.1} />
+                                <NumberInputWithSteppers name="team_stats.expectedGoalsAgainst" label="Opponent xG" step={0.1} />
+                                <NumberInputWithSteppers name="team_stats.corners" label="Corners" />
                             </div>
                             
                             <div className="space-y-2">
@@ -419,15 +485,15 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                                                             <TooltipTrigger asChild>
                                                                 <Toggle
                                                                     variant="outline" size="sm"
-                                                                    // FIX: The logic here is correct for multi-select. 
-                                                                    // The previous issue was likely due to a missing import or cached state.
                                                                     pressed={field.value?.includes(tag.name)}
                                                                     onPressedChange={(isPressed) => {
-                                                                        const currentTags = field.value || [];
+                                                                        const currentTags = Array.isArray(field.value) ? field.value : [];
                                                                         const newTags = isPressed
                                                                             ? [...currentTags, tag.name]
                                                                             : currentTags.filter(t => t !== tag.name);
-                                                                        field.onChange(newTags);
+                                                                        
+                                                                        // FIX: Explicitly set the new array to trigger state update reliably
+                                                                        field.onChange(newTags); 
                                                                     }}
                                                                 >
                                                                     {tag.name}
@@ -450,12 +516,10 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                         <div className="animate-in fade-in">
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-lg font-semibold">Player Performances</h3>
-                                {/* Disable Add Sub button if no squad is selected */}
                                 <Button onClick={addSubstitute} size="sm" type="button" disabled={!selectedSquad}>
                                     <UserPlus className="h-4 w-4 mr-2" />Add Sub
                                 </Button>
                             </div>
-                            {/* Warning if no squad is selected */}
                             {!selectedSquad && (
                                 <div className="text-center py-8 border border-dashed rounded-lg text-muted-foreground">
                                     Please select a squad in Step 1 to enter player statistics.
@@ -469,7 +533,6 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                                         <PlayerStatsForm
                                             players={field.value || []}
                                             onStatsChange={field.onChange}
-                                            // Passes the match duration for auto-populating minutes played
                                             gameDuration={watchedValues.duration || 90}
                                         />
                                     )}
@@ -488,12 +551,10 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                         {step < 4 && <Button 
                             type="button" 
                             onClick={() => setStep(step + 1)} 
-                            // Disable next if it's step 1 and squad_id is missing
                             disabled={!isValid || (step === 1 && !watchedValues.squad_id)}
                         >
                             Next <ArrowRight className="h-4 w-4 ml-2" />
                         </Button>}
-                        {/* Disable save button if submitting or no squad is selected */}
                         {step === 4 && <Button type="submit" disabled={isSubmitting || !watchedValues.squad_id}>
                             {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />} 
                             Save Game
