@@ -12,8 +12,7 @@ import { useDataSync } from '@/hooks/useDataSync';
 import AccountSelector from '@/components/AccountSelector';
 import UserAccountSettings from '@/components/UserAccountSettings';
 import DataManagement from '@/components/DataManagement';
-// THIS IS THE FIX: Added 'Trophy' to the import list
-import { Settings as SettingsIcon, Palette, Gamepad2, User, BarChart3, Target, Database, Trophy } from 'lucide-react';
+import { Settings as SettingsIcon, Palette, Gamepad2, User, BarChart3, Target, Database, Trophy, Sparkles } from 'lucide-react';
 
 // Interfaces for settings, derived from your original file
 interface DashboardSettings {
@@ -150,29 +149,26 @@ const Settings = () => {
           <AccountSelector />
         </TabsContent>
 
-        {/* --- THIS ENTIRE SECTION IS NOW FIXED --- */}
         <TabsContent value="appearance" className="mt-6">
           <Card>
             <CardHeader><CardTitle>Theme & Appearance</CardTitle></CardHeader>
             <CardContent>
-              <div className="space-y-2">
-                <Label htmlFor="theme-selector">Theme</Label>
-                {/* It now correctly uses your custom themes */}
-                <Select value={currentThemeName} onValueChange={(value) => setTheme(value)}>
-                  <SelectTrigger id="theme-selector" className="w-full md:w-[240px]">
-                    <SelectValue placeholder="Select a theme" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {/* It now maps over your custom themes */}
-                    {themeNames.map((themeKey) => (
-                      <SelectItem key={themeKey} value={themeKey}>
-                        {themeData[themeKey]?.name || themeKey}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-sm text-muted-foreground">Choose how FUTTrackr looks to you.</p>
-              </div>
+               <div className="space-y-2">
+                 <Label htmlFor="theme-selector">Theme</Label>
+                 <Select value={currentThemeName} onValueChange={(value) => setTheme(value)}>
+                   <SelectTrigger id="theme-selector" className="w-full md:w-[240px]">
+                     <SelectValue placeholder="Select a theme" />
+                   </SelectTrigger>
+                   <SelectContent>
+                     {themeNames.map((themeName) => (
+                       <SelectItem key={themeName} value={themeName}>
+                         {themeData[themeName]?.name || themeName}
+                       </SelectItem>
+                     ))}
+                   </SelectContent>
+                 </Select>
+                 <p className="text-sm text-muted-foreground">Choose how FUTTrackr looks to you.</p>
+               </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -244,4 +240,3 @@ const Settings = () => {
 };
 
 export default Settings;
-
