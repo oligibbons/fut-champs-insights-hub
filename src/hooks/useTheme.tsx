@@ -45,10 +45,10 @@ const themes: Record<string, Theme> = {
       fifa: { blue: '#0052CC', green: '#00875A', gold: '#FFAB00', red: '#DE350B', purple: '#5E4DB2' }
     }
   },
-  // You can add your "Champions" and "Volt" themes back here
 };
 
 interface ThemeContextType {
+  currentTheme: Theme;
   currentThemeName: string;
   setTheme: (themeName: string) => void;
   themes: string[];
@@ -58,35 +58,27 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
-  // Default to 'futvisionary' to ensure a dark theme on first load
   const [currentThemeName, setCurrentThemeName] = useState<string>(() => {
     return localStorage.getItem('futalyst-theme') || 'futvisionary';
   });
 
-  // This useEffect is the heart of the fix. It runs whenever the theme name changes.
   useEffect(() => {
     const root = window.document.documentElement;
-
-    // 1. Remove any existing theme class
     root.classList.remove('light', 'dark');
-
-    // 2. Add the correct theme class. All non-light themes are considered dark.
-    const newThemeClass = currentThemeName === 'light' ? 'light' : 'dark';
-    root.classList.add(newThemeClass);
-
-    // 3. Save the new theme choice to local storage so it persists
-    localStorage.setItem('futalyst-theme', currentThemeName);
-
-  }, [currentThemeName]); // Re-run this effect when currentThemeName changes
+    root.classList.add(currentThemeName === 'light' ? 'light' : 'dark');
+  }, [currentThemeName]);
 
   const setTheme = (themeName: string) => {
     if (themes[themeName]) {
+      localStorage.setItem('futalyst-theme', themeName);
       setCurrentThemeName(themeName);
     }
   };
 
   const value = {
     currentThemeName,
+    // THIS IS THE FIX: Restore the currentTheme object that App.tsx needs
+    currentTheme: themes[currentThemeName],
     setTheme,
     themes: Object.keys(themes),
     themeData: themes,
