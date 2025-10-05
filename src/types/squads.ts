@@ -1,13 +1,9 @@
-// REMOVED: These are no longer needed as we are fetching card types dynamically from Supabase.
-// export type PlayerCardType = 'bronze' | 'silver' | 'gold' | 'inform' | 'totw' | 'toty' | 'tots' | 'icon' | 'hero';
-// export const CARD_TYPES: PlayerCardType[] = ['bronze', 'silver', 'gold', 'inform', 'totw', 'toty', 'tots', 'icon', 'hero'];
-
 export interface PlayerCard {
   id: string;
   name: string;
   position: string;
   rating: number;
-  cardType: string;
+  card_type: string; // CORRECTED: Was cardType
   club: string;
   league: string;
   nationality: string;
@@ -57,7 +53,8 @@ export interface Squad {
   wins: number;
   losses: number;
   created?: string; // legacy field
-  user_id?: string; // To align with save function
+  game_version?: string; // Added to match filter
+  user_id?: string;
 }
 
 export type Formation = string;
@@ -67,7 +64,7 @@ export interface FormationData {
   positions: SquadPosition[];
 }
 
-// Formation definitions with correct positions
+// Your full list of FORMATIONS is preserved here...
 export const FORMATIONS: FormationData[] = [
     { name: '3-1-4-2', positions: [ { id: 'gk', position: 'GK', x: 50, y: 85 }, { id: 'cb1', position: 'CB', x: 30, y: 65 }, { id: 'cb2', position: 'CB', x: 50, y: 65 }, { id: 'cb3', position: 'CB', x: 70, y: 65 }, { id: 'cdm', position: 'CDM', x: 50, y: 50 }, { id: 'lm', position: 'LM', x: 15, y: 40 }, { id: 'cm1', position: 'CM', x: 35, y: 35 }, { id: 'cm2', position: 'CM', x: 65, y: 35 }, { id: 'rm', position: 'RM', x: 85, y: 40 }, { id: 'st1', position: 'ST', x: 40, y: 15 }, { id: 'st2', position: 'ST', x: 60, y: 15 } ] },
     { name: '3-4-1-2', positions: [ { id: 'gk', position: 'GK', x: 50, y: 85 }, { id: 'cb1', position: 'CB', x: 30, y: 65 }, { id: 'cb2', position: 'CB', x: 50, y: 65 }, { id: 'cb3', position: 'CB', x: 70, y: 65 }, { id: 'lm', position: 'LM', x: 15, y: 45 }, { id: 'cm1', position: 'CM', x: 35, y: 45 }, { id: 'cm2', position: 'CM', x: 65, y: 45 }, { id: 'rm', position: 'RM', x: 85, y: 45 }, { id: 'cam', position: 'CAM', x: 50, y: 30 }, { id: 'st1', position: 'ST', x: 40, y: 15 }, { id: 'st2', position: 'ST', x: 60, y: 15 } ] },
@@ -108,5 +105,5 @@ export interface CardType {
   highlight_color: string;
   user_id: string;
   game_version: string;
-  is_default?: boolean; // Added is_default for better default handling
+  is_default?: boolean; // Added for better default handling
 }
