@@ -37,6 +37,7 @@ interface SquadWithPlayers extends Squad {
 }
 
 // Schema for form validation using Zod
+// NOTE: z.coerce.number() ensures we can use type="text" but still save a number
 const gameFormSchema = z.object({
     user_goals: z.coerce.number().min(0),
     opponent_goals: z.coerce.number().min(0),
@@ -76,7 +77,7 @@ const matchTags = [
     { id: 'opponentRageQuit', name: 'Opponent Rage Quit', description: 'A game where the opponent quit while you were winning.' },
     { id: 'iRageQuit', name: 'I Rage Quit', description: 'A game where you quit out after being behind.' },
     { id: 'freeWinReceived', name: 'Free Win Received', description: 'A game where the opponent gifted you a win. Does not impact performance stats.', specialRule: 'no_stats' },
-    { id: 'freeWinGiven', name: 'Free Win Given Away', description: 'A game where you gifted the opponent a win. Does not impact performance stats.', specialRule: 'no_stats' },
+    { id: 'freeWinGiven', name: 'Free Win Given Away', description: 'A game where you gifted the opponent a win. Does-not-impact performance stats.', specialRule: 'no_stats' },
     { id: 'disconnected', name: 'Disconnected', description: 'A game where you were disconnected by the servers. Does not impact performance stats.', specialRule: 'no_stats' },
     { id: 'badServers', name: 'Bad Servers', description: 'A game where the servers made gameplay challenging.' },
     { id: 'frustratingGame', name: 'Frustrating Game', description: 'A game that caused you significant frustration.' },
@@ -268,21 +269,22 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
     }
 
     if (selectedSquad) {
-      // Access the raw joined data
+      // Access the raw joined data safely, defaulting to an empty array
       const allSquadPlayers = selectedSquad.squad_players || [];
       
       const initialPlayerStats = allSquadPlayers
+        // 1. Filter: ONLY take players that are part of the Starting XI
+        .filter(squadPlayer => squadPlayer.slot_id?.startsWith('starting-'))
         .map(squadPlayer => {
-          // Check if the nested 'players' object exists before processing
-          if (!squadPlayer.players) return null;
+          // 2. Map: Build the PlayerPerformance object
+          // CRITICAL: Ensure the nested 'players' object is present
+          if (!squadPlayer.players) {
+            console.warn(`Squad Player ID ${squadPlayer.player_id} is missing nested player data.`);
+            return null; 
+          }
           
           const player = squadPlayer.players;
-          const isStarter = squadPlayer.slot_id?.startsWith('starting-');
-          // FIX 2: Set minutes based on whether the player is a starter or a sub
-          const minutes = isStarter ? (watchedValues.duration || 90) : 0; 
-
-          // We ONLY want to populate the form with starting players initially.
-          if (!isStarter) return null; 
+          const minutes = watchedValues.duration || 90;
 
           return {
             id: player.id,
@@ -297,7 +299,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
             ownGoals: 0,
           };
         })
-        .filter((p): p is PlayerPerformance => p !== null); // Filter out nulls (substitutes)
+        .filter((p): p is PlayerPerformance => p !== null); // Remove any failed maps
 
       setValue('player_stats', initialPlayerStats);
     } else if (squads.length > 0) {
@@ -325,8 +327,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
         id: subToAdd.id, name: subToAdd.name, position: 'SUB', 
         rating: 6.0, 
         goals: 0, assists: 0, 
-        // FIX 2: Ensure explicitly added substitutes start at 0 minutes
-        minutesPlayed: 0, 
+        minutesPlayed: 0, // Subs start at 0 minutes
         yellowCards: 0, redCards: 0, ownGoals: 0,
       };
       setValue('player_stats', [...(watchedValues.player_stats || []), newPlayerStat]);
@@ -461,6 +462,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                                     <div className="flex flex-col items-center">
                                         <Label className="text-sm font-medium text-primary mb-1">Your Goals</Label>
                                         <div className="flex items-center space-x-1">
+                                            {/* MINUS BUTTON */}
                                             <Button type="button" variant="outline" size="icon" className="w-8 h-8 p-0" 
                                                 onClick={() => adjustNumericalValue('user_goals', -1)} 
                                                 onMouseDown={(e) => e.preventDefault()}
@@ -469,6 +471,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                                             
                                             <Controller name="user_goals" control={control} render={({ field }) => <Input {...field} type="text" inputMode="numeric" className="modern-input text-4xl h-20 w-24 text-center" />} />
                                             
+                                            {/* PLUS BUTTON */}
                                             <Button type="button" variant="outline" size="icon" className="w-8 h-8 p-0" onClick={() => adjustNumericalValue('user_goals', 1)} onMouseDown={(e) => e.preventDefault()}><Plus className="h-4 w-4" /></Button>
                                         </div>
                                     </div>
@@ -479,6 +482,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                                     <div className="flex flex-col items-center">
                                         <Label className="text-sm font-medium text-red-500 mb-1">Opponent Goals</Label>
                                         <div className="flex items-center space-x-1">
+                                            {/* MINUS BUTTON */}
                                             <Button type="button" variant="outline" size="icon" className="w-8 h-8 p-0" 
                                                 onClick={() => adjustNumericalValue('opponent_goals', -1)} 
                                                 onMouseDown={(e) => e.preventDefault()}
@@ -487,6 +491,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                                             
                                             <Controller name="opponent_goals" control={control} render={({ field }) => <Input {...field} type="text" inputMode="numeric" className="modern-input text-4xl h-20 w-24 text-center" />} />
                                             
+                                            {/* PLUS BUTTON */}
                                             <Button type="button" variant="outline" size="icon" className="w-8 h-8 p-0" onClick={() => adjustNumericalValue('opponent_goals', 1)} onMouseDown={(e) => e.preventDefault()}><Plus className="h-4 w-4" /></Button>
                                         </div>
                                     </div>
@@ -590,7 +595,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                                     Please select a squad in Step 1 to enter player statistics.
                                 </div>
                             )}
-                            {selectedSquad && (
+                            {selectedSquad && selectedSquad.squad_players && selectedSquad.squad_players.length > 0 ? (
                                 <Controller
                                     name="player_stats"
                                     control={control}
@@ -602,6 +607,11 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                                         />
                                     )}
                                 />
+                            ) : (
+                                <div className="text-center py-8 border border-dashed rounded-lg text-muted-foreground">
+                                    The selected squad has no players defined in the starting XI.
+                                    <p className="mt-2 text-sm">Please update your squad in the 'Squads' section.</p>
+                                </div>
                             )}
                         </div>
                     </div>
