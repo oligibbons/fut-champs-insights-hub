@@ -146,7 +146,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
   const watchedValues = watch();
   const selectedSquad = squads.find(s => s.id === watchedValues.squad_id);
 
-  // FIX: Centralized logic for numerical input adjustments (Steppers) with min/max enforcement
+  // FIX: Centralized logic for numerical input adjustments (Steppers)
   const adjustNumericalValue = useCallback((fieldName: keyof z.infer<typeof gameFormSchema> | `team_stats.${string}`, delta: number, stepValue: number = 1) => {
     
     let currentValue = get(getValues(), fieldName);
@@ -160,17 +160,15 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
     let min = 0;
     let max = Infinity;
 
-    if (fieldName.includes('opponent_skill') || fieldName.includes('server_quality') || fieldName.includes('stress_level')) {
+    if (fieldName.includes('opponent_skill') || fieldName.includes('server_quality') || fieldName.includes('stress_level') || fieldName.includes('duration')) {
+        min = fieldName.includes('duration') ? 1 : 1; // Duration minimum is 1
         max = 10;
-        min = 1;
     } else if (fieldName.includes('possession') || fieldName.includes('passAccuracy')) {
         max = 100;
         min = 0;
     } else if (fieldName.includes('opponent_squad_rating')) {
         max = 99;
         min = 50;
-    } else if (fieldName.includes('duration')) {
-        min = 1;
     } else if (fieldName.includes('goals') || fieldName.includes('fouls') || fieldName.includes('cards') || fieldName.includes('shots') || fieldName.includes('passes') || fieldName.includes('corners')) {
         min = 0;
         max = Infinity; 
@@ -179,10 +177,8 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
     newValue = Math.max(min, Math.min(max, newValue));
     
     if (stepValue < 1) {
-        // Round to step precision for decimals (e.g., xG)
         newValue = parseFloat(newValue.toFixed(1)); 
     } else {
-        // For integer fields
         newValue = Math.round(newValue); 
     }
 
@@ -224,11 +220,10 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                         <Input 
                             {...field} 
                             type="number" 
-                            inputMode={step < 1 ? "decimal" : "numeric"} // FIX: Helps keep keyboard open on mobile
+                            inputMode={step < 1 ? "decimal" : "numeric"} 
                             step={step} 
                             className={`h-8 text-sm font-semibold ${inputClassName} ${minInputWidth}`}
                             onChange={(e) => {
-                                // Important: We let RHF handle the coercion via Zod, just pass the raw value
                                 field.onChange(e.target.value);
                             }}
                             onBlur={(e) => field.onBlur(e)}
@@ -425,7 +420,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                             <div className="text-center">
                                 <Label className="text-lg font-semibold">Final Score</Label>
                                 <div className="flex items-center justify-center gap-2 md:gap-4 mt-2">
-                                    {/* FIX: Labeled User Goals Input with Unique Steppers */}
+                                    {/* FIX: Unique Steppers for Your Goals */}
                                     <div className="flex flex-col items-center">
                                         <Label className="text-sm font-medium text-primary mb-1">Your Goals</Label>
                                         <div className="flex items-center space-x-1">
@@ -437,7 +432,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                                     
                                     <span className="text-5xl font-bold text-muted-foreground mx-2 pt-6">:</span>
                                     
-                                    {/* FIX: Labeled Opponent Goals Input with Unique Steppers */}
+                                    {/* FIX: Unique Steppers for Opponent Goals */}
                                     <div className="flex flex-col items-center">
                                         <Label className="text-sm font-medium text-red-500 mb-1">Opponent Goals</Label>
                                         <div className="flex items-center space-x-1">
@@ -449,7 +444,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                                 </div>
                             </div>
                             
-                            {/* Duration with Steppers */}
+                            {/* FIX: Duration with universal Steppers */}
                             <NumberInputWithSteppers name="duration" label="Match Duration (Mins)" step={5} className="space-y-2" inputClassName="h-10 text-base" minInputWidth="w-full" />
                             <p className="text-xs text-muted-foreground">Enter less than 90 if the match ended early.</p>
                         </div>
@@ -458,7 +453,6 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                     <div className={step === 2 ? 'block' : 'hidden'}>
                         <div className="space-y-6 animate-in fade-in">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {/* Sliders for Skill, Quality, Stress (No change needed) */}
                                 <Controller name="opponent_skill" control={control} render={({ field }) => <div className="space-y-2"><Label>Opponent Skill: <span className="font-bold text-primary">{field.value}</span>/10</Label><Slider value={[field.value]} onValueChange={(v) => field.onChange(v[0])} max={10} step={1} /></div>} />
                                 <Controller name="server_quality" control={control} render={({ field }) => <div className="space-y-2"><Label>Server Quality: <span className="font-bold text-primary">{field.value}</span>/10</Label><Slider value={[field.value]} onValueChange={(v) => field.onChange(v[0])} max={10} step={1} /></div>} />
                                 <Controller name="stress_level" control={control} render={({ field }) => <div className="space-y-2"><Label>Stress Level: <span className="font-bold text-primary">{field.value}</span>/10</Label><Slider value={[field.value]} onValueChange={(v) => field.onChange(v[0])} max={10} step={1} /></div>} />
@@ -467,7 +461,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-border">
                                 <Controller name="opponent_play_style" control={control} render={({ field }) => <div><Label>Opponent Play Style</Label><Select value={field.value} onValueChange={field.onChange}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{['balanced', 'possession', 'counter-attack', 'high-press', 'drop-back'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></div>} />
                                 <Controller name="opponent_formation" control={control} render={({ field }) => <div><Label>Opponent Formation</Label><Input {...field} placeholder="e.g. 4-2-3-1" /></div>} />
-                                {/* FIX: Opponent Squad Rating with Steppers */}
+                                {/* FIX: Opponent Squad Rating with universal Steppers */}
                                 <NumberInputWithSteppers name="opponent_squad_rating" label="Opponent Squad Rating" step={1} minInputWidth="w-full" />
                             </div>
                         </div>
@@ -477,7 +471,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                         <div className="space-y-6 animate-in fade-in">
                             <h3 className="text-lg font-semibold border-b pb-2">Team Statistics</h3>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                {/* FIX: All numerical fields now use the custom stepper component */}
+                                {/* FIX: All numerical fields now use the universal stepper component */}
                                 <NumberInputWithSteppers name="team_stats.shots" label="Shots" />
                                 <NumberInputWithSteppers name="team_stats.shotsOnTarget" label="Shots on Target" />
                                 <NumberInputWithSteppers name="team_stats.possession" label="Possession %" />
@@ -506,7 +500,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                                                             <TooltipTrigger asChild>
                                                                 <Toggle
                                                                     variant="outline" size="sm"
-                                                                    // The core multi-select logic is sound and correctly uses field.value.
+                                                                    // FIX: Array multi-select logic re-verified.
                                                                     pressed={field.value?.includes(tag.name)}
                                                                     onPressedChange={(isPressed) => {
                                                                         const currentTags = Array.isArray(field.value) ? field.value : [];
@@ -514,7 +508,6 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                                                                             ? [...currentTags, tag.name]
                                                                             : currentTags.filter(t => t !== tag.name);
                                                                         
-                                                                        // This MUST work to enable multi-select.
                                                                         field.onChange(newTags); 
                                                                     }}
                                                                 >
