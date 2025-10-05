@@ -190,7 +190,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
   }, [getValues, setValue]);
 
 
-  // FIX: Reusable Number Input Component with Steppers (Applied to all numerical inputs)
+  // FIX: Reusable Number Input Component with Steppers 
   const NumberInputWithSteppers = ({ name, label, step = 1, className = '', inputClassName = 'text-center', minInputWidth = 'w-14' }: { name: keyof z.infer<typeof gameFormSchema> | `team_stats.${string}`, label: string, step?: number, className?: string, inputClassName?: string, minInputWidth?: string }) => {
     
     const currentValue = Number(get(getValues(), name)) || 0;
@@ -219,12 +219,11 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                     name={name as any} 
                     control={control} 
                     render={({ field }) => (
-                        // CRITICAL FIX: Use type="text" with correct inputMode for mobile keyboard persistence
+                        // CRITICAL FIX: Use type="text" with inputMode for mobile keyboard persistence
                         <Input 
                             {...field} 
                             type="text" 
                             inputMode={step < 1 ? "decimal" : "numeric"} 
-                            // Removed step property as it's handled by our steppers and is problematic with type="text"
                             className={`h-8 text-sm font-semibold ${inputClassName} ${minInputWidth}`}
                             onChange={(e) => {
                                 // Passes raw string value to RHF/Zod, which coerces to number on submit
@@ -520,7 +519,8 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                                                             <TooltipTrigger asChild>
                                                                 <Toggle
                                                                     variant="outline" size="sm"
-                                                                    // CRITICAL FIX: The logic is sound for multi-select. 
+                                                                    // CRITICAL FIX: Add explicit pressed state coloring
+                                                                    className={Array.isArray(field.value) && field.value.includes(tag.name) ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'hover:bg-accent'}
                                                                     pressed={Array.isArray(field.value) && field.value.includes(tag.name)}
                                                                     onPressedChange={(isPressed) => {
                                                                         const currentTags = Array.isArray(field.value) ? field.value : [];
