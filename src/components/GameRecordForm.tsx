@@ -14,9 +14,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Toggle } from '@/components/ui/toggle';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ArrowLeft, ArrowRight, Save, Loader2, UserPlus } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Save, Loader2, UserPlus, Users } from 'lucide-react';
 import PlayerStatsForm from './PlayerStatsForm';
 import { useSquadData } from '@/hooks/useSquadData';
+import { Squad } from '@/types/squads'; // Import Squad type
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from './ui/scroll-area';
 import { PlayerPerformance } from '@/types/futChampions';
@@ -33,8 +34,11 @@ const gameFormSchema = z.object({
     opponent_play_style: z.string(),
     opponent_formation: z.string().optional(),
     opponent_squad_rating: z.coerce.number().min(50).max(99),
+    // FIX: Added squad_id and validation
+    squad_id: z.string().min(1, { message: "Please select a squad." }),
     tags: z.array(z.string()).optional(),
     comments: z.string().optional(),
+    // FIX: Expanded team_stats schema for all requested fields
     team_stats: z.object({
         shots: z.coerce.number().min(0),
         shotsOnTarget: z.coerce.number().min(0),
@@ -121,51 +125,85 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
       opponent_play_style: 'balanced',
       opponent_formation: '',
       opponent_squad_rating: 85,
+      // FIX: Set default squad ID
+      squad_id: defaultSquad?.id || '',
       tags: [],
       comments: '',
+      // FIX: Default values for all team stats
       team_stats: {
-        shots: 8, shotsOnTarget: 4, possession: 50, expectedGoals: 1.2,
-        expectedGoalsAgainst: 1.0, passes: 100, passAccuracy: 78,
-        corners: 3, fouls: 0, yellowCards: 0, redCards: 0,
+        shots: 8, 
+        shotsOnTarget: 4, 
+        possession: 50, 
+        expectedGoals: 1.2,
+        expectedGoalsAgainst: 1.0, 
+        passes: 100, 
+        passAccuracy: 78,
+        corners: 3, 
+        fouls: 0, 
+        yellowCards: 0, 
+        redCards: 0,
       },
       player_stats: [],
     },
   });
 
   const watchedValues = watch();
+  // FIX: Use the selected squad for player population
+  const selectedSquad = squads.find(s => s.id === watchedValues.squad_id);
 
+  // FIX: Auto-populate players when the selected squad or duration changes
   useEffect(() => {
-    if (defaultSquad) {
-      const startingPlayers = (defaultSquad.squad_players?.filter(p => p.slot_id?.startsWith('starting-')) || [])
-        .map(p => p.players)
+    // If a default squad is loaded and nothing is selected, select it.
+    if (!watchedValues.squad_id && defaultSquad) {
+        setValue('squad_id', defaultSquad.id);
+    }
+
+    if (selectedSquad) {
+      // Get only starting players
+      const startingPlayers = (selectedSquad.squad_players?.filter(p => p.slot_id?.startsWith('starting-')) || [])
+        .map(p => p.players) // Access the nested player object from the join
         .map(player => ({
           id: player.id,
           name: player.name,
           position: player.position,
-          rating: 7.0,
+          // FIX: Set default rating to 7.0 (one decimal place)
+          rating: 7.0, 
           goals: 0,
           assists: 0,
-          minutesPlayed: 90,
+          // FIX: Auto-populate minutesPlayed with the game duration
+          minutesPlayed: watchedValues.duration || 90, 
           yellowCards: 0,
           redCards: 0,
           ownGoals: 0,
         }));
+      
       setValue('player_stats', startingPlayers);
+    } else if (squads.length > 0) {
+        // If squads are loaded but none is selected, clear player stats
+        setValue('player_stats', []);
     }
-  }, [defaultSquad, setValue]);
+    
+  }, [selectedSquad, watchedValues.duration, defaultSquad, setValue, squads.length, watchedValues.squad_id]);
 
   const addSubstitute = () => {
-    if (!defaultSquad) return;
+    // FIX: Check selectedSquad instead of defaultSquad and show toast
+    if (!selectedSquad) {
+      toast({ title: "Please select a squad first in Step 1.", variant: "destructive" });
+      return;
+    }
     const currentIds = watchedValues.player_stats?.map(p => p.id) || [];
-    const availableSubs = (defaultSquad.squad_players?.filter(p => p.slot_id?.startsWith('sub-')) || [])
+    const availableSubs = (selectedSquad.squad_players?.filter(p => p.slot_id?.startsWith('sub-')) || [])
       .map(p => p.players)
       .filter(p => !currentIds.includes(p.id));
 
     if (availableSubs.length > 0) {
       const subToAdd = availableSubs[0];
       const newPlayerStat: PlayerPerformance = {
-        id: subToAdd.id, name: subToAdd.name, position: 'SUB', rating: 6.0,
-        goals: 0, assists: 0, minutesPlayed: 0, yellowCards: 0, redCards: 0, ownGoals: 0,
+        id: subToAdd.id, name: subToAdd.name, position: 'SUB', 
+        rating: 6.0, 
+        goals: 0, assists: 0, 
+        minutesPlayed: 0, // Subs start at 0 mins
+        yellowCards: 0, redCards: 0, ownGoals: 0,
       };
       setValue('player_stats', [...(watchedValues.player_stats || []), newPlayerStat]);
     } else {
@@ -195,7 +233,8 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                 duration: data.duration,
                 comments: data.comments,
                 tags: data.tags,
-                squad_used: defaultSquad?.id
+                // FIX: Use the selected squad_id from the form data
+                squad_used: data.squad_id 
             })
             .select('id')
             .single();
@@ -205,12 +244,23 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
         const hasNoStatsTag = data.tags?.some(tagName => matchTags.find(t => t.name === tagName)?.specialRule === 'no_stats');
 
         if (!hasNoStatsTag) {
+            // FIX: Insert all required team stats fields (converted to snake_case for Supabase)
             const { error: teamStatsError } = await supabase
                 .from('team_statistics')
                 .insert({
                     game_id: gameResult.id,
                     user_id: user.id,
-                    ...data.team_stats,
+                    shots: data.team_stats.shots,
+                    shots_on_target: data.team_stats.shotsOnTarget,
+                    possession: data.team_stats.possession,
+                    expected_goals: data.team_stats.expectedGoals,
+                    expected_goals_against: data.team_stats.expectedGoalsAgainst,
+                    passes: data.team_stats.passes,
+                    pass_accuracy: data.team_stats.passAccuracy,
+                    corners: data.team_stats.corners,
+                    fouls: data.team_stats.fouls,
+                    yellow_cards: data.team_stats.yellowCards,
+                    red_cards: data.team_stats.redCards,
                 });
             if (teamStatsError) throw teamStatsError;
 
@@ -221,7 +271,8 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                     user_id: user.id,
                     player_name: p.name,
                     position: p.position,
-                    rating: p.rating,
+                    // FIX: Ensure rating is explicitly saved to 1 decimal place if needed
+                    rating: parseFloat(p.rating.toFixed(1)), 
                     goals: p.goals,
                     assists: p.assists,
                     minutes_played: p.minutesPlayed,
@@ -255,6 +306,35 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                 <ScrollArea className="h-[60vh] -mr-6 pr-6">
                     <div className={step === 1 ? 'block' : 'hidden'}>
                         <div className="space-y-8 animate-in fade-in">
+                             {/* FIX: Squad Selection Dropdown */}
+                            <Controller
+                                name="squad_id"
+                                control={control}
+                                render={({ field }) => (
+                                    <div className="space-y-2">
+                                        <Label htmlFor="squad_id" className="flex items-center gap-2">
+                                            <Users className="h-4 w-4" />
+                                            Select Squad
+                                        </Label>
+                                        <Select value={field.value} onValueChange={field.onChange}>
+                                            <SelectTrigger id="squad_id">
+                                                <SelectValue placeholder="Choose a squad..." />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {squads.map((squad: Squad) => (
+                                                    <SelectItem key={squad.id} value={squad.id}>
+                                                        {squad.name} {squad.is_default && "(Default)"}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        {/* Display error if no squad is selected on validation */}
+                                        {errors.squad_id && <p className="text-sm text-red-500">{errors.squad_id.message}</p>}
+                                    </div>
+                                )}
+                            />
+                            {/* End Squad Selection */}
+
                             <div className="text-center">
                                 <Label className="text-lg font-semibold">Final Score</Label>
                                 <div className="flex items-center justify-center gap-2 md:gap-4 mt-2">
@@ -289,13 +369,23 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                     
                     <div className={step === 3 ? 'block' : 'hidden'}>
                         <div className="space-y-6 animate-in fade-in">
+                            {/* FIX: Added more complete set of team stats inputs */}
+                            <h3 className="text-lg font-semibold border-b pb-2">Team Statistics</h3>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <Controller name="team_stats.shots" control={control} render={({ field }) => <div className="space-y-2"><Label>Shots</Label><Input {...field} type="number" /></div>} />
+                                <Controller name="team_stats.shotsOnTarget" control={control} render={({ field }) => <div className="space-y-2"><Label>Shots on Target</Label><Input {...field} type="number" /></div>} />
+                                <Controller name="team_stats.possession" control={control} render={({ field }) => <div className="space-y-2"><Label>Possession %</Label><Input {...field} type="number" /></div>} />
+                                <Controller name="team_stats.passes" control={control} render={({ field }) => <div className="space-y-2"><Label>Passes</Label><Input {...field} type="number" /></div>} />
+                                <Controller name="team_stats.passAccuracy" control={control} render={({ field }) => <div className="space-y-2"><Label>Pass Accuracy %</Label><Input {...field} type="number" /></div>} />
+                                <Controller name="team_stats.fouls" control={control} render={({ field }) => <div className="space-y-2"><Label>Fouls</Label><Input {...field} type="number" /></div>} />
+                                <Controller name="team_stats.yellowCards" control={control} render={({ field }) => <div className="space-y-2"><Label>Yellow Cards</Label><Input {...field} type="number" /></div>} />
+                                <Controller name="team_stats.redCards" control={control} render={({ field }) => <div className="space-y-2"><Label>Red Cards</Label><Input {...field} type="number" /></div>} />
                                 <Controller name="team_stats.expectedGoals" control={control} render={({ field }) => <div className="space-y-2"><Label>Your xG</Label><Input {...field} type="number" step="0.1" /></div>} />
                                 <Controller name="team_stats.expectedGoalsAgainst" control={control} render={({ field }) => <div className="space-y-2"><Label>Opponent xG</Label><Input {...field} type="number" step="0.1" /></div>} />
-                                <Controller name="team_stats.possession" control={control} render={({ field }) => <div className="space-y-2"><Label>Possession %</Label><Input {...field} type="number" /></div>} />
-                                {/* Add controllers for all other team_stats fields as needed */}
+                                <Controller name="team_stats.corners" control={control} render={({ field }) => <div className="space-y-2"><Label>Corners</Label><Input {...field} type="number" /></div>} />
                             </div>
-                             <div className="space-y-2">
+                            
+                            <div className="space-y-2">
                                 <Label>Match Tags</Label>
                                 <p className="text-sm text-muted-foreground">Select any tags that apply. Hover for details.</p>
                                 <TooltipProvider>
@@ -310,6 +400,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                                                             <TooltipTrigger asChild>
                                                                 <Toggle
                                                                     variant="outline" size="sm"
+                                                                    // This structure correctly allows multiple selections (toggles)
                                                                     pressed={field.value?.includes(tag.name)}
                                                                     onPressedChange={(isPressed) => {
                                                                         const currentTags = field.value || [];
@@ -339,19 +430,31 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                         <div className="animate-in fade-in">
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-lg font-semibold">Player Performances</h3>
-                                <Button onClick={addSubstitute} size="sm" type="button"><UserPlus className="h-4 w-4 mr-2" />Add Sub</Button>
+                                {/* Disable Add Sub button if no squad is selected */}
+                                <Button onClick={addSubstitute} size="sm" type="button" disabled={!selectedSquad}>
+                                    <UserPlus className="h-4 w-4 mr-2" />Add Sub
+                                </Button>
                             </div>
-                            <Controller
-                                name="player_stats"
-                                control={control}
-                                render={({ field }) => (
-                                    <PlayerStatsForm
-                                        players={field.value || []}
-                                        onStatsChange={field.onChange}
-                                        gameDuration={watchedValues.duration || 90}
-                                    />
-                                )}
-                             />
+                            {/* Warning if no squad is selected */}
+                            {!selectedSquad && (
+                                <div className="text-center py-8 border border-dashed rounded-lg text-muted-foreground">
+                                    Please select a squad in Step 1 to enter player statistics.
+                                </div>
+                            )}
+                            {selectedSquad && (
+                                <Controller
+                                    name="player_stats"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <PlayerStatsForm
+                                            players={field.value || []}
+                                            onStatsChange={field.onChange}
+                                            // Passes the match duration for auto-populating minutes played
+                                            gameDuration={watchedValues.duration || 90}
+                                        />
+                                    )}
+                                />
+                            )}
                         </div>
                     </div>
                 </ScrollArea>
@@ -362,8 +465,19 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                     </div>
                     <div className="flex items-center gap-2">
                         <Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button>
-                        {step < 4 && <Button type="button" onClick={() => setStep(step + 1)} disabled={!isValid && step===1}>Next <ArrowRight className="h-4 w-4 ml-2" /></Button>}
-                        {step === 4 && <Button type="submit" disabled={isSubmitting}>{isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />} Save Game</Button>}
+                        {step < 4 && <Button 
+                            type="button" 
+                            onClick={() => setStep(step + 1)} 
+                            // Disable next if it's step 1 and squad_id is missing
+                            disabled={!isValid || (step === 1 && !watchedValues.squad_id)}
+                        >
+                            Next <ArrowRight className="h-4 w-4 ml-2" />
+                        </Button>}
+                        {/* Disable save button if submitting or no squad is selected */}
+                        {step === 4 && <Button type="submit" disabled={isSubmitting || !watchedValues.squad_id}>
+                            {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />} 
+                            Save Game
+                        </Button>}
                     </div>
                 </div>
             </CardContent>
