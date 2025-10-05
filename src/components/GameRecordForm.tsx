@@ -8,13 +8,56 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
+import { Toggle } from '@/components/ui/toggle';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ArrowLeft, ArrowRight, Save, Loader2, UserPlus } from 'lucide-react';
 import PlayerStatsForm from './PlayerStatsForm';
 import { NumberInputWithStepper } from './ui/number-input-with-stepper';
 import { useSquadData } from '@/hooks/useSquadData';
 import { PlayerCard } from '@/types/squads';
 import { useToast } from '@/hooks/use-toast';
+import { ScrollArea } from './ui/scroll-area';
+
+// The new, comprehensive list of match tags with descriptions
+const matchTags = [
+    { id: 'dominantWin', name: 'Dominant Win', description: 'A win where you dominated your opponent.' },
+    { id: 'deservedLoss', name: 'Deserved Loss', description: 'A loss where you didn’t deserve to win.' },
+    { id: 'closeGame', name: 'Close Game', description: 'A game where irrespective of the result, it was tightly contested.' },
+    { id: 'extraTime', name: 'Extra Time', description: 'A game that went to Extra Time.' },
+    { id: 'penalties', name: 'Penalties', description: 'A game that went all the way to penalties.' },
+    { id: 'opponentRageQuit', name: 'Opponent Rage Quit', description: 'A game where the opponent quit while you were winning.' },
+    { id: 'iRageQuit', name: 'I Rage Quit', description: 'A game where you quit out after being behind.' },
+    { id: 'freeWinReceived', name: 'Free Win Received', description: 'A game where the opponent gifted you a win. Does not impact performance stats.', specialRule: 'no_stats' },
+    { id: 'freeWinGiven', name: 'Free Win Given Away', description: 'A game where you gifted the opponent a win. Does not impact performance stats.', specialRule: 'no_stats' },
+    { id: 'disconnected', name: 'Disconnected', description: 'A game where you were disconnected by the servers. Does not impact performance stats.', specialRule: 'no_stats' },
+    { id: 'badServers', name: 'Bad Servers', description: 'A game where the servers made gameplay challenging.' },
+    { id: 'frustratingGame', name: 'Frustrating Game', description: 'A game that caused you significant frustration.' },
+    { id: 'stressful', name: 'Stressful', description: 'A game that was stressful for you.' },
+    { id: 'skillGod', name: 'Skill God', description: 'A game against an opponent who uses a high level of skill moves effectively.' },
+    { id: 'undeservedLoss', name: 'Undeserved Loss', description: 'A game where you lost, but didn’t deserve to.' },
+    { id: 'undeservedWin', name: 'Undeserved Win', description: 'A game where you won, but didn’t deserve to.' },
+    { id: 'comebackWin', name: 'Comeback Win', description: 'A game where you came from behind to win.' },
+    { id: 'bottledLeadLoss', name: 'Bottled Lead Loss', description: 'A game where you lost from a winning position.' },
+    { id: 'goalFest', name: 'Goal Fest', description: 'A game with a large number of goals (typically 8+).' },
+    { id: 'defensiveBattle', name: 'Defensive Battle', description: 'A game where both players relied heavily on defending well.' },
+    { id: 'gameToBeProudOf', name: 'Game To Be Proud Of', description: 'A game that regardless of the result, you can be proud of.' },
+    { id: 'hacker', name: 'Hacker', description: 'A game where you faced a hacker.' },
+    { id: 'confirmedPro', name: 'Confirmed Pro Opponent', description: 'A game where you faced a confirmed professional FC player.' },
+    { id: 'eliteOpponent', name: 'Elite Opponent', description: 'A game against an elite-level player (possibly pro, but not confirmed).' },
+    { id: 'cutBackMerchant', name: 'Cut Back Merchant', description: 'An opponent whose sole game plan was to score cutbacks.' },
+    { id: 'defensiveMasterclass', name: 'Defensive Masterclass', description: 'A game where you defended to a very high level.' },
+    { id: 'attackingMasterclass', name: 'Attacking Masterclass', description: 'A game where you attacked to a very high level.' },
+    { id: 'defensiveDunce', name: 'Defensive Dunce', description: 'A game where you struggled to defend, to the point of embarrassment.' },
+    { id: 'attackingAmateur', name: 'Attacking Amateur', description: 'A game where you couldn’t attack to save your life.' },
+    { id: 'pay2WinRat', name: 'Pay2Win Rat', description: 'An opponent with a team that could only be achieved by spending a fortune.' },
+    { id: 'metaRat', name: 'Meta Rat', description: 'An opponent who uses every possible meta tactic/technique to get the win.' },
+    { id: 'opponentRubberBanded', name: 'Opponent Rubber Banded', description: 'The opponent put their controller down and stopped playing.' },
+    { id: 'iRubberBanded', name: 'I Rubber Banded', description: 'You put your controller down and stopped playing at some point.' },
+    { id: 'poorQualityOpponent', name: 'Poor Quality Opponent', description: 'An opponent who is simply not very good at the game.' },
+    { id: 'fairResult', name: 'Fair Result', description: 'Regardless of who won or lost, the result was a fair reflection of the performance.' },
+    { id: 'myOwnWorstEnemy', name: 'My Own Worst Enemy', description: 'Your own consistent mistakes caused you significant problems.' },
+    { id: 'funGame', name: 'Fun Game', description: 'A game that you enjoyed playing, irrespective of the result.' },
+];
 
 interface GameRecordFormProps {
   weekId: string;
@@ -22,16 +65,6 @@ interface GameRecordFormProps {
   onSave: (gameData: Omit<GameResult, 'id'>) => Promise<void>;
   onCancel: () => void;
 }
-
-const availableTags = [
-    { id: 'comeback', label: 'Comeback Win' },
-    { id: 'bottled', label: 'Bottled Lead' },
-    { id: 'bad-servers', label: 'Bad Servers' },
-    { id: 'scripting', label: 'Scripting' },
-    { id: 'good-opponent', label: 'Good Opponent' },
-    { id: 'lucky-win', label: 'Lucky Win' },
-    { id: 'unlucky-loss', label: 'Unlucky Loss' },
-];
 
 const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecordFormProps) => {
   const [step, setStep] = useState(1);
@@ -73,7 +106,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
   });
   
   useEffect(() => {
-     const startingPlayers = (defaultSquad?.startingXI.map(p => p.player).filter(Boolean) as PlayerCard[]).map(player => ({
+      const startingPlayers = (defaultSquad?.startingXI.map(p => p.player).filter(Boolean) as PlayerCard[]).map(player => ({
         id: player.id,
         name: player.name,
         position: player.position,
@@ -81,9 +114,9 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
         goals: 0,
         assists: 0,
         minutesPlayed: 90,
-    })) as PlayerPerformance[];
-    
-    setFormData(prev => ({...prev, playerStats: startingPlayers}))
+      })) as PlayerPerformance[];
+      
+      setFormData(prev => ({...prev, playerStats: startingPlayers}))
   }, [defaultSquad]);
 
 
@@ -98,12 +131,12 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
     }));
   };
   
-  const toggleMatchTag = (tagId: string) => {
+  const toggleMatchTag = (tagName: string) => {
     setFormData(prev => {
         const currentTags = prev.tags || [];
-        const newTags = currentTags.includes(tagId) 
-            ? currentTags.filter(id => id !== tagId) 
-            : [...currentTags, tagId];
+        const newTags = currentTags.includes(tagName) 
+            ? currentTags.filter(name => name !== tagName) 
+            : [...currentTags, tagName];
         return {...prev, tags: newTags};
     });
   };
@@ -111,7 +144,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
   useMemo(() => {
     const goalsFor = formData.teamStats?.actualGoals ?? 0;
     const goalsAgainst = formData.teamStats?.actualGoalsAgainst ?? 0;
-    const result = goalsFor > goalsAgainst ? 'win' : 'loss';
+    const result = goalsFor > goalsAgainst ? 'win' : goalsFor < goalsAgainst ? 'loss' : 'draw';
     const scoreLine = `${goalsFor}-${goalsAgainst}`;
     setFormData(prev => ({ ...prev, result, scoreLine }));
   }, [formData.teamStats?.actualGoals, formData.teamStats?.actualGoalsAgainst]);
@@ -142,9 +175,22 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
 
   const handleSubmit = async () => {
     setIsSaving(true);
-    // Filter out subs who didn't play
-    const finalPlayerStats = formData.playerStats?.filter(p => p.minutesPlayed > 0);
-    const finalData = { ...formData, date: new Date().toISOString(), playerStats: finalPlayerStats } as Omit<GameResult, 'id'>;
+
+    const hasNoStatsTag = formData.tags?.some(tagName => {
+        const tagObject = matchTags.find(t => t.name === tagName);
+        return tagObject?.specialRule === 'no_stats';
+    });
+
+    const finalPlayerStats = hasNoStatsTag ? [] : formData.playerStats?.filter(p => p.minutesPlayed > 0);
+    const finalTeamStats = hasNoStatsTag ? undefined : formData.teamStats;
+    
+    const finalData = { 
+        ...formData, 
+        date: new Date().toISOString(), 
+        playerStats: finalPlayerStats,
+        teamStats: finalTeamStats
+    } as Omit<GameResult, 'id'>;
+
     await onSave(finalData);
     setIsSaving(false);
   };
@@ -160,6 +206,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6">
+        <ScrollArea className="h-[60vh] -mr-6 pr-6">
         {step === 1 && (
           <div className="space-y-8 animate-in fade-in">
             <div className="text-center">
@@ -169,15 +216,15 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                 <span className="text-5xl font-bold text-muted-foreground mx-2">:</span>
                 <NumberInputWithStepper label="Opponent's Score" value={formData.teamStats?.actualGoalsAgainst ?? 0} onValueChange={(val) => handleTeamStatsChange('actualGoalsAgainst', val)} />
               </div>
-               <p className={`mt-4 font-bold text-3xl tracking-wider ${formData.result === 'win' ? 'text-green-500' : 'text-red-500'}`}>
-                {formData.scoreLine !== '0-0' ? (formData.result === 'win' ? 'VICTORY' : 'DEFEAT') : 'ENTER SCORE'}
+               <p className={`mt-4 font-bold text-3xl tracking-wider ${formData.result === 'win' ? 'text-green-500' : formData.result === 'loss' ? 'text-red-500' : 'text-muted-foreground'}`}>
+                {formData.scoreLine !== '0-0' ? (formData.result === 'win' ? 'VICTORY' : formData.result === 'loss' ? 'DEFEAT' : 'DRAW') : 'ENTER SCORE'}
               </p>
             </div>
              <div className="space-y-2">
-              <Label htmlFor="duration">Match Duration (Mins)</Label>
-              <Input id="duration" type="number" placeholder="e.g., 90 for a full game" value={formData.duration} onChange={(e) => handleInputChange('duration', parseInt(e.target.value) || 0)} />
-               <p className="text-xs text-muted-foreground">Enter less than 90 if the match ended early (e.g., rage quit).</p>
-            </div>
+               <Label htmlFor="duration">Match Duration (Mins)</Label>
+               <Input id="duration" type="number" placeholder="e.g., 90 for a full game" value={formData.duration} onChange={(e) => handleInputChange('duration', parseInt(e.target.value) || 0)} />
+                <p className="text-xs text-muted-foreground">Enter less than 90 if the match ended early (e.g., rage quit).</p>
+             </div>
           </div>
         )}
 
@@ -197,9 +244,9 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                   <Slider value={[formData.stressLevel!]} onValueChange={([val]) => handleInputChange('stressLevel', val)} max={10} step={1} />
                 </div>
                  <div className="flex items-center space-x-2 pt-6">
-                    <Switch id="crossplay" checked={formData.crossPlayEnabled} onCheckedChange={(val) => handleInputChange('crossPlayEnabled', val)} />
-                    <Label htmlFor="crossplay">Cross-Platform Match</Label>
-                </div>
+                   <Switch id="crossplay" checked={formData.crossPlayEnabled} onCheckedChange={(val) => handleInputChange('crossPlayEnabled', val)} />
+                   <Label htmlFor="crossplay">Cross-Platform Match</Label>
+                 </div>
              </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-border">
                 <div>
@@ -229,33 +276,48 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
         
         {step === 3 && (
             <div className="space-y-6 animate-in fade-in">
-                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="space-y-2"><Label>Your xG</Label><Input type="number" step="0.1" value={formData.teamStats?.expectedGoals} onChange={(e) => handleTeamStatsChange('expectedGoals', parseFloat(e.target.value))} /></div>
-                    <div className="space-y-2"><Label>Opponent xG</Label><Input type="number" step="0.1" value={formData.teamStats?.expectedGoalsAgainst} onChange={(e) => handleTeamStatsChange('expectedGoalsAgainst', parseFloat(e.target.value))} /></div>
-                    <div className="space-y-2"><Label>Possession %</Label><Input type="number" value={formData.teamStats?.possession} onChange={(e) => handleTeamStatsChange('possession', parseInt(e.target.value))} /></div>
-                    <div className="space-y-2"><Label>Shots</Label><Input type="number" value={formData.teamStats?.shots} onChange={(e) => handleTeamStatsChange('shots', parseInt(e.target.value))} /></div>
-                    <div className="space-y-2"><Label>Shots on Target</Label><Input type="number" value={formData.teamStats?.shotsOnTarget} onChange={(e) => handleTeamStatsChange('shotsOnTarget', parseInt(e.target.value))} /></div>
-                    <div className="space-y-2"><Label>Passes</Label><Input type="number" value={formData.teamStats?.passes} onChange={(e) => handleTeamStatsChange('passes', parseInt(e.target.value))} /></div>
-                    <div className="space-y-2"><Label>Pass Accuracy %</Label><Input type="number" value={formData.teamStats?.passAccuracy} onChange={(e) => handleTeamStatsChange('passAccuracy', parseInt(e.target.value))} /></div>
-                    <div className="space-y-2"><Label>Corners</Label><Input type="number" value={formData.teamStats?.corners} onChange={(e) => handleTeamStatsChange('corners', parseInt(e.target.value))} /></div>
-                    <div className="space-y-2"><Label>Fouls</Label><Input type="number" value={formData.teamStats?.fouls} onChange={(e) => handleTeamStatsChange('fouls', parseInt(e.target.value))} /></div>
-                    <div className="space-y-2"><Label>Yellow Cards</Label><Input type="number" value={formData.teamStats?.yellowCards} onChange={(e) => handleTeamStatsChange('yellowCards', parseInt(e.target.value))} /></div>
-                    <div className="space-y-2"><Label>Red Cards</Label><Input type="number" value={formData.teamStats?.redCards} onChange={(e) => handleTeamStatsChange('redCards', parseInt(e.target.value))} /></div>
-                 </div>
-                 <div className="space-y-2">
-                    <Label>Match Tags</Label>
+               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="space-y-2"><Label>Your xG</Label><Input type="number" step="0.1" value={formData.teamStats?.expectedGoals} onChange={(e) => handleTeamStatsChange('expectedGoals', parseFloat(e.target.value))} /></div>
+                  <div className="space-y-2"><Label>Opponent xG</Label><Input type="number" step="0.1" value={formData.teamStats?.expectedGoalsAgainst} onChange={(e) => handleTeamStatsChange('expectedGoalsAgainst', parseFloat(e.target.value))} /></div>
+                  <div className="space-y-2"><Label>Possession %</Label><Input type="number" value={formData.teamStats?.possession} onChange={(e) => handleTeamStatsChange('possession', parseInt(e.target.value))} /></div>
+                  <div className="space-y-2"><Label>Shots</Label><Input type="number" value={formData.teamStats?.shots} onChange={(e) => handleTeamStatsChange('shots', parseInt(e.target.value))} /></div>
+                  <div className="space-y-2"><Label>Shots on Target</Label><Input type="number" value={formData.teamStats?.shotsOnTarget} onChange={(e) => handleTeamStatsChange('shotsOnTarget', parseInt(e.target.value))} /></div>
+                  <div className="space-y-2"><Label>Passes</Label><Input type="number" value={formData.teamStats?.passes} onChange={(e) => handleTeamStatsChange('passes', parseInt(e.target.value))} /></div>
+                  <div className="space-y-2"><Label>Pass Accuracy %</Label><Input type="number" value={formData.teamStats?.passAccuracy} onChange={(e) => handleTeamStatsChange('passAccuracy', parseInt(e.target.value))} /></div>
+                  <div className="space-y-2"><Label>Corners</Label><Input type="number" value={formData.teamStats?.corners} onChange={(e) => handleTeamStatsChange('corners', parseInt(e.target.value))} /></div>
+                  <div className="space-y-2"><Label>Fouls</Label><Input type="number" value={formData.teamStats?.fouls} onChange={(e) => handleTeamStatsChange('fouls', parseInt(e.target.value))} /></div>
+                  <div className="space-y-2"><Label>Yellow Cards</Label><Input type="number" value={formData.teamStats?.yellowCards} onChange={(e) => handleTeamStatsChange('yellowCards', parseInt(e.target.value))} /></div>
+                  <div className="space-y-2"><Label>Red Cards</Label><Input type="number" value={formData.teamStats?.redCards} onChange={(e) => handleTeamStatsChange('redCards', parseInt(e.target.value))} /></div>
+               </div>
+                <div className="space-y-2">
+                  <Label>Match Tags</Label>
+                  <p className="text-sm text-muted-foreground">Select any tags that apply. Hover for details.</p>
+                  <TooltipProvider>
                     <div className="flex flex-wrap gap-2">
-                        {availableTags.map(tag => (
-                            <Badge key={tag.id} variant={formData.tags?.includes(tag.id) ? "default" : "outline"} className="cursor-pointer" onClick={() => toggleMatchTag(tag.id)}>
-                                {tag.label}
-                            </Badge>
+                        {matchTags.map(tag => (
+                          <Tooltip key={tag.id}>
+                            <TooltipTrigger asChild>
+                                <Toggle
+                                    variant="outline"
+                                    size="sm"
+                                    pressed={formData.tags?.includes(tag.name)}
+                                    onPressedChange={() => toggleMatchTag(tag.name)}
+                                >
+                                    {tag.name}
+                                </Toggle>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>{tag.description}</p>
+                            </TooltipContent>
+                          </Tooltip>
                         ))}
                     </div>
+                  </TooltipProvider>
                 </div>
-                <div className="space-y-2">
-                  <Label>Comments</Label>
-                  <Textarea value={formData.comments} onChange={(e) => handleInputChange('comments', e.target.value)} placeholder="Any key moments or tactical notes?" />
-                </div>
+               <div className="space-y-2">
+                 <Label>Comments</Label>
+                 <Textarea value={formData.comments} onChange={(e) => handleInputChange('comments', e.target.value)} placeholder="Any key moments or tactical notes?" />
+               </div>
             </div>
         )}
 
@@ -271,6 +333,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
             />
           </div>
         )}
+        </ScrollArea>
 
         <div className="flex justify-between items-center mt-8 pt-6 border-t border-border">
           <div>
@@ -288,3 +351,4 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
 };
 
 export default GameRecordForm;
+
