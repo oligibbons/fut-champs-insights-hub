@@ -533,3 +533,15 @@ export const FORMATIONS: FormationData[] = [
     ]
   }
 ];
+
+// NEW ADDITION: Interface for the custom card types created by the user
+export interface CardType {
+  id: string;
+  name: string;
+  primary_color: string;
+  secondary_color: string;
+  highlight_color: string;
+  user_id: string;
+  game_version: string;
+}
+
