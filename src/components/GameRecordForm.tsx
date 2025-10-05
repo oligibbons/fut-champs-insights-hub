@@ -51,7 +51,7 @@ const gameFormSchema = z.object({
     player_stats: z.array(z.any()).optional(),
 });
 
-// Match tags remain the same as your original file
+// CORRECT: Your full, comprehensive list of match tags is now included.
 const matchTags = [
     { id: 'dominantWin', name: 'Dominant Win', description: 'A win where you dominated your opponent.' },
     { id: 'deservedLoss', name: 'Deserved Loss', description: 'A loss where you didn’t deserve to win.' },
@@ -64,7 +64,32 @@ const matchTags = [
     { id: 'freeWinGiven', name: 'Free Win Given Away', description: 'A game where you gifted the opponent a win. Does not impact performance stats.', specialRule: 'no_stats' },
     { id: 'disconnected', name: 'Disconnected', description: 'A game where you were disconnected by the servers. Does not impact performance stats.', specialRule: 'no_stats' },
     { id: 'badServers', name: 'Bad Servers', description: 'A game where the servers made gameplay challenging.' },
-    // ... include all other tags from your original file here
+    { id: 'frustratingGame', name: 'Frustrating Game', description: 'A game that caused you significant frustration.' },
+    { id: 'stressful', name: 'Stressful', description: 'A game that was stressful for you.' },
+    { id: 'skillGod', name: 'Skill God', description: 'A game against an opponent who uses a high level of skill moves effectively.' },
+    { id: 'undeservedLoss', name: 'Undeserved Loss', description: 'A game where you lost, but didn’t deserve to.' },
+    { id: 'undeservedWin', name: 'Undeserved Win', description: 'A game where you won, but didn’t deserve to.' },
+    { id: 'comebackWin', name: 'Comeback Win', description: 'A game where you came from behind to win.' },
+    { id: 'bottledLeadLoss', name: 'Bottled Lead Loss', description: 'A game where you lost from a winning position.' },
+    { id: 'goalFest', name: 'Goal Fest', description: 'A game with a large number of goals (typically 8+).' },
+    { id: 'defensiveBattle', name: 'Defensive Battle', description: 'A game where both players relied heavily on defending well.' },
+    { id: 'gameToBeProudOf', name: 'Game To Be Proud Of', description: 'A game that regardless of the result, you can be proud of.' },
+    { id: 'hacker', name: 'Hacker', description: 'A game where you faced a hacker.' },
+    { id: 'confirmedPro', name: 'Confirmed Pro Opponent', description: 'A game where you faced a confirmed professional FC player.' },
+    { id: 'eliteOpponent', name: 'Elite Opponent', description: 'A game against an elite-level player (possibly pro, but not confirmed).' },
+    { id: 'cutBackMerchant', name: 'Cut Back Merchant', description: 'An opponent whose sole game plan was to score cutbacks.' },
+    { id: 'defensiveMasterclass', name: 'Defensive Masterclass', description: 'A game where you defended to a very high level.' },
+    { id: 'attackingMasterclass', name: 'Attacking Masterclass', description: 'A game where you attacked to a very high level.' },
+    { id: 'defensiveDunce', name: 'Defensive Dunce', description: 'A game where you struggled to defend, to the point of embarrassment.' },
+    { id: 'attackingAmateur', name: 'Attacking Amateur', description: 'A game where you couldn’t attack to save your life.' },
+    { id: 'pay2WinRat', name: 'Pay2Win Rat', description: 'An opponent with a team that could only be achieved by spending a fortune.' },
+    { id: 'metaRat', name: 'Meta Rat', description: 'An opponent who uses every possible meta tactic/technique to get the win.' },
+    { id: 'opponentRubberBanded', name: 'Opponent Rubber Banded', description: 'The opponent put their controller down and stopped playing.' },
+    { id: 'iRubberBanded', name: 'I Rubber Banded', description: 'You put your controller down and stopped playing at some point.' },
+    { id: 'poorQualityOpponent', name: 'Poor Quality Opponent', description: 'An opponent who is simply not very good at the game.' },
+    { id: 'fairResult', name: 'Fair Result', description: 'Regardless of who won or lost, the result was a fair reflection of the performance.' },
+    { id: 'myOwnWorstEnemy', name: 'My Own Worst Enemy', description: 'Your own consistent mistakes caused you significant problems.' },
+    { id: 'funGame', name: 'Fun Game', description: 'A game that you enjoyed playing, irrespective of the result.' },
 ];
 
 interface GameRecordFormProps {
@@ -121,6 +146,9 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
           goals: 0,
           assists: 0,
           minutesPlayed: 90,
+          yellowCards: 0,
+          redCards: 0,
+          ownGoals: 0,
         }));
       setValue('player_stats', startingPlayers);
     }
@@ -137,7 +165,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
       const subToAdd = availableSubs[0];
       const newPlayerStat: PlayerPerformance = {
         id: subToAdd.id, name: subToAdd.name, position: 'SUB', rating: 6.0,
-        goals: 0, assists: 0, minutesPlayed: 0
+        goals: 0, assists: 0, minutesPlayed: 0, yellowCards: 0, redCards: 0, ownGoals: 0,
       };
       setValue('player_stats', [...(watchedValues.player_stats || []), newPlayerStat]);
     } else {
@@ -151,7 +179,6 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
     const result = data.user_goals > data.opponent_goals ? 'win' : 'loss';
     
     try {
-        // Step 1: Insert the main game result
         const { data: gameResult, error: gameError } = await supabase
             .from('game_results')
             .insert({
@@ -177,7 +204,6 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
 
         const hasNoStatsTag = data.tags?.some(tagName => matchTags.find(t => t.name === tagName)?.specialRule === 'no_stats');
 
-        // Step 2: Insert Team Statistics (if not a 'no_stats' game)
         if (!hasNoStatsTag) {
             const { error: teamStatsError } = await supabase
                 .from('team_statistics')
@@ -188,7 +214,6 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                 });
             if (teamStatsError) throw teamStatsError;
 
-            // Step 3: Insert Player Performances (if they exist and not a 'no_stats' game)
             const validPlayerStats = data.player_stats?.filter(p => p.minutesPlayed > 0);
             if (validPlayerStats && validPlayerStats.length > 0) {
                 const performances = validPlayerStats.map(p => ({
@@ -200,6 +225,9 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                     goals: p.goals,
                     assists: p.assists,
                     minutes_played: p.minutesPlayed,
+                    yellow_cards: p.yellowCards,
+                    red_cards: p.redCards,
+                    own_goals: p.ownGoals
                 }));
                 const { error: playerStatsError } = await supabase.from('player_performances').insert(performances);
                 if (playerStatsError) throw playerStatsError;
@@ -225,9 +253,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
         <form onSubmit={handleSubmit(processSubmit)}>
             <CardContent className="p-4 md:p-6">
                 <ScrollArea className="h-[60vh] -mr-6 pr-6">
-                    {/* All steps are wrapped in divs to control visibility */}
                     <div className={step === 1 ? 'block' : 'hidden'}>
-                        {/* Step 1: Score & Duration */}
                         <div className="space-y-8 animate-in fade-in">
                             <div className="text-center">
                                 <Label className="text-lg font-semibold">Final Score</Label>
@@ -246,17 +272,14 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                     </div>
 
                     <div className={step === 2 ? 'block' : 'hidden'}>
-                        {/* Step 2: Game Feel & Opponent */}
                         <div className="space-y-6 animate-in fade-in">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {/* Sliders */}
                                 <Controller name="opponent_skill" control={control} render={({ field }) => <div className="space-y-2"><Label>Opponent Skill: <span className="font-bold text-primary">{field.value}</span>/10</Label><Slider value={[field.value]} onValueChange={(v) => field.onChange(v[0])} max={10} step={1} /></div>} />
                                 <Controller name="server_quality" control={control} render={({ field }) => <div className="space-y-2"><Label>Server Quality: <span className="font-bold text-primary">{field.value}</span>/10</Label><Slider value={[field.value]} onValueChange={(v) => field.onChange(v[0])} max={10} step={1} /></div>} />
                                 <Controller name="stress_level" control={control} render={({ field }) => <div className="space-y-2"><Label>Stress Level: <span className="font-bold text-primary">{field.value}</span>/10</Label><Slider value={[field.value]} onValueChange={(v) => field.onChange(v[0])} max={10} step={1} /></div>} />
                                 <Controller name="cross_play_enabled" control={control} render={({ field }) => <div className="flex items-center space-x-2 pt-6"><Switch id="crossplay" checked={field.value} onCheckedChange={field.onChange} /><Label htmlFor="crossplay">Cross-Platform</Label></div>} />
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-border">
-                                {/* Opponent Details */}
                                 <Controller name="opponent_play_style" control={control} render={({ field }) => <div><Label>Opponent Play Style</Label><Select value={field.value} onValueChange={field.onChange}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{['balanced', 'possession', 'counter-attack', 'high-press', 'drop-back'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></div>} />
                                 <Controller name="opponent_formation" control={control} render={({ field }) => <div><Label>Opponent Formation</Label><Input {...field} placeholder="e.g. 4-2-3-1" /></div>} />
                                 <Controller name="opponent_squad_rating" control={control} render={({ field }) => <div><Label>Opponent Squad Rating</Label><Input {...field} type="number" /></div>} />
@@ -265,13 +288,12 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                     </div>
                     
                     <div className={step === 3 ? 'block' : 'hidden'}>
-                        {/* Step 3: Stats & Tags */}
                         <div className="space-y-6 animate-in fade-in">
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 <Controller name="team_stats.expectedGoals" control={control} render={({ field }) => <div className="space-y-2"><Label>Your xG</Label><Input {...field} type="number" step="0.1" /></div>} />
                                 <Controller name="team_stats.expectedGoalsAgainst" control={control} render={({ field }) => <div className="space-y-2"><Label>Opponent xG</Label><Input {...field} type="number" step="0.1" /></div>} />
                                 <Controller name="team_stats.possession" control={control} render={({ field }) => <div className="space-y-2"><Label>Possession %</Label><Input {...field} type="number" /></div>} />
-                                {/* Add controllers for all other team_stats fields */}
+                                {/* Add controllers for all other team_stats fields as needed */}
                             </div>
                              <div className="space-y-2">
                                 <Label>Match Tags</Label>
@@ -314,7 +336,6 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                     </div>
 
                     <div className={step === 4 ? 'block' : 'hidden'}>
-                        {/* Step 4: Player Performance */}
                         <div className="animate-in fade-in">
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-lg font-semibold">Player Performances</h3>
