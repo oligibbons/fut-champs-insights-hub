@@ -16,9 +16,12 @@ import AIInsights from '@/pages/AIInsights';
 import GameCompletionPopup from '@/components/GameCompletionPopup';
 import WeekCompletionPopup from '@/components/WeekCompletionPopup';
 import AchievementSystem from '@/components/AchievementSystem'; // Import the new system
+// FIX: Import the WeekNaming component
+import WeekNaming from '@/components/WeekNaming'; 
 
 const CurrentWeek = () => {
-  const { weeklyData, createWeek, saveGame, endWeek, loading, refreshData } = useSupabaseData();
+  // FIX: Added 'updateWeek' to imports from the hook
+  const { weeklyData, createWeek, saveGame, endWeek, loading, refreshData, updateWeek } = useSupabaseData();
   const [isLoggingGame, setIsLoggingGame] = useState(false);
   const [completedGame, setCompletedGame] = useState<GameResult | null>(null);
   const [completedWeek, setCompletedWeek] = useState<WeeklyPerformance | null>(null);
@@ -37,7 +40,8 @@ const CurrentWeek = () => {
 
   const handleSaveGame = async (gameData: Omit<GameResult, 'id'>) => {
     if (currentWeek) {
-      await saveGame(currentWeek.id, gameData);
+      // The GameRecordForm now handles all saving logic
+      await refreshData(); // We rely on this refresh to update the weeklyData state
       setIsLoggingGame(false);
       
       // We need to refresh data to get the true game object with relations
@@ -89,6 +93,11 @@ const CurrentWeek = () => {
   
   const winRate = (currentWeek.gamesPlayed ?? 0) > 0 ? Math.round(((currentWeek.totalWins ?? 0) / (currentWeek.gamesPlayed ?? 1)) * 100) : 0;
 
+  // Handler for WeekNaming component
+  const handleUpdateWeekName = (updates: Partial<WeeklyPerformance>) => {
+    updateWeek(currentWeek.id, updates);
+  };
+
   return (
     <>
       {/* This component is invisible but will handle all achievement logic */}
@@ -99,6 +108,10 @@ const CurrentWeek = () => {
           <h1 className="text-3xl font-bold tracking-tight">{currentWeek.customName || `Week ${currentWeek.weekNumber} Run`}</h1>
           <p className="text-muted-foreground">Your live hub for the current Weekend League.</p>
         </div>
+        
+        {/* FIX: Week Naming Component Integration */}
+        <WeekNaming weekData={currentWeek} onUpdateWeek={handleUpdateWeekName} />
+
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           <StatCard title="Current Record" value={`${currentWeek.totalWins}-${currentWeek.totalLosses}`} icon={Trophy} />
           <StatCard title="Win Rate" value={`${winRate}%`} icon={BarChart2} />
@@ -127,6 +140,7 @@ const CurrentWeek = () => {
               <CardContent><div className="space-y-2">{currentWeek.games.slice().reverse().map(game => (<div key={game.id} className="flex justify-between items-center p-3 bg-secondary/50 rounded-lg"><div className="flex items-center gap-4"><span className={`font-bold ${game.result === 'win' ? 'text-green-500' : 'text-red-500'}`}>{game.result.toUpperCase()}</span><span>Game {game.gameNumber}</span><span className="font-mono">{game.scoreLine}</span></div><div className="text-xs text-muted-foreground">vs Skill: {game.opponentSkill}/10</div></div>))}</div></CardContent>
             </Card>
           </TabsContent>
+          {/* Note: TopPerformers in CurrentWeek.tsx requires a 'games' prop not a 'games' from context */}
           <TabsContent value="performers" className="mt-4"><TopPerformers games={currentWeek.games} /></TabsContent>
           <TabsContent value="insights" className="mt-4"><AIInsights /></TabsContent>
         </Tabs>
