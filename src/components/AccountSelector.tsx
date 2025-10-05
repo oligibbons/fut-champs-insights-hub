@@ -6,10 +6,11 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Plus, Edit, Trash2, Gamepad2, User, Check } from 'lucide-react';
+import { useGameVersion } from "@/contexts/GameVersionContext";
+import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
 
 interface Account {
   id: string;
@@ -25,6 +26,7 @@ interface Account {
 const AccountSelector = () => {
   const { toast } = useToast();
   const { user } = useAuth();
+  const { gameVersion, setGameVersion } = useGameVersion(); // Added for game version switching
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
@@ -46,7 +48,6 @@ const AccountSelector = () => {
             .eq('user_id', user.id);
             
           if (error) {
-            // If table doesn't exist or other error, fall back to localStorage
             console.warn('Could not load accounts from Supabase, using localStorage:', error.message);
           } else if (data && data.length > 0) {
             const formattedAccounts = data.map(acc => ({
@@ -98,16 +99,13 @@ const AccountSelector = () => {
     setAccounts(updatedAccounts);
     localStorage.setItem('accounts', JSON.stringify(updatedAccounts));
     
-    // Save to Supabase if user is logged in
     if (user) {
       try {
-        // First delete all existing accounts
         await supabase
           .from('gaming_accounts')
           .delete()
           .eq('user_id', user.id);
           
-        // Then insert the updated accounts
         const accountsForSupabase = updatedAccounts.map(acc => ({
           id: acc.id,
           user_id: user.id,
@@ -199,7 +197,6 @@ const AccountSelector = () => {
       description: `Switched to ${activeAccount?.name}`,
     });
     
-    // Refresh the page to load data for the new account
     window.location.reload();
   };
 
@@ -216,7 +213,6 @@ const AccountSelector = () => {
     const accountToDelete = accounts.find(acc => acc.id === accountId);
     const updatedAccounts = accounts.filter(acc => acc.id !== accountId);
     
-    // If deleting active account, make the first remaining account active
     if (accountToDelete?.isActive && updatedAccounts.length > 0) {
       updatedAccounts[0].isActive = true;
       localStorage.setItem('active-account', updatedAccounts[0].id);
@@ -235,13 +231,20 @@ const AccountSelector = () => {
   return (
     <Card className="glass-card">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-white">
-          <Gamepad2 className="h-5 w-5 text-fifa-blue" />
-          Game Accounts
-        </CardTitle>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+            <CardTitle className="flex items-center gap-2 text-white">
+              <Gamepad2 className="h-5 w-5 text-fifa-blue" />
+              Game Accounts & Version
+            </CardTitle>
+            <Tabs value={gameVersion} onValueChange={(value) => setGameVersion(value as 'FC25' | 'FC26')}>
+                <TabsList>
+                    <TabsTrigger value="FC25">FC25</TabsTrigger>
+                    <TabsTrigger value="FC26">FC26</TabsTrigger>
+                </TabsList>
+            </Tabs>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Active Account Display */}
         <div className="p-4 bg-fifa-blue/10 rounded-xl border border-fifa-blue/30">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -265,7 +268,6 @@ const AccountSelector = () => {
           </div>
         </div>
 
-        {/* All Accounts List */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h4 className="text-white font-medium">All Accounts</h4>
@@ -334,7 +336,6 @@ const AccountSelector = () => {
           ))}
         </div>
 
-        {/* Add Account Form */}
         {showAddForm && (
           <div className="p-4 bg-white/5 rounded-xl space-y-3">
             <h4 className="text-white font-medium">Add New Account</h4>
@@ -390,7 +391,6 @@ const AccountSelector = () => {
           </div>
         )}
 
-        {/* Edit Account Form */}
         {editingAccount && (
           <div className="p-4 bg-white/5 rounded-xl space-y-3">
             <h4 className="text-white font-medium">Edit Account</h4>
