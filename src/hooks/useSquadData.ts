@@ -1,293 +1,249 @@
-import { useLocalStorage } from './useLocalStorage';
-import { useAccountData } from './useAccountData';
-import { Squad, PlayerCard } from '@/types/squads';
-import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '../integrations/supabase/client';
+import { Squad, PlayerCard, SquadPlayer } from '../types/squads';
+import { useAuth } from '../contexts/AuthContext';
+import { toast } from 'sonner';
+import { useGameVersion } from '@/contexts/GameVersionContext';
 
-export function useSquadData() {
-  const { activeAccount } = useAccountData();
+export const useSquadData = () => {
   const { user } = useAuth();
-  const [squads, setSquads] = useLocalStorage<Squad[]>(`fc25-squads-${activeAccount}`, []);
-  const [players, setPlayers] = useLocalStorage<PlayerCard[]>(`fc25-players-${activeAccount}`, []);
-  const [isLoading, setIsLoading] = useState(true);
+  const { gameVersion } = useGameVersion();
+  const [squads, setSquads] = useState<Squad[]>([]);
+  const [players, setPlayers] = useState<PlayerCard[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Load squads from Supabase when component mounts
-  useEffect(() => {
-    if (user) {
-      fetchSquadsFromSupabase();
-    } else {
-      setIsLoading(false);
+  const fetchSquads = useCallback(async () => {
+    if (!user) return;
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('squads')
+        .select('*, squad_players(*, players(*))')
+        .eq('user_id', user.id)
+        .eq('game_version', gameVersion);
+
+      if (error) throw error;
+      setSquads(data as Squad[]);
+    } catch (error) {
+      toast.error('Failed to fetch squads.');
+      console.error('Error fetching squads:', error);
+    } finally {
+      setLoading(false);
     }
-  }, [user]);
+  }, [user, gameVersion]);
 
-  const fetchSquadsFromSupabase = async () => {
-    setIsLoading(true);
+  const fetchPlayers = useCallback(async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from('players')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('game_version', gameVersion);
+      if (error) throw error;
+      setPlayers(data as PlayerCard[]);
+    } catch (error) {
+      toast.error('Failed to fetch players.');
+      console.error('Error fetching players:', error);
+    }
+  }, [user, gameVersion]);
+
+  useEffect(() => {
+    fetchSquads();
+    fetchPlayers();
+  }, [fetchSquads, fetchPlayers]);
+
+  const createSquad = async (squadData: Omit<Squad, 'id' | 'user_id' | 'created_at' | 'squad_players'>) => {
+    if (!user) return;
     try {
       const { data, error } = await supabase
         .from('squads')
-        .select('*')
-        .eq('user_id', user?.id);
-
-      if (error) {
-        console.error('Error fetching squads:', error);
-        setIsLoading(false);
-        return;
-      }
-
-      if (data && data.length > 0) {
-        // Convert Supabase data to local Squad format
-        const convertedSquads = data.map(dbSquad => {
-          // Try to parse the squad data from the description field
-          try {
-            const squadData = JSON.parse(dbSquad.description || '{}');
-            return {
-              ...squadData,
-              id: dbSquad.id,
-              name: dbSquad.name,
-              formation: dbSquad.formation,
-              isDefault: dbSquad.is_default || false,
-              createdAt: dbSquad.created_at,
-              updatedAt: dbSquad.updated_at,
-              lastModified: dbSquad.last_used || dbSquad.updated_at
-            };
-          } catch (e) {
-            console.error('Error parsing squad data:', e);
-            return null;
-          }
-        }).filter(Boolean);
-
-        if (convertedSquads.length > 0) {
-          setSquads(convertedSquads);
-        }
-      }
-      
-      // Also fetch players
-      const { data: playerData, error: playerError } = await supabase
-        .from('players')
-        .select('*')
-        .eq('user_id', user?.id);
-        
-      if (playerError) {
-        console.error('Error fetching players:', playerError);
-      } else if (playerData && playerData.length > 0) {
-        // Convert Supabase data to local PlayerCard format
-        const convertedPlayers = playerData.map(dbPlayer => {
-          return {
-            id: dbPlayer.id,
-            name: dbPlayer.name,
-            position: dbPlayer.position,
-            rating: dbPlayer.rating,
-            cardType: dbPlayer.card_type,
-            club: dbPlayer.club || 'Unknown',
-            league: dbPlayer.league || 'Unknown',
-            nationality: dbPlayer.nationality || 'Unknown',
-            pace: dbPlayer.pace || 75,
-            shooting: dbPlayer.shooting || 75,
-            passing: dbPlayer.passing || 75,
-            dribbling: dbPlayer.dribbling || 75,
-            defending: dbPlayer.defending || 75,
-            physical: dbPlayer.physical || 75,
-            price: dbPlayer.price || 0,
-            goals: dbPlayer.goals || 0,
-            assists: dbPlayer.assists || 0,
-            averageRating: dbPlayer.average_rating || 0,
-            yellowCards: dbPlayer.yellow_cards || 0,
-            redCards: dbPlayer.red_cards || 0,
-            minutesPlayed: dbPlayer.minutes_played || 0,
-            wins: dbPlayer.wins || 0,
-            losses: dbPlayer.losses || 0,
-            cleanSheets: dbPlayer.clean_sheets || 0,
-            imageUrl: dbPlayer.image_url || '',
-            lastUsed: dbPlayer.last_used || new Date().toISOString()
-          } as PlayerCard;
-        });
-        
-        if (convertedPlayers.length > 0) {
-          setPlayers(convertedPlayers);
-        }
-      }
-    } catch (e) {
-      console.error('Error in fetchSquadsFromSupabase:', e);
-    } finally {
-      setIsLoading(false);
+        .insert([{ ...squadData, user_id: user.id, game_version: gameVersion }])
+        .select()
+        .single();
+      if (error) throw error;
+      setSquads(prev => [...prev, data as Squad]);
+      toast.success('Squad created successfully.');
+      return data;
+    } catch (error) {
+      toast.error('Failed to create squad.');
+      console.error('Error creating squad:', error);
     }
   };
 
-  const saveSquad = async (squad: Squad) => {
-    // First update local storage
-    const existingSquadIndex = squads.findIndex(s => s.id === squad.id);
-    let updatedSquads;
-    
-    if (existingSquadIndex >= 0) {
-      updatedSquads = [...squads];
-      updatedSquads[existingSquadIndex] = squad;
-    } else {
-      updatedSquads = [...squads, squad];
-    }
-    
-    setSquads(updatedSquads);
-
-    // Then save to Supabase if user is logged in
-    if (user) {
-      try {
-        // Store the complex squad data in the description field as JSON
-        const squadData = { ...squad };
-        delete squadData.id; // Remove id to avoid duplication
-        
-        const { error } = await supabase
-          .from('squads')
-          .upsert({
-            id: squad.id,
-            user_id: user.id,
-            name: squad.name,
-            formation: squad.formation,
-            is_default: squad.isDefault,
-            description: JSON.stringify(squadData),
-            last_used: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          });
-
-        if (error) {
-          console.error('Error saving squad to Supabase:', error);
-        }
-      } catch (e) {
-        console.error('Error in saveSquad:', e);
-      }
+  const updateSquad = async (squadId: string, updates: Partial<Squad>) => {
+    try {
+      const { data, error } = await supabase
+        .from('squads')
+        .update(updates)
+        .eq('id', squadId)
+        .select()
+        .single();
+      if (error) throw error;
+      setSquads(prev => prev.map(s => (s.id === squadId ? { ...s, ...data } : s)));
+      toast.success('Squad updated successfully.');
+    } catch (error) {
+      toast.error('Failed to update squad.');
+      console.error('Error updating squad:', error);
     }
   };
 
   const deleteSquad = async (squadId: string) => {
-    // Update local storage
-    setSquads(squads.filter(s => s.id !== squadId));
-
-    // Delete from Supabase if user is logged in
-    if (user) {
-      try {
-        const { error } = await supabase
-          .from('squads')
-          .delete()
-          .eq('id', squadId)
-          .eq('user_id', user.id);
-
-        if (error) {
-          console.error('Error deleting squad from Supabase:', error);
-        }
-      } catch (e) {
-        console.error('Error in deleteSquad:', e);
-      }
+    try {
+      const { error } = await supabase.from('squads').delete().eq('id', squadId);
+      if (error) throw error;
+      setSquads(prev => prev.filter(s => s.id !== squadId));
+      toast.success('Squad deleted successfully.');
+    } catch (error) {
+      toast.error('Failed to delete squad.');
+      console.error('Error deleting squad:', error);
     }
-  };
-
-  const setDefaultSquad = async (squadId: string) => {
-    // Update local storage
-    const updatedSquads = squads.map(squad => ({
-      ...squad,
-      isDefault: squad.id === squadId
-    }));
-    setSquads(updatedSquads);
-
-    // Update in Supabase if user is logged in
-    if (user) {
-      try {
-        // First, set all squads to non-default
-        await supabase
-          .from('squads')
-          .update({ is_default: false })
-          .eq('user_id', user.id);
-
-        // Then set the selected squad as default
-        const { error } = await supabase
-          .from('squads')
-          .update({ is_default: true })
-          .eq('id', squadId)
-          .eq('user_id', user.id);
-
-        if (error) {
-          console.error('Error setting default squad in Supabase:', error);
-        }
-      } catch (e) {
-        console.error('Error in setDefaultSquad:', e);
-      }
-    }
-  };
-
-  const getDefaultSquad = (): Squad | null => {
-    const defaultSquad = squads.find(squad => squad.isDefault);
-    return defaultSquad || (squads.length > 0 ? squads[0] : null);
   };
 
   const savePlayer = async (player: PlayerCard) => {
-    // Update local storage
-    const existingPlayerIndex = players.findIndex(p => 
-      p.name.toLowerCase() === player.name.toLowerCase() && 
-      p.cardType === player.cardType && 
-      p.rating === player.rating
-    );
-    
-    let updatedPlayers;
-    if (existingPlayerIndex >= 0) {
-      updatedPlayers = [...players];
-      updatedPlayers[existingPlayerIndex] = player;
-    } else {
-      updatedPlayers = [...players, player];
-    }
-    
-    setPlayers(updatedPlayers);
+    if (!user) return;
 
-    // Save to Supabase if user is logged in
-    if (user) {
-      try {
-        const { error } = await supabase
-          .from('players')
-          .upsert({
-            id: player.id,
-            user_id: user.id,
-            name: player.name,
-            position: player.position,
-            rating: player.rating,
-            card_type: player.cardType,
-            club: player.club,
-            league: player.league,
-            nationality: player.nationality,
-            pace: player.pace,
-            shooting: player.shooting,
-            passing: player.passing,
-            dribbling: player.dribbling,
-            defending: player.defending,
-            physical: player.physical,
-            price: player.price,
-            last_used: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          });
+    // Check if player with same name, card type, and rating already exists
+    const existingPlayerIndex = players.findIndex(p =>
+        p.name.toLowerCase() === player.name.toLowerCase() &&
+        p.card_type === player.card_type &&
+        p.rating === player.rating
+    );
+
+    if (existingPlayerIndex !== -1) {
+        // Update existing player
+        const existingPlayer = players[existingPlayerIndex];
+        try {
+            const { data, error } = await supabase
+                .from('players')
+                .update(player)
+                .eq('id', existingPlayer.id)
+                .select()
+                .single();
+            if (error) throw error;
+            setPlayers(prev => {
+                const newPlayers = [...prev];
+                newPlayers[existingPlayerIndex] = data as PlayerCard;
+                return newPlayers;
+            });
+            toast.success("Player updated in your club.");
+            return data;
+        } catch (error) {
+            toast.error("Failed to update player.");
+            console.error("Error updating player:", error);
+            return null;
+        }
+    } else {
+        // Create new player
+        try {
+            const { data, error } = await supabase
+                .from('players')
+                .insert([{ ...player, user_id: user.id, game_version: gameVersion }])
+                .select()
+                .single();
+            if (error) throw error;
+            setPlayers(prev => [...prev, data as PlayerCard]);
+            toast.success("Player added to your club.");
+            return data;
+        } catch (error) {
+            toast.error("Failed to add player.");
+            console.error("Error creating player:", error);
+            return null;
+        }
+    }
+};
+
+
+const addPlayerToSquad = async (squadId: string, playerId: string, position: string) => {
+    try {
+        const { data, error } = await supabase
+            .from('squad_players')
+            .insert([{ squad_id: squadId, player_id: playerId, position: position }])
+            .select('*, players(*)')
+            .single();
 
         if (error) {
-          console.error('Error saving player to Supabase:', error);
+            console.error("Error in addPlayerToSquad:", error);
+            throw error;
         }
-      } catch (e) {
-        console.error('Error in savePlayer:', e);
-      }
-    }
-  };
 
-  const getPlayerSuggestions = (searchTerm: string): PlayerCard[] => {
-    if (!searchTerm || searchTerm.length < 2) return [];
-    
-    return players.filter(player => 
-      player.name.toLowerCase().includes(searchTerm.toLowerCase())
-    ).slice(0, 10);
+        // The 'data' should be of type SquadPlayer, which has a 'players' property
+        const newSquadPlayer = data as SquadPlayer;
+
+        setSquads(prevSquads =>
+            prevSquads.map(squad => {
+                if (squad.id === squadId) {
+                    // Make sure squad_players is an array before trying to spread it
+                    const updatedPlayers = [...(squad.squad_players || []), newSquadPlayer];
+                    return { ...squad, squad_players: updatedPlayers };
+                }
+                return squad;
+            })
+        );
+
+        toast.success("Player added to squad.");
+        return newSquadPlayer;
+
+    } catch (error) {
+        toast.error("Failed to add player to squad.");
+        console.error('Error adding player to squad:', error);
+        return null;
+    }
+};
+
+
+  const removePlayerFromSquad = async (squadId: string, playerId: string) => {
+    try {
+      // Find the specific squad_player record to delete
+      const { data: squadPlayerData, error: findError } = await supabase
+        .from('squad_players')
+        .select('id')
+        .eq('squad_id', squadId)
+        .eq('player_id', playerId)
+        .limit(1);
+
+      if (findError) throw findError;
+      if (squadPlayerData.length === 0) {
+        throw new Error("Player not found in squad.");
+      }
+
+      const squadPlayerId = squadPlayerData[0].id;
+
+      const { error } = await supabase
+        .from('squad_players')
+        .delete()
+        .eq('id', squadPlayerId);
+
+      if (error) throw error;
+
+      setSquads(prev =>
+        prev.map(s => {
+          if (s.id === squadId) {
+            return {
+              ...s,
+              squad_players: s.squad_players.filter(p => p.player_id !== playerId),
+            };
+          }
+          return s;
+        })
+      );
+      toast.success('Player removed from squad.');
+    } catch (error) {
+      toast.error('Failed to remove player from squad.');
+      console.error('Error removing player from squad:', error);
+    }
   };
 
   return {
     squads,
     players,
-    saveSquad,
+    loading,
+    fetchSquads,
+    createSquad,
+    updateSquad,
     deleteSquad,
-    setDefaultSquad,
-    getDefaultSquad,
     savePlayer,
-    getPlayerSuggestions,
-    fetchSquadsFromSupabase,
-    isLoading
+    addPlayerToSquad,
+    removePlayerFromSquad,
   };
-}
+};
