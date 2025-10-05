@@ -11,7 +11,7 @@ export interface Theme {
   };
 }
 
-// --- NEW THEMES ---
+// Your beautiful custom themes
 const themes: Record<string, Theme> = {
   midnightPitch: {
     name: 'Midnight Pitch',
@@ -99,19 +99,59 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [currentThemeName, setCurrentThemeName] = useState<string>(() => {
-    // THIS IS THE FIX: Check if the saved theme is valid before using it.
     const savedTheme = localStorage.getItem('futalyst-theme');
     if (savedTheme && themes[savedTheme]) {
       return savedTheme;
     }
-    // If not, fall back to the new default theme.
     return 'midnightPitch';
   });
 
   useEffect(() => {
-    const root = window.document.documentElement;
+    const root = document.documentElement;
+    const theme = themes[currentThemeName];
+    if (!theme) return;
+
+    // Apply .dark or .light class for Tailwind's darkMode selector
     root.classList.remove('light', 'dark');
     root.classList.add(currentThemeName === 'tacticsBoard' ? 'light' : 'dark');
+    
+    // This function now sets BOTH sets of variables - your custom ones and the shadcn ones
+    const setCssVariables = (themeColors: Theme['colors']) => {
+      // Set your original theme variables for the navbar
+      root.style.setProperty('--theme-primary', themeColors.primary);
+      root.style.setProperty('--theme-secondary', themeColors.secondary);
+      root.style.setProperty('--theme-accent', themeColors.accent);
+      root.style.setProperty('--theme-surface', themeColors.surface);
+      root.style.setProperty('--theme-card-bg', themeColors.cardBg);
+      root.style.setProperty('--theme-text', themeColors.text);
+      root.style.setProperty('--theme-muted', themeColors.muted);
+      root.style.setProperty('--theme-border', themeColors.border);
+      root.style.setProperty('--theme-error', themeColors.error);
+
+      // Set the shadcn/ui variables for the rest of the app
+      root.style.setProperty('--background', themeColors.background);
+      root.style.setProperty('--foreground', themeColors.text);
+      root.style.setProperty('--card', themeColors.cardBg);
+      root.style.setProperty('--card-foreground', themeColors.text);
+      root.style.setProperty('--popover', themeColors.cardBg);
+      root.style.setProperty('--popover-foreground', themeColors.text);
+      root.style.setProperty('--primary', themeColors.primary);
+      root.style.setProperty('--primary-foreground', themeColors.text);
+      root.style.setProperty('--secondary', themeColors.secondary);
+      root.style.setProperty('--secondary-foreground', themeColors.text);
+      root.style.setProperty('--muted', themeColors.muted);
+      root.style.setProperty('--muted-foreground', themeColors.muted);
+      root.style.setProperty('--accent', themeColors.accent);
+      root.style.setProperty('--accent-foreground', themeColors.text);
+      root.style.setProperty('--destructive', themeColors.error);
+      root.style.setProperty('--border', themeColors.border);
+      root.style.setProperty('--input', themeColors.border);
+      root.style.setProperty('--ring', themeColors.primary);
+    };
+
+    setCssVariables(theme.colors);
+    document.body.style.background = theme.colors.background; // Set solid color for body
+
   }, [currentThemeName]);
 
   const setTheme = (themeName: string) => {
@@ -123,7 +163,6 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
 
   const value = {
     currentThemeName,
-    // This is now safe because currentThemeName is guaranteed to be a valid key
     currentTheme: themes[currentThemeName],
     setTheme,
     themes: Object.keys(themes),
@@ -140,4 +179,3 @@ export const useTheme = () => {
   }
   return context;
 };
-
