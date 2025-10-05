@@ -4,7 +4,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Badge } from '@/components/ui/badge';
 import { useDataSync } from '@/hooks/useDataSync';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { Tag, TrendingUp, TrendingDown, Info } from 'lucide-react';
+// FIX: Added 'Loader2' to the import list from lucide-react to resolve the ReferenceError.
+import { Tag, TrendingUp, TrendingDown, Info, Loader2 } from 'lucide-react';
 import { GameResult } from '@/types/futChampions';
 
 // A single, unified source of truth for all tag information.
@@ -235,4 +236,3 @@ const MatchTagAnalysis = () => {
 };
 
 export default MatchTagAnalysis;
-
