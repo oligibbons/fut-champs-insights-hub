@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useState } from 'react';
+import { useSquadData } from '@/hooks/useSquadData';
 import { Squad } from '@/types/squads';
 import SquadBuilder from '@/components/SquadBuilder';
 import { Button } from '@/components/ui/button';
@@ -15,50 +15,21 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/hooks/useTheme';
-import { useGameVersion } from '@/contexts/GameVersionContext'; // CORRECT: Use the global context
-import { supabase } from '@/integrations/supabase/client';
-import Navigation from '@/components/Navigation';
+import { useGameVersion } from '@/contexts/GameVersionContext';
 
 const Squads = () => {
-  const { user } = useAuth();
   const { toast } = useToast();
   const { currentTheme } = useTheme();
-  const { gameVersion, setGameVersion } = useGameVersion(); // CORRECT: Use global state
+  const { gameVersion, setGameVersion } = useGameVersion();
 
-  const [squads, setSquads] = useState<Squad[]>([]);
+  // CORRECT: Using the centralized hook for all data operations
+  const { squads, createSquad, updateSquad, deleteSquad, loading } = useSquadData();
+
   const [isBuilding, setIsBuilding] = useState(false);
   const [editingSquad, setEditingSquad] = useState<Squad | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  // CORRECT: Fetch data directly from Supabase, filtered by the global gameVersion
-  useEffect(() => {
-    const fetchSquads = async () => {
-      if (!user) {
-        setLoading(false);
-        return;
-      }
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('squads')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('game_version', gameVersion) // Filter by the context's game version
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching squads:', error);
-        toast({ title: "Error", description: "Could not fetch your squads.", variant: "destructive" });
-      } else {
-        setSquads(data as Squad[] || []);
-      }
-      setLoading(false);
-    };
-
-    fetchSquads();
-  }, [user, gameVersion, toast]); // Re-fetches whenever the global gameVersion changes
 
   const handleAddNewSquad = () => {
     setEditingSquad(null);
@@ -70,59 +41,42 @@ const Squads = () => {
     setIsBuilding(true);
   };
 
-  const handleSaveSquad = async (squadData: Squad) => {
-     if (!user) return;
-    const isUpdating = squads.some(s => s.id === squadData.id);
-
-    const dataToSave = {
-        ...squadData,
-        user_id: user.id,
-        game_version: gameVersion,
-        updated_at: new Date().toISOString()
-    };
-    
-    const { error } = isUpdating
-        ? await supabase.from('squads').update(dataToSave).eq('id', squadData.id)
-        : await supabase.from('squads').insert(dataToSave);
-
-    if (error) {
-      toast({ title: "Error saving squad.", description: error.message, variant: "destructive" });
+  const handleSaveSquad = async (squadData: Omit<Squad, 'id' | 'user_id' | 'created_at' | 'squad_players'>) => {
+    if (editingSquad) {
+      // We are updating an existing squad
+      await updateSquad(editingSquad.id, squadData);
     } else {
-      toast({ title: `Squad ${isUpdating ? 'Updated' : 'Created'}` });
-      const { data } = await supabase.from('squads').select('*').eq('user_id', user.id).eq('game_version', gameVersion).order('created_at', { ascending: false });
-      setSquads(data as Squad[] || []);
+      // We are creating a new squad
+      await createSquad(squadData);
     }
-
     setIsBuilding(false);
     setEditingSquad(null);
   };
 
   const handleDeleteSquad = async (squadId: string) => {
-    const { error } = await supabase.from('squads').delete().eq('id', squadId);
-    if (error) {
-        toast({ title: "Error deleting squad.", description: error.message, variant: "destructive"});
-    } else {
-        setSquads(squads.filter(s => s.id !== squadId));
-        toast({ title: "Squad Deleted" });
-    }
+    await deleteSquad(squadId);
+    toast({ title: "Squad Deleted" });
   };
-  
+
   const handleSetDefault = async (squadId: string) => {
-    if(!user) return;
-    // Set all other squads for this game version to not be default
-    await supabase.from('squads').update({ is_default: false }).eq('user_id', user.id).eq('game_version', gameVersion);
-    // Set the selected one as default
-    await supabase.from('squads').update({ is_default: true }).eq('id', squadId);
-    // Update local state to reflect change
-    setSquads(squads.map(s => ({...s, isDefault: s.id === squadId})));
+    // First, unset any other default squad for the current game version
+    const currentDefault = squads.find(s => s.is_default);
+    if (currentDefault) {
+      await updateSquad(currentDefault.id, { is_default: false });
+    }
+    // Set the new default squad
+    await updateSquad(squadId, { is_default: true });
     toast({ title: "Default Squad Updated" });
   };
+
+  if (loading) {
+      return <div>Loading your squads...</div>;
+  }
 
   if (isBuilding) {
     return (
         <SquadBuilder
           squad={editingSquad || undefined}
-          gameVersion={gameVersion} // CORRECT: Pass the global game version down
           onSave={handleSaveSquad}
           onCancel={() => setIsBuilding(false)}
         />
@@ -138,7 +92,7 @@ const Squads = () => {
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 rounded-full p-1" style={{backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border, borderWidth: 1}}>
-            {['FC25', 'FC26'].map(version => ( // CORRECT: Shows FC26
+            {['FC25', 'FC26'].map(version => (
               <Button
                 key={version}
                 size="sm"
@@ -162,8 +116,8 @@ const Squads = () => {
           {squads.map((squad) => (
             <div key={squad.id}>
               <Card
-                style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: squad.isDefault ? currentTheme.colors.primary : currentTheme.colors.border, '--tw-ring-color': currentTheme.colors.primary }}
-                className={`rounded-3xl shadow-depth-lg border-2 group transition-all duration-300 ${squad.isDefault ? 'ring-2 ring-offset-2 ring-offset-background' : ''}`}
+                style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: squad.is_default ? currentTheme.colors.primary : currentTheme.colors.border, '--tw-ring-color': currentTheme.colors.primary }}
+                className={`rounded-3xl shadow-depth-lg border-2 group transition-all duration-300 ${squad.is_default ? 'ring-2 ring-offset-2 ring-offset-background' : ''}`}
               >
                 <CardHeader className="pb-4">
                   <div className="flex items-start justify-between">
@@ -171,7 +125,7 @@ const Squads = () => {
                       <CardTitle className="text-2xl font-bold tracking-tight" style={{color: currentTheme.colors.heading}}>{squad.name}</CardTitle>
                       <p className="text-sm" style={{color: currentTheme.colors.textSecondary}}>{squad.formation}</p>
                     </div>
-                    {squad.isDefault && (
+                    {squad.is_default && (
                       <div className="flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-full" style={{backgroundColor: currentTheme.colors.primary, color: currentTheme.colors.primaryContrast}}>
                         <Shield size={14} />Default
                       </div>
@@ -184,16 +138,16 @@ const Squads = () => {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
                   </div>
                   <div className="grid grid-cols-3 gap-2 text-center text-sm">
-                    <div><p className="font-bold text-lg" style={{color: currentTheme.colors.text}}>{squad.gamesPlayed}</p><p style={{color: currentTheme.colors.textSecondary}}>Played</p></div>
-                    <div><p className="font-bold text-lg" style={{color: 'hsl(var(--primary-green))'}}>{squad.wins}</p><p style={{color: currentTheme.colors.textSecondary}}>Wins</p></div>
-                    <div><p className="font-bold text-lg" style={{color: 'hsl(var(--primary-red))'}}>{squad.losses}</p><p style={{color: currentTheme.colors.textSecondary}}>Losses</p></div>
+                    <div><p className="font-bold text-lg" style={{color: currentTheme.colors.text}}>{squad.games_played || 0}</p><p style={{color: currentTheme.colors.textSecondary}}>Played</p></div>
+                    <div><p className="font-bold text-lg" style={{color: 'hsl(var(--primary-green))'}}>{squad.wins || 0}</p><p style={{color: currentTheme.colors.textSecondary}}>Wins</p></div>
+                    <div><p className="font-bold text-lg" style={{color: 'hsl(var(--primary-red))'}}>{squad.losses || 0}</p><p style={{color: currentTheme.colors.textSecondary}}>Losses</p></div>
                   </div>
                 </CardContent>
                 <CardFooter className="flex justify-between p-4 bg-black/20 rounded-b-3xl">
                   <div className="flex gap-2">
-                    <Button size="sm" variant="outline" onClick={() => handleSetDefault(squad.id)} disabled={squad.isDefault} className="modern-button-secondary">
-                      <Star className={`h-4 w-4 mr-2 ${squad.isDefault ? 'text-yellow-400 fill-yellow-400' : ''}`} />
-                      {squad.isDefault ? 'Default' : 'Set Default'}
+                    <Button size="sm" variant="outline" onClick={() => handleSetDefault(squad.id)} disabled={squad.is_default} className="modern-button-secondary">
+                      <Star className={`h-4 w-4 mr-2 ${squad.is_default ? 'text-yellow-400 fill-yellow-400' : ''}`} />
+                      {squad.is_default ? 'Default' : 'Set Default'}
                     </Button>
                   </div>
                   <div className="flex gap-2">
