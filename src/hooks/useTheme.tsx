@@ -11,6 +11,7 @@ export interface Theme {
   };
 }
 
+// Your beautiful custom themes
 const themes: Record<string, Theme> = {
   futvisionary: {
     name: 'FUT Visionary',
@@ -44,10 +45,10 @@ const themes: Record<string, Theme> = {
       fifa: { blue: '#0052CC', green: '#00875A', gold: '#FFAB00', red: '#DE350B', purple: '#5E4DB2' }
     }
   },
+  // You can add your "Champions" and "Volt" themes back here
 };
 
 interface ThemeContextType {
-  currentTheme: Theme;
   currentThemeName: string;
   setTheme: (themeName: string) => void;
   themes: string[];
@@ -57,55 +58,34 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
-  const [currentThemeName, setCurrentThemeName] = useState<string>('futvisionary');
+  // Default to 'futvisionary' to ensure a dark theme on first load
+  const [currentThemeName, setCurrentThemeName] = useState<string>(() => {
+    return localStorage.getItem('futalyst-theme') || 'futvisionary';
+  });
 
+  // This useEffect is the heart of the fix. It runs whenever the theme name changes.
   useEffect(() => {
-    const savedTheme = localStorage.getItem('futalyst-theme');
-    if (savedTheme && themes[savedTheme]) {
-      setCurrentThemeName(savedTheme);
-    }
-  }, []);
+    const root = window.document.documentElement;
 
-  useEffect(() => {
-    const theme = themes[currentThemeName];
-    if (!theme) return;
-
-    const root = document.documentElement;
+    // 1. Remove any existing theme class
     root.classList.remove('light', 'dark');
-    root.classList.add(currentThemeName === 'light' ? 'light' : 'dark');
-    
-    // This part is for your custom inline styles, if you use them.
-    root.style.setProperty('--background', theme.colors.background);
-    root.style.setProperty('--foreground', theme.colors.text);
-    root.style.setProperty('--card', theme.colors.cardBg);
-    root.style.setProperty('--card-foreground', theme.colors.text);
-    root.style.setProperty('--popover', theme.colors.cardBg);
-    root.style.setProperty('--popover-foreground', theme.colors.text);
-    root.style.setProperty('--primary', theme.colors.primary);
-    root.style.setProperty('--primary-foreground', theme.colors.text);
-    root.style.setProperty('--secondary', theme.colors.secondary);
-    root.style.setProperty('--secondary-foreground', theme.colors.text);
-    root.style.setProperty('--muted', theme.colors.muted);
-    root.style.setProperty('--muted-foreground', theme.colors.muted);
-    root.style.setProperty('--accent', theme.colors.accent);
-    root.style.setProperty('--accent-foreground', theme.colors.text);
-    root.style.setProperty('--destructive', theme.colors.error);
-    root.style.setProperty('--border', theme.colors.border);
-    root.style.setProperty('--input', theme.colors.border);
-    root.style.setProperty('--ring', theme.colors.primary);
 
-  }, [currentThemeName]);
+    // 2. Add the correct theme class. All non-light themes are considered dark.
+    const newThemeClass = currentThemeName === 'light' ? 'light' : 'dark';
+    root.classList.add(newThemeClass);
+
+    // 3. Save the new theme choice to local storage so it persists
+    localStorage.setItem('futalyst-theme', currentThemeName);
+
+  }, [currentThemeName]); // Re-run this effect when currentThemeName changes
 
   const setTheme = (themeName: string) => {
     if (themes[themeName]) {
-      // THIS IS THE CRITICAL FIX: Save the theme to localStorage
-      localStorage.setItem('futalyst-theme', themeName);
       setCurrentThemeName(themeName);
     }
   };
 
   const value = {
-    currentTheme: themes[currentThemeName],
     currentThemeName,
     setTheme,
     themes: Object.keys(themes),
