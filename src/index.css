@@ -1,36 +1,51 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* THIS IS THE DEFINITIVE FIX:
-  We are defining the standard shadcn/ui variables (--background, --foreground, etc.)
-  and telling them to use the values from your custom theme variables 
-  (--theme-background, --theme-text, etc.) which will be set by your useTheme.tsx hook.
-  This creates a bridge that makes the two systems work together.
-*/
 @layer base {
   :root {
-    --background: var(--theme-background);
-    --foreground: var(--theme-text);
-    --card: var(--theme-card-bg);
-    --card-foreground: var(--theme-text);
-    --popover: var(--theme-card-bg);
-    --popover-foreground: var(--theme-text);
-    --primary: var(--theme-primary);
-    --primary-foreground: var(--theme-text);
-    --secondary: var(--theme-secondary);
-    --secondary-foreground: var(--theme-text);
-    --muted: var(--theme-muted);
-    --muted-foreground: var(--theme-text);
-    --accent: var(--theme-accent);
-    --accent-foreground: var(--theme-text);
-    --destructive: var(--theme-error);
-    --border: var(--theme-border);
-    --input: var(--theme-border);
-    --ring: var(--theme-primary);
+    /* Define fallback variables. The useTheme hook will override these. */
+    --background: hsl(220, 16%, 96%);
+    --foreground: hsl(211, 39%, 23%);
+    --card: hsl(0, 0%, 100%);
+    --card-foreground: hsl(211, 39%, 23%);
+    --popover: hsl(0, 0%, 100%);
+    --popover-foreground: hsl(211, 39%, 23%);
+    --primary: hsl(221, 100%, 40%);
+    --primary-foreground: hsl(0, 0%, 100%);
+    --secondary: hsl(248, 44%, 56%);
+    --secondary-foreground: hsl(0, 0%, 100%);
+    --muted: hsl(214, 12%, 47%);
+    --muted-foreground: hsl(214, 12%, 47%);
+    --accent: hsl(14, 86%, 47%);
+    --accent-foreground: hsl(0, 0%, 100%);
+    --destructive: hsl(14, 86%, 47%);
+    --border: hsla(221, 100%, 40%, 0.2);
+    --input: hsla(221, 100%, 40%, 0.2);
+    --ring: hsl(221, 100%, 40%);
     --radius: 0.75rem;
+  }
+
+  .dark {
+    /* Define dark mode fallback variables. */
+    --background: hsl(210, 15%, 8%);
+    --foreground: hsl(0, 0%, 92%);
+    --card: hsl(210, 22%, 7%);
+    --card-foreground: hsl(0, 0%, 92%);
+    --popover: hsl(210, 22%, 7%);
+    --popover-foreground: hsl(0, 0%, 92%);
+    --primary: hsl(191, 100%, 50%);
+    --primary-foreground: hsl(0, 0%, 92%);
+    --secondary: hsl(247, 78%, 69%);
+    --secondary-foreground: hsl(0, 0%, 92%);
+    --muted: hsl(220, 13%, 60%);
+    --muted-foreground: hsl(220, 13%, 60%);
+    --accent: hsl(149, 100%, 50%);
+    --accent-foreground: hsl(0, 0%, 92%);
+    --destructive: hsl(355, 70%, 55%);
+    --border: hsla(191, 100%, 50%, 0.2);
+    --input: hsla(191, 100%, 50%, 0.2);
+    --ring: hsl(191, 100%, 50%);
   }
 }
 
@@ -39,7 +54,7 @@
     @apply border-border;
   }
   body {
-    /* Let the useTheme hook handle the background gradient */
+    @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
     font-family: 'Poppins', sans-serif;
   }
