@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Squad, PlayerCard, SquadPosition, FORMATIONS, CardType, SquadPlayer } from '@/types/squads';
+import { Squad, PlayerCard, FORMATIONS, CardType, SquadPlayer } from '@/types/squads';
 import PlayerSearchModal from './PlayerSearchModal';
 import { Plus, Save, Trash2, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -13,6 +13,61 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from './ui/badge';
 import { useGameVersion } from '@/contexts/GameVersionContext';
+
+// --- Bench Player Slot Sub-Component ---
+// This new component handles the display for each player on the bench.
+
+interface BenchPlayerSlotProps {
+  slotId: string;
+  slotType: 'Substitute' | 'Reserve';
+  player: PlayerCard | undefined;
+  onPositionClick: (slotId: string) => void;
+  onRemovePlayer: (slotId: string, e?: React.MouseEvent) => void;
+  cardTypes: CardType[];
+}
+
+const BenchPlayerSlot = ({ slotId, slotType, player, onPositionClick, onRemovePlayer, cardTypes }: BenchPlayerSlotProps) => {
+    const getBenchBadgeStyle = (p: PlayerCard) => {
+        const cardType = cardTypes.find(ct => ct.id === p.card_type);
+        if (cardType) return { backgroundColor: cardType.primary_color, color: cardType.highlight_color, borderColor: cardType.secondary_color };
+        return { backgroundColor: '#555', color: '#FFF', borderColor: '#888' };
+    };
+
+    return (
+      <div 
+        className="flex items-center gap-3 p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors group" 
+        onClick={() => onPositionClick(slotId)}
+      >
+        {player ? (
+          <>
+            <Badge className="text-sm border" style={getBenchBadgeStyle(player)}>{player.rating}</Badge>
+            <div className="flex-1 min-w-0">
+              <p className="text-white font-medium truncate">{player.name}</p>
+              <p className="text-gray-400 text-sm">{player.position} • {player.club}</p>
+            </div>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={(e) => onRemovePlayer(slotId, e)} 
+              className="w-8 h-8 rounded-full flex items-center justify-center text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </>
+        ) : (
+          <div className="flex items-center gap-3 text-gray-400 w-full">
+            <div className="w-10 h-10 flex items-center justify-center bg-white/5 rounded-md">
+              <Plus className="h-4 w-4" />
+            </div>
+            <span>Add {slotType}</span>
+          </div>
+        )}
+      </div>
+    );
+}
+
+
+// --- Main Squad Builder Component ---
 
 interface SquadBuilderProps {
   squad?: Squad;
@@ -42,7 +97,6 @@ const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
     };
   });
   
-  // FIX: Use the unique position ID (e.g., 'starting-5') instead of just the position name.
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
   const [showPlayerModal, setShowPlayerModal] = useState(false);
 
@@ -64,17 +118,21 @@ const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
     if (!selectedSlotId) return;
   
     const currentFormation = FORMATIONS.find(f => f.name === squadData.formation);
-    const positionDetails = currentFormation?.positions.find(p => p.id === selectedSlotId);
-    if (!positionDetails) return;
+    // Find position details for starting XI, or define for bench
+    let positionName = 'SUB';
+    if (selectedSlotId.startsWith('starting-')) {
+        positionName = currentFormation?.positions.find(p => p.id === selectedSlotId)?.position || 'Unknown';
+    } else if (selectedSlotId.startsWith('res-')) {
+        positionName = 'RES';
+    }
 
     setSquadData(currentSquadData => {
-      // Remove any player that might already be in this specific slot
       const filteredPlayers = currentSquadData.squad_players.filter(p => p.slot_id !== selectedSlotId);
 
       const newPlayerEntry: Partial<SquadPlayer> = {
           player_id: player.id,
-          position: positionDetails.position, // The position name, e.g., "CDM"
-          slot_id: selectedSlotId, // The unique slot ID, e.g., "starting-6"
+          position: positionName,
+          slot_id: selectedSlotId,
           players: player 
       };
 
@@ -122,6 +180,10 @@ const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
       return squadData.squad_players.find(p => p.slot_id === slotId)?.players;
   }
 
+  // Define arrays for bench slots
+  const substituteSlots = Array.from({ length: 7 }, (_, i) => `sub-${i}`);
+  const reserveSlots = Array.from({ length: 5 }, (_, i) => `res-${i}`);
+
   return (
     <div className="space-y-6 animate-fade-in">
       <Card className="glass-card overflow-hidden">
@@ -139,7 +201,6 @@ const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
                     return (
                       <div key={pos.id} className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group" style={{ left: `${pos.x}%`, top: `${pos.y}%` }} onClick={() => handlePositionClick(pos.id)}>
                         {player ? (
-                          // FIX: Increased size of player cards by ~60%
                           <div className="relative w-24 text-center">
                             <div className={cn("w-20 h-20 rounded-full mx-auto flex flex-col items-center justify-center text-xs font-bold transition-all duration-200 group-hover:scale-110", player.is_evolution && "border-2 border-teal-400")} style={getCardStyle(player)}>
                               <div className="text-xl font-bold">{player.rating}</div>
@@ -151,7 +212,6 @@ const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
                             </button>
                           </div>
                         ) : (
-                          // FIX: Increased size of empty slots to match
                           <div className="w-24 text-center">
                             <div className="w-20 h-20 border-2 border-dashed border-white/50 rounded-full flex flex-col items-center justify-center text-white text-xs bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-all duration-200 group-hover:scale-110 mx-auto">
                               <Plus className="h-6 w-6" />
@@ -165,9 +225,39 @@ const SquadBuilder = ({ squad, onSave, onCancel }: SquadBuilderProps) => {
                 </div>
               </div>
             </TabsContent>
-            {/* Note: Subs and Reserves will need a similar logic update if they can have duplicate positions */}
-            <TabsContent value="substitutes" className="mt-4"><div className="grid grid-cols-1 md:grid-cols-2 gap-2">{/* BenchPlayerSlot mapping */}</div></TabsContent>
-            <TabsContent value="reserves" className="mt-4"><div className="grid grid-cols-1 md:grid-cols-2 gap-2">{/* BenchPlayerSlot mapping */}</div></TabsContent>
+            
+            <TabsContent value="substitutes" className="mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {substituteSlots.map(slotId => (
+                        <BenchPlayerSlot 
+                            key={slotId}
+                            slotId={slotId}
+                            slotType="Substitute"
+                            player={getPlayerForSlot(slotId)}
+                            onPositionClick={handlePositionClick}
+                            onRemovePlayer={handleRemovePlayer}
+                            cardTypes={cardTypes}
+                        />
+                    ))}
+                </div>
+            </TabsContent>
+
+            <TabsContent value="reserves" className="mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {reserveSlots.map(slotId => (
+                        <BenchPlayerSlot 
+                            key={slotId}
+                            slotId={slotId}
+                            slotType="Reserve"
+                            player={getPlayerForSlot(slotId)}
+                            onPositionClick={handlePositionClick}
+                            onRemovePlayer={handleRemovePlayer}
+                            cardTypes={cardTypes}
+                        />
+                    ))}
+                </div>
+            </TabsContent>
+
           </Tabs>
         </CardContent>
       </Card>
