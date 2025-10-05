@@ -91,7 +91,7 @@ export const useSquadData = () => {
       if (squad_players && squad_players.length > 0) {
         const playersToInsert = squad_players.map((p: any) => ({
           squad_id: newSquad.id,
-          player_id: p.player_id,
+          player_id: p.player_id || p.players.id,
           position: p.position,
           slot_id: p.slot_id,
         }));
@@ -102,6 +102,7 @@ export const useSquadData = () => {
       
       toast.success('Squad created successfully.');
       await fetchSquads();
+      return newSquad;
     } catch (error) {
       toast.error(`Error creating squad: ${error.message}`);
       console.error('Error creating squad:', error);
@@ -127,7 +128,7 @@ export const useSquadData = () => {
         if (squad_players && squad_players.length > 0) {
             const playersToInsert = squad_players.map((p: any) => ({
                 squad_id: squadId,
-                player_id: p.player_id,
+                player_id: p.player_id || p.players.id,
                 position: p.position,
                 slot_id: p.slot_id,
             }));
@@ -144,6 +145,28 @@ export const useSquadData = () => {
     }
   };
 
+  const duplicateSquad = async (squadId: string) => {
+    const originalSquad = squads.find(s => s.id === squadId);
+    if (!originalSquad) {
+      toast.error("Original squad not found.");
+      return;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { id, created_at, updated_at, is_default, ...restOfSquad } = originalSquad;
+
+    const newSquadData = {
+      ...restOfSquad,
+      name: `${originalSquad.name} (Copy)`,
+      is_default: false, // Duplicates are never the default
+      games_played: 0,
+      wins: 0,
+      losses: 0,
+    };
+    
+    await createSquad(newSquadData);
+  };
+  
   const deleteSquad = async (squadId: string) => {
     try {
       const { error } = await supabase.from('squads').delete().eq('id', squadId);
@@ -243,6 +266,7 @@ export const useSquadData = () => {
     fetchSquads,
     createSquad,
     updateSquad,
+    duplicateSquad,
     deleteSquad,
     getPlayerSuggestions,
     savePlayer,
