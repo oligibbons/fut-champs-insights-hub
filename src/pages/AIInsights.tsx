@@ -4,11 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useTheme } from '@/hooks/useTheme';
 import { useAccountData } from '@/hooks/useAccountData';
-import { generateInsights, Insight } from '@/utils/aiInsights'; // Updated to return structured insights
-import { 
-  Brain, 
-  TrendingUp, 
-  TrendingDown, 
+// Corrected the import to use the exported function name
+import { EnhancedAIGenerateInsights, Insight } from '@/utils/aiInsights'; 
+import {
+  Brain,
+  TrendingUp,
+  TrendingDown,
   RefreshCw,
   Lightbulb,
   AlertTriangle,
@@ -19,7 +20,8 @@ import {
 
 const AIInsights = () => {
   const { currentTheme } = useTheme();
-  const { weeks, loading: dataLoading } = useAccountData();
+  // Destructure currentAccount to use it later
+  const { weeks, loading: dataLoading, currentAccount } = useAccountData(); 
   const [insights, setInsights] = useState<Insight[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +36,8 @@ const AIInsights = () => {
 
     try {
       const summary = generateSummaryForAI(allGames);
-      const generatedInsights = await generateInsights(summary); // Expects structured JSON
+      // Corrected the function call
+      const generatedInsights = await EnhancedAIGenerateInsights(summary);
       setInsights(generatedInsights);
       setLastGenerated(new Date());
     } catch (e) {
@@ -52,15 +55,14 @@ const AIInsights = () => {
     const winRate = totalGames > 0 ? (wins / totalGames) * 100 : 0;
 
     const tagCounts = games
-        .flatMap(game => game.tags || [])
-        .reduce((acc: any, tag: string) => {
-            acc[tag] = (acc[tag] || 0) + 1;
-            return acc;
-        }, {});
-        
+      .flatMap(game => game.tags || [])
+      .reduce((acc: any, tag: string) => {
+        acc[tag] = (acc[tag] || 0) + 1;
+        return acc;
+      }, {});
+      
     const sortedTags = Object.entries(tagCounts).sort(([, a]: any, [, b]: any) => b - a);
 
-    // Create a detailed prompt for the AI
     let prompt = `
       Analyze the following FIFA/FC Champions performance data. Based on this data, identify 3 key strengths, 3 areas for improvement, and 2 notable opportunities or patterns.
       
@@ -85,7 +87,6 @@ const AIInsights = () => {
   };
 
   const getInsightTypeColor = (category: string) => {
-    // Assuming you have these colors defined in your theme or CSS
     switch (category) {
       case 'strength': return 'text-green-500';
       case 'weakness': return 'text-red-500';
@@ -101,11 +102,11 @@ const AIInsights = () => {
   
   const mostUsedTags = useMemo(() => {
     const tagCounts = allGames
-        .flatMap(game => game.tags || [])
-        .reduce((acc: any, tag: string) => {
-            acc[tag] = (acc[tag] || 0) + 1;
-            return acc;
-        }, {});
+      .flatMap(game => game.tags || [])
+      .reduce((acc: any, tag: string) => {
+        acc[tag] = (acc[tag] || 0) + 1;
+        return acc;
+      }, {});
     return Object.entries(tagCounts).sort(([, a]: any, [, b]: any) => b - a).slice(0, 5);
   }, [allGames]);
 
@@ -145,20 +146,20 @@ const AIInsights = () => {
             )}
             {isGenerating ? 'Analyzing...' : (allGames.length < 5 ? `Log ${5 - allGames.length} more games` : 'Generate Insights')}
           </Button>
-           <p className="text-xs text-muted-foreground">
-            Analysis is more accurate with more data. A minimum of 5 games is required.
-          </p>
+            <p className="text-xs text-muted-foreground">
+              Analysis is more accurate with more data. A minimum of 5 games is required.
+            </p>
         </CardContent>
       </Card>
 
       {error && (
         <Card className="border-destructive/50">
           <CardContent className="p-4 flex items-center gap-4">
-             <AlertTriangle className="h-8 w-8 text-destructive" />
-             <div>
+              <AlertTriangle className="h-8 w-8 text-destructive" />
+              <div>
                 <h4 className="font-semibold text-destructive">Analysis Failed</h4>
                 <p className="text-sm text-muted-foreground">{error}</p>
-             </div>
+              </div>
           </CardContent>
         </Card>
       )}
@@ -247,9 +248,9 @@ const AIInsights = () => {
       {!isGenerating && insights.length === 0 && !error && allGames.length > 0 && (
          <Card>
            <CardContent className="text-center py-12">
-             <Brain className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
-             <h3 className="text-xl font-medium mb-2">Ready for Analysis</h3>
-             <p className="text-muted-foreground mb-6">
+            <Brain className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
+            <h3 className="text-xl font-medium mb-2">Ready for Analysis</h3>
+            <p className="text-muted-foreground mb-6">
                Click the "Generate Insights" button to get your personalized performance breakdown.
              </p>
            </CardContent>
@@ -279,4 +280,3 @@ const AIInsights = () => {
 };
 
 export default AIInsights;
-
