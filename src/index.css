@@ -4,8 +4,7 @@
 
 @layer base {
   :root {
-    /* Define fallback variables. The useTheme hook will override these. */
-    --background: hsl(220, 16%, 96%);
+    --background: hsl(220, 16%, 96%); /* Fallback for light mode */
     --foreground: hsl(211, 39%, 23%);
     --card: hsl(0, 0%, 100%);
     --card-foreground: hsl(211, 39%, 23%);
@@ -27,8 +26,7 @@
   }
 
   .dark {
-    /* Define dark mode fallback variables. */
-    --background: hsl(210, 15%, 8%);
+    --background: hsl(210, 15%, 8%); /* Fallback for dark mode */
     --foreground: hsl(0, 0%, 92%);
     --card: hsl(210, 22%, 7%);
     --card-foreground: hsl(0, 0%, 92%);
