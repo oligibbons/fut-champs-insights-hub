@@ -89,7 +89,7 @@ const SquadBuilder = ({ squad, gameVersion, onSave, onCancel }: SquadBuilderProp
   };
   
   const getCardStyle = (player: PlayerCard) => {
-      const cardType = cardTypes.find(ct => ct.id === player.cardType);
+      const cardType = cardTypes.find(ct => ct.id === player.card_type); // CORRECTED: was cardType
       if (cardType) return { background: `linear-gradient(135deg, ${cardType.primary_color} 50%, ${cardType.secondary_color} 50%)`, color: cardType.highlight_color };
       return { background: `linear-gradient(135deg, #333 50%, #555 50%)`, color: '#FFFFFF' };
   };
@@ -115,7 +115,7 @@ const SquadBuilder = ({ squad, gameVersion, onSave, onCancel }: SquadBuilderProp
 
 const BenchPlayerSlot = ({ position, onPositionClick, onRemovePlayer, cardTypes }: { position: SquadPosition, onPositionClick: (pos: SquadPosition) => void, onRemovePlayer: (id: string) => void, cardTypes: CardType[]}) => {
     const getBenchBadgeStyle = (player: PlayerCard) => {
-        const cardType = cardTypes.find(ct => ct.id === player.cardType);
+        const cardType = cardTypes.find(ct => ct.id === player.card_type); // CORRECTED: was cardType
         if (cardType) return { backgroundColor: cardType.primary_color, color: cardType.highlight_color, borderColor: cardType.secondary_color };
         return { backgroundColor: '#555', color: '#FFF', borderColor: '#888' };
     };
