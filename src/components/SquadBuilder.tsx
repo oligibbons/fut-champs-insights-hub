@@ -33,7 +33,7 @@ const SquadBuilder = ({ squad, gameVersion, onSave, onCancel }: SquadBuilderProp
       id: `squad-${Date.now()}`,
       name: 'New Squad',
       formation: preferredFormation.name,
-      startingXI: preferredFormation.positions.map((pos) => ({...pos, player: undefined})),
+      startingXI: preferredFormation.positions.map(pos => ({...pos, player: undefined})),
       substitutes: Array.from({ length: 7 }, (_, i) => ({ id: `sub-${i}`, position: 'SUB', player: undefined, x: 0, y: 0 })),
       reserves: Array.from({ length: 5 }, (_, i) => ({ id: `res-${i}`, position: 'RES', player: undefined, x: 0, y: 0 })),
       createdAt: new Date().toISOString(),
@@ -89,7 +89,7 @@ const SquadBuilder = ({ squad, gameVersion, onSave, onCancel }: SquadBuilderProp
   };
   
   const getCardStyle = (player: PlayerCard) => {
-      const cardType = cardTypes.find(ct => ct.id === player.card_type); // CORRECTED: was cardType
+      const cardType = cardTypes.find(ct => ct.id === player.card_type);
       if (cardType) return { background: `linear-gradient(135deg, ${cardType.primary_color} 50%, ${cardType.secondary_color} 50%)`, color: cardType.highlight_color };
       return { background: `linear-gradient(135deg, #333 50%, #555 50%)`, color: '#FFFFFF' };
   };
