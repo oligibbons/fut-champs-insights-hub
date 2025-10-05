@@ -12,7 +12,8 @@ import { useDataSync } from '@/hooks/useDataSync';
 import AccountSelector from '@/components/AccountSelector';
 import UserAccountSettings from '@/components/UserAccountSettings';
 import DataManagement from '@/components/DataManagement';
-import { Settings as SettingsIcon, Palette, Gamepad2, User, BarChart3, Target, Database } from 'lucide-react';
+// THIS IS THE FIX: Added 'Trophy' to the import list
+import { Settings as SettingsIcon, Palette, Gamepad2, User, BarChart3, Target, Database, Trophy } from 'lucide-react';
 
 // Interfaces for settings, derived from your original file
 interface DashboardSettings {
@@ -243,3 +244,4 @@ const Settings = () => {
 };
 
 export default Settings;
+
