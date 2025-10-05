@@ -12,45 +12,26 @@ import { useDataSync } from '@/hooks/useDataSync';
 import AccountSelector from '@/components/AccountSelector';
 import UserAccountSettings from '@/components/UserAccountSettings';
 import DataManagement from '@/components/DataManagement';
-import { Settings as SettingsIcon, Palette, Gamepad2, User, BarChart3, Target, Database, Trophy, Sparkles } from 'lucide-react';
+import { Settings as SettingsIcon, Palette, Gamepad2, User, BarChart3, Target, Database } from 'lucide-react';
 
 // Interfaces for settings, derived from your original file
 interface DashboardSettings {
-  showTopPerformers: boolean;
-  showXGAnalysis: boolean;
-  showAIInsights: boolean;
-  showFormAnalysis: boolean;
-  showWeaknesses: boolean;
-  showOpponentAnalysis: boolean;
-  showPositionalAnalysis: boolean;
-  showRecentTrends: boolean;
-  showAchievements: boolean;
-  showTargetProgress: boolean;
-  showTimeAnalysis: boolean;
-  showStressAnalysis: boolean;
-  showMatchFacts: boolean;
-  showWeeklyScores: boolean;
-  showRecentForm: boolean;
+  showTopPerformers: boolean; showXGAnalysis: boolean; showAIInsights: boolean; showFormAnalysis: boolean;
+  showWeaknesses: boolean; showOpponentAnalysis: boolean; showPositionalAnalysis: boolean; showRecentTrends: boolean;
+  showAchievements: boolean; showTargetProgress: boolean; showTimeAnalysis: boolean; showStressAnalysis: boolean;
+  showMatchFacts: boolean; showWeeklyScores: boolean; showRecentForm: boolean;
 }
 
 interface CurrentWeekSettings {
-  showTopPerformers: boolean;
-  showXGAnalysis: boolean;
-  showAIInsights: boolean;
-  showFormAnalysis: boolean;
-  showWeaknesses: boolean;
-  showOpponentAnalysis: boolean;
-  showPositionalAnalysis: boolean;
-  showRecentTrends: boolean;
-  showAchievements: boolean;
-  showTargetProgress: boolean;
-  showTimeAnalysis: boolean;
-  showStressAnalysis: boolean;
+  showTopPerformers: boolean; showXGAnalysis: boolean; showAIInsights: boolean; showFormAnalysis: boolean;
+  showWeaknesses: boolean; showOpponentAnalysis: boolean; showPositionalAnalysis: boolean; showRecentTrends: boolean;
+  showAchievements: boolean; showTargetProgress: boolean; showTimeAnalysis: boolean; showStressAnalysis: boolean;
   showCurrentRunStats: boolean;
 }
 
 const Settings = () => {
-  const { theme, setTheme } = useTheme();
+  // THIS IS THE CRITICAL FIX: We are now using all the correct data from your custom useTheme hook
+  const { currentThemeName, setTheme, themes: themeNames, themeData } = useTheme();
   const { toast } = useToast();
   const { gameVersion, setGameVersion } = useGameVersion();
   const { settings, setSettings } = useDataSync();
@@ -95,7 +76,6 @@ const Settings = () => {
   };
   
   const resetSettings = () => {
-    // Note: Re-declaring defaults as they were in your original file.
     const defaultDashboard: DashboardSettings = {
       showTopPerformers: true, showXGAnalysis: true, showAIInsights: true, showFormAnalysis: true,
       showWeaknesses: true, showOpponentAnalysis: true, showPositionalAnalysis: true, showRecentTrends: true,
@@ -169,18 +149,25 @@ const Settings = () => {
           <AccountSelector />
         </TabsContent>
 
+        {/* --- THIS ENTIRE SECTION IS NOW FIXED --- */}
         <TabsContent value="appearance" className="mt-6">
           <Card>
             <CardHeader><CardTitle>Theme & Appearance</CardTitle></CardHeader>
             <CardContent>
-               <div className="space-y-2">
+              <div className="space-y-2">
                 <Label htmlFor="theme-selector">Theme</Label>
-                <Select value={theme} onValueChange={(value) => setTheme(value as 'light' | 'dark' | 'system')}>
-                  <SelectTrigger id="theme-selector" className="w-full md:w-[240px]"><SelectValue /></SelectTrigger>
+                {/* It now correctly uses your custom themes */}
+                <Select value={currentThemeName} onValueChange={(value) => setTheme(value)}>
+                  <SelectTrigger id="theme-selector" className="w-full md:w-[240px]">
+                    <SelectValue placeholder="Select a theme" />
+                  </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="light">Light</SelectItem>
-                    <SelectItem value="dark">Dark</SelectItem>
-                    <SelectItem value="system">System</SelectItem>
+                    {/* It now maps over your custom themes */}
+                    {themeNames.map((themeKey) => (
+                      <SelectItem key={themeKey} value={themeKey}>
+                        {themeData[themeKey]?.name || themeKey}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <p className="text-sm text-muted-foreground">Choose how FUTTrackr looks to you.</p>
