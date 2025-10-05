@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useSquadData } from '@/hooks/useSquadData';
-import { Squad } from '@/types/squads';
+import { Squad, CardType } from '@/types/squads';
 import SquadBuilder from '@/components/SquadBuilder';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
-import { Plus, Trash2, Edit, Star, Users, Shield } from 'lucide-react';
+import { Plus, Trash2, Edit, Star, Users, Shield, Copy } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,13 +20,40 @@ import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/hooks/useTheme';
 import { useGameVersion } from '@/contexts/GameVersionContext';
 
+// New component for the auto-generated squad image
+const SquadVisual = ({ squad, cardTypes }: { squad: Squad, cardTypes: CardType[] }) => {
+    const getCardColor = (cardType: string) => {
+        const type = cardTypes.find(ct => ct.id === cardType);
+        return type ? type.primary_color : '#555'; // Fallback color
+    };
+
+    const startingXI = squad.squad_players?.filter(p => p.slot_id?.startsWith('starting-')).slice(0, 11) || [];
+
+    if (startingXI.length === 0) {
+        return <Users className="h-16 w-16 text-muted-foreground" />;
+    }
+
+    return (
+        <div className="grid grid-cols-4 gap-2 p-4">
+            {startingXI.map((playerSlot) => (
+                <div 
+                    key={playerSlot.id} 
+                    className="w-8 h-8 rounded-full border-2 border-white/20"
+                    style={{ backgroundColor: getCardColor(playerSlot.players.card_type) }}
+                    title={playerSlot.players.name}
+                />
+            ))}
+        </div>
+    );
+};
+
+
 const Squads = () => {
   const { toast } = useToast();
   const { currentTheme } = useTheme();
   const { gameVersion, setGameVersion } = useGameVersion();
 
-  // CORRECT: Using the centralized hook for all data operations
-  const { squads, createSquad, updateSquad, deleteSquad, loading } = useSquadData();
+  const { squads, createSquad, updateSquad, deleteSquad, duplicateSquad, cardTypes, loading } = useSquadData();
 
   const [isBuilding, setIsBuilding] = useState(false);
   const [editingSquad, setEditingSquad] = useState<Squad | null>(null);
@@ -41,12 +68,15 @@ const Squads = () => {
     setIsBuilding(true);
   };
 
-  const handleSaveSquad = async (squadData: Omit<Squad, 'id' | 'user_id' | 'created_at' | 'squad_players'>) => {
+  const handleDuplicateSquad = async (squadId: string) => {
+    await duplicateSquad(squadId);
+    toast({ title: "Squad Duplicated", description: "A copy of the squad has been created." });
+  };
+
+  const handleSaveSquad = async (squadData: any) => {
     if (editingSquad) {
-      // We are updating an existing squad
       await updateSquad(editingSquad.id, squadData);
     } else {
-      // We are creating a new squad
       await createSquad(squadData);
     }
     setIsBuilding(false);
@@ -59,12 +89,10 @@ const Squads = () => {
   };
 
   const handleSetDefault = async (squadId: string) => {
-    // First, unset any other default squad for the current game version
     const currentDefault = squads.find(s => s.is_default);
     if (currentDefault) {
       await updateSquad(currentDefault.id, { is_default: false });
     }
-    // Set the new default squad
     await updateSquad(squadId, { is_default: true });
     toast({ title: "Default Squad Updated" });
   };
@@ -134,7 +162,7 @@ const Squads = () => {
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="aspect-video rounded-xl mb-4 overflow-hidden relative flex items-center justify-center" style={{backgroundColor: currentTheme.colors.background}}>
-                    <Users className="h-16 w-16" style={{color: currentTheme.colors.textSecondary}}/>
+                    <SquadVisual squad={squad} cardTypes={cardTypes} />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
                   </div>
                   <div className="grid grid-cols-3 gap-2 text-center text-sm">
@@ -151,6 +179,7 @@ const Squads = () => {
                     </Button>
                   </div>
                   <div className="flex gap-2">
+                    <Button size="icon" variant="ghost" onClick={() => handleDuplicateSquad(squad.id)} className="hover:bg-white/20"><Copy className="h-4 w-4" /></Button>
                     <Button size="icon" variant="ghost" onClick={() => handleEditSquad(squad)} className="hover:bg-white/20"><Edit className="h-4 w-4" /></Button>
                     <AlertDialog><AlertDialogTrigger asChild><Button size="icon" variant="ghost" className="text-red-500 hover:bg-red-500/20 hover:text-red-400"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
                       <AlertDialogContent>
