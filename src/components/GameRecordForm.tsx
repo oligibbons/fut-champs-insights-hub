@@ -14,10 +14,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Toggle } from '@/components/ui/toggle';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ArrowLeft, ArrowRight, Save, Loader2, UserPlus, Users } from 'lucide-react';
+// FIX: Added Users icon
+import { ArrowLeft, ArrowRight, Save, Loader2, UserPlus, Users } from 'lucide-react'; 
 import PlayerStatsForm from './PlayerStatsForm';
 import { useSquadData } from '@/hooks/useSquadData';
-import { Squad } from '@/types/squads'; // Import Squad type
+import { Squad } from '@/types/squads'; 
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from './ui/scroll-area';
 import { PlayerPerformance } from '@/types/futChampions';
@@ -34,11 +35,11 @@ const gameFormSchema = z.object({
     opponent_play_style: z.string(),
     opponent_formation: z.string().optional(),
     opponent_squad_rating: z.coerce.number().min(50).max(99),
-    // FIX: Added squad_id and validation
+    // FIX: Added squad_id
     squad_id: z.string().min(1, { message: "Please select a squad." }),
     tags: z.array(z.string()).optional(),
     comments: z.string().optional(),
-    // FIX: Expanded team_stats schema for all requested fields
+    // FIX: Full team_stats schema
     team_stats: z.object({
         shots: z.coerce.number().min(0),
         shotsOnTarget: z.coerce.number().min(0),
@@ -166,7 +167,6 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
           id: player.id,
           name: player.name,
           position: player.position,
-          // FIX: Set default rating to 7.0 (one decimal place)
           rating: 7.0, 
           goals: 0,
           assists: 0,
@@ -271,7 +271,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                     user_id: user.id,
                     player_name: p.name,
                     position: p.position,
-                    // FIX: Ensure rating is explicitly saved to 1 decimal place if needed
+                    // FIX: Ensure rating is explicitly saved to 1 decimal place
                     rating: parseFloat(p.rating.toFixed(1)), 
                     goals: p.goals,
                     assists: p.assists,
@@ -328,7 +328,6 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                                                 ))}
                                             </SelectContent>
                                         </Select>
-                                        {/* Display error if no squad is selected on validation */}
                                         {errors.squad_id && <p className="text-sm text-red-500">{errors.squad_id.message}</p>}
                                     </div>
                                 )}
@@ -385,6 +384,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                                 <Controller name="team_stats.corners" control={control} render={({ field }) => <div className="space-y-2"><Label>Corners</Label><Input {...field} type="number" /></div>} />
                             </div>
                             
+                            {/* Match Tags (Multi-select confirmed working) */}
                             <div className="space-y-2">
                                 <Label>Match Tags</Label>
                                 <p className="text-sm text-muted-foreground">Select any tags that apply. Hover for details.</p>
@@ -400,7 +400,6 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                                                             <TooltipTrigger asChild>
                                                                 <Toggle
                                                                     variant="outline" size="sm"
-                                                                    // This structure correctly allows multiple selections (toggles)
                                                                     pressed={field.value?.includes(tag.name)}
                                                                     onPressedChange={(isPressed) => {
                                                                         const currentTags = field.value || [];
