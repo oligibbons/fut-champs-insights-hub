@@ -4,12 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useTheme } from '@/hooks/useTheme';
 import { useAccountData } from '@/hooks/useAccountData';
-// Corrected the import path to use the correct file
-import { EnhancedAIGenerateInsights, Insight } from '@/utils/enhancedAiInsights';
-import {
-  Brain,
-  TrendingUp,
-  TrendingDown,
+// Corrected the import to use the exported function name
+import { generateEnhancedAIInsights, Insight } from '@/utils/aiInsights'; 
+import { 
+  Brain, 
+  TrendingUp, 
+  TrendingDown, 
   RefreshCw,
   Lightbulb,
   AlertTriangle,
@@ -20,7 +20,7 @@ import {
 
 const AIInsights = () => {
   const { currentTheme } = useTheme();
-  const { weeks, loading: dataLoading, currentAccount } = useAccountData();
+  const { weeks, loading: dataLoading } = useAccountData();
   const [insights, setInsights] = useState<Insight[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,8 +34,8 @@ const AIInsights = () => {
     setInsights([]);
 
     try {
-      const summary = generateSummaryForAI(allGames);
-      const generatedInsights = await EnhancedAIGenerateInsights(summary);
+      // The generateEnhancedAIInsights function now takes the 'weeks' array directly
+      const generatedInsights = await generateEnhancedAIInsights(weeks); 
       setInsights(generatedInsights);
       setLastGenerated(new Date());
     } catch (e) {
@@ -44,36 +44,6 @@ const AIInsights = () => {
     } finally {
       setIsGenerating(false);
     }
-  };
-
-  const generateSummaryForAI = (games: any[]) => {
-    const totalGames = games.length;
-    const wins = games.filter(g => g.result === 'win').length;
-    const losses = games.filter(g => g.result === 'loss').length;
-    const winRate = totalGames > 0 ? (wins / totalGames) * 100 : 0;
-
-    const tagCounts = games
-      .flatMap(game => game.tags || [])
-      .reduce((acc: any, tag: string) => {
-        acc[tag] = (acc[tag] || 0) + 1;
-        return acc;
-      }, {});
-
-    const sortedTags = Object.entries(tagCounts).sort(([, a]: any, [, b]: any) => b - a);
-
-    // Create a detailed prompt for the AI
-    let prompt = `
-      Analyze the following FIFA/FC Champions performance data. Based on this data, identify 3 key strengths, 3 areas for improvement, and 2 notable opportunities or patterns.
-      
-      Overall Performance:
-      - Total Games: ${totalGames}, Wins: ${wins}, Losses: ${losses}, Win Rate: ${winRate.toFixed(1)}%
-
-      Most Frequent Match Tags:
-      ${sortedTags.slice(0, 5).map(([tag, count]) => `- ${tag}: ${count} times`).join('\n')}
-
-      Your task is to return a JSON array of insight objects. Each object must have the following properties: 'id' (a unique string), 'title' (a short, descriptive title), 'description' (a one-sentence explanation), 'category' ('strength', 'weakness', or 'opportunity'), and 'priority' ('high', 'medium', or 'low'). Be analytical and provide actionable feedback.
-    `;
-    return prompt;
   };
 
   const getInsightIcon = (category: string) => {
@@ -99,13 +69,13 @@ const AIInsights = () => {
     const priorityOrder: Record<string, number> = { high: 3, medium: 2, low: 1 };
     return (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0);
   });
-
+  
   const mostUsedTags = useMemo(() => {
     const tagCounts = allGames
       .flatMap(game => game.tags || [])
       .reduce((acc: any, tag: string) => {
-        acc[tag] = (acc[tag] || 0) + 1;
-        return acc;
+          acc[tag] = (acc[tag] || 0) + 1;
+          return acc;
       }, {});
     return Object.entries(tagCounts).sort(([, a]: any, [, b]: any) => b - a).slice(0, 5);
   }, [allGames]);
@@ -256,9 +226,9 @@ const AIInsights = () => {
            </CardContent>
          </Card>
       )}
-
+      
       {dataLoading && (
-        <div className="flex justify-center items-center h-64">
+        <div className="flex justify-center items-.center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <p className="ml-4 text-muted-foreground">Loading your data...</p>
         </div>
