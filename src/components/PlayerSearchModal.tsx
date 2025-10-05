@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { PlayerCard, CardType } from '@/types/squads'; // Correctly import CardType
+import { PlayerCard, CardType } from '@/types/squads';
 import { useSquadData } from '@/hooks/useSquadData';
 import { Search, Plus, User, Edit } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -16,7 +16,7 @@ interface PlayerSearchModalProps {
   onClose: () => void;
   onPlayerSelect: (player: PlayerCard) => void;
   position?: string;
-  cardTypes: CardType[]; // Now correctly typed and expected as a prop
+  cardTypes: CardType[]; // This prop is the single source of truth for card types
 }
 
 const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position, cardTypes }: PlayerSearchModalProps) => {
@@ -31,7 +31,7 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position, cardType
     name: '',
     position: position || 'CM',
     rating: 75,
-    cardType: cardTypes.find(ct => ct.name.toLowerCase() === 'gold')?.id || cardTypes[0]?.id || '',
+    cardType: cardTypes.find(ct => ct.is_default)?.id || cardTypes[0]?.id || '',
     club: '',
     nationality: '',
     league: '',
@@ -53,13 +53,12 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position, cardType
     }
   }, [searchTerm, getPlayerSuggestions]);
 
-  // When the modal opens or the position/cardTypes props change, update the new player form
   useEffect(() => {
     if (isOpen) {
         setNewPlayer(prev => ({ 
             ...prev, 
             position: position || 'CM',
-            cardType: cardTypes.find(ct => ct.name.toLowerCase() === 'gold')?.id || cardTypes[0]?.id || ''
+            cardType: cardTypes.find(ct => ct.is_default)?.id || cardTypes[0]?.id || ''
         }));
     }
   }, [isOpen, position, cardTypes]);
@@ -120,16 +119,16 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position, cardType
     setShowCreateForm(false);
     setEditingPlayer(null);
     setNewPlayer({
-        name: '', position: position || 'CM', rating: 75, cardType: cardTypes.find(ct => ct.name.toLowerCase() === 'gold')?.id || cardTypes[0]?.id || '',
+        name: '', position: position || 'CM', rating: 75, cardType: cardTypes.find(ct => ct.is_default)?.id || cardTypes[0]?.id || '',
         club: '', nationality: '', league: '', pace: 75, shooting: 75, passing: 75,
         dribbling: 75, defending: 75, physical: 75, price: 0, isEvolution: false
     });
   };
 
-  const getCardTypeColor = (cardType: PlayerCard['cardType']) => {
+  const getCardTypeStyle = (cardType: PlayerCard['cardType']) => {
     const customType = cardTypes.find(ct => ct.id === cardType);
-    if(customType) return { background: customType.primary_color, color: customType.highlight_color };
-    return { background: '#FFD700', color: 'black'};
+    if(customType) return { background: `linear-gradient(135deg, ${customType.primary_color} 50%, ${customType.secondary_color} 50%)`, color: customType.highlight_color };
+    return { background: '#888', color: 'white'}; // Simple fallback
   };
 
   const handleInputChange = (field: keyof PlayerCard, value: string) => {
@@ -154,7 +153,7 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position, cardType
               {suggestions.map((player) => (
                 <div key={player.id} className="flex items-center justify-between p-3 bg-gray-800 rounded-lg group">
                   <div className="flex items-center gap-3 flex-1 cursor-pointer" onClick={() => onPlayerSelect(player)}>
-                    <Badge style={getCardTypeColor(player.cardType)} className="text-xs">{player.rating}</Badge>
+                    <Badge style={getCardTypeStyle(player.cardType)} className="text-xs">{player.rating}</Badge>
                     <div><p className="font-medium">{player.name}</p><p className="text-gray-400 text-sm">{player.position} • {player.club}</p></div>
                   </div>
                   <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleEditPlayer(player); }} className="opacity-0 group-hover:opacity-100 transition-opacity bg-gray-700 border-gray-600"><Edit className="h-3 w-3" /></Button>
