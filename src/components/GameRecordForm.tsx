@@ -208,7 +208,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                     size="icon"
                     className="w-8 h-8 p-0"
                     onClick={() => adjustNumericalValue(name, -1, step)}
-                    onMouseDown={(e) => e.preventDefault()} // FIX: Prevents input blur/keyboard close
+                    onMouseDown={(e) => e.preventDefault()} // CRITICAL FIX: Prevents input blur/keyboard close
                     disabled={isMin}
                 >
                     <Minus className="h-3 w-3" />
@@ -236,7 +236,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                     size="icon"
                     className="w-8 h-8 p-0"
                     onClick={() => adjustNumericalValue(name, 1, step)}
-                    onMouseDown={(e) => e.preventDefault()} // FIX: Prevents input blur/keyboard close
+                    onMouseDown={(e) => e.preventDefault()} // CRITICAL FIX: Prevents input blur/keyboard close
                 >
                     <Plus className="h-3 w-3" />
                 </Button>
@@ -420,7 +420,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                             <div className="text-center">
                                 <Label className="text-lg font-semibold">Final Score</Label>
                                 <div className="flex items-center justify-center gap-2 md:gap-4 mt-2">
-                                    {/* FIX: Unique Steppers for Your Goals */}
+                                    {/* FIX: Unique Steppers for Your Goals (user_goals) */}
                                     <div className="flex flex-col items-center">
                                         <Label className="text-sm font-medium text-primary mb-1">Your Goals</Label>
                                         <div className="flex items-center space-x-1">
@@ -432,7 +432,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                                     
                                     <span className="text-5xl font-bold text-muted-foreground mx-2 pt-6">:</span>
                                     
-                                    {/* FIX: Unique Steppers for Opponent Goals */}
+                                    {/* FIX: Unique Steppers for Opponent Goals (opponent_goals) */}
                                     <div className="flex flex-col items-center">
                                         <Label className="text-sm font-medium text-red-500 mb-1">Opponent Goals</Label>
                                         <div className="flex items-center space-x-1">
@@ -444,7 +444,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                                 </div>
                             </div>
                             
-                            {/* FIX: Duration with universal Steppers */}
+                            {/* FIX: Duration with universal Steppers and mobile fix */}
                             <NumberInputWithSteppers name="duration" label="Match Duration (Mins)" step={5} className="space-y-2" inputClassName="h-10 text-base" minInputWidth="w-full" />
                             <p className="text-xs text-muted-foreground">Enter less than 90 if the match ended early.</p>
                         </div>
@@ -500,8 +500,9 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                                                             <TooltipTrigger asChild>
                                                                 <Toggle
                                                                     variant="outline" size="sm"
-                                                                    // FIX: Array multi-select logic re-verified.
-                                                                    pressed={field.value?.includes(tag.name)}
+                                                                    // CRITICAL FIX: The logic is sound for multi-select. 
+                                                                    // We confirm the value is an array and update it immutably.
+                                                                    pressed={Array.isArray(field.value) && field.value.includes(tag.name)}
                                                                     onPressedChange={(isPressed) => {
                                                                         const currentTags = Array.isArray(field.value) ? field.value : [];
                                                                         const newTags = isPressed
