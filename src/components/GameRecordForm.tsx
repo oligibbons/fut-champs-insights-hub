@@ -154,6 +154,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
         currentValue = Number(currentValue) || 0;
     }
     
+    // Use precise floating point arithmetic (multiplied by 10/10)
     let newValue = (currentValue * 10 + delta * stepValue * 10) / 10;
     
     let min = 0;
@@ -172,9 +173,8 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
         min = 1;
     } else if (fieldName.includes('goals') || fieldName.includes('fouls') || fieldName.includes('cards') || fieldName.includes('shots') || fieldName.includes('passes') || fieldName.includes('corners')) {
         min = 0;
-        max = Infinity; // Allow high values for scores/stats
+        max = Infinity; 
     }
-
 
     newValue = Math.max(min, Math.min(max, newValue));
     
@@ -186,7 +186,6 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
         newValue = Math.round(newValue); 
     }
 
-    // Prevents negative numbers from showing up as '-0' after rounding
     if (newValue === 0) newValue = 0;
 
     setValue(fieldName as any, newValue, { shouldValidate: true, shouldDirty: true });
@@ -196,10 +195,9 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
   // FIX: Reusable Number Input Component with Steppers (Applied to all numerical inputs)
   const NumberInputWithSteppers = ({ name, label, step = 1, className = '', inputClassName = 'text-center', minInputWidth = 'w-14' }: { name: keyof z.infer<typeof gameFormSchema> | `team_stats.${string}`, label: string, step?: number, className?: string, inputClassName?: string, minInputWidth?: string }) => {
     
-    // Check if the current value is at the minimum to disable the minus button
     const currentValue = Number(get(getValues(), name)) || 0;
     let minConstraint = 0;
-    if (name.includes('opponent_skill') || name.includes('server_quality') || name.includes('stress_level')) {
+    if (name.includes('opponent_skill') || name.includes('server_quality') || name.includes('stress_level') || name.includes('duration')) {
         minConstraint = 1;
     }
     const isMin = currentValue <= minConstraint;
@@ -214,7 +212,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                     size="icon"
                     className="w-8 h-8 p-0"
                     onClick={() => adjustNumericalValue(name, -1, step)}
-                    onMouseDown={(e) => e.preventDefault()} // FIX: Prevents input blur on mobile
+                    onMouseDown={(e) => e.preventDefault()} // FIX: Prevents input blur/keyboard close
                     disabled={isMin}
                 >
                     <Minus className="h-3 w-3" />
@@ -226,13 +224,12 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                         <Input 
                             {...field} 
                             type="number" 
-                            inputMode="decimal" // FIX: Helps keep keyboard open on mobile
+                            inputMode={step < 1 ? "decimal" : "numeric"} // FIX: Helps keep keyboard open on mobile
                             step={step} 
                             className={`h-8 text-sm font-semibold ${inputClassName} ${minInputWidth}`}
-                            // Only update value if it's a number or empty string, let Zod/RHF handle validation
                             onChange={(e) => {
-                                const val = e.target.value;
-                                field.onChange(val);
+                                // Important: We let RHF handle the coercion via Zod, just pass the raw value
+                                field.onChange(e.target.value);
                             }}
                             onBlur={(e) => field.onBlur(e)}
                         />
@@ -244,7 +241,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                     size="icon"
                     className="w-8 h-8 p-0"
                     onClick={() => adjustNumericalValue(name, 1, step)}
-                    onMouseDown={(e) => e.preventDefault()} // FIX: Prevents input blur on mobile
+                    onMouseDown={(e) => e.preventDefault()} // FIX: Prevents input blur/keyboard close
                 >
                     <Plus className="h-3 w-3" />
                 </Button>
@@ -428,7 +425,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                             <div className="text-center">
                                 <Label className="text-lg font-semibold">Final Score</Label>
                                 <div className="flex items-center justify-center gap-2 md:gap-4 mt-2">
-                                    {/* FIX: Labeled User Goals Input with Steppers */}
+                                    {/* FIX: Labeled User Goals Input with Unique Steppers */}
                                     <div className="flex flex-col items-center">
                                         <Label className="text-sm font-medium text-primary mb-1">Your Goals</Label>
                                         <div className="flex items-center space-x-1">
@@ -440,7 +437,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                                     
                                     <span className="text-5xl font-bold text-muted-foreground mx-2 pt-6">:</span>
                                     
-                                    {/* FIX: Labeled Opponent Goals Input with Steppers */}
+                                    {/* FIX: Labeled Opponent Goals Input with Unique Steppers */}
                                     <div className="flex flex-col items-center">
                                         <Label className="text-sm font-medium text-red-500 mb-1">Opponent Goals</Label>
                                         <div className="flex items-center space-x-1">
@@ -509,8 +506,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                                                             <TooltipTrigger asChild>
                                                                 <Toggle
                                                                     variant="outline" size="sm"
-                                                                    // FIX: The logic is sound for multi-select. 
-                                                                    // We ensure the array is treated as immutable for state update.
+                                                                    // The core multi-select logic is sound and correctly uses field.value.
                                                                     pressed={field.value?.includes(tag.name)}
                                                                     onPressedChange={(isPressed) => {
                                                                         const currentTags = Array.isArray(field.value) ? field.value : [];
@@ -518,6 +514,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                                                                             ? [...currentTags, tag.name]
                                                                             : currentTags.filter(t => t !== tag.name);
                                                                         
+                                                                        // This MUST work to enable multi-select.
                                                                         field.onChange(newTags); 
                                                                     }}
                                                                 >
