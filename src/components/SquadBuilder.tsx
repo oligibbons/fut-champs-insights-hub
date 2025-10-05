@@ -33,7 +33,7 @@ const SquadBuilder = ({ squad, gameVersion, onSave, onCancel }: SquadBuilderProp
       id: `squad-${Date.now()}`,
       name: 'New Squad',
       formation: preferredFormation.name,
-      startingXI: preferredFormation.positions.map(pos => ({...pos, player: undefined})),
+      startingXI: preferredFormation.positions.map((pos) => ({...pos, player: undefined})),
       substitutes: Array.from({ length: 7 }, (_, i) => ({ id: `sub-${i}`, position: 'SUB', player: undefined, x: 0, y: 0 })),
       reserves: Array.from({ length: 5 }, (_, i) => ({ id: `res-${i}`, position: 'RES', player: undefined, x: 0, y: 0 })),
       createdAt: new Date().toISOString(),
