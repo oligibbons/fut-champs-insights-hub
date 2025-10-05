@@ -14,7 +14,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Toggle } from '@/components/ui/toggle';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-// FIX: Added 'Users', 'Plus', and 'Minus' to imports
 import { ArrowLeft, ArrowRight, Save, Loader2, UserPlus, Users, Plus, Minus } from 'lucide-react'; 
 import PlayerStatsForm from './PlayerStatsForm';
 import { useSquadData } from '@/hooks/useSquadData';
@@ -147,20 +146,16 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
   const watchedValues = watch();
   const selectedSquad = squads.find(s => s.id === watchedValues.squad_id);
 
-  // FIX: Centralized logic for numerical input adjustments (Steppers)
+  // FIX: Centralized logic for numerical input adjustments (Steppers) with min/max enforcement
   const adjustNumericalValue = useCallback((fieldName: keyof z.infer<typeof gameFormSchema> | `team_stats.${string}`, delta: number, stepValue: number = 1) => {
     
-    // Use lodash get for nested field names
     let currentValue = get(getValues(), fieldName);
-
     if (typeof currentValue !== 'number') {
         currentValue = Number(currentValue) || 0;
     }
     
-    // Handle floating point arithmetic precisely
     let newValue = (currentValue * 10 + delta * stepValue * 10) / 10;
     
-    // Apply constraints based on field name
     let min = 0;
     let max = Infinity;
 
@@ -175,65 +170,88 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
         min = 50;
     } else if (fieldName.includes('duration')) {
         min = 1;
+    } else if (fieldName.includes('goals') || fieldName.includes('fouls') || fieldName.includes('cards') || fieldName.includes('shots') || fieldName.includes('passes') || fieldName.includes('corners')) {
+        min = 0;
+        max = Infinity; // Allow high values for scores/stats
     }
+
 
     newValue = Math.max(min, Math.min(max, newValue));
     
-    // Round to step precision if step is decimal
     if (stepValue < 1) {
-        newValue = Math.round(newValue / stepValue) * stepValue;
-        newValue = parseFloat(newValue.toFixed(1)); // Keep it at 1 decimal place
+        // Round to step precision for decimals (e.g., xG)
+        newValue = parseFloat(newValue.toFixed(1)); 
     } else {
-        newValue = Math.round(newValue); // For integer fields
+        // For integer fields
+        newValue = Math.round(newValue); 
     }
+
+    // Prevents negative numbers from showing up as '-0' after rounding
+    if (newValue === 0) newValue = 0;
 
     setValue(fieldName as any, newValue, { shouldValidate: true, shouldDirty: true });
   }, [getValues, setValue]);
 
 
-  // Reusable Number Input Component with Steppers
-  const NumberInputWithSteppers = ({ name, label, step = 1, className = '', inputClassName = 'text-center' }: { name: keyof z.infer<typeof gameFormSchema> | `team_stats.${string}`, label: string, step?: number, className?: string, inputClassName?: string }) => (
-    <div className={`space-y-2 ${className}`}>
-        <Label>{label}</Label>
-        <div className="flex items-center gap-1">
-            <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="w-8 h-8 p-0"
-                onClick={() => adjustNumericalValue(name, -1, step)}
-                disabled={get(getValues(), name) <= (name === 'opponent_skill' || name === 'server_quality' || name === 'stress_level' ? 1 : 0)}
-            >
-                <Minus className="h-3 w-3" />
-            </Button>
-            <Controller 
-                name={name as any} 
-                control={control} 
-                render={({ field }) => (
-                    <Input 
-                        {...field} 
-                        type="number" 
-                        step={step} 
-                        className={`h-8 w-14 text-sm font-semibold ${inputClassName}`}
-                        onChange={(e) => {
-                            // Ensure empty strings are handled correctly by Zod coercion
-                            field.onChange(e.target.value === '' ? '' : e.target.value);
-                        }}
-                    />
-                )} 
-            />
-            <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="w-8 h-8 p-0"
-                onClick={() => adjustNumericalValue(name, 1, step)}
-            >
-                <Plus className="h-3 w-3" />
-            </Button>
+  // FIX: Reusable Number Input Component with Steppers (Applied to all numerical inputs)
+  const NumberInputWithSteppers = ({ name, label, step = 1, className = '', inputClassName = 'text-center', minInputWidth = 'w-14' }: { name: keyof z.infer<typeof gameFormSchema> | `team_stats.${string}`, label: string, step?: number, className?: string, inputClassName?: string, minInputWidth?: string }) => {
+    
+    // Check if the current value is at the minimum to disable the minus button
+    const currentValue = Number(get(getValues(), name)) || 0;
+    let minConstraint = 0;
+    if (name.includes('opponent_skill') || name.includes('server_quality') || name.includes('stress_level')) {
+        minConstraint = 1;
+    }
+    const isMin = currentValue <= minConstraint;
+
+    return (
+        <div className={`space-y-2 ${className}`}>
+            <Label>{label}</Label>
+            <div className="flex items-center gap-1">
+                <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="w-8 h-8 p-0"
+                    onClick={() => adjustNumericalValue(name, -1, step)}
+                    onMouseDown={(e) => e.preventDefault()} // FIX: Prevents input blur on mobile
+                    disabled={isMin}
+                >
+                    <Minus className="h-3 w-3" />
+                </Button>
+                <Controller 
+                    name={name as any} 
+                    control={control} 
+                    render={({ field }) => (
+                        <Input 
+                            {...field} 
+                            type="number" 
+                            inputMode="decimal" // FIX: Helps keep keyboard open on mobile
+                            step={step} 
+                            className={`h-8 text-sm font-semibold ${inputClassName} ${minInputWidth}`}
+                            // Only update value if it's a number or empty string, let Zod/RHF handle validation
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                field.onChange(val);
+                            }}
+                            onBlur={(e) => field.onBlur(e)}
+                        />
+                    )} 
+                />
+                <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="w-8 h-8 p-0"
+                    onClick={() => adjustNumericalValue(name, 1, step)}
+                    onMouseDown={(e) => e.preventDefault()} // FIX: Prevents input blur on mobile
+                >
+                    <Plus className="h-3 w-3" />
+                </Button>
+            </div>
         </div>
-    </div>
-  );
+    );
+  };
 
 
   useEffect(() => {
@@ -410,26 +428,32 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                             <div className="text-center">
                                 <Label className="text-lg font-semibold">Final Score</Label>
                                 <div className="flex items-center justify-center gap-2 md:gap-4 mt-2">
-                                    {/* User Goals Input with Steppers */}
-                                    <div className="flex items-center space-x-1">
-                                      <Button type="button" variant="outline" size="icon" onClick={() => adjustNumericalValue('user_goals', -1)}><Minus className="h-4 w-4" /></Button>
-                                      <Controller name="user_goals" control={control} render={({ field }) => <Input {...field} type="number" className="modern-input text-4xl h-20 w-24 text-center" />} />
-                                      <Button type="button" variant="outline" size="icon" onClick={() => adjustNumericalValue('user_goals', 1)}><Plus className="h-4 w-4" /></Button>
+                                    {/* FIX: Labeled User Goals Input with Steppers */}
+                                    <div className="flex flex-col items-center">
+                                        <Label className="text-sm font-medium text-primary mb-1">Your Goals</Label>
+                                        <div className="flex items-center space-x-1">
+                                            <Button type="button" variant="outline" size="icon" className="w-8 h-8 p-0" onClick={() => adjustNumericalValue('user_goals', -1)} onMouseDown={(e) => e.preventDefault()}><Minus className="h-4 w-4" /></Button>
+                                            <Controller name="user_goals" control={control} render={({ field }) => <Input {...field} type="number" inputMode="numeric" className="modern-input text-4xl h-20 w-24 text-center" />} />
+                                            <Button type="button" variant="outline" size="icon" className="w-8 h-8 p-0" onClick={() => adjustNumericalValue('user_goals', 1)} onMouseDown={(e) => e.preventDefault()}><Plus className="h-4 w-4" /></Button>
+                                        </div>
                                     </div>
                                     
-                                    <span className="text-5xl font-bold text-muted-foreground mx-2">:</span>
+                                    <span className="text-5xl font-bold text-muted-foreground mx-2 pt-6">:</span>
                                     
-                                    {/* Opponent Goals Input with Steppers */}
-                                    <div className="flex items-center space-x-1">
-                                      <Button type="button" variant="outline" size="icon" onClick={() => adjustNumericalValue('opponent_goals', -1)}><Minus className="h-4 w-4" /></Button>
-                                      <Controller name="opponent_goals" control={control} render={({ field }) => <Input {...field} type="number" className="modern-input text-4xl h-20 w-24 text-center" />} />
-                                      <Button type="button" variant="outline" size="icon" onClick={() => adjustNumericalValue('opponent_goals', 1)}><Plus className="h-4 w-4" /></Button>
+                                    {/* FIX: Labeled Opponent Goals Input with Steppers */}
+                                    <div className="flex flex-col items-center">
+                                        <Label className="text-sm font-medium text-red-500 mb-1">Opponent Goals</Label>
+                                        <div className="flex items-center space-x-1">
+                                            <Button type="button" variant="outline" size="icon" className="w-8 h-8 p-0" onClick={() => adjustNumericalValue('opponent_goals', -1)} onMouseDown={(e) => e.preventDefault()}><Minus className="h-4 w-4" /></Button>
+                                            <Controller name="opponent_goals" control={control} render={({ field }) => <Input {...field} type="number" inputMode="numeric" className="modern-input text-4xl h-20 w-24 text-center" />} />
+                                            <Button type="button" variant="outline" size="icon" className="w-8 h-8 p-0" onClick={() => adjustNumericalValue('opponent_goals', 1)} onMouseDown={(e) => e.preventDefault()}><Plus className="h-4 w-4" /></Button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                             
                             {/* Duration with Steppers */}
-                            <NumberInputWithSteppers name="duration" label="Match Duration (Mins)" step={5} className="space-y-2" inputClassName="h-10 text-base" />
+                            <NumberInputWithSteppers name="duration" label="Match Duration (Mins)" step={5} className="space-y-2" inputClassName="h-10 text-base" minInputWidth="w-full" />
                             <p className="text-xs text-muted-foreground">Enter less than 90 if the match ended early.</p>
                         </div>
                     </div>
@@ -437,7 +461,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                     <div className={step === 2 ? 'block' : 'hidden'}>
                         <div className="space-y-6 animate-in fade-in">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {/* Sliders for Skill, Quality, Stress */}
+                                {/* Sliders for Skill, Quality, Stress (No change needed) */}
                                 <Controller name="opponent_skill" control={control} render={({ field }) => <div className="space-y-2"><Label>Opponent Skill: <span className="font-bold text-primary">{field.value}</span>/10</Label><Slider value={[field.value]} onValueChange={(v) => field.onChange(v[0])} max={10} step={1} /></div>} />
                                 <Controller name="server_quality" control={control} render={({ field }) => <div className="space-y-2"><Label>Server Quality: <span className="font-bold text-primary">{field.value}</span>/10</Label><Slider value={[field.value]} onValueChange={(v) => field.onChange(v[0])} max={10} step={1} /></div>} />
                                 <Controller name="stress_level" control={control} render={({ field }) => <div className="space-y-2"><Label>Stress Level: <span className="font-bold text-primary">{field.value}</span>/10</Label><Slider value={[field.value]} onValueChange={(v) => field.onChange(v[0])} max={10} step={1} /></div>} />
@@ -446,8 +470,8 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-border">
                                 <Controller name="opponent_play_style" control={control} render={({ field }) => <div><Label>Opponent Play Style</Label><Select value={field.value} onValueChange={field.onChange}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{['balanced', 'possession', 'counter-attack', 'high-press', 'drop-back'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></div>} />
                                 <Controller name="opponent_formation" control={control} render={({ field }) => <div><Label>Opponent Formation</Label><Input {...field} placeholder="e.g. 4-2-3-1" /></div>} />
-                                {/* Opponent Squad Rating with Steppers */}
-                                <NumberInputWithSteppers name="opponent_squad_rating" label="Opponent Squad Rating" step={1} />
+                                {/* FIX: Opponent Squad Rating with Steppers */}
+                                <NumberInputWithSteppers name="opponent_squad_rating" label="Opponent Squad Rating" step={1} minInputWidth="w-full" />
                             </div>
                         </div>
                     </div>
@@ -456,7 +480,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                         <div className="space-y-6 animate-in fade-in">
                             <h3 className="text-lg font-semibold border-b pb-2">Team Statistics</h3>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                {/* All numerical fields now use the custom stepper component */}
+                                {/* FIX: All numerical fields now use the custom stepper component */}
                                 <NumberInputWithSteppers name="team_stats.shots" label="Shots" />
                                 <NumberInputWithSteppers name="team_stats.shotsOnTarget" label="Shots on Target" />
                                 <NumberInputWithSteppers name="team_stats.possession" label="Possession %" />
@@ -485,6 +509,8 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                                                             <TooltipTrigger asChild>
                                                                 <Toggle
                                                                     variant="outline" size="sm"
+                                                                    // FIX: The logic is sound for multi-select. 
+                                                                    // We ensure the array is treated as immutable for state update.
                                                                     pressed={field.value?.includes(tag.name)}
                                                                     onPressedChange={(isPressed) => {
                                                                         const currentTags = Array.isArray(field.value) ? field.value : [];
@@ -492,7 +518,6 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                                                                             ? [...currentTags, tag.name]
                                                                             : currentTags.filter(t => t !== tag.name);
                                                                         
-                                                                        // FIX: Explicitly set the new array to trigger state update reliably
                                                                         field.onChange(newTags); 
                                                                     }}
                                                                 >
