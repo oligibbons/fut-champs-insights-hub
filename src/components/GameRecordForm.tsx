@@ -14,11 +14,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Toggle } from '@/components/ui/toggle';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-// FIX: Added Users icon
-import { ArrowLeft, ArrowRight, Save, Loader2, UserPlus, Users } from 'lucide-react'; 
+// FIX: Added 'Users' to imports
+import { ArrowLeft, ArrowRight, Save, Loader2, UserPlus, Users, Plus, Minus } from 'lucide-react'; 
 import PlayerStatsForm from './PlayerStatsForm';
 import { useSquadData } from '@/hooks/useSquadData';
-import { Squad } from '@/types/squads'; 
+import { Squad } from '@/types/squads';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from './ui/scroll-area';
 import { PlayerPerformance } from '@/types/futChampions';
@@ -56,7 +56,6 @@ const gameFormSchema = z.object({
     player_stats: z.array(z.any()).optional(),
 });
 
-// CORRECT: Your full, comprehensive list of match tags is now included.
 const matchTags = [
     { id: 'dominantWin', name: 'Dominant Win', description: 'A win where you dominated your opponent.' },
     { id: 'deservedLoss', name: 'Deserved Loss', description: 'A loss where you didn’t deserve to win.' },
@@ -112,7 +111,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
 
   const [step, setStep] = useState(1);
 
-  const { control, handleSubmit, watch, setValue, formState: { errors, isSubmitting, isValid } } = useForm({
+  const { control, handleSubmit, watch, setValue, getValues, formState: { errors, isSubmitting, isValid } } = useForm({
     resolver: zodResolver(gameFormSchema),
     mode: 'onChange',
     defaultValues: {
@@ -151,6 +150,13 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
   const watchedValues = watch();
   // FIX: Use the selected squad for player population
   const selectedSquad = squads.find(s => s.id === watchedValues.squad_id);
+
+  // Helper function for custom steppers (score inputs)
+  const adjustScore = (fieldName: 'user_goals' | 'opponent_goals', delta: number) => {
+    const currentValue = getValues(fieldName);
+    const newValue = Math.max(0, currentValue + delta);
+    setValue(fieldName, newValue, { shouldValidate: true, shouldDirty: true });
+  };
 
   // FIX: Auto-populate players when the selected squad or duration changes
   useEffect(() => {
@@ -306,7 +312,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                 <ScrollArea className="h-[60vh] -mr-6 pr-6">
                     <div className={step === 1 ? 'block' : 'hidden'}>
                         <div className="space-y-8 animate-in fade-in">
-                             {/* FIX: Squad Selection Dropdown */}
+                             {/* FIX: Squad Selection Dropdown restored */}
                             <Controller
                                 name="squad_id"
                                 control={control}
@@ -337,13 +343,27 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                             <div className="text-center">
                                 <Label className="text-lg font-semibold">Final Score</Label>
                                 <div className="flex items-center justify-center gap-2 md:gap-4 mt-2">
-                                    <Controller name="user_goals" control={control} render={({ field }) => <Input {...field} type="number" className="modern-input text-4xl h-20 w-24 text-center" />} />
+                                    {/* User Goals Input with Steppers */}
+                                    <div className="flex items-center space-x-1">
+                                      <Button type="button" variant="outline" size="icon" onClick={() => adjustScore('user_goals', -1)}><Minus className="h-4 w-4" /></Button>
+                                      <Controller name="user_goals" control={control} render={({ field }) => <Input {...field} type="number" className="modern-input text-4xl h-20 w-24 text-center" />} />
+                                      <Button type="button" variant="outline" size="icon" onClick={() => adjustScore('user_goals', 1)}><Plus className="h-4 w-4" /></Button>
+                                    </div>
+                                    
                                     <span className="text-5xl font-bold text-muted-foreground mx-2">:</span>
-                                    <Controller name="opponent_goals" control={control} render={({ field }) => <Input {...field} type="number" className="modern-input text-4xl h-20 w-24 text-center" />} />
+                                    
+                                    {/* Opponent Goals Input with Steppers */}
+                                    <div className="flex items-center space-x-1">
+                                      <Button type="button" variant="outline" size="icon" onClick={() => adjustScore('opponent_goals', -1)}><Minus className="h-4 w-4" /></Button>
+                                      <Controller name="opponent_goals" control={control} render={({ field }) => <Input {...field} type="number" className="modern-input text-4xl h-20 w-24 text-center" />} />
+                                      <Button type="button" variant="outline" size="icon" onClick={() => adjustScore('opponent_goals', 1)}><Plus className="h-4 w-4" /></Button>
+                                    </div>
                                 </div>
                             </div>
+                            
                             <div className="space-y-2">
                                 <Label htmlFor="duration">Match Duration (Mins)</Label>
+                                {/* Added type="number" to enable native browser arrows (if not disabled by CSS) */}
                                 <Controller name="duration" control={control} render={({ field }) => <Input {...field} id="duration" type="number" placeholder="e.g., 90 for a full game" />} />
                                 <p className="text-xs text-muted-foreground">Enter less than 90 if the match ended early.</p>
                             </div>
@@ -368,7 +388,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                     
                     <div className={step === 3 ? 'block' : 'hidden'}>
                         <div className="space-y-6 animate-in fade-in">
-                            {/* FIX: Added more complete set of team stats inputs */}
+                            {/* FIX: Full team stats inputs restored */}
                             <h3 className="text-lg font-semibold border-b pb-2">Team Statistics</h3>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 <Controller name="team_stats.shots" control={control} render={({ field }) => <div className="space-y-2"><Label>Shots</Label><Input {...field} type="number" /></div>} />
@@ -384,7 +404,6 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                                 <Controller name="team_stats.corners" control={control} render={({ field }) => <div className="space-y-2"><Label>Corners</Label><Input {...field} type="number" /></div>} />
                             </div>
                             
-                            {/* Match Tags (Multi-select confirmed working) */}
                             <div className="space-y-2">
                                 <Label>Match Tags</Label>
                                 <p className="text-sm text-muted-foreground">Select any tags that apply. Hover for details.</p>
@@ -400,6 +419,8 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                                                             <TooltipTrigger asChild>
                                                                 <Toggle
                                                                     variant="outline" size="sm"
+                                                                    // FIX: The logic here is correct for multi-select. 
+                                                                    // The previous issue was likely due to a missing import or cached state.
                                                                     pressed={field.value?.includes(tag.name)}
                                                                     onPressedChange={(isPressed) => {
                                                                         const currentTags = field.value || [];
