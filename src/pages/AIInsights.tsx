@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useTheme } from '@/hooks/useTheme';
 import { useAccountData } from '@/hooks/useAccountData';
-// Corrected the import to use the exported function name
-import { EnhancedAIGenerateInsights, Insight } from '@/utils/aiInsights'; 
+// Corrected the import path to use the correct file
+import { EnhancedAIGenerateInsights, Insight } from '@/utils/enhancedAiInsights'; 
 import {
   Brain,
   TrendingUp,
@@ -20,8 +20,7 @@ import {
 
 const AIInsights = () => {
   const { currentTheme } = useTheme();
-  // Destructure currentAccount to use it later
-  const { weeks, loading: dataLoading, currentAccount } = useAccountData(); 
+  const { weeks, loading: dataLoading, currentAccount } = useAccountData();
   const [insights, setInsights] = useState<Insight[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +35,6 @@ const AIInsights = () => {
 
     try {
       const summary = generateSummaryForAI(allGames);
-      // Corrected the function call
       const generatedInsights = await EnhancedAIGenerateInsights(summary);
       setInsights(generatedInsights);
       setLastGenerated(new Date());
@@ -240,7 +238,7 @@ const AIInsights = () => {
                     </div>
                   );
                 })}
-              </CardContent>
+              </CardContent>.
             </Card>
           </>
       )}
