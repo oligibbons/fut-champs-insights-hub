@@ -1,54 +1,48 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 
-// The original Theme interface your components expect
 export interface Theme {
   name: string;
   colors: {
-    primary: string;
-    secondary: string;
-    accent: string;
-    background: string; // This will be a solid color fallback
-    backgroundGradient: string; // Keep the gradient separate
-    surface: string;
-    cardBg: string;
-    text: string;
-    muted: string;
-    border: string;
-    success: string;
-    warning: string;
-    error: string;
-    fifa: {
-      blue: string;
-      green: string;
-      gold: string;
-      red: string;
-      purple: string;
-    };
+    primary: string; secondary: string; accent: string; background: string;
+    surface: string; cardBg: string; text: string; muted: string; border: string;
+    success: string; warning: string; error: string;
+    fifa: { blue: string; green: string; gold: string; red: string; purple: string; };
   };
 }
 
-// --- REVISED & ENHANCED THEMES ---
 const themes: Record<string, Theme> = {
   futvisionary: {
     name: 'FUT Visionary',
     colors: {
-      primary: '#00D4FF',
-      secondary: '#6C5CE7',
-      accent: '#00FF88',
-      background: '#0D1117', // Solid background color
-      backgroundGradient: 'linear-gradient(145deg, #0D1117 0%, #161B22 100%)',
+      primary: 'hsl(191, 100%, 50%)',      // #00D4FF
+      secondary: 'hsl(247, 78%, 69%)',    // #6C5CE7
+      accent: 'hsl(149, 100%, 50%)',       // #00FF88
+      background: 'hsl(210, 15%, 8%)',    // Solid color from gradient
       surface: 'rgba(22, 27, 34, 0.8)',
-      cardBg: 'rgba(13, 17, 23, 0.7)',
-      text: '#EAEAEA',
-      muted: '#8892B0',
-      border: 'rgba(0, 212, 255, 0.2)',
-      success: '#28A745',
-      warning: '#FFC107',
-      error: '#DC3545',
+      cardBg: 'hsl(210, 22%, 7%)',       // Solid card background
+      text: 'hsl(0, 0%, 92%)',           // #EAEAEA
+      muted: 'hsl(220, 13%, 60%)',        // #8892B0
+      border: 'hsla(191, 100%, 50%, 0.2)',
+      success: '#28A745', warning: '#FFC107', error: '#DC3545',
       fifa: { blue: '#00D4FF', green: '#00FF88', gold: '#FFC107', red: '#DC3545', purple: '#6C5CE7' }
     }
   },
-  // ... other themes can be updated similarly
+  light: {
+    name: 'Day Mode',
+    colors: {
+      primary: 'hsl(221, 100%, 40%)',   // #0052CC
+      secondary: 'hsl(248, 44%, 56%)', // #5E4DB2
+      accent: 'hsl(14, 86%, 47%)',    // #DE350B
+      background: 'hsl(220, 16%, 96%)', // #F4F5F7
+      surface: 'rgba(255, 255, 255, 0.9)',
+      cardBg: 'hsl(0, 0%, 100%)',      // #FFFFFF
+      text: 'hsl(211, 39%, 23%)',     // #172B4D
+      muted: 'hsl(214, 12%, 47%)',     // #6B778C
+      border: 'hsla(221, 100%, 40%, 0.2)',
+      success: '#00875A', warning: '#FFAB00', error: '#DE350B',
+      fifa: { blue: '#0052CC', green: '#00875A', gold: '#FFAB00', red: '#DE350B', purple: '#5E4DB2' }
+    }
+  },
 };
 
 interface ThemeContextType {
@@ -73,15 +67,17 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     localStorage.setItem('futalyst-theme', currentThemeName);
-    
     const theme = themes[currentThemeName];
     if (!theme) return;
 
     const root = document.documentElement;
 
-    // --- THIS IS THE CRITICAL FIX ---
-    // Map your theme colors to the CSS variables that shadcn/ui uses.
-    // NOTE: HSL conversion is removed for direct hex/rgba values.
+    // Remove old theme class and add the new one
+    root.classList.remove('light', 'dark');
+    root.classList.add(currentThemeName === 'light' ? 'light' : 'dark');
+
+    // THIS IS THE CRITICAL FIX: Set the correct CSS variables
+    // that shadcn/ui and tailwindcss are expecting.
     root.style.setProperty('--background', theme.colors.background);
     root.style.setProperty('--foreground', theme.colors.text);
     root.style.setProperty('--card', theme.colors.cardBg);
@@ -93,17 +89,13 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     root.style.setProperty('--secondary', theme.colors.secondary);
     root.style.setProperty('--secondary-foreground', theme.colors.text);
     root.style.setProperty('--muted', theme.colors.muted);
-    root.style.setProperty('--muted-foreground', theme.colors.text); // Adjust if you have a different muted text color
+    root.style.setProperty('--muted-foreground', theme.colors.muted);
     root.style.setProperty('--accent', theme.colors.accent);
     root.style.setProperty('--accent-foreground', theme.colors.text);
     root.style.setProperty('--destructive', theme.colors.error);
     root.style.setProperty('--border', theme.colors.border);
-    root.style.setProperty('--input', theme.colors.border); // Often the same as border
-    root.style.setProperty('--ring', theme.colors.primary); // Ring color on focus
-
-    // Apply the gradient background to the body
-    document.body.style.background = theme.colors.backgroundGradient;
-    document.body.style.color = theme.colors.text;
+    root.style.setProperty('--input', theme.colors.border);
+    root.style.setProperty('--ring', theme.colors.primary);
 
   }, [currentThemeName]);
 
