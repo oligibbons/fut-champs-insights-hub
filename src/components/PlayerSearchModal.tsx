@@ -61,6 +61,9 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position, cardType
             position: position || 'CM',
             card_type: cardTypes.find(ct => ct.is_default)?.id || cardTypes[0]?.id || ''
         }));
+        setSearchTerm('');
+        setShowCreateForm(false);
+        setEditingPlayer(null);
     }
   }, [isOpen, position, cardTypes]);
 
@@ -68,7 +71,6 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position, cardType
     if (!user) { toast({ title: "Authentication Error", variant: "destructive" }); return; }
     if (!newPlayer.name?.trim()) { toast({ title: "Player name is required", variant: "destructive" }); return; }
 
-    // This object now perfectly matches your Supabase 'players' table schema
     const playerToSave = {
       id: editingPlayer ? editingPlayer.id : undefined,
       name: newPlayer.name,
@@ -86,7 +88,7 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position, cardType
       physical: newPlayer.physical,
       is_evolution: newPlayer.isEvolution,
       user_id: user.id,
-      game_version: gameVersion
+      game_version: gameVersion,
     };
 
     const { data, error } = await supabase.from('players').upsert(playerToSave).select().single();
@@ -118,8 +120,8 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position, cardType
     });
   };
 
-  const getCardTypeStyle = (cardType: PlayerCard['card_type']) => {
-    const customType = cardTypes.find(ct => ct.id === cardType);
+  const getCardTypeStyle = (card_type: PlayerCard['card_type']) => {
+    const customType = cardTypes.find(ct => ct.id === card_type);
     if(customType) return { background: `linear-gradient(135deg, ${customType.primary_color} 50%, ${customType.secondary_color} 50%)`, color: customType.highlight_color };
     return { background: '#888', color: 'white'};
   };
@@ -132,9 +134,8 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position, cardType
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-gray-900 border-gray-700 text-white">
         <DialogHeader>
-          <DialogTitle>{showCreateForm ? (editingPlayer ? 'Edit Player' : 'Create New Player') : 'Search Players'}</DialogTitle>
-          {/* FIXED: Added DialogDescription to resolve accessibility warning */}
-          <DialogDescription>Search for a player in your club or create a new one to add to your squad.</DialogDescription>
+            <DialogTitle>{showCreateForm ? (editingPlayer ? 'Edit Player' : 'Create New Player') : 'Search Players'}</DialogTitle>
+            <DialogDescription>Search your club or create a new player to add to the squad.</DialogDescription>
         </DialogHeader>
 
         {!showCreateForm ? (
@@ -166,7 +167,9 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position, cardType
                 <Select value={newPlayer.card_type} onValueChange={(value) => setNewPlayer(prev => ({ ...prev, card_type: value }))}>
                     <SelectTrigger className="bg-gray-800 border-gray-600"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                        {cardTypes.map(type => ( <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem> ))}
+                        {cardTypes.map(type => (
+                            <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>
+                        ))}
                     </SelectContent>
                 </Select>
               </div>
