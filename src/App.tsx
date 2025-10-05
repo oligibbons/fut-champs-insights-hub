@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Routes, Route, Navigate } from "react-router-dom";
-import { useTheme } from "@/hooks/useTheme";
+import { useTheme } from "@/hooks/useTheme.tsx";
 import { useAuth } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Navigation from "@/components/Navigation";
@@ -27,8 +27,8 @@ function App() {
   const { loading, user } = useAuth();
 
   useEffect(() => {
-    const storedTheme = localStorage.getItem("vite-ui-theme") || "dark";
-    setTheme(storedTheme as "light" | "dark" | "system");
+    const savedTheme = localStorage.getItem('futalyst-theme') || 'futvisionary';
+    setTheme(savedTheme);
   }, [setTheme]);
 
   if (loading) {
@@ -40,7 +40,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground transition-colors duration-500">
+    <div className="min-h-screen bg-background text-foreground">
       {user && <Navigation />}
       <main className={`transition-all duration-300 ${user ? 'lg:pl-[5.5rem]' : ''}`}>
         <div className="p-4 md:p-8">
