@@ -24,6 +24,7 @@ import { PlayerPerformance } from '@/types/futChampions';
 import { get } from 'lodash';
 
 // Schema for form validation using Zod
+// NOTE: z.coerce.number() ensures we can use type="text" but still save a number
 const gameFormSchema = z.object({
     user_goals: z.coerce.number().min(0),
     opponent_goals: z.coerce.number().min(0),
@@ -160,6 +161,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
     let min = 0;
     let max = Infinity;
 
+    // Apply constraints based on field name
     if (fieldName.includes('opponent_skill') || fieldName.includes('server_quality') || fieldName.includes('stress_level') || fieldName.includes('duration')) {
         min = fieldName.includes('duration') ? 1 : 1; // Duration minimum is 1
         max = 10;
@@ -217,13 +219,15 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                     name={name as any} 
                     control={control} 
                     render={({ field }) => (
+                        // CRITICAL FIX: Use type="text" with correct inputMode for mobile keyboard persistence
                         <Input 
                             {...field} 
-                            type="number" 
+                            type="text" 
                             inputMode={step < 1 ? "decimal" : "numeric"} 
-                            step={step} 
+                            // Removed step property as it's handled by our steppers and is problematic with type="text"
                             className={`h-8 text-sm font-semibold ${inputClassName} ${minInputWidth}`}
                             onChange={(e) => {
+                                // Passes raw string value to RHF/Zod, which coerces to number on submit
                                 field.onChange(e.target.value);
                             }}
                             onBlur={(e) => field.onBlur(e)}
@@ -424,8 +428,16 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                                     <div className="flex flex-col items-center">
                                         <Label className="text-sm font-medium text-primary mb-1">Your Goals</Label>
                                         <div className="flex items-center space-x-1">
-                                            <Button type="button" variant="outline" size="icon" className="w-8 h-8 p-0" onClick={() => adjustNumericalValue('user_goals', -1)} onMouseDown={(e) => e.preventDefault()}><Minus className="h-4 w-4" /></Button>
-                                            <Controller name="user_goals" control={control} render={({ field }) => <Input {...field} type="number" inputMode="numeric" className="modern-input text-4xl h-20 w-24 text-center" />} />
+                                            {/* MINUS BUTTON */}
+                                            <Button type="button" variant="outline" size="icon" className="w-8 h-8 p-0" 
+                                                onClick={() => adjustNumericalValue('user_goals', -1)} 
+                                                onMouseDown={(e) => e.preventDefault()}
+                                                disabled={get(getValues(), 'user_goals') <= 0}
+                                            ><Minus className="h-4 w-4" /></Button>
+                                            
+                                            <Controller name="user_goals" control={control} render={({ field }) => <Input {...field} type="text" inputMode="numeric" className="modern-input text-4xl h-20 w-24 text-center" />} />
+                                            
+                                            {/* PLUS BUTTON */}
                                             <Button type="button" variant="outline" size="icon" className="w-8 h-8 p-0" onClick={() => adjustNumericalValue('user_goals', 1)} onMouseDown={(e) => e.preventDefault()}><Plus className="h-4 w-4" /></Button>
                                         </div>
                                     </div>
@@ -436,8 +448,16 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                                     <div className="flex flex-col items-center">
                                         <Label className="text-sm font-medium text-red-500 mb-1">Opponent Goals</Label>
                                         <div className="flex items-center space-x-1">
-                                            <Button type="button" variant="outline" size="icon" className="w-8 h-8 p-0" onClick={() => adjustNumericalValue('opponent_goals', -1)} onMouseDown={(e) => e.preventDefault()}><Minus className="h-4 w-4" /></Button>
-                                            <Controller name="opponent_goals" control={control} render={({ field }) => <Input {...field} type="number" inputMode="numeric" className="modern-input text-4xl h-20 w-24 text-center" />} />
+                                            {/* MINUS BUTTON */}
+                                            <Button type="button" variant="outline" size="icon" className="w-8 h-8 p-0" 
+                                                onClick={() => adjustNumericalValue('opponent_goals', -1)} 
+                                                onMouseDown={(e) => e.preventDefault()}
+                                                disabled={get(getValues(), 'opponent_goals') <= 0}
+                                            ><Minus className="h-4 w-4" /></Button>
+                                            
+                                            <Controller name="opponent_goals" control={control} render={({ field }) => <Input {...field} type="text" inputMode="numeric" className="modern-input text-4xl h-20 w-24 text-center" />} />
+                                            
+                                            {/* PLUS BUTTON */}
                                             <Button type="button" variant="outline" size="icon" className="w-8 h-8 p-0" onClick={() => adjustNumericalValue('opponent_goals', 1)} onMouseDown={(e) => e.preventDefault()}><Plus className="h-4 w-4" /></Button>
                                         </div>
                                     </div>
@@ -501,7 +521,6 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                                                                 <Toggle
                                                                     variant="outline" size="sm"
                                                                     // CRITICAL FIX: The logic is sound for multi-select. 
-                                                                    // We confirm the value is an array and update it immutably.
                                                                     pressed={Array.isArray(field.value) && field.value.includes(tag.name)}
                                                                     onPressedChange={(isPressed) => {
                                                                         const currentTags = Array.isArray(field.value) ? field.value : [];
