@@ -1,35 +1,41 @@
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Game } from '@/types/futChampions';
-import { Trophy, Star, TrendingUp, Users } from 'lucide-react';
+import { Trophy, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 const TopPerformers = ({ games }: { games: Game[] }) => {
   const playerStats = useMemo(() => {
-    if (!games || games.length === 0) return [];
+    // A robust check to ensure games data is valid
+    if (!games || !Array.isArray(games) || games.length === 0) {
+      return [];
+    }
 
     const playerMap = new Map();
     
-    games.forEach(game => {
-      game.player_performances?.forEach(player => {
-        const existing = playerMap.get(player.player_name) || {
-          name: player.player_name,
-          position: player.position,
-          gamesPlayed: 0,
-          goals: 0,
-          assists: 0,
-          totalRating: 0,
-        };
-        
-        existing.gamesPlayed += 1;
-        existing.goals += player.goals || 0;
-        existing.assists += player.assists || 0;
-        existing.totalRating += player.rating || 0;
-        
-        playerMap.set(player.player_name, existing);
-      });
+    // 1. Flatten all player performances from all games into a single array
+    const allPerformances = games.flatMap(game => game.player_performances || []).filter(Boolean);
+
+    // 2. Aggregate the stats for each player
+    allPerformances.forEach(player => {
+      const existing = playerMap.get(player.player_name) || {
+        name: player.player_name,
+        position: player.position,
+        gamesPlayed: 0,
+        goals: 0,
+        assists: 0,
+        totalRating: 0,
+      };
+      
+      existing.gamesPlayed += 1;
+      existing.goals += player.goals || 0;
+      existing.assists += player.assists || 0;
+      existing.totalRating += player.rating || 0;
+      
+      playerMap.set(player.player_name, existing);
     });
     
+    // 3. Calculate final stats and sort the players
     return Array.from(playerMap.values())
       .map(player => ({
         ...player,
