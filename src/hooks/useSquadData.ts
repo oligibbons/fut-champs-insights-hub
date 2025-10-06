@@ -17,7 +17,7 @@ export const useSquadData = () => {
     if (!user) return;
     setLoading(true);
     try {
-      // 1. Fetch all three necessary tables in parallel. This is more efficient.
+      // 1. Fetch all three necessary tables in parallel for maximum efficiency.
       const [
         { data: playersData, error: playersError },
         { data: squadsData, error: squadsError },
@@ -84,6 +84,7 @@ export const useSquadData = () => {
       setPlayers(data || []);
     } catch (error: any) {
       toast.error('Failed to fetch players.');
+      console.error('Error fetching players:', error.message);
     }
   }, [user, gameVersion]);
 
@@ -99,6 +100,7 @@ export const useSquadData = () => {
         setCardTypes(data || []);
     } catch (error: any) {
         toast.error('Failed to fetch card types.');
+        console.error('Error fetching card types:', error.message);
     }
   }, [user, gameVersion]);
 
@@ -128,6 +130,7 @@ export const useSquadData = () => {
       return newSquad;
     } catch (error: any) {
       toast.error(`Error creating squad: ${error.message}`);
+      console.error('Error creating squad:', error);
     }
   };
 
@@ -135,16 +138,20 @@ export const useSquadData = () => {
     if (!user) return;
     const { squad_players, ...squadDetails } = updates;
     try {
-        await supabase.from('squads').update(squadDetails).eq('id', squadId);
-        await supabase.from('squad_players').delete().eq('squad_id', squadId);
+        const { error: squadError } = await supabase.from('squads').update(squadDetails).eq('id', squadId);
+        if (squadError) throw squadError;
+        const { error: deleteError } = await supabase.from('squad_players').delete().eq('squad_id', squadId);
+        if (deleteError) throw deleteError;
         if (squad_players && squad_players.length > 0) {
             const playersToInsert = squad_players.map((p: any) => ({ squad_id: squadId, player_id: p.player_id || p.players.id, position: p.position, slot_id: p.slot_id }));
-            await supabase.from('squad_players').insert(playersToInsert);
+            const { error: playersError } = await supabase.from('squad_players').insert(playersToInsert);
+            if (playersError) throw playersError;
         }
         toast.success('Squad updated successfully.');
         await fetchSquads();
     } catch (error: any) {
         toast.error(`Error updating squad: ${error.message}`);
+        console.error('Error updating squad:', error);
     }
   };
 
@@ -161,7 +168,8 @@ export const useSquadData = () => {
   
   const deleteSquad = async (squadId: string) => {
     try {
-      await supabase.from('squads').delete().eq('id', squadId);
+      const { error } = await supabase.from('squads').delete().eq('id', squadId);
+      if (error) throw error;
       setSquads(prev => prev.filter(s => s.id !== squadId));
       toast.success('Squad deleted successfully.');
     } catch (error: any) {
