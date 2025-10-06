@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGameVersion } from '@/contexts/GameVersionContext';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Loader2, BarChart2, Star, ListChecks } from 'lucide-react';
+import { PlusCircle, Loader2, BarChart2, Star, ListChecks, FlagOff } from 'lucide-react';
 import GameCard from '@/components/GameCard';
 import WeekProgress from '@/components/WeekProgress';
 import { Game, FutChampsWeek } from '@/types/futChampions';
@@ -15,12 +15,14 @@ import { Squad } from '@/types/squads';
 import WeekCompletionPopup from '@/components/WeekCompletionPopup';
 import CurrentRunStats from '@/components/CurrentRunStats';
 import TopPerformers from '@/components/TopPerformers';
+import RecentRuns from '@/components/RecentRuns'; // Import the new component
 
 const CurrentWeek = () => {
     const { user } = useAuth();
     const { toast } = useToast();
     const { gameVersion } = useGameVersion();
     const [currentWeek, setCurrentWeek] = useState<FutChampsWeek | null>(null);
+    const [recentRuns, setRecentRuns] = useState<FutChampsWeek[]>([]);
     const [games, setGames] = useState<Game[]>([]);
     const [squads, setSquads] = useState<Squad[]>([]);
     const [loading, setLoading] = useState(true);
@@ -32,13 +34,12 @@ const CurrentWeek = () => {
         if (!user) return;
         setLoading(true);
         try {
-            // Fetch current week filtered by game version
             const { data: weekData, error: weekError } = await supabase
                 .from('weekly_performances')
                 .select('*')
                 .eq('user_id', user.id)
                 .eq('is_completed', false)
-                .eq('game_version', gameVersion) // Filter by game_version
+                .eq('game_version', gameVersion)
                 .order('created_at', { ascending: false })
                 .limit(1)
                 .single();
@@ -57,14 +58,24 @@ const CurrentWeek = () => {
             } else {
                 setCurrentWeek(null);
                 setGames([]);
+                // If no active week, fetch recent completed runs
+                const { data: recentData, error: recentError } = await supabase
+                    .from('weekly_performances')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .eq('is_completed', true)
+                    .eq('game_version', gameVersion)
+                    .order('start_date', { ascending: false })
+                    .limit(5);
+                if (recentError) throw recentError;
+                setRecentRuns(recentData || []);
             }
 
-            // Fetch squads filtered by game version
             const { data: squadsData, error: squadsError } = await supabase
                 .from('squads')
                 .select('*, squad_players(*, players(*))')
                 .eq('user_id', user.id)
-                .eq('game_version', gameVersion); // Filter by game_version
+                .eq('game_version', gameVersion);
             if (squadsError) throw squadsError;
             setSquads(squadsData || []);
 
@@ -76,53 +87,59 @@ const CurrentWeek = () => {
         }
     };
 
-    // Refetch data when user or gameVersion changes
     useEffect(() => {
         fetchData();
     }, [user, gameVersion]);
 
     const startNewWeek = async () => {
         if (!user) return;
-        // Start a new week with the current game version
         const { data, error } = await supabase
             .from('weekly_performances')
-            .insert({ user_id: user.id, game_version: gameVersion, week_number: 1, start_date: new Date().toISOString() }) // Add game_version
+            .insert({ 
+                user_id: user.id, 
+                game_version: gameVersion, 
+                week_number: (recentRuns[0]?.week_number || 0) + 1, 
+                start_date: new Date().toISOString() 
+            })
             .select()
             .single();
 
         if (error) {
             toast({ title: "Error", description: "Could not start a new week.", variant: "destructive" });
         } else if (data) {
-            setCurrentWeek(data);
-            setGames([]);
-            toast({ title: "Success", description: "New FUT Champs week started!" });
+           await fetchData();
         }
     };
     
-    const handleSave = async () => {
-        await fetchData();
-        setRecordGameModalOpen(false);
-        const gamesPlayed = games.length + 1;
-        if (gamesPlayed >= 20) { // Check if 20 or more games are played
-            if(currentWeek) {
-                const { data: completedWeek, error } = await supabase
-                    .from('weekly_performances')
-                    .update({ is_completed: true, end_date: new Date().toISOString() })
-                    .eq('id', currentWeek.id)
-                    .select()
-                    .single();
+    const endCurrentRun = async () => {
+        if (!currentWeek) return;
+        const { data: completedWeek, error } = await supabase
+            .from('weekly_performances')
+            .update({ is_completed: true, end_date: new Date().toISOString() })
+            .eq('id', currentWeek.id)
+            .select()
+            .single();
 
-                if (error) {
-                    toast({ title: "Error", description: "Failed to mark week as complete.", variant: "destructive" });
-                } else {
-                    setJustCompletedWeek(completedWeek);
-                    setShowCompletionPopup(true);
-                    setCurrentWeek(null);
-                    setGames([]);
-                }
-            }
+        if (error) {
+            toast({ title: "Error", description: "Failed to mark week as complete.", variant: "destructive" });
+        } else {
+            setJustCompletedWeek(completedWeek);
+            setShowCompletionPopup(true);
+            await fetchData(); // Refresh all data
         }
     };
+
+    const handleSave = async () => {
+        await fetchData(); // Refresh data first to get the new game count
+        setRecordGameModalOpen(false);
+    };
+    
+    // Auto-end run when games reach 15
+    useEffect(() => {
+        if (games.length >= 15) {
+            endCurrentRun();
+        }
+    }, [games]);
 
     if (loading) {
         return <div className="flex justify-center items-center h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>;
@@ -130,12 +147,15 @@ const CurrentWeek = () => {
 
     if (!currentWeek) {
         return (
-            <div className="text-center p-8">
-                <h2 className="text-2xl font-semibold mb-4">No Active FUT Champs Week for {gameVersion}</h2>
-                <p className="mb-6">Start a new week to begin tracking your games.</p>
-                <Button onClick={startNewWeek}>
-                    <PlusCircle className="mr-2 h-4 w-4" /> Start New Week
-                </Button>
+            <div className="container mx-auto p-4 space-y-6">
+                 <div className="text-center p-8">
+                    <h2 className="text-2xl font-semibold mb-4">No Active FUT Champs Week for {gameVersion}</h2>
+                    <p className="mb-6">Start a new week to begin tracking your games.</p>
+                    <Button onClick={startNewWeek}>
+                        <PlusCircle className="mr-2 h-4 w-4" /> Start New Week
+                    </Button>
+                </div>
+                <RecentRuns runs={recentRuns} />
             </div>
         );
     }
@@ -150,11 +170,14 @@ const CurrentWeek = () => {
 
             <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold">{currentWeek.custom_name || `Week ${currentWeek.week_number}`}</h1>
-                {games.length < 20 && (
-                    <Button onClick={() => setRecordGameModalOpen(true)}>
+                <div className="flex gap-2">
+                    <Button onClick={() => setRecordGameModalOpen(true)} disabled={games.length >= 15}>
                         <PlusCircle className="mr-2 h-4 w-4" /> Record Game
                     </Button>
-                )}
+                     <Button variant="outline" onClick={endCurrentRun}>
+                        <FlagOff className="mr-2 h-4 w-4" /> End Run
+                    </Button>
+                </div>
             </div>
 
             <Dialog open={isRecordGameModalOpen} onOpenChange={setRecordGameModalOpen}>
@@ -197,7 +220,7 @@ const CurrentWeek = () => {
                 </div>
               </TabsContent>
                <TabsContent value="stats" className="mt-4">
-                    <CurrentRunStats week={currentWeek} />
+                    <CurrentRunStats week={currentWeek} games={games} />
                </TabsContent>
               <TabsContent value="performers" className="mt-4">
                     <TopPerformers games={games} />
