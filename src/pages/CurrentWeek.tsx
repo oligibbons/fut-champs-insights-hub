@@ -20,7 +20,7 @@ import AchievementSystem from '@/components/AchievementSystem';
 import WeekNaming from '@/components/WeekNaming';
 
 const CurrentWeek = () => {
-  const { weeklyData, createWeek, saveGame, endWeek, loading, refreshData, updateWeek } = useSupabaseData();
+  const { weeklyData, createWeek, endWeek, loading, refreshData, updateWeek } = useSupabaseData();
   const [isLoggingGame, setIsLoggingGame] = useState(false);
   const [completedGame, setCompletedGame] = useState<GameResult | null>(null);
   const [completedWeek, setCompletedWeek] = useState<WeeklyPerformance | null>(null);
@@ -36,13 +36,14 @@ const CurrentWeek = () => {
   };
 
   const handleSaveGame = async () => {
-    await refreshData();
+    const refreshedData = await refreshData();
     setIsLoggingGame(false); // Close the dialog on save
 
-    const refreshedData = await refreshData();
     const updatedWeek = refreshedData.find(w => w.id === currentWeek?.id);
-    const lastGameNumber = Math.max(...(updatedWeek?.games.map(g => g.gameNumber) || [0]));
-    const newGame = updatedWeek?.games.find(g => g.gameNumber === lastGameNumber);
+    // Find the game that was just added
+    const newGame = updatedWeek?.games.reduce((latest, game) => 
+        game.gameNumber > (latest?.gameNumber || 0) ? game : latest, 
+    null as GameResult | null);
 
     if (newGame) {
       setCompletedGame(newGame);
@@ -109,7 +110,6 @@ const CurrentWeek = () => {
         </div>
         <WeekProgress wins={currentWeek.totalWins} losses={currentWeek.totalLosses} target={currentWeek.winTarget?.wins || 20} />
         
-        {/* MODIFICATION: Game Logging Form is now inside a Dialog */}
         <Dialog open={isLoggingGame} onOpenChange={setIsLoggingGame}>
           <DialogTrigger asChild>
             <div className="text-center">
@@ -120,6 +120,7 @@ const CurrentWeek = () => {
             <DialogHeader>
               <DialogTitle>Log Game #{currentWeek.games.length + 1}</DialogTitle>
             </DialogHeader>
+            {/* Pass the correct props to the form */}
             <GameRecordForm 
               weekId={currentWeek.id} 
               nextGameNumber={currentWeek.games.length + 1} 
@@ -139,7 +140,7 @@ const CurrentWeek = () => {
           <TabsContent value="stats" className="mt-4"><CurrentRunStats week={currentWeek} /></TabsContent>
           <TabsContent value="gamelog" className="mt-4">
             <Card>
-              <CardHeader><CardTitle>Game Log</CardTitle></CardHeader>
+              <CardHeader><CardTitle>Game Log</CardTitle></Header>
               <CardContent><div className="space-y-2">{currentWeek.games.slice().reverse().map(game => (<div key={game.id} className="flex justify-between items-center p-3 bg-secondary/50 rounded-lg"><div className="flex items-center gap-4"><span className={`font-bold ${game.result === 'win' ? 'text-green-500' : 'text-red-500'}`}>{game.result.toUpperCase()}</span><span>Game {game.gameNumber}</span><span className="font-mono">{game.scoreLine}</span></div><div className="text-xs text-muted-foreground">vs Skill: {game.opponentSkill}/10</div></div>))}</div></CardContent>
             </Card>
           </TabsContent>
