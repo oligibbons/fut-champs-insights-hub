@@ -56,6 +56,11 @@
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', sans-serif;
+    background-image:
+        radial-gradient(hsl(var(--secondary)) 1px, transparent 1px),
+        radial-gradient(hsl(var(--secondary)) 1px, hsl(var(--background)) 1px);
+    background-size: 40px 40px;
+    background-position: 0 0, 20px 20px;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Inter', sans-serif;
@@ -63,8 +68,18 @@
   }
 }
 
-.gradient-text {
-  background: linear-gradient(to right, #3b82f6, #8b5cf6);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+@layer components {
+  .glass-card {
+    background: hsl(var(--card) / 0.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    @apply rounded-xl border border-white/10 shadow-lg;
+  }
+
+  .gradient-text {
+    background: linear-gradient(to right, #3b82f6, #8b5cf6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
 }
+
