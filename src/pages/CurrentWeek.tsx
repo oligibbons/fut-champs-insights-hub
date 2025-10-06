@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Loader2 } from 'lucide-react';
-import GameCard from '@/components/GameCard';
+import GameCard from '../components/GameCard';
 import WeekProgress from '@/components/WeekProgress';
 import { Game, FutChampsWeek } from '@/types/futChampions';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
