@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Loader2 } from 'lucide-react';
-// import GameCard from '@/components/GameCard'; // This component does not exist in the project.
+import GameCard from '@/components/GameCard';
 import WeekProgress from '@/components/WeekProgress';
 import { Game, FutChampsWeek } from '@/types/futChampions';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -28,10 +28,10 @@ const CurrentWeek = () => {
         setLoading(true);
         try {
             const { data: weekData, error: weekError } = await supabase
-                .from('weekly_performances')
+                .from('fut_champs_weeks')
                 .select('*')
                 .eq('user_id', user.id)
-                .eq('is_completed', false)
+                .is('completed_at', null)
                 .order('created_at', { ascending: false })
                 .limit(1)
                 .single();
@@ -59,7 +59,7 @@ const CurrentWeek = () => {
             if (squadsError) throw squadsError;
             setSquads(squadsData || []);
 
-        } catch (error: any) {
+        } catch (error: any) a/s/supabase';
             console.error('Error fetching data:', error);
             toast({ title: "Error", description: "Failed to fetch current week data.", variant: "destructive" });
         } finally {
@@ -74,7 +74,7 @@ const CurrentWeek = () => {
     const startNewWeek = async () => {
         if (!user) return;
         const { data, error } = await supabase
-            .from('weekly_performances')
+            .from('fut_champs_weeks')
             .insert({ user_id: user.id })
             .select()
             .single();
@@ -95,8 +95,8 @@ const CurrentWeek = () => {
         if (gamesPlayed === 20) {
             if(currentWeek) {
                 const { data: completedWeek, error } = await supabase
-                    .from('weekly_performances')
-                    .update({ is_completed: true })
+                    .from('fut_champs_weeks')
+                    .update({ completed_at: new Date().toISOString() })
                     .eq('id', currentWeek.id)
                     .select()
                     .single();
@@ -173,13 +173,9 @@ const CurrentWeek = () => {
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {/* The GameCard component is missing, so the list of games cannot be displayed. */}
-                {/* You will need to create or restore the GameCard.tsx component to see your games here. */}
-                {/*
                 {games.map(game => (
                     <GameCard key={game.id} game={game} />
                 ))}
-                */}
             </div>
         </div>
     );
