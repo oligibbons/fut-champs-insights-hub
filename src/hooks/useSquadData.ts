@@ -17,32 +17,10 @@ export const useSquadData = () => {
     if (!user) return;
     setLoading(true);
     try {
-      // DEFINITIVE FIX: This explicit query ensures all nested data is returned correctly.
+      // DEFINITIVE FIX: A clean query that relies on Supabase's JOIN inference.
       const { data: squadsData, error: squadsError } = await supabase
         .from('squads')
-        .select(`
-          id,
-          name,
-          formation,
-          is_default,
-          games_played,
-          wins,
-          losses,
-          squad_players (
-            id,
-            slot_id,
-            position,
-            players (
-              id,
-              name,
-              rating,
-              position,
-              card_type,
-              club,
-              is_evolution
-            )
-          )
-        `)
+        .select('*, squad_players(*, players(*))')
         .eq('user_id', user.id)
         .eq('game_version', gameVersion);
 
@@ -50,9 +28,8 @@ export const useSquadData = () => {
         throw squadsError;
       }
 
-      if (squadsData) {
-        setSquads(squadsData as unknown as Squad[]);
-      }
+      // Directly set the correctly-structured data from Supabase. No more manual stitching.
+      setSquads(squadsData || []);
 
     } catch (error: any) {
       toast.error('Failed to fetch squad data.');
@@ -156,7 +133,7 @@ export const useSquadData = () => {
     const newSquadData = { ...restOfSquad, name: `${originalSquad.name} (Copy)`, is_default: false, games_played: 0, wins: 0, losses: 0 };
     await createSquad(newSquadData);
   };
-  
+
   const deleteSquad = async (squadId: string) => {
     try {
       const { error } = await supabase.from('squads').delete().eq('id', squadId);
@@ -187,8 +164,8 @@ export const useSquadData = () => {
           return null;
       }
   };
-  
-    const addPlayerToSquad = async (squadId: string, playerId: string, position: string) => {
+
+  const addPlayerToSquad = async (squadId: string, playerId: string, position: string) => {
     try {
         const { data, error } = await supabase.from('squad_players').insert([{ squad_id: squadId, player_id: playerId, position }]).select('*, players(*)').single();
         if (error) throw error;
@@ -206,7 +183,7 @@ export const useSquadData = () => {
     try {
         await supabase.from('squad_players').delete().eq('id', squadPlayerId);
         toast.success('Player removed from squad.');
-        await fetchSquads(); 
+        await fetchSquads();
     } catch (error: any) {
         toast.error('Failed to remove player from squad.');
     }
