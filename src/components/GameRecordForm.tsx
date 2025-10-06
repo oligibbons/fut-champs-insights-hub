@@ -148,11 +148,10 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
     const { control, handleSubmit, watch, setValue, getValues, formState: { errors, isSubmitting, isValid } } = useForm({
         resolver: zodResolver(gameFormSchema),
         mode: 'onChange',
-        // FIX: Remove defaultSquad from initial values to prevent race condition.
         defaultValues: {
             user_goals: 0, opponent_goals: 0, duration: 90, opponent_skill: 5, server_quality: 5,
             stress_level: 5, cross_play_enabled: false, opponent_play_style: 'balanced',
-            opponent_formation: '', opponent_squad_rating: 85, squad_id: '', // Initialize as empty
+            opponent_formation: '', opponent_squad_rating: 85, squad_id: '',
             tags: [], comments: '',
             team_stats: {
                 shots: 8, shotsOnTarget: 4, possession: 50, expectedGoals: 1.2,
@@ -180,27 +179,22 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
         setValue(fieldName, newValue, { shouldValidate: true, shouldDirty: true });
     }, [getValues, setValue]);
 
-    // FIX: This useEffect now correctly handles the entire data lifecycle.
     useEffect(() => {
-        // Condition 1: Squads have loaded, but no squad is selected yet.
-        if (squads.length > 0 && !watchedValues.squad_id) {
+        if (squads.length === 0) return;
+
+        if (!watchedValues.squad_id) {
             const defaultSquad = squads.find(s => s.is_default);
             if (defaultSquad) {
-                // Set the default squad ID, which will trigger another re-render.
                 setValue('squad_id', defaultSquad.id, { shouldValidate: true });
             }
-            return; // Exit to wait for the re-render.
+            return;
         }
 
-        // Condition 2: A squad is selected, but its data is incomplete (still stitching).
-        if (!selectedSquad || !selectedSquad.squad_players || !selectedSquad.squad_players.every(sp => sp && sp.players)) {
-            if (getValues('player_stats')?.length > 0) {
-                setValue('player_stats', []); // Clear players if data is not ready.
-            }
-            return; // Exit and wait for complete data.
+        if (!selectedSquad || !selectedSquad.squad_players) {
+            if (getValues('player_stats')?.length > 0) setValue('player_stats', []);
+            return;
         }
 
-        // Condition 3: Squad is fully loaded. Proceed with populating players.
         const currentPlayers = getValues('player_stats') || [];
         
         const newStarters = selectedSquad.squad_players
@@ -222,7 +216,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
             });
 
         const manualSubs = currentPlayers.filter((p: PlayerPerformance) => 
-            p.position === 'SUB' && !selectedSquad.squad_players.some(sp => sp.players.id === p.id)
+            p.position === 'SUB' && !newStarters.some(starter => starter.id === p.id)
         );
 
         const finalPlayerList = [...newStarters, ...manualSubs];
@@ -232,9 +226,67 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
         }
     }, [squads, selectedSquad, watchedValues.squad_id, watchedValues.duration, setValue, getValues]);
 
+    const addSubstitute = () => {
+        if (!selectedSquad) {
+            toast({ title: "Please select a squad first.", variant: "destructive" });
+            return;
+        }
+        const currentIds = watchedValues.player_stats?.map(p => p.id) || [];
+        const availableSubs = (selectedSquad.squad_players || []).filter(p => p.slot_id?.startsWith('sub-') && p.players && !currentIds.includes(p.players.id));
+        if (availableSubs.length > 0) {
+            const subToAdd = availableSubs[0].players;
+            setValue('player_stats', [...(watchedValues.player_stats || []), {
+                id: subToAdd.id, name: subToAdd.name, position: 'SUB', rating: 6.0, goals: 0, assists: 0,
+                minutesPlayed: 0, yellowCards: 0, redCards: 0, ownGoals: 0,
+            }]);
+        } else {
+            toast({ title: "No available substitutes left in this squad.", variant: "destructive" });
+        }
+    };
 
-    const addSubstitute = () => { /* This function remains unchanged */ };
-    const processSubmit = async (data: z.infer<typeof gameFormSchema>) => { /* This function remains unchanged */ };
+    const processSubmit = async (data: z.infer<typeof gameFormSchema>) => {
+        if (!user) return;
+        const result = data.user_goals > data.opponent_goals ? 'win' : 'loss';
+        try {
+            const { data: gameResult, error: gameError } = await supabase.from('game_results').insert({
+                week_id: weekId, user_id: user.id, game_number: nextGameNumber, result,
+                score_line: `${data.user_goals}-${data.opponent_goals}`, user_goals: data.user_goals,
+                opponent_goals: data.opponent_goals, opponent_skill: data.opponent_skill,
+                server_quality: data.server_quality, stress_level: data.stress_level,
+                duration: data.duration, comments: data.comments, tags: data.tags, squad_used: data.squad_id
+            }).select('id').single();
+            if (gameError) throw gameError;
+
+            const hasNoStatsTag = data.tags?.some(tagName => matchTags.find(t => t.name === tagName)?.specialRule === 'no_stats');
+            if (!hasNoStatsTag) {
+                const { error: teamStatsError } = await supabase.from('team_statistics').insert({
+                    game_id: gameResult.id, user_id: user.id, shots: data.team_stats.shots,
+                    shots_on_target: data.team_stats.shotsOnTarget, possession: data.team_stats.possession,
+                    expected_goals: data.team_stats.expectedGoals, expected_goals_against: data.team_stats.expectedGoalsAgainst,
+                    passes: data.team_stats.passes, pass_accuracy: data.team_stats.passAccuracy,
+                    corners: data.team_stats.corners, fouls: data.team_stats.fouls,
+                    yellow_cards: data.team_stats.yellowCards, red_cards: data.team_stats.redCards,
+                });
+                if (teamStatsError) throw teamStatsError;
+
+                const validPlayerStats = data.player_stats?.filter(p => p.minutesPlayed > 0);
+                if (validPlayerStats?.length > 0) {
+                    const performances = validPlayerStats.map(p => ({
+                        game_id: gameResult.id, user_id: user.id, player_name: p.name, position: p.position,
+                        rating: parseFloat(p.rating.toFixed(1)), goals: p.goals, assists: p.assists,
+                        minutes_played: p.minutesPlayed, yellow_cards: p.yellowCards,
+                        red_cards: p.redCards, own_goals: p.ownGoals
+                    }));
+                    const { error: playerStatsError } = await supabase.from('player_performances').insert(performances);
+                    if (playerStatsError) throw playerStatsError;
+                }
+            }
+            toast({ title: "Game Saved Successfully!" });
+            await onSave();
+        } catch (error: any) {
+            toast({ title: "Error Saving Game", description: error.message, variant: "destructive" });
+        }
+    };
 
     return (
         <form onSubmit={handleSubmit(processSubmit)} className="flex flex-col h-full">
