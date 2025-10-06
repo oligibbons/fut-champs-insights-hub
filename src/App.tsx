@@ -20,7 +20,7 @@ import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
-import "./App.css";
+// The "./App.css" import has been removed.
 
 function App() {
   const { setTheme } = useTheme();
