@@ -28,7 +28,7 @@ const CurrentWeek = () => {
         setLoading(true);
         try {
             const { data: weekData, error: weekError } = await supabase
-                .from('fut_champs_weeks')
+                .from('weekly_performances')
                 .select('*')
                 .eq('user_id', user.id)
                 .is('completed_at', null)
@@ -74,7 +74,7 @@ const CurrentWeek = () => {
     const startNewWeek = async () => {
         if (!user) return;
         const { data, error } = await supabase
-            .from('fut_champs_weeks')
+            .from('weekly_performances')
             .insert({ user_id: user.id })
             .select()
             .single();
@@ -95,7 +95,7 @@ const CurrentWeek = () => {
         if (gamesPlayed === 20) {
             if(currentWeek) {
                 const { data: completedWeek, error } = await supabase
-                    .from('fut_champs_weeks')
+                    .from('weekly_performances')
                     .update({ completed_at: new Date().toISOString() })
                     .eq('id', currentWeek.id)
                     .select()
