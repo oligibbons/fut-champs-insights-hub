@@ -59,7 +59,7 @@ const CurrentWeek = () => {
             if (squadsError) throw squadsError;
             setSquads(squadsData || []);
 
-        } catch (error: any) a/s/supabase';
+        } catch (error: any) {
             console.error('Error fetching data:', error);
             toast({ title: "Error", description: "Failed to fetch current week data.", variant: "destructive" });
         } finally {
