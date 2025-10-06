@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSupabaseData } from '@/hooks/useSupabaseData';
-import { useSquadData } from '@/hooks/useSquadData'; // ADDED: Import the squad data hook
+import { useSquadData } from '@/hooks/useSquadData';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -22,7 +22,7 @@ import WeekNaming from '@/components/WeekNaming';
 
 const CurrentWeek = () => {
   const { weeklyData, createWeek, endWeek, loading: weekLoading, refreshData, updateWeek } = useSupabaseData();
-  const { squads, loading: squadsLoading } = useSquadData(); // ADDED: Fetch squads here
+  const { squads, loading: squadsLoading } = useSquadData();
   const [isLoggingGame, setIsLoggingGame] = useState(false);
   const [completedGame, setCompletedGame] = useState<GameResult | null>(null);
   const [completedWeek, setCompletedWeek] = useState<WeeklyPerformance | null>(null);
@@ -122,7 +122,7 @@ const CurrentWeek = () => {
               <DialogTitle>Log Game #{currentWeek.games.length + 1}</DialogTitle>
             </DialogHeader>
             <GameRecordForm 
-              squads={squads} // MODIFIED: Pass the fetched squads as a prop
+              squads={squads}
               weekId={currentWeek.id} 
               nextGameNumber={currentWeek.games.length + 1} 
               onSave={handleSaveGame} 
