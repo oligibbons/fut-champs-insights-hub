@@ -262,28 +262,29 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
   };
 
 
-  // FIX 1 & 2: Logic to populate player stats correctly (starters=duration, subs=0)
+  // FIX: Logic to robustly initialize player stats based on the selected squad's starting XI
   useEffect(() => {
+    // 1. If no squad is selected yet but a default one exists, set it.
     if (!watchedValues.squad_id && defaultSquad) {
         setValue('squad_id', defaultSquad.id);
+        return; // Exit and let the next cycle run with the correct squad_id
     }
-
+    
+    // Use the already calculated selectedSquad (which relies on watchedValues.squad_id and squads)
     if (selectedSquad) {
       // Access the raw joined data safely, defaulting to an empty array
       const allSquadPlayers = selectedSquad.squad_players || [];
       
       const initialPlayerStats = allSquadPlayers
-        // 1. Filter: ONLY take players that are part of the Starting XI
+        // Filter: ONLY take players that are part of the Starting XI
         .filter(squadPlayer => squadPlayer.slot_id && squadPlayer.slot_id.startsWith('starting-'))
         .map(squadPlayer => {
-          // 2. Map: Build the PlayerPerformance object
-          // CRITICAL: Ensure the nested 'players' object is present
-          if (!squadPlayer.players) {
-            // If the nested player object is missing, skip the player entirely
-            return null; 
+          // CRITICAL: Ensure the nested 'players' object is present AND all fields exist
+          const player = squadPlayer.players;
+          if (!player || !player.id) {
+            return null; // Skip invalid entries
           }
           
-          const player = squadPlayer.players;
           const minutes = watchedValues.duration || 90;
 
           return {
@@ -297,16 +298,24 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
             yellowCards: 0,
             redCards: 0,
             ownGoals: 0,
-          };
+          } as PlayerPerformance;
         })
         .filter((p): p is PlayerPerformance => p !== null); // Remove any failed maps
 
-      setValue('player_stats', initialPlayerStats);
-    } else if (squads.length > 0) {
+      // 3. Update player_stats ONLY if the new list differs from the old list to avoid unnecessary re-renders
+      const currentFormPlayerIds = getValues('player_stats')?.map((p: any) => p.id).sort().join(',') || '';
+      const newPlayerIds = initialPlayerStats.map(p => p.id).sort().join(',');
+
+      if (currentFormPlayerIds !== newPlayerIds) {
+          setValue('player_stats', initialPlayerStats);
+      }
+    } else if (watchedValues.squad_id) {
+        // If a squad_id is set but selectedSquad is null (e.g., loading or doesn't exist), ensure player_stats is empty
         setValue('player_stats', []);
     }
     
-  }, [selectedSquad, watchedValues.duration, defaultSquad, setValue, squads.length, watchedValues.squad_id]);
+  }, [selectedSquad, watchedValues.duration, watchedValues.squad_id, defaultSquad, setValue, getValues, squads]); // Explicitly watch all dependencies
+
 
   const addSubstitute = () => {
     if (!selectedSquad) {
