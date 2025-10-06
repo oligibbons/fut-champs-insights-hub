@@ -11,64 +11,44 @@ body {
     background-position: 0 0, 20px 20px;
 }
 
-.card-gradient-border {
-  border-radius: 1.5rem; /* More rounded corners */
-  border: 3px solid;
-  border-image-slice: 1;
-  border-width: 3px;
-  border-image-source: linear-gradient(to right, var(--primary), var(--secondary));
-  transition: all 0.3s ease-in-out;
+/* Glassmorphism Card Style */
+.glass-card {
+    background: rgba(var(--card-rgb), 0.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    transition: all 0.3s ease;
 }
 
-.card-gradient-border:hover {
-    transform: translateY(-5px) scale(1.02);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+.glass-card:hover {
+    background: rgba(var(--card-rgb), 0.7);
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.45);
 }
 
+/* Updated Button Style */
 .modern-button-primary {
+    font-family: 'Teko', sans-serif;
+    font-size: 1.25rem;
+    letter-spacing: 1px;
     background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
     color: var(--primary-foreground);
     border: none;
     transition: all 0.3s ease;
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    border-radius: 0.75rem;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1.5rem;
 }
 
 .modern-button-primary:hover {
-    transform: translateY(-3px);
+    transform: translateY(-3px) scale(1.05);
     box-shadow: 0 8px 25px rgba(0,0,0,0.4);
     filter: brightness(1.2);
 }
 
-.subtle-glow:hover {
-  box-shadow: 0 0 20px 0px hsla(var(--primary-hsl), 0.6);
-}
-
-.link-hover-effect {
-    position: relative;
-    text-decoration: none;
-    color: var(--accent2);
-    transition: color 0.3s ease;
-}
-
-.link-hover-effect::after {
-    content: '';
-    position: absolute;
-    width: 100%;
-    transform: scaleX(0);
-    height: 2px;
-    bottom: -2px;
-    left: 0;
-    background-color: var(--accent);
-    transform-origin: bottom right;
-    transition: transform 0.25s ease-out;
-}
-
-.link-hover-effect:hover {
-    color: var(--accent);
-}
-
-.link-hover-effect:hover::after {
-    transform: scaleX(1);
-    transform-origin: bottom left;
+/* General Link Styling */
+a {
+    transition: color 0.2s ease-in-out;
 }
