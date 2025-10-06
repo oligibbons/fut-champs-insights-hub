@@ -6,7 +6,8 @@ import { Trophy, Target, TrendingUp, BarChart3 } from 'lucide-react';
 const CurrentRunStats = ({ week, games }: { week: FutChampsWeek | null, games: Game[] }) => {
     
     const runStats = useMemo(() => {
-        if (!week || games.length === 0) return null;
+        // Correctly check the games prop for its length
+        if (!week || !games || games.length === 0) return null;
 
         const totalGames = games.length;
         const totalWins = games.filter(g => g.result === 'win').length;
