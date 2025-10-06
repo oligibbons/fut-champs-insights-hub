@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { Squad, PlayerCard, SquadPlayer, CardType } from '../types/squads';
-import { useAuth } from '../contexts/Auth/AuthContext';
+import { useAuth } from '../contexts/AuthContext'; // FIX: Corrected import path
 import { toast } from 'sonner';
 import { useGameVersion } from '@/contexts/GameVersionContext';
 
@@ -243,6 +243,7 @@ export const useSquadData = () => {
   
     const addPlayerToSquad = async (squadId: string, playerId: string, position: string) => {
     try {
+        // NOTE: If RLS is preventing the nested players data here, fetchSquads will correct it on re-fetch
         const { data, error } = await supabase
             .from('squad_players')
             .insert([{ squad_id: squadId, player_id: playerId, position }])
@@ -285,9 +286,6 @@ export const useSquadData = () => {
         setSquads(prev =>
             prev.map(s => {
                 if (s.id === squadId) {
-                    // Filter out the removed player. Note: the types in Squad need update
-                    // to reflect the joined data structure if this component relies on it.
-                    // Assuming the component can handle the updated state after fetchSquads runs.
                     return { ...s, squad_players: s.squad_players.filter((p: any) => p.id !== squadPlayerId) };
                 }
                 return s;
