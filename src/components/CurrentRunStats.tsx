@@ -1,12 +1,11 @@
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FutChampsWeek, Game } from '@/types/futChampions';
-import { Trophy, Target, TrendingUp, BarChart3 } from 'lucide-react';
+import { Trophy, Target, TrendingUp, BarChart3, Crosshair } from 'lucide-react';
 
 const CurrentRunStats = ({ week, games }: { week: FutChampsWeek | null, games: Game[] }) => {
     
     const runStats = useMemo(() => {
-        // Correctly check the games prop for its length
         if (!week || !games || games.length === 0) return null;
 
         const totalGames = games.length;
@@ -15,7 +14,6 @@ const CurrentRunStats = ({ week, games }: { week: FutChampsWeek | null, games: G
         const totalGoals = games.reduce((sum, game) => sum + (game.user_goals || 0), 0);
         const totalConceded = games.reduce((sum, game) => sum + (game.opponent_goals || 0), 0);
 
-        // Team stats aggregation from nested team_statistics
         const allTeamStats = games.map(g => g.team_statistics).flat().filter(Boolean);
         const totalPossession = allTeamStats.reduce((sum, stats) => sum + (stats.possession || 50), 0);
         const totalShots = allTeamStats.reduce((sum, stats) => sum + (stats.shots || 0), 0);
@@ -54,7 +52,7 @@ const CurrentRunStats = ({ week, games }: { week: FutChampsWeek | null, games: G
 
     return (
         <div className="space-y-4">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                  <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Win Rate</CardTitle>
@@ -73,6 +71,16 @@ const CurrentRunStats = ({ week, games }: { week: FutChampsWeek | null, games: G
                     <CardContent>
                         <div className="text-2xl font-bold">{runStats.goalRatio}</div>
                         <p className="text-xs text-muted-foreground">{runStats.goals} For / {runStats.conceded} Against</p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Shot Accuracy</CardTitle>
+                        <Crosshair className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{runStats.shotAccuracy}%</div>
+                        <p className="text-xs text-muted-foreground">On target</p>
                     </CardContent>
                 </Card>
                 <Card>
