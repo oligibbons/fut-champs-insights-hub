@@ -15,24 +15,22 @@ import { Toggle } from '@/components/ui/toggle';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Save, Loader2, UserPlus, Users, Plus, Minus, Trophy, Shield, BarChartHorizontal, Star } from 'lucide-react';
 import PlayerStatsForm from './PlayerStatsForm';
-import { Squad, PlayerCard } from '@/types/squads';
+import { Squad, PlayerCard, SquadPlayer } from '@/types/squads';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from './ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlayerPerformance } from '@/types/futChampions';
 import { get, isEqual } from 'lodash';
 
-// Interfaces
-interface SquadPlayerJoin { id: string; player_id: string; position: string; slot_id: string; players: PlayerCard; }
-interface SquadWithPlayers extends Squad { squad_players: SquadPlayerJoin[]; }
-
 // Zod Schema
 const gameFormSchema = z.object({
     user_goals: z.coerce.number().min(0), opponent_goals: z.coerce.number().min(0), duration: z.coerce.number().min(1), opponent_skill: z.number().min(1).max(10), server_quality: z.number().min(1).max(10), stress_level: z.number().min(1).max(10), cross_play_enabled: z.boolean(), opponent_play_style: z.string(), opponent_formation: z.string().optional(), opponent_squad_rating: z.coerce.number().min(50).max(99), squad_id: z.string().min(1, { message: "Please select a squad." }), tags: z.array(z.string()).optional(), comments: z.string().optional(), team_stats: z.object({ shots: z.coerce.number().min(0), shotsOnTarget: z.coerce.number().min(0), possession: z.coerce.number().min(0).max(100), expectedGoals: z.coerce.number().min(0), expectedGoalsAgainst: z.coerce.number().min(0), passes: z.coerce.number().min(0), passAccuracy: z.coerce.number().min(0).max(100), corners: z.coerce.number().min(0), fouls: z.coerce.number().min(0), yellowCards: z.coerce.number().min(0), redCards: z.coerce.number().min(0), }), player_stats: z.array(z.any()).optional(),
 });
 
-// Match Tags Data (omitted for brevity)
-const matchTags = [ /* ... */ ];
+// Match Tags Data
+const matchTags = [
+    { id: 'dominantWin', name: 'Dominant Win', description: 'A win where you dominated your opponent.' }, { id: 'deservedLoss', name: 'Deserved Loss', description: 'A loss where you didn’t deserve to win.' }, { id: 'closeGame', name: 'Close Game', description: 'A game where irrespective of the result, it was tightly contested.' }, { id: 'extraTime', name: 'Extra Time', description: 'A game that went to Extra Time.' }, { id: 'penalties', name: 'Penalties', description: 'A game that went all the way to penalties.' }, { id: 'opponentRageQuit', name: 'Opponent Rage Quit', description: 'A game where the opponent quit while you were winning.' }, { id: 'iRageQuit', name: 'I Rage Quit', description: 'A game where you quit out after being behind.' }, { id: 'freeWinReceived', name: 'Free Win Received', description: 'A game where the opponent gifted you a win. Does not impact performance stats.', specialRule: 'no_stats' }, { id: 'freeWinGiven', name: 'Free Win Given Away', description: 'A game where you gifted the opponent a win. Does-not-impact performance stats.', specialRule: 'no_stats' }, { id: 'disconnected', name: 'Disconnected', description: 'A game where you were disconnected by the servers. Does not impact performance stats.', specialRule: 'no_stats' }, { id: 'badServers', name: 'Bad Servers', description: 'A game where the servers made gameplay challenging.' }, { id: 'frustratingGame', name: 'Frustrating Game', description: 'A game that caused you significant frustration.' }, { id: 'stressful', name: 'Stressful', description: 'A game that was stressful for you.' }, { id: 'skillGod', name: 'Skill God', description: 'A game against an opponent who uses a high level of skill moves effectively.' }, { id: 'undeservedLoss', name: 'Undeserved Loss', description: 'A game where you lost, but didn’t deserve to.' }, { id: 'undeservedWin', name: 'Undeserved Win', description: 'A game where you won, but didn’t deserve to.' }, { id: 'comebackWin', name: 'Comeback Win', description: 'A game where you came from behind to win.' }, { id: 'bottledLeadLoss', name: 'Bottled Lead Loss', description: 'A game where you lost from a winning position.' }, { id: 'goalFest', name: 'Goal Fest', description: 'A game with a large number of goals (typically 8+).' }, { id: 'defensiveBattle', name: 'Defensive Battle', description: 'A game where both players relied heavily on defending well.' }, { id: 'gameToBeProudOf', name: 'Game To Be Proud Of', description: 'A game that regardless of the result, you can be proud of.' }, { id: 'hacker', name: 'Hacker', description: 'A game where you faced a hacker.' }, { id: 'confirmedPro', name: 'Confirmed Pro Opponent', description: 'A game where you faced a confirmed professional FC player.' }, { id: 'eliteOpponent', name: 'Elite Opponent', description: 'A game against an elite-level player (possibly pro, but not confirmed).' }, { id: 'cutBackMerchant', name: 'Cut Back Merchant', description: 'An opponent whose sole game plan was to score cutbacks.' }, { id: 'defensiveMasterclass', name: 'Defensive Masterclass', description: 'A game where you defended to a very high level.' }, { id: 'attackingMasterclass', name: 'Attacking Masterclass', description: 'A game where you attacked to a very high level.' }, { id: 'defensiveDunce', name: 'Defensive Dunce', description: 'A game where you struggled to defend, to the point of embarrassment.' }, { id: 'attackingAmateur', name: 'Attacking Amateur', description: 'A game where you couldn’t attack to save your life.' }, { id: 'pay2WinRat', name: 'Pay2Win Rat', description: 'An opponent with a team that could only be achieved by spending a fortune.' }, { id: 'metaRat', name: 'Meta Rat', description: 'An opponent who uses every possible meta tactic/technique to get the win.' }, { id: 'opponentRubberBanded', name: 'Opponent Rubber Banded', description: 'The opponent put their controller down and stopped playing.' }, { id: 'iRubberBanded', name: 'I Rubber Banded', description: 'You put your controller down and stopped playing at some point.' }, { id: 'poorQualityOpponent', name: 'Poor Quality Opponent', description: 'An opponent who is simply not very good at the game.' }, { id: 'fairResult', name: 'Fair Result', description: 'Regardless of who won or lost, the result was a fair reflection of the performance.' }, { id: 'myOwnWorstEnemy', name: 'My Own Worst Enemy', description: 'Your own consistent mistakes caused you significant problems.' }, { id: 'funGame', name: 'Fun Game', description: 'A game that you enjoyed playing, irrespective of the result.' },
+];
 
 const NumberInputWithSteppers = memo(({ control, name, label, step = 1, className = '', inputClassName = 'text-center', minInputWidth = 'w-14', adjustValue, getValues }: any) => {
     const minConstraint = ['opponent_skill', 'server_quality', 'stress_level', 'duration'].some(f => name.includes(f)) ? 1 : 0;
@@ -69,7 +67,7 @@ const GameRecordForm = ({ squads, weekId, nextGameNumber, onSave, onCancel }: Ga
     const selectedSquadId = watchedValues.squad_id;
     const gameDuration = watchedValues.duration;
 
-    const selectedSquad = squads.find(s => s.id === selectedSquadId) as SquadWithPlayers | undefined;
+    const selectedSquad = squads.find(s => s.id === selectedSquadId);
 
     const adjustNumericalValue = useCallback((fieldName: any, delta: number, stepValue: number = 1) => {
         let currentValue = get(getValues(), fieldName);
@@ -86,61 +84,51 @@ const GameRecordForm = ({ squads, weekId, nextGameNumber, onSave, onCancel }: Ga
     }, [getValues, setValue]);
 
     useEffect(() => {
-        if (squads.length > 0 && !selectedSquadId) {
-            const defaultSquad = squads.find(s => s.is_default);
+        if (squads.length > 0 && !getValues('squad_id')) {
+            const defaultSquad = squads.find(s => s.is_default) || squads[0];
             if (defaultSquad) {
                 setValue('squad_id', defaultSquad.id, { shouldValidate: true });
             }
         }
-    }, [squads, selectedSquadId, setValue]);
+    }, [squads, setValue, getValues]);
 
     useEffect(() => {
-        if (selectedSquad) {
-            const newStarters = (selectedSquad.squad_players || [])
-                .filter(sp => sp && sp.slot_id?.startsWith('starting-') && sp.players)
+        if (selectedSquad && selectedSquad.squad_players) {
+            const newStarters = selectedSquad.squad_players
+                .filter((sp): sp is SquadPlayer & { players: PlayerCard } => 
+                    !!sp && sp.slot_id?.startsWith('starting-') && !!sp.players
+                )
                 .map(sp => ({
                     id: sp.players.id,
                     name: sp.players.name,
                     position: sp.players.position,
-                    rating: 7.0,
-                    goals: 0,
-                    assists: 0,
+                    rating: 7.0, goals: 0, assists: 0,
                     minutesPlayed: gameDuration || 90,
-                    yellowCards: 0,
-                    redCards: 0,
-                    ownGoals: 0,
+                    yellowCards: 0, redCards: 0, ownGoals: 0,
                 }));
-
-            const currentPlayers = getValues('player_stats') || [];
-            const manualSubs = currentPlayers.filter((p: PlayerPerformance) => {
-                const isStarterInNewSquad = newStarters.some(starter => starter.id === p.id);
-                return p.position === 'SUB' && !isStarterInNewSquad;
-            });
-
-            const finalPlayerList = [...newStarters, ...manualSubs];
-
-            if (!isEqual(currentPlayers, finalPlayerList)) {
-                setValue('player_stats', finalPlayerList, { shouldValidate: true, shouldDirty: true });
-            }
+            
+            setValue('player_stats', newStarters, { shouldValidate: true, shouldDirty: true });
         } else {
-            if (getValues('player_stats').length > 0) {
-                 setValue('player_stats', [], { shouldValidate: true, shouldDirty: true });
-            }
+             setValue('player_stats', [], { shouldValidate: true, shouldDirty: true });
         }
-    }, [selectedSquad, gameDuration, setValue, getValues]);
+    }, [selectedSquad, gameDuration, setValue]);
 
     const addSubstitute = () => {
         if (!selectedSquad) { toast({ title: "Please select a squad first.", variant: "destructive" }); return; }
-        const currentIds = watchedValues.player_stats?.map(p => p.id) || [];
-        const availableSubs = (selectedSquad.squad_players || []).filter(p => p.slot_id?.startsWith('sub-') && p.players && !currentIds.includes(p.players.id));
+        const currentIds = getValues('player_stats').map(p => p.id);
+        const availableSubs = (selectedSquad.squad_players || [])
+            .filter((sp): sp is SquadPlayer & { players: PlayerCard } => 
+                !!sp && sp.slot_id?.startsWith('sub-') && !!sp.players && !currentIds.includes(sp.players.id)
+            );
+
         if (availableSubs.length > 0) {
             const subToAdd = availableSubs[0].players;
-            setValue('player_stats', [...(watchedValues.player_stats || []), { id: subToAdd.id, name: subToAdd.name, position: 'SUB', rating: 6.0, goals: 0, assists: 0, minutesPlayed: 0, yellowCards: 0, redCards: 0, ownGoals: 0, }]);
+            setValue('player_stats', [...getValues('player_stats'), { id: subToAdd.id, name: subToAdd.name, position: 'SUB', rating: 6.0, goals: 0, assists: 0, minutesPlayed: 0, yellowCards: 0, redCards: 0, ownGoals: 0, }]);
         } else {
             toast({ title: "No available substitutes left in this squad.", variant: "destructive" });
         }
     };
-
+    
     const processSubmit = async (data: z.infer<typeof gameFormSchema>) => {
         if (!user) return;
         const result = data.user_goals > data.opponent_goals ? 'win' : 'loss';
@@ -205,3 +193,4 @@ const GameRecordForm = ({ squads, weekId, nextGameNumber, onSave, onCancel }: Ga
 };
 
 export default GameRecordForm;
+
