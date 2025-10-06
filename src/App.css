@@ -2,26 +2,73 @@
 @tailwind components;
 @tailwind utilities;
 
+body {
+    background-color: var(--background);
+    background-image:
+        radial-gradient(var(--secondary) 1px, transparent 1px),
+        radial-gradient(var(--secondary) 1px, var(--background) 1px);
+    background-size: 40px 40px;
+    background-position: 0 0, 20px 20px;
+}
+
 .card-gradient-border {
-  border: 2px solid;
+  border-radius: 1.5rem; /* More rounded corners */
+  border: 3px solid;
   border-image-slice: 1;
-  border-width: 2px;
+  border-width: 3px;
   border-image-source: linear-gradient(to right, var(--primary), var(--secondary));
+  transition: all 0.3s ease-in-out;
+}
+
+.card-gradient-border:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
 }
 
 .modern-button-primary {
     background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-    color: white;
+    color: var(--primary-foreground);
     border: none;
     transition: all 0.3s ease;
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    border-radius: 0.75rem;
 }
 
 .modern-button-primary:hover {
     transform: translateY(-3px);
     box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+    filter: brightness(1.2);
 }
 
 .subtle-glow:hover {
-  box-shadow: 0 0 15px 0px hsla(var(--primary-hsl), 0.5);
+  box-shadow: 0 0 20px 0px hsla(var(--primary-hsl), 0.6);
+}
+
+.link-hover-effect {
+    position: relative;
+    text-decoration: none;
+    color: var(--accent2);
+    transition: color 0.3s ease;
+}
+
+.link-hover-effect::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    transform: scaleX(0);
+    height: 2px;
+    bottom: -2px;
+    left: 0;
+    background-color: var(--accent);
+    transform-origin: bottom right;
+    transition: transform 0.25s ease-out;
+}
+
+.link-hover-effect:hover {
+    color: var(--accent);
+}
+
+.link-hover-effect:hover::after {
+    transform: scaleX(1);
+    transform-origin: bottom left;
 }
