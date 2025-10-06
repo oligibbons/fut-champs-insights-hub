@@ -41,7 +41,7 @@ const NumberInputWithSteppers = memo(({ control, name, label, step = 1, classNam
 });
 
 interface GameRecordFormProps {
-    squads: Squad[]; // MODIFIED: Accept squads as a prop
+    squads: Squad[];
     weekId: string;
     nextGameNumber: number;
     onSave: () => Promise<void>;
@@ -51,7 +51,6 @@ interface GameRecordFormProps {
 const GameRecordForm = ({ squads, weekId, nextGameNumber, onSave, onCancel }: GameRecordFormProps) => {
     const { user } = useAuth();
     const { toast } = useToast();
-    // REMOVED: The redundant useSquadData hook call is gone.
 
     const { control, handleSubmit, watch, setValue, getValues, formState: { errors, isSubmitting, isValid } } = useForm({
         resolver: zodResolver(gameFormSchema),
@@ -98,7 +97,7 @@ const GameRecordForm = ({ squads, weekId, nextGameNumber, onSave, onCancel }: Ga
     useEffect(() => {
         if (selectedSquad) {
             const newStarters = (selectedSquad.squad_players || [])
-                .filter(sp => sp.slot_id?.startsWith('starting-') && sp.players)
+                .filter(sp => sp && sp.slot_id?.startsWith('starting-') && sp.players)
                 .map(sp => ({
                     id: sp.players.id,
                     name: sp.players.name,
