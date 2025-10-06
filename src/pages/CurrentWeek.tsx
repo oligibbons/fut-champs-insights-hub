@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGameVersion } from '@/contexts/GameVersionContext';
@@ -15,7 +15,7 @@ import { Squad } from '@/types/squads';
 import WeekCompletionPopup from '@/components/WeekCompletionPopup';
 import CurrentRunStats from '@/components/CurrentRunStats';
 import TopPerformers from '@/components/TopPerformers';
-import RecentRuns from '@/components/RecentRuns'; // Import the new component
+import RecentRuns from '@/components/RecentRuns';
 
 const CurrentWeek = () => {
     const { user } = useAuth();
@@ -30,7 +30,7 @@ const CurrentWeek = () => {
     const [showCompletionPopup, setShowCompletionPopup] = useState(false);
     const [justCompletedWeek, setJustCompletedWeek] = useState<FutChampsWeek | null>(null);
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         if (!user) return;
         setLoading(true);
         try {
@@ -58,7 +58,6 @@ const CurrentWeek = () => {
             } else {
                 setCurrentWeek(null);
                 setGames([]);
-                // If no active week, fetch recent completed runs
                 const { data: recentData, error: recentError } = await supabase
                     .from('weekly_performances')
                     .select('*')
@@ -85,11 +84,36 @@ const CurrentWeek = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [user, gameVersion, toast]);
 
     useEffect(() => {
         fetchData();
-    }, [user, gameVersion]);
+    }, [fetchData]);
+
+    const endCurrentRun = useCallback(async () => {
+        if (!currentWeek) return;
+        const { data: completedWeek, error } = await supabase
+            .from('weekly_performances')
+            .update({ is_completed: true, end_date: new Date().toISOString() })
+            .eq('id', currentWeek.id)
+            .select()
+            .single();
+
+        if (error) {
+            toast({ title: "Error", description: "Failed to end the run.", variant: "destructive" });
+        } else {
+            setJustCompletedWeek(completedWeek);
+            setShowCompletionPopup(true);
+            await fetchData();
+        }
+    }, [currentWeek, fetchData, toast]);
+
+    useEffect(() => {
+        if (currentWeek && games.length >= 15 && !currentWeek.is_completed) {
+            toast({ title: "Run Auto-Completed", description: "You've reached 15 games. This run has been automatically ended." });
+            endCurrentRun();
+        }
+    }, [games, currentWeek, endCurrentRun, toast]);
 
     const startNewWeek = async () => {
         if (!user) return;
@@ -111,35 +135,10 @@ const CurrentWeek = () => {
         }
     };
     
-    const endCurrentRun = async () => {
-        if (!currentWeek) return;
-        const { data: completedWeek, error } = await supabase
-            .from('weekly_performances')
-            .update({ is_completed: true, end_date: new Date().toISOString() })
-            .eq('id', currentWeek.id)
-            .select()
-            .single();
-
-        if (error) {
-            toast({ title: "Error", description: "Failed to mark week as complete.", variant: "destructive" });
-        } else {
-            setJustCompletedWeek(completedWeek);
-            setShowCompletionPopup(true);
-            await fetchData(); // Refresh all data
-        }
-    };
-
     const handleSave = async () => {
-        await fetchData(); // Refresh data first to get the new game count
         setRecordGameModalOpen(false);
+        await fetchData();
     };
-    
-    // Auto-end run when games reach 15
-    useEffect(() => {
-        if (games.length >= 15) {
-            endCurrentRun();
-        }
-    }, [games]);
 
     if (loading) {
         return <div className="flex justify-center items-center h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>;
@@ -166,7 +165,7 @@ const CurrentWeek = () => {
 
     return (
         <div className="container mx-auto p-4 space-y-6">
-            <WeekProgress wins={wins} losses={losses} gamesPlayed={games.length} />
+            <WeekProgress wins={wins} losses={losses} gamesPlayed={games.length} target={15} />
 
             <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold">{currentWeek.custom_name || `Week ${currentWeek.week_number}`}</h1>
