@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSupabaseData } from '@/hooks/useSupabaseData';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Loader2, Trophy, BarChart2, Calendar, Bot, Star, ListChecks } from 'lucide-react';
 import GameRecordForm from '@/components/GameRecordForm';
@@ -15,19 +16,15 @@ import TopPerformers from '@/components/TopPerformers';
 import AIInsights from '@/pages/AIInsights';
 import GameCompletionPopup from '@/components/GameCompletionPopup';
 import WeekCompletionPopup from '@/components/WeekCompletionPopup';
-import AchievementSystem from '@/components/AchievementSystem'; // Import the new system
-// FIX: Import the WeekNaming component
-import WeekNaming from '@/components/WeekNaming'; 
+import AchievementSystem from '@/components/AchievementSystem';
+import WeekNaming from '@/components/WeekNaming';
 
 const CurrentWeek = () => {
-  // FIX: Added 'updateWeek' to imports from the hook
   const { weeklyData, createWeek, saveGame, endWeek, loading, refreshData, updateWeek } = useSupabaseData();
   const [isLoggingGame, setIsLoggingGame] = useState(false);
   const [completedGame, setCompletedGame] = useState<GameResult | null>(null);
   const [completedWeek, setCompletedWeek] = useState<WeeklyPerformance | null>(null);
   const navigate = useNavigate();
-
-  // This state will act as our trigger for the achievement system
   const [lastUpdate, setLastUpdate] = useState<number>(0);
 
   const currentWeek = weeklyData.find(w => !w.isCompleted) || null;
@@ -35,41 +32,39 @@ const CurrentWeek = () => {
   const handleCreateWeek = async () => {
     const nextWeekNumber = weeklyData.length > 0 ? Math.max(...weeklyData.map(w => w.weekNumber)) + 1 : 1;
     await createWeek({ weekNumber: nextWeekNumber, startDate: new Date().toISOString() });
-    setLastUpdate(Date.now()); // Trigger on new week creation
+    setLastUpdate(Date.now());
   };
 
-  const handleSaveGame = async (gameData: Omit<GameResult, 'id'>) => {
-    if (currentWeek) {
-      // The GameRecordForm now handles all saving logic
-      await refreshData(); // We rely on this refresh to update the weeklyData state
-      setIsLoggingGame(false);
-      
-      // We need to refresh data to get the true game object with relations
-      const refreshedData = await refreshData();
-      const updatedWeek = refreshedData.find(w => w.id === currentWeek.id);
-      const newGame = updatedWeek?.games.find(g => g.gameNumber === gameData.gameNumber);
-      
-      setCompletedGame(newGame || { ...gameData, id: 'temp' } as GameResult);
-      setLastUpdate(Date.now()); // <<< KEY CHANGE: Update the trigger to process achievements
+  const handleSaveGame = async () => {
+    await refreshData();
+    setIsLoggingGame(false); // Close the dialog on save
 
-      if ((updatedWeek?.gamesPlayed ?? 0) >= 20) {
-        await handleEndWeek(currentWeek.id);
-      }
+    const refreshedData = await refreshData();
+    const updatedWeek = refreshedData.find(w => w.id === currentWeek?.id);
+    const lastGameNumber = Math.max(...(updatedWeek?.games.map(g => g.gameNumber) || [0]));
+    const newGame = updatedWeek?.games.find(g => g.gameNumber === lastGameNumber);
+
+    if (newGame) {
+      setCompletedGame(newGame);
+    }
+    setLastUpdate(Date.now());
+
+    if ((updatedWeek?.gamesPlayed ?? 0) >= 20 && currentWeek) {
+      await handleEndWeek(currentWeek.id);
     }
   };
-  
+
   const handleEndWeek = async (weekId: string) => {
     await endWeek(weekId);
-    // After ending the week, refresh data again to get the final week object
     const finalData = await refreshData();
     const finishedWeek = finalData.find(w => w.id === weekId);
     setCompletedWeek(finishedWeek || null);
-    setLastUpdate(Date.now()); // Trigger on week end as well
+    setLastUpdate(Date.now());
   };
 
   const closeWeekModal = () => {
     setCompletedWeek(null);
-    navigate('/'); 
+    navigate('/');
   };
 
   const StatCard = ({ title, value, icon: Icon }: { title: string, value: string | number, icon: React.ElementType }) => (
@@ -90,28 +85,22 @@ const CurrentWeek = () => {
       </div>
     );
   }
-  
+
   const winRate = (currentWeek.gamesPlayed ?? 0) > 0 ? Math.round(((currentWeek.totalWins ?? 0) / (currentWeek.gamesPlayed ?? 1)) * 100) : 0;
 
-  // Handler for WeekNaming component
   const handleUpdateWeekName = (updates: Partial<WeeklyPerformance>) => {
     updateWeek(currentWeek.id, updates);
   };
 
   return (
     <>
-      {/* This component is invisible but will handle all achievement logic */}
       <AchievementSystem trigger={lastUpdate} />
-
       <div className="space-y-8">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{currentWeek.customName || `Week ${currentWeek.weekNumber} Run`}</h1>
           <p className="text-muted-foreground">Your live hub for the current Weekend League.</p>
         </div>
-        
-        {/* FIX: Week Naming Component Integration */}
         <WeekNaming weekData={currentWeek} onUpdateWeek={handleUpdateWeekName} />
-
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           <StatCard title="Current Record" value={`${currentWeek.totalWins}-${currentWeek.totalLosses}`} icon={Trophy} />
           <StatCard title="Win Rate" value={`${winRate}%`} icon={BarChart2} />
@@ -119,13 +108,27 @@ const CurrentWeek = () => {
           <Card className="flex flex-col items-center justify-center bg-secondary/50"><CPSGauge games={currentWeek.games} size={100} /></Card>
         </div>
         <WeekProgress wins={currentWeek.totalWins} losses={currentWeek.totalLosses} target={currentWeek.winTarget?.wins || 20} />
-        {isLoggingGame ? (
-          <GameRecordForm weekId={currentWeek.id} nextGameNumber={currentWeek.games.length + 1} onSave={handleSaveGame} onCancel={() => setIsLoggingGame(false)} />
-        ) : (
-          <div className="text-center">
-            <Button size="lg" onClick={() => setIsLoggingGame(true)}><Plus className="mr-2 h-4 w-4" /> Log Next Game</Button>
-          </div>
-        )}
+        
+        {/* MODIFICATION: Game Logging Form is now inside a Dialog */}
+        <Dialog open={isLoggingGame} onOpenChange={setIsLoggingGame}>
+          <DialogTrigger asChild>
+            <div className="text-center">
+              <Button size="lg" onClick={() => setIsLoggingGame(true)}><Plus className="mr-2 h-4 w-4" /> Log Next Game</Button>
+            </div>
+          </DialogTrigger>
+          <DialogContent className="max-w-4xl h-[90vh]">
+            <DialogHeader>
+              <DialogTitle>Log Game #{currentWeek.games.length + 1}</DialogTitle>
+            </DialogHeader>
+            <GameRecordForm 
+              weekId={currentWeek.id} 
+              nextGameNumber={currentWeek.games.length + 1} 
+              onSave={handleSaveGame} 
+              onCancel={() => setIsLoggingGame(false)} 
+            />
+          </DialogContent>
+        </Dialog>
+        
         <Tabs defaultValue="stats" className="w-full">
           <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
             <TabsTrigger value="stats"><BarChart2 className="h-4 w-4 mr-2" />Run Stats</TabsTrigger>
@@ -140,7 +143,6 @@ const CurrentWeek = () => {
               <CardContent><div className="space-y-2">{currentWeek.games.slice().reverse().map(game => (<div key={game.id} className="flex justify-between items-center p-3 bg-secondary/50 rounded-lg"><div className="flex items-center gap-4"><span className={`font-bold ${game.result === 'win' ? 'text-green-500' : 'text-red-500'}`}>{game.result.toUpperCase()}</span><span>Game {game.gameNumber}</span><span className="font-mono">{game.scoreLine}</span></div><div className="text-xs text-muted-foreground">vs Skill: {game.opponentSkill}/10</div></div>))}</div></CardContent>
             </Card>
           </TabsContent>
-          {/* Note: TopPerformers in CurrentWeek.tsx requires a 'games' prop not a 'games' from context */}
           <TabsContent value="performers" className="mt-4"><TopPerformers games={currentWeek.games} /></TabsContent>
           <TabsContent value="insights" className="mt-4"><AIInsights /></TabsContent>
         </Tabs>
