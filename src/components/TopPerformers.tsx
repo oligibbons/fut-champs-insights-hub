@@ -6,36 +6,41 @@ import { Badge } from '@/components/ui/badge';
 
 const TopPerformers = ({ games }: { games: Game[] }) => {
   const playerStats = useMemo(() => {
-    // A robust check to ensure games data is valid
-    if (!games || !Array.isArray(games) || games.length === 0) {
+    // 1. A robust check to ensure 'games' is a valid, non-empty array.
+    if (!Array.isArray(games) || games.length === 0) {
       return [];
     }
 
     const playerMap = new Map();
     
-    // 1. Flatten all player performances from all games into a single array
-    const allPerformances = games.flatMap(game => game.player_performances || []).filter(Boolean);
+    // 2. Iterate through each game safely.
+    for (const game of games) {
+      // 3. Critically, check if 'player_performances' exists and is an array on each game object.
+      if (Array.isArray(game.player_performances)) {
+        for (const player of game.player_performances) {
+          // Ensure the player object and its name are valid before processing.
+          if (!player || !player.player_name) continue;
 
-    // 2. Aggregate the stats for each player
-    allPerformances.forEach(player => {
-      const existing = playerMap.get(player.player_name) || {
-        name: player.player_name,
-        position: player.position,
-        gamesPlayed: 0,
-        goals: 0,
-        assists: 0,
-        totalRating: 0,
-      };
-      
-      existing.gamesPlayed += 1;
-      existing.goals += player.goals || 0;
-      existing.assists += player.assists || 0;
-      existing.totalRating += player.rating || 0;
-      
-      playerMap.set(player.player_name, existing);
-    });
+          const existing = playerMap.get(player.player_name) || {
+            name: player.player_name,
+            position: player.position,
+            gamesPlayed: 0,
+            goals: 0,
+            assists: 0,
+            totalRating: 0,
+          };
+          
+          existing.gamesPlayed += 1;
+          existing.goals += player.goals || 0;
+          existing.assists += player.assists || 0;
+          existing.totalRating += player.rating || 0;
+          
+          playerMap.set(player.player_name, existing);
+        }
+      }
+    }
     
-    // 3. Calculate final stats and sort the players
+    // 4. Calculate final stats and sort the players.
     return Array.from(playerMap.values())
       .map(player => ({
         ...player,
@@ -50,7 +55,7 @@ const TopPerformers = ({ games }: { games: Game[] }) => {
         <Card>
             <CardContent className="text-center py-12">
                 <Users className="h-12 w-12 mx-auto mb-3 text-gray-500" />
-                <p className="text-muted-foreground">Play a game to see your top performers.</p>
+                <p className="text-muted-foreground">No player stats recorded for this run yet.</p>
             </CardContent>
         </Card>
     );
