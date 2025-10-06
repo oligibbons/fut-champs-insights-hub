@@ -22,7 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Game } from '@/types/futChampions';
 import { get } from 'lodash';
 
-// Zod Schema with new dribble stats
+// Zod Schema with single dribble success rate
 const gameFormSchema = z.object({
     user_goals: z.coerce.number().min(0),
     opponent_goals: z.coerce.number().min(0),
@@ -49,8 +49,7 @@ const gameFormSchema = z.object({
         fouls: z.coerce.number().min(0),
         yellowCards: z.coerce.number().min(0),
         redCards: z.coerce.number().min(0),
-        dribbles_attempted: z.coerce.number().min(0).optional(),
-        dribbles_completed: z.coerce.number().min(0).optional(),
+        dribble_success_rate: z.coerce.number().min(0).max(100).optional(),
     }),
     player_stats: z.array(z.any()).optional(),
 });
@@ -112,8 +111,7 @@ const GameRecordForm = ({ squads, weekId, nextGameNumber, onSave, onCancel, exis
                 fouls: existingGame?.team_statistics?.[0]?.fouls ?? 0,
                 yellowCards: existingGame?.team_statistics?.[0]?.yellow_cards ?? 0,
                 redCards: existingGame?.team_statistics?.[0]?.red_cards ?? 0,
-                dribbles_attempted: existingGame?.team_statistics?.[0]?.dribbles_attempted ?? 10,
-                dribbles_completed: existingGame?.team_statistics?.[0]?.dribbles_completed ?? 5,
+                dribble_success_rate: existingGame?.team_statistics?.[0]?.dribble_success_rate ?? 50,
             },
             player_stats: existingGame?.player_performances?.map(p => ({...p, minutesPlayed: p.minutes_played })) ?? [],
         };
@@ -131,13 +129,13 @@ const GameRecordForm = ({ squads, weekId, nextGameNumber, onSave, onCancel, exis
         let min = 0, max = Infinity;
         if (['opponent_skill', 'server_quality', 'stress_level'].some(f => fieldName.includes(f))) { min = 1; max = 10; }
         else if (fieldName.includes('duration')) { min = 1; max = 120; }
-        else if (['possession', 'passAccuracy'].some(f => fieldName.includes(f))) { max = 100; }
+        else if (['possession', 'passAccuracy', 'dribble_success_rate'].some(f => fieldName.includes(f))) { max = 100; }
         else if (fieldName.includes('opponent_squad_rating')) { min = 50; max = 99; }
         newValue = Math.max(min, Math.min(max, newValue));
         newValue = stepValue < 1 ? parseFloat(newValue.toFixed(1)) : Math.round(newValue);
         setValue(fieldName, newValue, { shouldValidate: true, shouldDirty: true });
     }, [getValues, setValue]);
-
+    
     const addSubstitute = () => {
         const currentPlayers = getValues('player_stats') || [];
         setValue('player_stats', [
@@ -185,8 +183,7 @@ const GameRecordForm = ({ squads, weekId, nextGameNumber, onSave, onCancel, exis
                 possession: data.team_stats.possession, expected_goals: data.team_stats.expectedGoals, expected_goals_against: data.team_stats.expectedGoalsAgainst,
                 passes: data.team_stats.passes, pass_accuracy: data.team_stats.passAccuracy, corners: data.team_stats.corners,
                 fouls: data.team_stats.fouls, yellow_cards: data.team_stats.yellowCards, red_cards: data.team_stats.redCards,
-                dribbles_attempted: data.team_stats.dribbles_attempted,
-                dribbles_completed: data.team_stats.dribbles_completed,
+                dribble_success_rate: data.team_stats.dribble_success_rate,
             }, { onConflict: 'game_id' });
             
             // Delete existing and re-insert player performances
@@ -233,16 +230,15 @@ const GameRecordForm = ({ squads, weekId, nextGameNumber, onSave, onCancel, exis
                         <NumberInputWithSteppers name="team_stats.shots" label="Shots" control={control} adjustValue={adjustNumericalValue} getValues={getValues} />
                         <NumberInputWithSteppers name="team_stats.shotsOnTarget" label="Shots on Target" control={control} adjustValue={adjustNumericalValue} getValues={getValues} />
                         <NumberInputWithSteppers name="team_stats.possession" label="Possession %" control={control} adjustValue={adjustNumericalValue} getValues={getValues} />
-                        <NumberInputWithSteppers name="team_stats.passes" label="Passes" step={10} control={control} adjustValue={adjustNumericalValue} getValues={getValues} />
                         <NumberInputWithSteppers name="team_stats.passAccuracy" label="Pass Accuracy %" control={control} adjustValue={adjustNumericalValue} getValues={getValues} />
-                        <NumberInputWithSteppers name="team_stats.dribbles_attempted" label="Dribbles Attempted" control={control} adjustValue={adjustNumericalValue} getValues={getValues} />
-                        <NumberInputWithSteppers name="team_stats.dribbles_completed" label="Dribbles Completed" control={control} adjustValue={adjustNumericalValue} getValues={getValues} />
+                        <NumberInputWithSteppers name="team_stats.dribble_success_rate" label="Dribble Success %" control={control} adjustValue={adjustNumericalValue} getValues={getValues} />
                         <NumberInputWithSteppers name="team_stats.fouls" label="Fouls" control={control} adjustValue={adjustNumericalValue} getValues={getValues} />
                         <NumberInputWithSteppers name="team_stats.yellowCards" label="Yellow Cards" control={control} adjustValue={adjustNumericalValue} getValues={getValues} />
                         <NumberInputWithSteppers name="team_stats.redCards" label="Red Cards" control={control} adjustValue={adjustNumericalValue} getValues={getValues} />
                         <NumberInputWithSteppers name="team_stats.expectedGoals" label="Your xG" step={0.1} control={control} adjustValue={adjustNumericalValue} getValues={getValues} />
                         <NumberInputWithSteppers name="team_stats.expectedGoalsAgainst" label="Opponent xG" step={0.1} control={control} adjustValue={adjustNumericalValue} getValues={getValues} />
                         <NumberInputWithSteppers name="team_stats.corners" label="Corners" control={control} adjustValue={adjustNumericalValue} getValues={getValues} />
+                        <NumberInputWithSteppers name="team_stats.passes" label="Passes" step={10} control={control} adjustValue={adjustNumericalValue} getValues={getValues} />
                     </div>
                     <div className="space-y-2"> <Label>Match Tags</Label><p className="text-sm text-muted-foreground">Select any tags that apply. Hover for details.</p> <TooltipProvider><div className="flex flex-wrap gap-2"><Controller name="tags" control={control} render={({ field }) => (<>{matchTags.map(tag => (<Tooltip key={tag.id}><TooltipTrigger asChild><Toggle variant="outline" size="sm" className={field.value?.includes(tag.name) ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'hover:bg-accent'} pressed={field.value?.includes(tag.name)} onPressedChange={(isPressed) => { const newTags = isPressed ? [...(field.value || []), tag.name] : (field.value || []).filter(t => t !== tag.name); field.onChange(newTags); }}>{tag.name}</Toggle></TooltipTrigger><TooltipContent><p>{tag.description}</p></TooltipContent></Tooltip>))}</>)} /></div></TooltipProvider> </div>
                     <Controller name="comments" control={control} render={({ field }) => <div className="space-y-2"><Label>Comments</Label><Textarea {...field} placeholder="Any key moments or tactical notes?" /></div>} />
