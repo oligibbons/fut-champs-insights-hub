@@ -17,45 +17,25 @@ export const useSquadData = () => {
     if (!user) return;
     setLoading(true);
     try {
-      // NEW ARCHITECTURE: Fetch all three necessary tables in parallel.
-      const [
-        { data: playersData, error: playersError },
-        { data: squadsData, error: squadsError },
-        { data: squadPlayersData, error: squadPlayersError }
-      ] = await Promise.all([
-        supabase.from('players').select('*').eq('user_id', user.id).eq('game_version', gameVersion),
-        supabase.from('squads').select('*').eq('user_id', user.id).eq('game_version', gameVersion),
-        supabase.from('squad_players').select('*') // We fetch all and filter locally for reliability.
-      ]);
+      // Fetch squads and their related players in a single, structured query
+      const { data: squadsData, error: squadsError } = await supabase
+        .from('squads')
+        .select(`
+          *,
+          squad_players (
+            *,
+            players (*)
+          )
+        `)
+        .eq('user_id', user.id)
+        .eq('game_version', gameVersion);
 
-      if (playersError || squadsError || squadPlayersError) {
-        throw playersError || squadsError || squadPlayersError;
+      if (squadsError) {
+        throw squadsError;
       }
-      
-      const playerMap = new Map(playersData.map(p => [p.id, p as PlayerCard]));
-      setPlayers(playersData || []);
 
-      // Stitch the data together into a final, complete structure BEFORE setting state.
-      const finalSquads = (squadsData || []).map(squad => {
-        const playersInSquad = (squadPlayersData || [])
-          .filter(sp => sp.squad_id === squad.id)
-          .map(sp => {
-            const playerCard = playerMap.get(sp.player_id);
-            return {
-              ...sp,
-              players: playerCard || null
-            };
-          })
-          .filter(sp => sp.players !== null); // Ensure no null player records are included.
-
-        return {
-          ...squad,
-          squad_players: playersInSquad,
-        } as Squad;
-      });
-
-      // Set the final, fully stitched state once. This is atomic and prevents race conditions.
-      setSquads(finalSquads);
+      // The data is now correctly structured by Supabase.
+      setSquads(squadsData || []);
 
     } catch (error: any) {
       toast.error('Failed to fetch squad data.');
@@ -100,9 +80,10 @@ export const useSquadData = () => {
   useEffect(() => {
     if (user) {
         fetchSquads(); 
+        fetchPlayers(); // Still useful to have a flat list of all players for the search modal
         fetchCardTypes();
     }
-  }, [user, gameVersion, fetchSquads, fetchCardTypes]);
+  }, [user, gameVersion, fetchSquads, fetchPlayers, fetchCardTypes]);
 
   const createSquad = async (squadData: any) => {
     if (!user) return;
