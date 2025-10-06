@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Loader2 } from 'lucide-react';
-import GameCard from '../components/GameCard';
+// import GameCard from '@/components/GameCard'; // This component does not exist in the project.
 import WeekProgress from '@/components/WeekProgress';
 import { Game, FutChampsWeek } from '@/types/futChampions';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -173,9 +173,13 @@ const CurrentWeek = () => {
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {/* The GameCard component is missing, so the list of games cannot be displayed. */}
+                {/* You will need to create or restore the GameCard.tsx component to see your games here. */}
+                {/*
                 {games.map(game => (
                     <GameCard key={game.id} game={game} />
                 ))}
+                */}
             </div>
         </div>
     );
