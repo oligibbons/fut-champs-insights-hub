@@ -274,12 +274,12 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
       
       const initialPlayerStats = allSquadPlayers
         // 1. Filter: ONLY take players that are part of the Starting XI
-        .filter(squadPlayer => squadPlayer.slot_id?.startsWith('starting-'))
+        .filter(squadPlayer => squadPlayer.slot_id && squadPlayer.slot_id.startsWith('starting-'))
         .map(squadPlayer => {
           // 2. Map: Build the PlayerPerformance object
           // CRITICAL: Ensure the nested 'players' object is present
           if (!squadPlayer.players) {
-            console.warn(`Squad Player ID ${squadPlayer.player_id} is missing nested player data.`);
+            // If the nested player object is missing, skip the player entirely
             return null; 
           }
           
@@ -319,7 +319,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
     
     // Find the first substitute who is NOT already in the player_stats list
     const availableSubs = allSquadPlayers
-      .filter(p => p.slot_id?.startsWith('sub-') && !currentIds.includes(p.players.id));
+      .filter(p => p.slot_id?.startsWith('sub-') && p.players && !currentIds.includes(p.players.id));
 
     if (availableSubs.length > 0) {
       const subToAdd = availableSubs[0].players;
@@ -591,7 +591,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                                 </Button>
                             </div>
                             
-                            {/* Check if squad is selected AND has players */}
+                            {/* Player Display Logic */}
                             {selectedSquad && selectedSquad.squad_players && selectedSquad.squad_players.filter(p => p.slot_id?.startsWith('starting-')).length > 0 ? (
                                 <Controller
                                     name="player_stats"
@@ -606,8 +606,10 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                                 />
                             ) : (
                                 <div className="text-center py-8 border border-dashed rounded-lg text-muted-foreground">
-                                    The selected squad has no players defined in the starting XI.
-                                    <p className="mt-2 text-sm">Please update your squad in the 'Squads' section.</p>
+                                    The currently selected squad has no players defined in the starting XI.
+                                    <p className="mt-2 text-sm">
+                                        Please ensure your squad **"{selectedSquad?.name || 'No Squad Selected'}"** has players assigned to starting positions in the 'Squads' section before logging a game.
+                                    </p>
                                 </div>
                             )}
                         </div>
