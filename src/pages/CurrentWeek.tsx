@@ -1,172 +1,184 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useSupabaseData } from '@/hooks/useSupabaseData';
-import { useSquadData } from '@/hooks/useSquadData'; // The new, reliable hook
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Loader2, Trophy, BarChart2, Calendar, Bot, Star, ListChecks } from 'lucide-react';
-import GameRecordForm from '@/components/GameRecordForm';
+import { PlusCircle, Loader2 } from 'lucide-react';
+import GameCard from '@/components/GameCard';
 import WeekProgress from '@/components/WeekProgress';
-import CurrentRunStats from '@/components/CurrentRunStats';
-import { GameResult, WeeklyPerformance } from '@/types/futChampions';
-import CPSGauge from '@/components/CPSGauge';
-import { Skeleton } from '@/components/ui/skeleton';
-import TopPerformers from '@/components/TopPerformers';
-import AIInsights from '@/pages/AIInsights';
-import GameCompletionPopup from '@/components/GameCompletionPopup';
+import { Game, FutChampsWeek } from '@/types/futChampions';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import GameRecordForm from '@/components/GameRecordForm';
+import { useToast } from '@/hooks/use-toast';
+import { Squad } from '@/types/squads';
 import WeekCompletionPopup from '@/components/WeekCompletionPopup';
-import AchievementSystem from '@/components/AchievementSystem';
-import WeekNaming from '@/components/WeekNaming';
 
 const CurrentWeek = () => {
-  // Fetch both weekly data and the new, reliable squad data
-  const { weeklyData, createWeek, endWeek, loading: weekLoading, refreshData, updateWeek } = useSupabaseData();
-  const { squads, loading: squadsLoading } = useSquadData();
-  
-  const [isLoggingGame, setIsLoggingGame] = useState(false);
-  const [completedGame, setCompletedGame] = useState<GameResult | null>(null);
-  const [completedWeek, setCompletedWeek] = useState<WeeklyPerformance | null>(null);
-  const navigate = useNavigate();
-  const [lastUpdate, setLastUpdate] = useState<number>(0);
+    const { user } = useAuth();
+    const { toast } = useToast();
+    const [currentWeek, setCurrentWeek] = useState<FutChampsWeek | null>(null);
+    const [games, setGames] = useState<Game[]>([]);
+    const [squads, setSquads] = useState<Squad[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [isRecordGameModalOpen, setRecordGameModalOpen] = useState(false);
+    const [showCompletionPopup, setShowCompletionPopup] = useState(false);
+    const [justCompletedWeek, setJustCompletedWeek] = useState<FutChampsWeek | null>(null);
 
-  const currentWeek = weeklyData.find(w => !w.isCompleted) || null;
-  const isLoading = weekLoading || squadsLoading;
+    const fetchData = async () => {
+        if (!user) return;
+        setLoading(true);
+        try {
+            const { data: weekData, error: weekError } = await supabase
+                .from('fut_champs_weeks')
+                .select('*')
+                .eq('user_id', user.id)
+                .is('completed_at', null)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .single();
 
-  const handleCreateWeek = async () => {
-    const nextWeekNumber = weeklyData.length > 0 ? Math.max(...weeklyData.map(w => w.weekNumber)) + 1 : 1;
-    await createWeek({ weekNumber: nextWeekNumber, startDate: new Date().toISOString() });
-    setLastUpdate(Date.now());
-  };
+            if (weekError && weekError.code !== 'PGRST116') throw weekError;
 
-  const handleSaveGame = async () => {
-    await refreshData();
-    setIsLoggingGame(false);
-    const refreshedData = await refreshData();
-    const updatedWeek = refreshedData.find(w => w.id === currentWeek?.id);
-    const lastGameNumber = Math.max(...(updatedWeek?.games.map(g => g.gameNumber) || [0]));
-    const newGame = updatedWeek?.games.find(g => g.gameNumber === lastGameNumber);
+            if (weekData) {
+                setCurrentWeek(weekData);
+                const { data: gamesData, error: gamesError } = await supabase
+                    .from('game_results')
+                    .select('*, player_performances(*), team_statistics(*)')
+                    .eq('week_id', weekData.id)
+                    .order('game_number', { ascending: true });
+                if (gamesError) throw gamesError;
+                setGames(gamesData || []);
+            } else {
+                setCurrentWeek(null);
+                setGames([]);
+            }
 
-    if (newGame) setCompletedGame(newGame);
-    setLastUpdate(Date.now());
+            const { data: squadsData, error: squadsError } = await supabase
+                .from('squads')
+                .select('*, squad_players(*, players(*))')
+                .eq('user_id', user.id);
+            if (squadsError) throw squadsError;
+            setSquads(squadsData || []);
 
-    if ((updatedWeek?.gamesPlayed ?? 0) >= 20 && currentWeek) {
-      await handleEndWeek(currentWeek.id);
+        } catch (error: any) a/s/supabase';
+            console.error('Error fetching data:', error);
+            toast({ title: "Error", description: "Failed to fetch current week data.", variant: "destructive" });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, [user]);
+
+    const startNewWeek = async () => {
+        if (!user) return;
+        const { data, error } = await supabase
+            .from('fut_champs_weeks')
+            .insert({ user_id: user.id })
+            .select()
+            .single();
+
+        if (error) {
+            toast({ title: "Error", description: "Could not start a new week.", variant: "destructive" });
+        } else if (data) {
+            setCurrentWeek(data);
+            setGames([]);
+            toast({ title: "Success", description: "New FUT Champs week started!" });
+        }
+    };
+    
+    const handleSave = async () => {
+        await fetchData();
+        setRecordGameModalOpen(false);
+        const gamesPlayed = games.length + 1;
+        if (gamesPlayed === 20) {
+            if(currentWeek) {
+                const { data: completedWeek, error } = await supabase
+                    .from('fut_champs_weeks')
+                    .update({ completed_at: new Date().toISOString() })
+                    .eq('id', currentWeek.id)
+                    .select()
+                    .single();
+
+                if (error) {
+                    toast({ title: "Error", description: "Failed to mark week as complete.", variant: "destructive" });
+                } else {
+                    setJustCompletedWeek(completedWeek);
+                    setShowCompletionPopup(true);
+                    setCurrentWeek(null);
+                    setGames([]);
+                }
+            }
+        }
+    };
+
+    if (loading) {
+        return <div className="flex justify-center items-center h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>;
     }
-  };
 
-  const handleEndWeek = async (weekId: string) => {
-    await endWeek(weekId);
-    const finalData = await refreshData();
-    const finishedWeek = finalData.find(w => w.id === weekId);
-    setCompletedWeek(finishedWeek || null);
-    setLastUpdate(Date.now());
-  };
-
-  const closeWeekModal = () => {
-    setCompletedWeek(null);
-    navigate('/');
-  };
-
-  const StatCard = ({ title, value, icon: Icon }: { title: string, value: string | number, icon: React.ElementType }) => (
-    <Card className="bg-secondary/50">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle><Icon className="h-4 w-4 text-muted-foreground" /></CardHeader>
-      <CardContent>{isLoading ? <Skeleton className="h-8 w-20 mt-1" /> : <div className="text-2xl font-bold">{value}</div>}</CardContent>
-    </Card>
-  );
-
-  if (isLoading) {
-    return <div className="flex justify-center items-center h-64"><Loader2 className="h-8 w-8 animate-spin" /></div>;
-  }
-
-  if (!currentWeek) {
-    return (
-      <div className="text-center py-16">
-        <h2 className="text-2xl font-semibold mb-4">No Active Champs Run</h2>
-        <p className="text-muted-foreground mb-6">Start your new Weekend League run to begin tracking.</p>
-        <Button onClick={handleCreateWeek}><Plus className="mr-2 h-4 w-4" /> Start New Run</Button>
-      </div>
-    );
-  }
-  
-  const winRate = (currentWeek.gamesPlayed ?? 0) > 0 ? Math.round(((currentWeek.totalWins ?? 0) / (currentWeek.gamesPlayed ?? 1)) * 100) : 0;
-
-  return (
-    <>
-      <AchievementSystem trigger={lastUpdate} />
-      <div className="space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">{currentWeek.customName || `Week ${currentWeek.weekNumber} Run`}</h1>
-          <p className="text-muted-foreground">Your live hub for the current Weekend League.</p>
-        </div>
-        <WeekNaming weekData={currentWeek} onUpdateWeek={(updates) => updateWeek(currentWeek.id, updates)} />
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <StatCard title="Current Record" value={`${currentWeek.totalWins}-${currentWeek.totalLosses}`} icon={Trophy} />
-          <StatCard title="Win Rate" value={`${winRate}%`} icon={BarChart2} />
-          <StatCard title="Games Played" value={currentWeek.gamesPlayed ?? 0} icon={Calendar} />
-          <Card className="flex flex-col items-center justify-center bg-secondary/50"><CPSGauge games={currentWeek.games} size={100} /></Card>
-        </div>
-        <WeekProgress wins={currentWeek.totalWins} losses={currentWeek.totalLosses} target={currentWeek.winTarget?.wins || 20} />
-        
-        <Dialog open={isLoggingGame} onOpenChange={setIsLoggingGame}>
-          <DialogTrigger asChild>
-            <div className="text-center">
-              <Button size="lg" disabled={squads.length === 0} onClick={() => setIsLoggingGame(true)}>
-                <Plus className="mr-2 h-4 w-4" /> Log Next Game
-              </Button>
-               {squads.length === 0 && <p className="text-xs text-muted-foreground mt-2">You need to create a squad before you can log a game.</p>}
+    if (!currentWeek) {
+        return (
+            <div className="text-center p-8">
+                <h2 className="text-2xl font-semibold mb-4">No Active FUT Champs Week</h2>
+                <p className="mb-6">Start a new week to begin tracking your games.</p>
+                <Button onClick={startNewWeek}>
+                    <PlusCircle className="mr-2 h-4 w-4" /> Start New Week
+                </Button>
             </div>
-          </DialogTrigger>
-          <DialogContent className="max-w-4xl h-[90vh]">
-            <DialogHeader>
-              <DialogTitle>Log Game #{currentWeek.games.length + 1}</DialogTitle>
-            </DialogHeader>
-            <GameRecordForm 
-              squads={squads} // Pass the complete and correct data down.
-              weekId={currentWeek.id} 
-              nextGameNumber={currentWeek.games.length + 1} 
-              onSave={handleSaveGame} 
-              onCancel={() => setIsLoggingGame(false)} 
-            />
-          </DialogContent>
-        </Dialog>
-        
-        <Tabs defaultValue="stats" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
-            <TabsTrigger value="stats"><BarChart2 className="h-4 w-4 mr-2" />Run Stats</TabsTrigger>
-            <TabsTrigger value="gamelog"><ListChecks className="h-4 w-4 mr-2" />Game Log</TabsTrigger>
-            <TabsTrigger value="performers"><Star className="h-4 w-4 mr-2" />Top Performers</TabsTrigger>
-            <TabsTrigger value="insights"><Bot className="h-4 w-4 mr-2" />AI Insights</TabsTrigger>
-          </TabsList>
-          <TabsContent value="stats" className="mt-4"><CurrentRunStats week={currentWeek} /></TabsContent>
-          <TabsContent value="gamelog" className="mt-4">
-            <Card>
-              <CardHeader><CardTitle>Game Log</CardTitle></CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {currentWeek.games.slice().reverse().map(game => (
-                    <div key={game.id} className="flex justify-between items-center p-3 bg-secondary/50 rounded-lg">
-                      <div className="flex items-center gap-4">
-                        <span className={`font-bold ${game.result === 'win' ? 'text-green-500' : 'text-red-500'}`}>{game.result.toUpperCase()}</span>
-                        <span>Game {game.gameNumber}</span>
-                        <span className="font-mono">{game.scoreLine}</span>
-                      </div>
-                      <div className="text-xs text-muted-foreground">vs Skill: {game.opponentSkill}/10</div>
+        );
+    }
+    
+    const wins = games.filter(g => g.result === 'win').length;
+    const losses = games.filter(g => g.result === 'loss').length;
+    const nextGameNumber = games.length + 1;
+
+    return (
+        <div className="container mx-auto p-4">
+            <WeekProgress wins={wins} losses={losses} gamesPlayed={games.length} />
+
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-3xl font-bold">Current Week</h1>
+                {games.length < 20 && (
+                    <Button onClick={() => setRecordGameModalOpen(true)}>
+                        <PlusCircle className="mr-2 h-4 w-4" /> Record Game
+                    </Button>
+                )}
+            </div>
+
+            <Dialog open={isRecordGameModalOpen} onOpenChange={setRecordGameModalOpen}>
+                <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+                    <DialogHeader>
+                        <DialogTitle>Record a Game</DialogTitle>
+                        <DialogDescription>
+                            Enter the details for game #{nextGameNumber} of the week.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex-1 min-h-0">
+                        <GameRecordForm
+                            squads={squads}
+                            weekId={currentWeek.id}
+                            nextGameNumber={nextGameNumber}
+                            onSave={handleSave}
+                            onCancel={() => setRecordGameModalOpen(false)}
+                        />
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="performers" className="mt-4"><TopPerformers games={currentWeek.games} /></TabsContent>
-          <TabsContent value="insights" className="mt-4"><AIInsights /></TabsContent>
-        </Tabs>
-      </div>
-      <GameCompletionPopup game={completedGame} isOpen={!!completedGame} onClose={() => setCompletedGame(null)} />
-      <WeekCompletionPopup week={completedWeek} isOpen={!!completedWeek} onClose={closeWeekModal} />
-    </>
-  );
+                </DialogContent>
+            </Dialog>
+
+            <WeekCompletionPopup 
+                isOpen={showCompletionPopup} 
+                onClose={() => setShowCompletionPopup(false)}
+                week={justCompletedWeek}
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {games.map(game => (
+                    <GameCard key={game.id} game={game} />
+                ))}
+            </div>
+        </div>
+    );
 };
 
 export default CurrentWeek;
