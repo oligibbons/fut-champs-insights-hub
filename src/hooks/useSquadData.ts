@@ -17,10 +17,18 @@ export const useSquadData = () => {
     if (!user) return;
     setLoading(true);
     try {
-      // DEFINITIVE FIX: A clean query that relies on Supabase's JOIN inference.
+      // DEFINITIVE FIX: This explicit query tells Supabase to fetch all squads,
+      // and for each squad, to fetch all related `squad_players` records,
+      // and for each of those, to fetch the full related `players` record.
       const { data: squadsData, error: squadsError } = await supabase
         .from('squads')
-        .select('*, squad_players(*, players(*))')
+        .select(`
+          *,
+          squad_players (
+            *,
+            players (*)
+          )
+        `)
         .eq('user_id', user.id)
         .eq('game_version', gameVersion);
 
@@ -28,7 +36,7 @@ export const useSquadData = () => {
         throw squadsError;
       }
 
-      // Directly set the correctly-structured data from Supabase. No more manual stitching.
+      // Directly set the correctly-structured data from Supabase.
       setSquads(squadsData || []);
 
     } catch (error: any) {
