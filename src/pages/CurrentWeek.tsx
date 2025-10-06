@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSupabaseData } from '@/hooks/useSupabaseData';
-import { useSquadData } from '@/hooks/useSquadData';
+import { useSquadData } from '@/hooks/useSquadData'; // The new, reliable hook
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -21,8 +21,10 @@ import AchievementSystem from '@/components/AchievementSystem';
 import WeekNaming from '@/components/WeekNaming';
 
 const CurrentWeek = () => {
+  // Fetch both weekly data and the new, reliable squad data
   const { weeklyData, createWeek, endWeek, loading: weekLoading, refreshData, updateWeek } = useSupabaseData();
   const { squads, loading: squadsLoading } = useSquadData();
+  
   const [isLoggingGame, setIsLoggingGame] = useState(false);
   const [completedGame, setCompletedGame] = useState<GameResult | null>(null);
   const [completedWeek, setCompletedWeek] = useState<WeeklyPerformance | null>(null);
@@ -30,6 +32,7 @@ const CurrentWeek = () => {
   const [lastUpdate, setLastUpdate] = useState<number>(0);
 
   const currentWeek = weeklyData.find(w => !w.isCompleted) || null;
+  const isLoading = weekLoading || squadsLoading;
 
   const handleCreateWeek = async () => {
     const nextWeekNumber = weeklyData.length > 0 ? Math.max(...weeklyData.map(w => w.weekNumber)) + 1 : 1;
@@ -40,15 +43,12 @@ const CurrentWeek = () => {
   const handleSaveGame = async () => {
     await refreshData();
     setIsLoggingGame(false);
-
     const refreshedData = await refreshData();
     const updatedWeek = refreshedData.find(w => w.id === currentWeek?.id);
     const lastGameNumber = Math.max(...(updatedWeek?.games.map(g => g.gameNumber) || [0]));
     const newGame = updatedWeek?.games.find(g => g.gameNumber === lastGameNumber);
 
-    if (newGame) {
-      setCompletedGame(newGame);
-    }
+    if (newGame) setCompletedGame(newGame);
     setLastUpdate(Date.now());
 
     if ((updatedWeek?.gamesPlayed ?? 0) >= 20 && currentWeek) {
@@ -72,11 +72,13 @@ const CurrentWeek = () => {
   const StatCard = ({ title, value, icon: Icon }: { title: string, value: string | number, icon: React.ElementType }) => (
     <Card className="bg-secondary/50">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle><Icon className="h-4 w-4 text-muted-foreground" /></CardHeader>
-      <CardContent>{weekLoading ? <Skeleton className="h-8 w-20 mt-1" /> : <div className="text-2xl font-bold">{value}</div>}</CardContent>
+      <CardContent>{isLoading ? <Skeleton className="h-8 w-20 mt-1" /> : <div className="text-2xl font-bold">{value}</div>}</CardContent>
     </Card>
   );
 
-  if (weekLoading || squadsLoading) return <div className="flex justify-center items-center h-64"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-64"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+  }
 
   if (!currentWeek) {
     return (
@@ -87,12 +89,8 @@ const CurrentWeek = () => {
       </div>
     );
   }
-
+  
   const winRate = (currentWeek.gamesPlayed ?? 0) > 0 ? Math.round(((currentWeek.totalWins ?? 0) / (currentWeek.gamesPlayed ?? 1)) * 100) : 0;
-
-  const handleUpdateWeekName = (updates: Partial<WeeklyPerformance>) => {
-    updateWeek(currentWeek.id, updates);
-  };
 
   return (
     <>
@@ -102,7 +100,7 @@ const CurrentWeek = () => {
           <h1 className="text-3xl font-bold tracking-tight">{currentWeek.customName || `Week ${currentWeek.weekNumber} Run`}</h1>
           <p className="text-muted-foreground">Your live hub for the current Weekend League.</p>
         </div>
-        <WeekNaming weekData={currentWeek} onUpdateWeek={handleUpdateWeekName} />
+        <WeekNaming weekData={currentWeek} onUpdateWeek={(updates) => updateWeek(currentWeek.id, updates)} />
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           <StatCard title="Current Record" value={`${currentWeek.totalWins}-${currentWeek.totalLosses}`} icon={Trophy} />
           <StatCard title="Win Rate" value={`${winRate}%`} icon={BarChart2} />
@@ -114,7 +112,10 @@ const CurrentWeek = () => {
         <Dialog open={isLoggingGame} onOpenChange={setIsLoggingGame}>
           <DialogTrigger asChild>
             <div className="text-center">
-              <Button size="lg" onClick={() => setIsLoggingGame(true)}><Plus className="mr-2 h-4 w-4" /> Log Next Game</Button>
+              <Button size="lg" disabled={squads.length === 0} onClick={() => setIsLoggingGame(true)}>
+                <Plus className="mr-2 h-4 w-4" /> Log Next Game
+              </Button>
+               {squads.length === 0 && <p className="text-xs text-muted-foreground mt-2">You need to create a squad before you can log a game.</p>}
             </div>
           </DialogTrigger>
           <DialogContent className="max-w-4xl h-[90vh]">
@@ -122,7 +123,7 @@ const CurrentWeek = () => {
               <DialogTitle>Log Game #{currentWeek.games.length + 1}</DialogTitle>
             </DialogHeader>
             <GameRecordForm 
-              squads={squads}
+              squads={squads} // Pass the complete and correct data down.
               weekId={currentWeek.id} 
               nextGameNumber={currentWeek.games.length + 1} 
               onSave={handleSaveGame} 
@@ -142,7 +143,20 @@ const CurrentWeek = () => {
           <TabsContent value="gamelog" className="mt-4">
             <Card>
               <CardHeader><CardTitle>Game Log</CardTitle></CardHeader>
-              <CardContent><div className="space-y-2">{currentWeek.games.slice().reverse().map(game => (<div key={game.id} className="flex justify-between items-center p-3 bg-secondary/50 rounded-lg"><div className="flex items-center gap-4"><span className={`font-bold ${game.result === 'win' ? 'text-green-500' : 'text-red-500'}`}>{game.result.toUpperCase()}</span><span>Game {game.gameNumber}</span><span className="font-mono">{game.scoreLine}</span></div><div className="text-xs text-muted-foreground">vs Skill: {game.opponentSkill}/10</div></div>))}</div></CardContent>
+              <CardContent>
+                <div className="space-y-2">
+                  {currentWeek.games.slice().reverse().map(game => (
+                    <div key={game.id} className="flex justify-between items-center p-3 bg-secondary/50 rounded-lg">
+                      <div className="flex items-center gap-4">
+                        <span className={`font-bold ${game.result === 'win' ? 'text-green-500' : 'text-red-500'}`}>{game.result.toUpperCase()}</span>
+                        <span>Game {game.gameNumber}</span>
+                        <span className="font-mono">{game.scoreLine}</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground">vs Skill: {game.opponentSkill}/10</div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
             </Card>
           </TabsContent>
           <TabsContent value="performers" className="mt-4"><TopPerformers games={currentWeek.games} /></TabsContent>
