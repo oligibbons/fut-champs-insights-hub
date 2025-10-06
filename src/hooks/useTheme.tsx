@@ -13,6 +13,24 @@ export interface Theme {
 
 // Your beautiful custom themes
 const themes: Record<string, Theme> = {
+  champsElite: {
+    name: 'Champs Elite',
+    colors: {
+      primary: 'hsl(340, 50%, 45%)', // royal claret
+      secondary: 'hsl(220, 15%, 20%)', // dark charcoal
+      accent: 'hsl(40, 90%, 60%)', // royal gold
+      background: 'hsl(220, 15%, 15%)',
+      surface: 'rgba(30, 41, 59, 0.5)',
+      cardBg: 'hsl(220, 15%, 20%)',
+      text: 'hsl(0, 0%, 100%)', // white
+      muted: 'hsl(220, 10%, 60%)',
+      border: 'hsla(340, 50%, 45%, 0.3)',
+      success: 'hsl(140, 70%, 45%)',
+      warning: 'hsl(40, 90%, 60%)',
+      error: 'hsl(0, 80%, 60%)',
+      fifa: { blue: 'hsl(210, 90%, 60%)', green: 'hsl(130, 80%, 50%)', gold: 'hsl(40, 90%, 60%)', red: 'hsl(0, 80%, 60%)', purple: 'hsl(260, 80%, 70%)' }
+    }
+  },
   midnightPitch: {
     name: 'Midnight Pitch',
     colors: {
@@ -104,7 +122,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     if (savedTheme && themes[savedTheme]) {
       return savedTheme;
     }
-    return 'midnightPitch'; // Default theme
+    return 'champsElite'; // Default theme
   });
 
   useEffect(() => {
