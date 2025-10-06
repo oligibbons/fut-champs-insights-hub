@@ -22,6 +22,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlayerPerformance } from '@/types/futChampions';
 import { get, isEqual } from 'lodash';
 
+// Interfaces
+interface SquadPlayerJoin { id: string; player_id: string; position: string; slot_id: string; players: PlayerCard; }
+interface SquadWithPlayers extends Squad { squad_players: SquadPlayerJoin[]; }
+
 // Zod Schema
 const gameFormSchema = z.object({
     user_goals: z.coerce.number().min(0), opponent_goals: z.coerce.number().min(0), duration: z.coerce.number().min(1), opponent_skill: z.number().min(1).max(10), server_quality: z.number().min(1).max(10), stress_level: z.number().min(1).max(10), cross_play_enabled: z.boolean(), opponent_play_style: z.string(), opponent_formation: z.string().optional(), opponent_squad_rating: z.coerce.number().min(50).max(99), squad_id: z.string().min(1, { message: "Please select a squad." }), tags: z.array(z.string()).optional(), comments: z.string().optional(), team_stats: z.object({ shots: z.coerce.number().min(0), shotsOnTarget: z.coerce.number().min(0), possession: z.coerce.number().min(0).max(100), expectedGoals: z.coerce.number().min(0), expectedGoalsAgainst: z.coerce.number().min(0), passes: z.coerce.number().min(0), passAccuracy: z.coerce.number().min(0).max(100), corners: z.coerce.number().min(0), fouls: z.coerce.number().min(0), yellowCards: z.coerce.number().min(0), redCards: z.coerce.number().min(0), }), player_stats: z.array(z.any()).optional(),
@@ -107,11 +111,23 @@ const GameRecordForm = ({ squads, weekId, nextGameNumber, onSave, onCancel }: Ga
                     yellowCards: 0, redCards: 0, ownGoals: 0,
                 }));
             
-            setValue('player_stats', newStarters, { shouldValidate: true, shouldDirty: true });
+            const currentPlayers = getValues('player_stats') || [];
+            const manualSubs = currentPlayers.filter((p: PlayerPerformance) => {
+                const isStarterInNewSquad = newStarters.some(starter => starter.id === p.id);
+                return p.position === 'SUB' && !isStarterInNewSquad;
+            });
+
+            const finalPlayerList = [...newStarters, ...manualSubs];
+
+            if (!isEqual(currentPlayers, finalPlayerList)) {
+                setValue('player_stats', finalPlayerList, { shouldValidate: true, shouldDirty: true });
+            }
         } else {
-             setValue('player_stats', [], { shouldValidate: true, shouldDirty: true });
+             if (getValues('player_stats').length > 0) {
+                 setValue('player_stats', [], { shouldValidate: true, shouldDirty: true });
+            }
         }
-    }, [selectedSquad, gameDuration, setValue]);
+    }, [selectedSquad, gameDuration, setValue, getValues]);
 
     const addSubstitute = () => {
         if (!selectedSquad) { toast({ title: "Please select a squad first.", variant: "destructive" }); return; }
@@ -153,7 +169,8 @@ const GameRecordForm = ({ squads, weekId, nextGameNumber, onSave, onCancel }: Ga
 
     return (
         <form onSubmit={handleSubmit(processSubmit)} className="flex flex-col h-full">
-            <Tabs defaultValue="details" className="flex-grow flex flex-col overflow-hidden">
+            {/* The className here is the only change needed. `overflow-hidden` is removed. */}
+            <Tabs defaultValue="details" className="flex-grow flex flex-col">
                 <TabsList className="grid w-full grid-cols-4">
                     <TabsTrigger value="details"><Trophy className="h-4 w-4 mr-2" />Match</TabsTrigger>
                     <TabsTrigger value="opponent"><Shield className="h-4 w-4 mr-2" />Opponent</TabsTrigger>
