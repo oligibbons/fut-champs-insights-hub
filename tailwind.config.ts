@@ -18,10 +18,10 @@ const config = {
       },
     },
     extend: {
-      // THIS IS THE CRITICAL FIX:
-      // We are removing the hsl() wrapper and using the CSS variables directly.
-      // This tells Tailwind to expect a full color value (like 'hsl(...)')
-      // which is what our theme provider will give it.
+      fontFamily: {
+        heading: ['Teko', 'sans-serif'],
+        sans: ['Inter', 'sans-serif'],
+      },
       colors: {
         border: "var(--border)",
         input: "var(--input)",
