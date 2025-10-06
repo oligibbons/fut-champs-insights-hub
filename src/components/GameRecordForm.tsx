@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useGameVersion } from '@/contexts/GameVersionContext'; // Import the hook
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -52,6 +53,7 @@ interface GameRecordFormProps {
 const GameRecordForm = ({ squads, weekId, nextGameNumber, onSave, onCancel }: GameRecordFormProps) => {
     const { user } = useAuth();
     const { toast } = useToast();
+    const { gameVersion } = useGameVersion(); // Get the current game version
 
     const { control, handleSubmit, watch, setValue, getValues, formState: { errors, isSubmitting, isValid } } = useForm({
         resolver: zodResolver(gameFormSchema),
@@ -148,7 +150,24 @@ const GameRecordForm = ({ squads, weekId, nextGameNumber, onSave, onCancel }: Ga
         if (!user) return;
         const result = data.user_goals > data.opponent_goals ? 'win' : 'loss';
         try {
-            const { data: gameResult, error: gameError } = await supabase.from('game_results').insert({ week_id: weekId, user_id: user.id, game_number: nextGameNumber, result, score_line: `${data.user_goals}-${data.opponent_goals}`, user_goals: data.user_goals, opponent_goals: data.opponent_goals, opponent_skill: data.opponent_skill, server_quality: data.server_quality, stress_level: data.stress_level, duration: data.duration, comments: data.comments, tags: data.tags, squad_used: data.squad_id }).select('id').single();
+            const { data: gameResult, error: gameError } = await supabase.from('game_results').insert({ 
+                week_id: weekId, 
+                user_id: user.id, 
+                game_number: nextGameNumber, 
+                result, 
+                score_line: `${data.user_goals}-${data.opponent_goals}`, 
+                user_goals: data.user_goals, 
+                opponent_goals: data.opponent_goals, 
+                opponent_skill: data.opponent_skill, 
+                server_quality: data.server_quality, 
+                stress_level: data.stress_level, 
+                duration: data.duration, 
+                comments: data.comments, 
+                tags: data.tags, 
+                squad_used: data.squad_id,
+                game_version: gameVersion // Add game_version to the insert
+            }).select('id').single();
+
             if (gameError) throw gameError;
             const hasNoStatsTag = data.tags?.some(tagName => matchTags.find(t => t.name === tagName)?.specialRule === 'no_stats');
             if (!hasNoStatsTag) {
