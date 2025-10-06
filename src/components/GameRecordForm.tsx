@@ -168,7 +168,7 @@ const GameRecordForm = ({ squads, weekId, nextGameNumber, onSave, onCancel }: Ga
 
     return (
         <form onSubmit={handleSubmit(processSubmit)} className="flex flex-col h-full">
-            <Tabs defaultValue="details" className="flex flex-col flex-1 min-h-0">
+            <Tabs defaultValue="details" className="grid grid-rows-[auto_1fr] flex-1 min-h-0">
                 <TabsList className="grid w-full grid-cols-4">
                     <TabsTrigger value="details"><Trophy className="h-4 w-4 mr-2" />Match</TabsTrigger>
                     <TabsTrigger value="opponent"><Shield className="h-4 w-4 mr-2" />Opponent</TabsTrigger>
@@ -176,7 +176,7 @@ const GameRecordForm = ({ squads, weekId, nextGameNumber, onSave, onCancel }: Ga
                     <TabsTrigger value="players"><Star className="h-4 w-4 mr-2" />Players</TabsTrigger>
                 </TabsList>
                 
-                <div className="flex-1 overflow-y-auto mt-4 pr-4 pb-4">
+                <div className="overflow-y-auto mt-4 pr-4 pb-4">
                     <TabsContent value="details" className="space-y-6">
                         <Controller name="squad_id" control={control} render={({ field }) => ( <div className="space-y-2"> <Label htmlFor="squad_id" className="flex items-center gap-2"><Users className="h-4 w-4" />Select Squad</Label> <Select value={field.value} onValueChange={field.onChange}> <SelectTrigger id="squad_id"><SelectValue placeholder="Choose a squad..." /></SelectTrigger> <SelectContent>{squads.map((s: Squad) => <SelectItem key={s.id} value={s.id}>{s.name} {s.is_default && "(Default)"}</SelectItem>)}</SelectContent> </Select> {errors.squad_id && <p className="text-sm text-red-500">{errors.squad_id.message as string}</p>} </div> )}/>
                         <div className="text-center"> <Label className="text-lg font-semibold">Final Score</Label> <div className="flex items-center justify-center gap-2 md:gap-4 mt-2"> <div className="flex flex-col items-center"><Label className="text-sm font-medium text-primary mb-1">Your Goals</Label><div className="flex items-center space-x-1"><Button type="button" variant="outline" size="icon" className="w-8 h-8 p-0" onClick={() => adjustNumericalValue('user_goals', -1)} onMouseDown={(e) => e.preventDefault()} disabled={getValues('user_goals') <= 0}><Minus className="h-4 w-4" /></Button><Controller name="user_goals" control={control} render={({ field }) => <Input {...field} type="text" inputMode="numeric" className="modern-input text-4xl h-20 w-24 text-center" />} /><Button type="button" variant="outline" size="icon" className="w-8 h-8 p-0" onClick={() => adjustNumericalValue('user_goals', 1)} onMouseDown={(e) => e.preventDefault()}><Plus className="h-4 w-4" /></Button></div></div> <span className="text-5xl font-bold text-muted-foreground mx-2 pt-6">:</span> <div className="flex flex-col items-center"><Label className="text-sm font-medium text-red-500 mb-1">Opponent Goals</Label><div className="flex items-center space-x-1"><Button type="button" variant="outline" size="icon" className="w-8 h-8 p-0" onClick={() => adjustNumericalValue('opponent_goals', -1)} onMouseDown={(e) => e.preventDefault()} disabled={getValues('opponent_goals') <= 0}><Minus className="h-4 w-4" /></Button><Controller name="opponent_goals" control={control} render={({ field }) => <Input {...field} type="text" inputMode="numeric" className="modern-input text-4xl h-20 w-24 text-center" />} /><Button type="button" variant="outline" size="icon" className="w-8 h-8 p-0" onClick={() => adjustNumericalValue('opponent_goals', 1)} onMouseDown={(e) => e.preventDefault()}><Plus className="h-4 w-4" /></Button></div></div> </div> </div>
@@ -209,4 +209,3 @@ const GameRecordForm = ({ squads, weekId, nextGameNumber, onSave, onCancel }: Ga
 };
 
 export default GameRecordForm;
-
