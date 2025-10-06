@@ -16,19 +16,19 @@ const themes: Record<string, Theme> = {
   champsElite: {
     name: 'Champs Elite',
     colors: {
-      primary: 'hsl(340, 50%, 45%)', // royal claret
-      secondary: 'hsl(220, 15%, 20%)', // dark charcoal
-      accent: 'hsl(40, 90%, 60%)', // royal gold
-      background: 'hsl(220, 15%, 15%)',
-      surface: 'rgba(30, 41, 59, 0.5)',
-      cardBg: 'hsl(220, 15%, 20%)',
-      text: 'hsl(0, 0%, 100%)', // white
-      muted: 'hsl(220, 10%, 60%)',
-      border: 'hsla(340, 50%, 45%, 0.3)',
+      primary: 'hsl(350, 70%, 55%)', // More vibrant claret
+      secondary: 'hsl(210, 30%, 25%)', // Slightly lighter charcoal
+      accent: 'hsl(45, 100%, 50%)',   // Brighter gold
+      background: 'hsl(220, 15%, 10%)', // Darker background for more contrast
+      surface: 'rgba(30, 41, 59, 0.6)',
+      cardBg: 'hsl(220, 15%, 15%)',
+      text: 'hsl(0, 0%, 100%)',
+      muted: 'hsl(220, 10%, 70%)',
+      border: 'hsla(350, 70%, 55%, 0.4)',
       success: 'hsl(140, 70%, 45%)',
-      warning: 'hsl(40, 90%, 60%)',
+      warning: 'hsl(45, 100%, 50%)',
       error: 'hsl(0, 80%, 60%)',
-      fifa: { blue: 'hsl(210, 90%, 60%)', green: 'hsl(130, 80%, 50%)', gold: 'hsl(40, 90%, 60%)', red: 'hsl(0, 80%, 60%)', purple: 'hsl(260, 80%, 70%)' }
+      fifa: { blue: 'hsl(210, 90%, 60%)', green: 'hsl(130, 80%, 50%)', gold: 'hsl(45, 100%, 50%)', red: 'hsl(0, 80%, 60%)', purple: 'hsl(260, 80%, 70%)' }
     }
   },
   midnightPitch: {
