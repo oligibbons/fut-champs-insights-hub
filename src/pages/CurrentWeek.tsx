@@ -1,20 +1,25 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useGameVersion } from '@/contexts/GameVersionContext';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Loader2 } from 'lucide-react';
+import { PlusCircle, Loader2, BarChart2, Star, ListChecks } from 'lucide-react';
 import GameCard from '@/components/GameCard';
 import WeekProgress from '@/components/WeekProgress';
 import { Game, FutChampsWeek } from '@/types/futChampions';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import GameRecordForm from '@/components/GameRecordForm';
 import { useToast } from '@/hooks/use-toast';
 import { Squad } from '@/types/squads';
 import WeekCompletionPopup from '@/components/WeekCompletionPopup';
+import CurrentRunStats from '@/components/CurrentRunStats';
+import TopPerformers from '@/components/TopPerformers';
 
 const CurrentWeek = () => {
     const { user } = useAuth();
     const { toast } = useToast();
+    const { gameVersion } = useGameVersion();
     const [currentWeek, setCurrentWeek] = useState<FutChampsWeek | null>(null);
     const [games, setGames] = useState<Game[]>([]);
     const [squads, setSquads] = useState<Squad[]>([]);
@@ -27,11 +32,13 @@ const CurrentWeek = () => {
         if (!user) return;
         setLoading(true);
         try {
+            // Fetch current week filtered by game version
             const { data: weekData, error: weekError } = await supabase
                 .from('weekly_performances')
                 .select('*')
                 .eq('user_id', user.id)
                 .eq('is_completed', false)
+                .eq('game_version', gameVersion) // Filter by game_version
                 .order('created_at', { ascending: false })
                 .limit(1)
                 .single();
@@ -52,10 +59,12 @@ const CurrentWeek = () => {
                 setGames([]);
             }
 
+            // Fetch squads filtered by game version
             const { data: squadsData, error: squadsError } = await supabase
                 .from('squads')
                 .select('*, squad_players(*, players(*))')
-                .eq('user_id', user.id);
+                .eq('user_id', user.id)
+                .eq('game_version', gameVersion); // Filter by game_version
             if (squadsError) throw squadsError;
             setSquads(squadsData || []);
 
@@ -67,15 +76,17 @@ const CurrentWeek = () => {
         }
     };
 
+    // Refetch data when user or gameVersion changes
     useEffect(() => {
         fetchData();
-    }, [user]);
+    }, [user, gameVersion]);
 
     const startNewWeek = async () => {
         if (!user) return;
+        // Start a new week with the current game version
         const { data, error } = await supabase
             .from('weekly_performances')
-            .insert({ user_id: user.id })
+            .insert({ user_id: user.id, game_version: gameVersion, week_number: 1, start_date: new Date().toISOString() }) // Add game_version
             .select()
             .single();
 
@@ -92,11 +103,11 @@ const CurrentWeek = () => {
         await fetchData();
         setRecordGameModalOpen(false);
         const gamesPlayed = games.length + 1;
-        if (gamesPlayed === 20) {
+        if (gamesPlayed >= 20) { // Check if 20 or more games are played
             if(currentWeek) {
                 const { data: completedWeek, error } = await supabase
                     .from('weekly_performances')
-                    .update({ is_completed: true })
+                    .update({ is_completed: true, end_date: new Date().toISOString() })
                     .eq('id', currentWeek.id)
                     .select()
                     .single();
@@ -120,7 +131,7 @@ const CurrentWeek = () => {
     if (!currentWeek) {
         return (
             <div className="text-center p-8">
-                <h2 className="text-2xl font-semibold mb-4">No Active FUT Champs Week</h2>
+                <h2 className="text-2xl font-semibold mb-4">No Active FUT Champs Week for {gameVersion}</h2>
                 <p className="mb-6">Start a new week to begin tracking your games.</p>
                 <Button onClick={startNewWeek}>
                     <PlusCircle className="mr-2 h-4 w-4" /> Start New Week
@@ -134,11 +145,11 @@ const CurrentWeek = () => {
     const nextGameNumber = games.length + 1;
 
     return (
-        <div className="container mx-auto p-4">
+        <div className="container mx-auto p-4 space-y-6">
             <WeekProgress wins={wins} losses={losses} gamesPlayed={games.length} />
 
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold">Current Week</h1>
+            <div className="flex justify-between items-center">
+                <h1 className="text-3xl font-bold">{currentWeek.custom_name || `Week ${currentWeek.week_number}`}</h1>
                 {games.length < 20 && (
                     <Button onClick={() => setRecordGameModalOpen(true)}>
                         <PlusCircle className="mr-2 h-4 w-4" /> Record Game
@@ -172,11 +183,27 @@ const CurrentWeek = () => {
                 week={justCompletedWeek}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {games.map(game => (
-                    <GameCard key={game.id} game={game} />
-                ))}
-            </div>
+            <Tabs defaultValue="gamelog" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="gamelog"><ListChecks className="h-4 w-4 mr-2" />Game Log</TabsTrigger>
+                <TabsTrigger value="stats"><BarChart2 className="h-4 w-4 mr-2" />Run Stats</TabsTrigger>
+                <TabsTrigger value="performers"><Star className="h-4 w-4 mr-2" />Top Performers</TabsTrigger>
+              </TabsList>
+              <TabsContent value="gamelog" className="mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {games.map(game => (
+                        <GameCard key={game.id} game={game} />
+                    ))}
+                </div>
+              </TabsContent>
+               <TabsContent value="stats" className="mt-4">
+                    <CurrentRunStats week={currentWeek} />
+               </TabsContent>
+              <TabsContent value="performers" className="mt-4">
+                    <TopPerformers games={games} />
+              </TabsContent>
+            </Tabs>
+
         </div>
     );
 };
