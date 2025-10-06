@@ -176,7 +176,6 @@ const GameRecordForm = ({ squads, weekId, nextGameNumber, onSave, onCancel }: Ga
                     <TabsTrigger value="players"><Star className="h-4 w-4 mr-2" />Players</TabsTrigger>
                 </TabsList>
                 
-                {/* This div is the new scrolling container */}
                 <div className="flex-1 overflow-y-auto mt-4 pr-4 pb-4">
                     <TabsContent value="details" className="space-y-6">
                         <Controller name="squad_id" control={control} render={({ field }) => ( <div className="space-y-2"> <Label htmlFor="squad_id" className="flex items-center gap-2"><Users className="h-4 w-4" />Select Squad</Label> <Select value={field.value} onValueChange={field.onChange}> <SelectTrigger id="squad_id"><SelectValue placeholder="Choose a squad..." /></SelectTrigger> <SelectContent>{squads.map((s: Squad) => <SelectItem key={s.id} value={s.id}>{s.name} {s.is_default && "(Default)"}</SelectItem>)}</SelectContent> </Select> {errors.squad_id && <p className="text-sm text-red-500">{errors.squad_id.message as string}</p>} </div> )}/>
