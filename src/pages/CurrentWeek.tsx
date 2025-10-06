@@ -31,7 +31,7 @@ const CurrentWeek = () => {
                 .from('weekly_performances')
                 .select('*')
                 .eq('user_id', user.id)
-                .is('completed_at', null)
+                .eq('is_completed', false)
                 .order('created_at', { ascending: false })
                 .limit(1)
                 .single();
@@ -96,7 +96,7 @@ const CurrentWeek = () => {
             if(currentWeek) {
                 const { data: completedWeek, error } = await supabase
                     .from('weekly_performances')
-                    .update({ completed_at: new Date().toISOString() })
+                    .update({ is_completed: true })
                     .eq('id', currentWeek.id)
                     .select()
                     .single();
