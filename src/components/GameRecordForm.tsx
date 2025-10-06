@@ -21,7 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from './ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlayerPerformance } from '@/types/futChampions';
-import { get } from 'lodash';
+import { get, isEqual } from 'lodash';
 
 // Interfaces
 interface SquadPlayerJoin {
@@ -61,7 +61,7 @@ const gameFormSchema = z.object({
     player_stats: z.array(z.any()).optional(),
 });
 
-// Match Tags Data (Full list as provided in original file)
+// Match Tags Data
 const matchTags = [
     { id: 'dominantWin', name: 'Dominant Win', description: 'A win where you dominated your opponent.' },
     { id: 'deservedLoss', name: 'Deserved Loss', description: 'A loss where you didn’t deserve to win.' },
@@ -139,18 +139,14 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
   const adjustNumericalValue = useCallback((fieldName: any, delta: number, stepValue: number = 1) => {
     let currentValue = get(getValues(), fieldName);
     currentValue = (typeof currentValue !== 'number') ? (Number(currentValue) || 0) : currentValue;
-    
     let newValue = (currentValue * 10 + delta * stepValue * 10) / 10;
-    
     let min = 0, max = Infinity;
     if (['opponent_skill', 'server_quality', 'stress_level'].some(f => fieldName.includes(f))) { min = 1; max = 10; }
     else if (fieldName.includes('duration')) { min = 1; max = 120; }
     else if (['possession', 'passAccuracy'].some(f => fieldName.includes(f))) { max = 100; }
     else if (fieldName.includes('opponent_squad_rating')) { min = 50; max = 99; }
-
     newValue = Math.max(min, Math.min(max, newValue));
     newValue = stepValue < 1 ? parseFloat(newValue.toFixed(1)) : Math.round(newValue);
-
     setValue(fieldName, newValue, { shouldValidate: true, shouldDirty: true });
   }, [getValues, setValue]);
 
@@ -162,8 +158,9 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
             <Label>{label}</Label>
             <div className="flex items-center gap-1">
                 <Button type="button" variant="outline" size="icon" className="w-8 h-8 p-0" onClick={() => adjustNumericalValue(name, -1, step)} onMouseDown={(e) => e.preventDefault()} disabled={currentValue <= minConstraint}><Minus className="h-3 w-3" /></Button>
+                {/* FIX: Simplified Controller render prop to prevent focus loss */}
                 <Controller name={name} control={control} render={({ field }) => (
-                    <Input {...field} type="text" inputMode={step < 1 ? "decimal" : "numeric"} className={`h-8 text-sm font-semibold ${inputClassName} ${minInputWidth}`} onChange={field.onChange} />
+                    <Input {...field} type="text" inputMode={step < 1 ? "decimal" : "numeric"} className={`h-8 text-sm font-semibold ${inputClassName} ${minInputWidth}`} />
                 )} />
                 <Button type="button" variant="outline" size="icon" className="w-8 h-8 p-0" onClick={() => adjustNumericalValue(name, 1, step)} onMouseDown={(e) => e.preventDefault()}><Plus className="h-3 w-3" /></Button>
             </div>
@@ -171,28 +168,52 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
     );
   };
 
+  // FIX: Robust useEffect for populating and updating player stats
   useEffect(() => {
     if (!watchedValues.squad_id && defaultSquad) {
       setValue('squad_id', defaultSquad.id);
       return;
     }
-    if (selectedSquad) {
-      const initialPlayerStats = (selectedSquad.squad_players || [])
+  
+    const currentPlayers = getValues('player_stats') || [];
+  
+    if (selectedSquad && selectedSquad.squad_players && selectedSquad.squad_players.length > 0) {
+      const startingPlayerIds = new Set(
+        selectedSquad.squad_players
+          .filter(sp => sp?.slot_id?.startsWith('starting-') && sp.players?.id)
+          .map(sp => sp.players.id)
+      );
+  
+      // Update minutes for all players if duration changes
+      const updatedPlayers = currentPlayers.map((player: PlayerPerformance) => ({
+        ...player,
+        minutesPlayed: startingPlayerIds.has(player.id) ? watchedValues.duration || 90 : player.minutesPlayed,
+      }));
+  
+      // Generate list of starters from the squad
+      const initialStarters = selectedSquad.squad_players
         .filter(sp => sp?.slot_id?.startsWith('starting-') && sp.players?.id)
         .map(sp => ({
           id: sp.players.id, name: sp.players.name, position: sp.players.position, rating: 7.0,
           goals: 0, assists: 0, minutesPlayed: watchedValues.duration || 90,
           yellowCards: 0, redCards: 0, ownGoals: 0,
         } as PlayerPerformance));
-      
-      const currentIds = getValues('player_stats')?.map(p => p.id).sort().join(',') || '';
-      const newIds = initialPlayerStats.map(p => p.id).sort().join(',');
-
-      if (currentIds !== newIds) {
-        setValue('player_stats', initialPlayerStats);
+  
+      // If the list of starters has changed, replace them but keep any subs that were added manually
+      const currentStarterIds = new Set(currentPlayers.filter((p: any) => startingPlayerIds.has(p.id)).map((p: any) => p.id));
+      const newStarterIds = new Set(initialStarters.map(p => p.id));
+  
+      if (!isEqual(currentStarterIds, newStarterIds)) {
+        const manualSubs = currentPlayers.filter((p: any) => !startingPlayerIds.has(p.id));
+        setValue('player_stats', [...initialStarters, ...manualSubs]);
+      } else if (!isEqual(currentPlayers, updatedPlayers)) {
+        setValue('player_stats', updatedPlayers);
       }
     } else if (watchedValues.squad_id) {
+      // If a squad is selected but has no players, clear the list
+      if (currentPlayers.length > 0) {
         setValue('player_stats', []);
+      }
     }
   }, [selectedSquad, watchedValues.duration, watchedValues.squad_id, defaultSquad, setValue, getValues]);
 
@@ -207,7 +228,8 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
       const subToAdd = availableSubs[0].players;
       setValue('player_stats', [...(watchedValues.player_stats || []), {
         id: subToAdd.id, name: subToAdd.name, position: 'SUB', rating: 6.0, goals: 0, assists: 0,
-        minutesPlayed: 0, yellowCards: 0, redCards: 0, ownGoals: 0,
+        minutesPlayed: 0, // Subs always start with 0 minutes
+        yellowCards: 0, redCards: 0, ownGoals: 0,
       }]);
     } else {
       toast({ title: "No available substitutes left in this squad.", variant: "destructive" });
@@ -230,19 +252,12 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
         const hasNoStatsTag = data.tags?.some(tagName => matchTags.find(t => t.name === tagName)?.specialRule === 'no_stats');
         if (!hasNoStatsTag) {
             const { error: teamStatsError } = await supabase.from('team_statistics').insert({
-                game_id: gameResult.id,
-                user_id: user.id,
-                shots: data.team_stats.shots,
-                shots_on_target: data.team_stats.shotsOnTarget,
-                possession: data.team_stats.possession,
-                expected_goals: data.team_stats.expectedGoals,
-                expected_goals_against: data.team_stats.expectedGoalsAgainst,
-                passes: data.team_stats.passes,
-                pass_accuracy: data.team_stats.passAccuracy,
-                corners: data.team_stats.corners,
-                fouls: data.team_stats.fouls,
-                yellow_cards: data.team_stats.yellowCards,
-                red_cards: data.team_stats.redCards,
+                game_id: gameResult.id, user_id: user.id, shots: data.team_stats.shots,
+                shots_on_target: data.team_stats.shotsOnTarget, possession: data.team_stats.possession,
+                expected_goals: data.team_stats.expectedGoals, expected_goals_against: data.team_stats.expectedGoalsAgainst,
+                passes: data.team_stats.passes, pass_accuracy: data.team_stats.passAccuracy,
+                corners: data.team_stats.corners, fouls: data.team_stats.fouls,
+                yellow_cards: data.team_stats.yellowCards, red_cards: data.team_stats.redCards,
             });
             if (teamStatsError) throw teamStatsError;
 
@@ -327,7 +342,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
 
             <TabsContent value="players" className="animate-in fade-in">
                 <div className="flex justify-between items-center mb-4"><h3 className="text-lg font-semibold">Player Performances</h3><Button onClick={addSubstitute} size="sm" type="button" disabled={!selectedSquad}><UserPlus className="h-4 w-4 mr-2" />Add Sub</Button></div>
-                {(selectedSquad && getValues('player_stats')?.length > 0) ? (<Controller name="player_stats" control={control} render={({ field }) => (<PlayerStatsForm players={field.value || []} onStatsChange={field.onChange} gameDuration={watchedValues.duration || 90} />)} />) : (<div className="text-center py-8 border border-dashed rounded-lg text-muted-foreground"><p className='px-4'>Select a squad with a starting XI in the "Match" tab to log player performances.</p>{selectedSquad && <p className="mt-2 text-sm">The squad **"{selectedSquad.name}"** may have no players in the starting XI.</p>}</div>)}
+                {watchedValues.player_stats && watchedValues.player_stats.length > 0 ? (<Controller name="player_stats" control={control} render={({ field }) => (<PlayerStatsForm players={field.value || []} onStatsChange={field.onChange} gameDuration={watchedValues.duration || 90} />)} />) : (<div className="text-center py-8 border border-dashed rounded-lg text-muted-foreground"><p className='px-4'>Select a squad with a starting XI in the "Match" tab to auto-populate player performances.</p>{selectedSquad && <p className="mt-2 text-sm">The squad **"{selectedSquad.name}"** may have no players in the starting XI.</p>}</div>)}
             </TabsContent>
         </ScrollArea>
       </Tabs>
