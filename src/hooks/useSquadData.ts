@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { Squad, PlayerCard, SquadPlayer, CardType } from '../types/squads';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/Auth/AuthContext';
 import { toast } from 'sonner';
 import { useGameVersion } from '@/contexts/GameVersionContext';
 
@@ -13,28 +13,67 @@ export const useSquadData = () => {
   const [cardTypes, setCardTypes] = useState<CardType[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // MODIFIED: Consolidated fetch logic using stitching to bypass deep-join RLS issues
   const fetchSquads = useCallback(async () => {
     if (!user) return;
     try {
       setLoading(true);
-      const { data, error } = await supabase
+
+      // 1. Fetch all accessible Player Cards (must succeed first to stitch data)
+      const { data: playersData, error: playersError } = await supabase
+        .from('players')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('game_version', gameVersion);
+      
+      if (playersError) throw playersError;
+      const playerMap = new Map(playersData.map(p => [p.id, p as PlayerCard]));
+      setPlayers(playersData || []);
+
+      // 2. Fetch Squads and the raw squad_players join (NO deep join on 'players')
+      const { data: squadsData, error: squadsError } = await supabase
         .from('squads')
-        .select('*, squad_players(*, players(*))')
+        // Simplified select to 'squad_players(*)' to avoid RLS issue on nested 'players(*)'
+        .select('*, squad_players(*)') 
         .eq('user_id', user.id)
         .eq('game_version', gameVersion);
 
-      if (error) throw error;
-      setSquads(data || []);
-    } catch (error) {
+      if (squadsError) throw squadsError;
+
+      // 3. Manual Stitching: Recreate the expected deep-joined structure
+      const finalSquads = (squadsData || []).map(squad => {
+          // Recreate the array of squad players with the nested 'players' object attached
+          const stitchedPlayers = squad.squad_players ? squad.squad_players.map((sp: any) => {
+              const playerCard = playerMap.get(sp.player_id);
+              
+              // Attach the fully accessible PlayerCard object (or null if RLS hid it in the initial fetch)
+              return {
+                  ...sp,
+                  players: playerCard || null, 
+              };
+          }) : [];
+
+          return {
+              ...squad,
+              squad_players: stitchedPlayers,
+          } as Squad;
+      });
+      
+      setSquads(finalSquads);
+
+    } catch (error: any) {
       toast.error('Failed to fetch squads.');
-      console.error('Error fetching squads:', error);
+      console.error('Error fetching squads:', error.message);
     } finally {
       setLoading(false);
     }
   }, [user, gameVersion]);
 
+  // Kept separate for external use, though primary player data load is now in fetchSquads for stitching
   const fetchPlayers = useCallback(async () => {
     if (!user) return;
+    // NOTE: This now uses the data from the new fetchSquads for consistency, but if called externally, 
+    // it will re-fetch all players, which is harmless.
     try {
       const { data, error } = await supabase
         .from('players')
@@ -43,9 +82,9 @@ export const useSquadData = () => {
         .eq('game_version', gameVersion);
       if (error) throw error;
       setPlayers(data || []);
-    } catch (error) {
+    } catch (error: any) {
       toast.error('Failed to fetch players.');
-      console.error('Error fetching players:', error);
+      console.error('Error fetching players:', error.message);
     }
   }, [user, gameVersion]);
 
@@ -59,20 +98,20 @@ export const useSquadData = () => {
             .eq('game_version', gameVersion);
         if (error) throw error;
         setCardTypes(data || []);
-    } catch (error) {
+    } catch (error: any) {
         toast.error('Failed to fetch card types.');
-        console.error('Error fetching card types:', error);
+        console.error('Error fetching card types:', error.message);
     }
   }, [user, gameVersion]);
 
 
   useEffect(() => {
     if (user) {
-        fetchSquads();
-        fetchPlayers();
+        // Only fetch squads and card types, as player data is now included in fetchSquads
+        fetchSquads(); 
         fetchCardTypes();
     }
-  }, [user, gameVersion, fetchSquads, fetchPlayers, fetchCardTypes]);
+  }, [user, gameVersion, fetchSquads, fetchCardTypes]);
 
   const createSquad = async (squadData: any) => {
     if (!user) return;
@@ -103,7 +142,7 @@ export const useSquadData = () => {
       toast.success('Squad created successfully.');
       await fetchSquads();
       return newSquad;
-    } catch (error) {
+    } catch (error: any) {
       toast.error(`Error creating squad: ${error.message}`);
       console.error('Error creating squad:', error);
     }
@@ -139,7 +178,7 @@ export const useSquadData = () => {
 
         toast.success('Squad updated successfully.');
         await fetchSquads();
-    } catch (error) {
+    } catch (error: any) {
         toast.error(`Error updating squad: ${error.message}`);
         console.error('Error updating squad:', error);
     }
@@ -174,7 +213,7 @@ export const useSquadData = () => {
       
       setSquads(prev => prev.filter(s => s.id !== squadId));
       toast.success('Squad deleted successfully.');
-    } catch (error) {
+    } catch (error: any) {
       toast.error('Failed to delete squad.');
       console.error('Error deleting squad:', error);
     }
@@ -195,7 +234,7 @@ export const useSquadData = () => {
           if (error) throw error;
           await fetchPlayers();
           return data as PlayerCard;
-      } catch (error) {
+      } catch (error: any) {
           toast.error(`Failed to save player: ${error.message}`);
           console.error('Error saving player:', error);
           return null;
@@ -227,7 +266,7 @@ export const useSquadData = () => {
         toast.success("Player added to squad.");
         return newSquadPlayer;
 
-    } catch (error) {
+    } catch (error: any) {
         toast.error("Failed to add player to squad.");
         console.error('Error adding player to squad:', error);
         return null;
@@ -246,13 +285,18 @@ export const useSquadData = () => {
         setSquads(prev =>
             prev.map(s => {
                 if (s.id === squadId) {
-                    return { ...s, squad_players: s.squad_players.filter(p => p.id !== squadPlayerId) };
+                    // Filter out the removed player. Note: the types in Squad need update
+                    // to reflect the joined data structure if this component relies on it.
+                    // Assuming the component can handle the updated state after fetchSquads runs.
+                    return { ...s, squad_players: s.squad_players.filter((p: any) => p.id !== squadPlayerId) };
                 }
                 return s;
             })
         );
         toast.success('Player removed from squad.');
-    } catch (error) {
+        // Re-fetch everything to ensure state is clean and joined data is correct
+        await fetchSquads(); 
+    } catch (error: any) {
         toast.error('Failed to remove player from squad.');
         console.error('Error removing player from squad:', error);
     }
