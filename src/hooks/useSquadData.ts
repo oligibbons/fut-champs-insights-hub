@@ -17,7 +17,7 @@ export const useSquadData = () => {
     if (!user) return;
     setLoading(true);
     try {
-      // 1. Fetch all three necessary tables in parallel for maximum efficiency.
+      // NEW ARCHITECTURE: Fetch all three necessary tables in parallel.
       const [
         { data: playersData, error: playersError },
         { data: squadsData, error: squadsError },
@@ -25,35 +25,28 @@ export const useSquadData = () => {
       ] = await Promise.all([
         supabase.from('players').select('*').eq('user_id', user.id).eq('game_version', gameVersion),
         supabase.from('squads').select('*').eq('user_id', user.id).eq('game_version', gameVersion),
-        // We fetch all squad_players and filter locally, which is often more reliable with RLS.
-        supabase.from('squad_players').select('*')
+        supabase.from('squad_players').select('*') // We fetch all and filter locally for reliability.
       ]);
 
       if (playersError || squadsError || squadPlayersError) {
-        // Throw the first error that occurred.
         throw playersError || squadsError || squadPlayersError;
       }
       
       const playerMap = new Map(playersData.map(p => [p.id, p as PlayerCard]));
-      
-      // Set the standalone players state once.
       setPlayers(playersData || []);
 
-      // 2. Stitch the data together into a final, complete structure BEFORE setting state.
+      // Stitch the data together into a final, complete structure BEFORE setting state.
       const finalSquads = (squadsData || []).map(squad => {
         const playersInSquad = (squadPlayersData || [])
-          // Find all the player links for the current squad.
           .filter(sp => sp.squad_id === squad.id)
           .map(sp => {
             const playerCard = playerMap.get(sp.player_id);
-            // Attach the nested player object from the map.
             return {
               ...sp,
               players: playerCard || null
             };
           })
-          // CRITICAL: Filter out any links where the player might have been deleted or doesn't exist.
-          .filter(sp => sp.players !== null);
+          .filter(sp => sp.players !== null); // Ensure no null player records are included.
 
         return {
           ...squad,
@@ -61,7 +54,7 @@ export const useSquadData = () => {
         } as Squad;
       });
 
-      // 3. Set the final, fully stitched state once. This is atomic and prevents race conditions.
+      // Set the final, fully stitched state once. This is atomic and prevents race conditions.
       setSquads(finalSquads);
 
     } catch (error: any) {
@@ -174,6 +167,7 @@ export const useSquadData = () => {
       toast.success('Squad deleted successfully.');
     } catch (error: any) {
       toast.error('Failed to delete squad.');
+      console.error('Error deleting squad:', error);
     }
   };
 
@@ -196,7 +190,7 @@ export const useSquadData = () => {
       }
   };
   
-  const addPlayerToSquad = async (squadId: string, playerId: string, position: string) => {
+    const addPlayerToSquad = async (squadId: string, playerId: string, position: string) => {
     try {
         const { data, error } = await supabase.from('squad_players').insert([{ squad_id: squadId, player_id: playerId, position }]).select('*, players(*)').single();
         if (error) throw error;
