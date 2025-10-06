@@ -169,7 +169,6 @@ const GameRecordForm = ({ squads, weekId, nextGameNumber, onSave, onCancel }: Ga
 
     return (
         <form onSubmit={handleSubmit(processSubmit)} className="flex flex-col h-full">
-            {/* The className here is the only change needed. `overflow-hidden` is removed. */}
             <Tabs defaultValue="details" className="flex-grow flex flex-col">
                 <TabsList className="grid w-full grid-cols-4">
                     <TabsTrigger value="details"><Trophy className="h-4 w-4 mr-2" />Match</TabsTrigger>
