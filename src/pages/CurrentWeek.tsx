@@ -28,10 +28,10 @@ const CurrentWeek = () => {
         setLoading(true);
         try {
             const { data: weekData, error: weekError } = await supabase
-                .from('fut_champs_weeks')
+                .from('weekly_performances')
                 .select('*')
                 .eq('user_id', user.id)
-                .is('completed_at', null)
+                .eq('is_completed', false)
                 .order('created_at', { ascending: false })
                 .limit(1)
                 .single();
@@ -59,7 +59,7 @@ const CurrentWeek = () => {
             if (squadsError) throw squadsError;
             setSquads(squadsData || []);
 
-        } catch (error: any) a/s/supabase';
+        } catch (error: any) {
             console.error('Error fetching data:', error);
             toast({ title: "Error", description: "Failed to fetch current week data.", variant: "destructive" });
         } finally {
@@ -74,7 +74,7 @@ const CurrentWeek = () => {
     const startNewWeek = async () => {
         if (!user) return;
         const { data, error } = await supabase
-            .from('fut_champs_weeks')
+            .from('weekly_performances')
             .insert({ user_id: user.id })
             .select()
             .single();
@@ -95,8 +95,8 @@ const CurrentWeek = () => {
         if (gamesPlayed === 20) {
             if(currentWeek) {
                 const { data: completedWeek, error } = await supabase
-                    .from('fut_champs_weeks')
-                    .update({ completed_at: new Date().toISOString() })
+                    .from('weekly_performances')
+                    .update({ is_completed: true })
                     .eq('id', currentWeek.id)
                     .select()
                     .single();
