@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { WeeklyPerformance } from '@/types/futChampions';
-import { ResponsiveContainer, ComposedChart, XAxis, YAxis, CartesianGrid, Tooltip, BoxPlot } from 'recharts';
+import { ResponsiveContainer, BarChart, XAxis, YAxis, CartesianGrid, Tooltip, Bar, ErrorBar } from 'recharts';
 import { useTheme } from '@/hooks/useTheme';
 
 interface PlayerConsistencyChartProps {
@@ -26,13 +26,12 @@ const PlayerConsistencyChart = ({ weeklyData }: PlayerConsistencyChartProps) => 
         const ratings = playerRatings[playerName].sort((a, b) => a - b);
         const min = ratings[0];
         const max = ratings[ratings.length - 1];
-        const q1 = ratings[Math.floor(ratings.length / 4)];
         const median = ratings[Math.floor(ratings.length / 2)];
-        const q3 = ratings[Math.floor((3 * ratings.length) / 4)];
         
         return {
             name: playerName,
-            box: [min, q1, median, q3, max],
+            median: median,
+            range: [min, max], // Data for the ErrorBar component
         };
     });
 
@@ -43,18 +42,27 @@ const PlayerConsistencyChart = ({ weeklyData }: PlayerConsistencyChartProps) => 
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={400}>
-          <ComposedChart data={chartData} layout="vertical" margin={{ top: 20, right: 20, bottom: 20, left: 60 }}>
+          <BarChart data={chartData} layout="vertical" margin={{ top: 20, right: 30, bottom: 20, left: 100 }}>
             <CartesianGrid stroke={currentTheme.colors.border} strokeDasharray="3 3" />
             <XAxis type="number" stroke={currentTheme.colors.muted} domain={[4, 10]} />
             <YAxis type="category" dataKey="name" stroke={currentTheme.colors.muted} width={100} />
             <Tooltip 
+              cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}
               contentStyle={{
                 backgroundColor: currentTheme.colors.surface,
                 borderColor: currentTheme.colors.border
               }}
+              formatter={(value, name, props) => {
+                if (name === 'median' && props.payload.range) {
+                  return [`Median: ${value.toFixed(1)} | Range: ${props.payload.range[0]} - ${props.payload.range[1]}`, null]
+                }
+                return [value, name]
+              }}
             />
-            <BoxPlot dataKey="box" fill={currentTheme.colors.primary} stroke={currentTheme.colors.primary} />
-          </ComposedChart>
+            <Bar dataKey="median" fill={currentTheme.colors.primary}>
+                <ErrorBar dataKey="range" width={5} strokeWidth={2} stroke={currentTheme.colors.accent} direction="x" />
+            </Bar>
+          </BarChart>
         </ResponsiveContainer>
       </CardContent>
     </Card>
