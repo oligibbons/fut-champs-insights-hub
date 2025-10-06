@@ -92,7 +92,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
         // Populate players if a squad is selected
         if (selectedSquad) {
             const newStarters = (selectedSquad.squad_players || [])
-                .filter(sp => sp.slot_id?.startsWith('starting-'))
+                .filter(sp => sp.slot_id?.startsWith('starting-') && sp.players) // Ensure player data exists
                 .map(sp => ({
                     id: sp.players.id,
                     name: sp.players.name,
