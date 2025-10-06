@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSupabaseData } from '@/hooks/useSupabaseData';
+import { useSquadData } from '@/hooks/useSquadData'; // ADDED: Import the squad data hook
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -20,7 +21,8 @@ import AchievementSystem from '@/components/AchievementSystem';
 import WeekNaming from '@/components/WeekNaming';
 
 const CurrentWeek = () => {
-  const { weeklyData, createWeek, endWeek, loading, refreshData, updateWeek } = useSupabaseData();
+  const { weeklyData, createWeek, endWeek, loading: weekLoading, refreshData, updateWeek } = useSupabaseData();
+  const { squads, loading: squadsLoading } = useSquadData(); // ADDED: Fetch squads here
   const [isLoggingGame, setIsLoggingGame] = useState(false);
   const [completedGame, setCompletedGame] = useState<GameResult | null>(null);
   const [completedWeek, setCompletedWeek] = useState<WeeklyPerformance | null>(null);
@@ -70,11 +72,11 @@ const CurrentWeek = () => {
   const StatCard = ({ title, value, icon: Icon }: { title: string, value: string | number, icon: React.ElementType }) => (
     <Card className="bg-secondary/50">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle><Icon className="h-4 w-4 text-muted-foreground" /></CardHeader>
-      <CardContent>{loading ? <Skeleton className="h-8 w-20 mt-1" /> : <div className="text-2xl font-bold">{value}</div>}</CardContent>
+      <CardContent>{weekLoading ? <Skeleton className="h-8 w-20 mt-1" /> : <div className="text-2xl font-bold">{value}</div>}</CardContent>
     </Card>
   );
 
-  if (loading) return <div className="flex justify-center items-center h-64"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+  if (weekLoading || squadsLoading) return <div className="flex justify-center items-center h-64"><Loader2 className="h-8 w-8 animate-spin" /></div>;
 
   if (!currentWeek) {
     return (
@@ -120,6 +122,7 @@ const CurrentWeek = () => {
               <DialogTitle>Log Game #{currentWeek.games.length + 1}</DialogTitle>
             </DialogHeader>
             <GameRecordForm 
+              squads={squads} // MODIFIED: Pass the fetched squads as a prop
               weekId={currentWeek.id} 
               nextGameNumber={currentWeek.games.length + 1} 
               onSave={handleSaveGame} 
@@ -138,7 +141,6 @@ const CurrentWeek = () => {
           <TabsContent value="stats" className="mt-4"><CurrentRunStats week={currentWeek} /></TabsContent>
           <TabsContent value="gamelog" className="mt-4">
             <Card>
-              {/* FIX: Corrected closing tag from </Header> to </CardHeader> */}
               <CardHeader><CardTitle>Game Log</CardTitle></CardHeader>
               <CardContent><div className="space-y-2">{currentWeek.games.slice().reverse().map(game => (<div key={game.id} className="flex justify-between items-center p-3 bg-secondary/50 rounded-lg"><div className="flex items-center gap-4"><span className={`font-bold ${game.result === 'win' ? 'text-green-500' : 'text-red-500'}`}>{game.result.toUpperCase()}</span><span>Game {game.gameNumber}</span><span className="font-mono">{game.scoreLine}</span></div><div className="text-xs text-muted-foreground">vs Skill: {game.opponentSkill}/10</div></div>))}</div></CardContent>
             </Card>
