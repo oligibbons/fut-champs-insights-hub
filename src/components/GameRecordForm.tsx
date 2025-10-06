@@ -590,12 +590,9 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                                     <UserPlus className="h-4 w-4 mr-2" />Add Sub
                                 </Button>
                             </div>
-                            {!selectedSquad && (
-                                <div className="text-center py-8 border border-dashed rounded-lg text-muted-foreground">
-                                    Please select a squad in Step 1 to enter player statistics.
-                                </div>
-                            )}
-                            {selectedSquad && selectedSquad.squad_players && selectedSquad.squad_players.length > 0 ? (
+                            
+                            {/* Check if squad is selected AND has players */}
+                            {selectedSquad && selectedSquad.squad_players && selectedSquad.squad_players.filter(p => p.slot_id?.startsWith('starting-')).length > 0 ? (
                                 <Controller
                                     name="player_stats"
                                     control={control}
