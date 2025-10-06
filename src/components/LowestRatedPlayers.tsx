@@ -25,7 +25,8 @@ const LowestRatedPlayers = ({ weeklyData }: LowestRatedPlayersProps) => {
     weeklyData.forEach(week => {
       week.games.forEach(game => {
         game.playerStats?.forEach((player: PlayerPerformance) => {
-          if (player.position.toUpperCase() === 'GK') return; // Exclude Goalkeepers
+          // Exclude Goalkeepers from this analysis
+          if (player.position.toUpperCase() === 'GK') return;
 
           const key = player.name;
           if (!playerMap.has(key)) {
@@ -40,7 +41,8 @@ const LowestRatedPlayers = ({ weeklyData }: LowestRatedPlayersProps) => {
 
     const playerStats: PlayerStats[] = [];
     playerMap.forEach((stats, name) => {
-      if (stats.totalGames >= 5) { // Minimum 5 games played
+      // Only include players with a minimum of 5 games
+      if (stats.totalGames >= 5) {
         playerStats.push({
           name,
           position: stats.position,
@@ -50,7 +52,7 @@ const LowestRatedPlayers = ({ weeklyData }: LowestRatedPlayersProps) => {
       }
     });
 
-    // Sort by average rating ascending and take the bottom 5
+    // Sort by average rating (ascending) and take the bottom 5
     return playerStats.sort((a, b) => a.averageRating - b.averageRating).slice(0, 5);
   }, [weeklyData]);
 
@@ -66,16 +68,16 @@ const LowestRatedPlayers = ({ weeklyData }: LowestRatedPlayersProps) => {
         {lowestRatedPlayers.length > 0 ? (
           <ul className="space-y-4">
             {lowestRatedPlayers.map(player => (
-              <li key={player.name} className="flex items-center justify-between p-2 rounded-lg" style={{ backgroundColor: currentTheme.colors.surface }}>
+              <li key={player.name} className="flex items-center justify-between p-3 rounded-lg" style={{ backgroundColor: currentTheme.colors.surface }}>
                 <div>
                   <p className="font-semibold" style={{ color: currentTheme.colors.text }}>{player.name}</p>
                   <p className="text-xs" style={{ color: currentTheme.colors.muted }}>{player.totalGames} games played</p>
                 </div>
                 <div className="text-right">
-                    <Badge variant="destructive" className="text-sm">
+                    <Badge variant="destructive" className="text-lg">
                         {player.averageRating.toFixed(2)}
                     </Badge>
-                    <p className="text-xs" style={{ color: currentTheme.colors.muted }}>Avg. Rating</p>
+                    <p className="text-xs mt-1" style={{ color: currentTheme.colors.muted }}>Avg. Rating</p>
                 </div>
               </li>
             ))}
@@ -83,8 +85,8 @@ const LowestRatedPlayers = ({ weeklyData }: LowestRatedPlayersProps) => {
         ) : (
           <div className="text-center py-8" style={{ color: currentTheme.colors.muted }}>
             <UserX className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Not enough player data to show underperforming players.</p>
-            <p className="text-xs">(Requires at least 5 games played)</p>
+            <p>Not enough player data available.</p>
+            <p className="text-xs">(Requires players to have at least 5 games played)</p>
           </div>
         )}
       </CardContent>
