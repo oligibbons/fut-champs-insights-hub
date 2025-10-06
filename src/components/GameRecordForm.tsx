@@ -81,35 +81,49 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
     }, [getValues, setValue]);
 
     useEffect(() => {
+        // Set default squad if not already set
         if (squads.length > 0 && !watchedValues.squad_id) {
             const defaultSquad = squads.find(s => s.is_default);
             if (defaultSquad) {
                 setValue('squad_id', defaultSquad.id, { shouldValidate: true });
             }
-            return;
         }
 
-        if (!selectedSquad) return;
+        // Populate players if a squad is selected
+        if (selectedSquad) {
+            const newStarters = (selectedSquad.squad_players || [])
+                .filter(sp => sp.slot_id?.startsWith('starting-'))
+                .map(sp => ({
+                    id: sp.players.id,
+                    name: sp.players.name,
+                    position: sp.players.position,
+                    rating: 7.0,
+                    goals: 0,
+                    assists: 0,
+                    minutesPlayed: watchedValues.duration || 90,
+                    yellowCards: 0,
+                    redCards: 0,
+                    ownGoals: 0,
+                }));
 
-        const currentPlayers = getValues('player_stats') || [];
-        const newStarters = selectedSquad.squad_players
-            .filter(sp => sp.slot_id?.startsWith('starting-'))
-            .map(sp => ({
-                id: sp.players.id,
-                name: sp.players.name,
-                position: sp.players.position,
-                rating: 7.0, goals: 0, assists: 0,
-                minutesPlayed: watchedValues.duration || 90,
-                yellowCards: 0, redCards: 0, ownGoals: 0,
-            }));
+            // Keep any manually added substitutes that are not part of the new squad's starting XI
+            const currentPlayers = getValues('player_stats') || [];
+            const manualSubs = currentPlayers.filter((p: PlayerPerformance) => {
+                const isStarterInNewSquad = newStarters.some(starter => starter.id === p.id);
+                return p.position === 'SUB' && !isStarterInNewSquad;
+            });
 
-        const manualSubs = currentPlayers.filter((p: PlayerPerformance) => p.position === 'SUB');
-        const finalPlayerList = [...newStarters, ...manualSubs];
+            const finalPlayerList = [...newStarters, ...manualSubs];
 
-        if (!isEqual(currentPlayers, finalPlayerList)) {
-            setValue('player_stats', finalPlayerList, { shouldValidate: true });
+            // Only update if the player list has actually changed
+            if (!isEqual(currentPlayers, finalPlayerList)) {
+                setValue('player_stats', finalPlayerList, { shouldValidate: true, shouldDirty: true });
+            }
+        } else {
+            // If no squad is selected, clear the player stats
+            setValue('player_stats', [], { shouldValidate: true, shouldDirty: true });
         }
-    }, [squads, selectedSquad, watchedValues.squad_id, watchedValues.duration, setValue, getValues]);
+    }, [selectedSquad, squads, setValue, getValues, watchedValues.duration, watchedValues.squad_id]);
 
     const addSubstitute = () => {
         if (!selectedSquad) { toast({ title: "Please select a squad first.", variant: "destructive" }); return; }
