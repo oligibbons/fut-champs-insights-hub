@@ -107,7 +107,6 @@ const matchTags = [
     { id: 'funGame', name: 'Fun Game', description: 'A game that you enjoyed playing, irrespective of the result.' },
 ];
 
-// FIX: NumberInputWithSteppers moved outside the main component and memoized to prevent re-creation.
 const NumberInputWithSteppers = memo(({ control, name, label, step = 1, className = '', inputClassName = 'text-center', minInputWidth = 'w-14', adjustValue, getValues }: any) => {
     const minConstraint = ['opponent_skill', 'server_quality', 'stress_level', 'duration'].some(f => name.includes(f)) ? 1 : 0;
     const isMin = (getValues(name) || 0) <= minConstraint;
@@ -181,15 +180,18 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
         setValue(fieldName, newValue, { shouldValidate: true, shouldDirty: true });
     }, [getValues, setValue]);
 
-    // FIX: More robust useEffect to handle player population and updates reliably.
     useEffect(() => {
         if (!watchedValues.squad_id && defaultSquad) {
             setValue('squad_id', defaultSquad.id, { shouldValidate: true });
             return;
         }
 
-        if (!selectedSquad || !selectedSquad.squad_players || !selectedSquad.squad_players.every(sp => sp.players)) {
-            if (getValues('player_stats')?.length > 0) setValue('player_stats', []);
+        // FIX: The definitive guard clause. This checks that the squad and all its nested player data are fully loaded.
+        if (!selectedSquad || !selectedSquad.squad_players || !selectedSquad.squad_players.every(sp => sp && sp.players)) {
+            // If data is not ready, ensure the player list is empty and exit.
+            if (getValues('player_stats')?.length > 0) {
+                setValue('player_stats', []);
+            }
             return;
         }
 
@@ -198,7 +200,6 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
         const newStarters = selectedSquad.squad_players
             .filter(sp => sp.slot_id?.startsWith('starting-'))
             .map(sp => {
-                // Find if this player already exists in the form (e.g. from a previous squad selection)
                 const existingPlayer = currentPlayers.find((p: PlayerPerformance) => p.id === sp.players.id);
                 return {
                     id: sp.players.id,
@@ -207,7 +208,7 @@ const GameRecordForm = ({ weekId, nextGameNumber, onSave, onCancel }: GameRecord
                     rating: existingPlayer ? existingPlayer.rating : 7.0,
                     goals: existingPlayer ? existingPlayer.goals : 0,
                     assists: existingPlayer ? existingPlayer.assists : 0,
-                    minutesPlayed: watchedValues.duration || 90, // Always update minutes from duration
+                    minutesPlayed: watchedValues.duration || 90,
                     yellowCards: existingPlayer ? existingPlayer.yellowCards : 0,
                     redCards: existingPlayer ? existingPlayer.redCards : 0,
                     ownGoals: existingPlayer ? existingPlayer.ownGoals : 0,
