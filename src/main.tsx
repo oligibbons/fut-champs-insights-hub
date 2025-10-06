@@ -8,7 +8,6 @@ import { ThemeProvider } from './hooks/useTheme';
 import { Toaster } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import './index.css'; 
-import './App.css';
 
 // Create a client for react-query
 const queryClient = new QueryClient();
