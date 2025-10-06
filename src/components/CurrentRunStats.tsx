@@ -18,8 +18,8 @@ const CurrentRunStats = ({ week, games }: { week: FutChampsWeek | null, games: G
         const totalPossession = allTeamStats.reduce((sum, stats) => sum + (stats.possession || 50), 0);
         const totalShots = allTeamStats.reduce((sum, stats) => sum + (stats.shots || 0), 0);
         const totalShotsOnTarget = allTeamStats.reduce((sum, stats) => sum + (stats.shots_on_target || 0), 0);
-        const totalDribblesAttempted = allTeamStats.reduce((sum, stats) => sum + (stats.dribbles_attempted || 0), 0);
-        const totalDribblesCompleted = allTeamStats.reduce((sum, stats) => sum + (stats.dribbles_completed || 0), 0);
+        const totalDribbleSuccess = allTeamStats.reduce((sum, stats) => sum + (stats.dribble_success_rate || 0), 0);
+        const gamesWithDribbleStats = allTeamStats.filter(stats => stats.dribble_success_rate !== null && stats.dribble_success_rate !== undefined).length;
 
         const avgOpponentSkill = games.reduce((sum, game) => sum + game.opponent_skill, 0) / totalGames;
         const winRate = (totalWins / totalGames) * 100;
@@ -32,14 +32,22 @@ const CurrentRunStats = ({ week, games }: { week: FutChampsWeek | null, games: G
             goals: totalGoals,
             conceded: totalConceded,
             shotAccuracy: totalShots > 0 ? ((totalShotsOnTarget / totalShots) * 100).toFixed(1) : '0',
-            dribbleSuccess: totalDribblesAttempted > 0 ? ((totalDribblesCompleted / totalDribblesAttempted) * 100).toFixed(1) : '0',
+            dribbleSuccess: gamesWithDribbleStats > 0 ? (totalDribbleSuccess / gamesWithDribbleStats).toFixed(1) : '0',
             currentStreak: week.current_streak || 0,
             avgOpponentSkill: avgOpponentSkill.toFixed(1),
         };
     }, [week, games]);
 
     if (!runStats) {
-        // ... No Stats Yet card ...
+        return (
+            <Card>
+                <CardContent className="text-center py-12">
+                    <Trophy className="h-12 w-12 mx-auto mb-4 text-gray-400 opacity-50" />
+                    <h3 className="text-lg font-medium mb-2">No Stats Yet</h3>
+                    <p className="text-muted-foreground">Play your first game of the week to see your stats here.</p>
+                </CardContent>
+            </Card>
+        );
     }
 
     return (
