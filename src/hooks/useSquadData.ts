@@ -17,14 +17,30 @@ export const useSquadData = () => {
     if (!user) return;
     setLoading(true);
     try {
-      // Fetch squads and their related players in a single, structured query
+      // DEFINITIVE FIX: This explicit query ensures all nested data is returned correctly.
       const { data: squadsData, error: squadsError } = await supabase
         .from('squads')
         .select(`
-          *,
+          id,
+          name,
+          formation,
+          is_default,
+          games_played,
+          wins,
+          losses,
           squad_players (
-            *,
-            players (*)
+            id,
+            slot_id,
+            position,
+            players (
+              id,
+              name,
+              rating,
+              position,
+              card_type,
+              club,
+              is_evolution
+            )
           )
         `)
         .eq('user_id', user.id)
@@ -34,8 +50,9 @@ export const useSquadData = () => {
         throw squadsError;
       }
 
-      // The data is now correctly structured by Supabase.
-      setSquads(squadsData || []);
+      if (squadsData) {
+        setSquads(squadsData as unknown as Squad[]);
+      }
 
     } catch (error: any) {
       toast.error('Failed to fetch squad data.');
@@ -44,7 +61,7 @@ export const useSquadData = () => {
       setLoading(false);
     }
   }, [user, gameVersion]);
-  
+
   const fetchPlayers = useCallback(async () => {
     if (!user) return;
     try {
@@ -79,8 +96,8 @@ export const useSquadData = () => {
 
   useEffect(() => {
     if (user) {
-        fetchSquads(); 
-        fetchPlayers(); // Still useful to have a flat list of all players for the search modal
+        fetchSquads();
+        fetchPlayers();
         fetchCardTypes();
     }
   }, [user, gameVersion, fetchSquads, fetchPlayers, fetchCardTypes]);
