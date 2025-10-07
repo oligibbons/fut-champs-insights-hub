@@ -12,7 +12,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './hooks/useTheme';
 import { Toaster } from "@/components/ui/sonner";
-import { DataSyncProvider } from './hooks/useDataSync';
+import { DataSyncProvider } from './hooks/useDataSync.tsx'; // Ensure path ends with .tsx
 import { GameVersionProvider } from './contexts/GameVersionContext';
 import AIInsights from './pages/AIInsights';
 import Achievements from './pages/Achievements';
