@@ -4,26 +4,26 @@
 
 @layer base {
   :root {
-    --background: 230 25% 10%;
-    --foreground: 210 20% 95%;
-    --card: 230 20% 14%;
-    --card-foreground: 210 20% 95%;
-    --popover: 230 20% 12%;
-    --popover-foreground: 210 20% 95%;
-    --primary: 190 95% 60%;
-    --primary-foreground: 210 20% 95%;
-    --secondary: 230 15% 25%;
-    --secondary-foreground: 210 20% 95%;
-    --muted: 230 15% 40%;
-    --muted-foreground: 230 10% 65%;
-    --accent: 290 85% 65%;
-    --accent-foreground: 210 20% 95%;
-    --destructive: 0 70% 55%;
-    --destructive-foreground: 210 20% 95%;
-    --border: 190 95% 60% / 0.2;
-    --input: 230 15% 20%;
-    --ring: 190 95% 70%;
-    --radius: 0.75rem; /* Increased for a more modern feel */
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+    --radius: 0.75rem;
   }
 }
 
@@ -34,36 +34,67 @@
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
-  /* For a more premium feel on headings */
-  h1, h2, h3, h4, h5, h6 {
+  h1, h2, h3 {
     @apply font-bold tracking-tight;
   }
 }
 
-/* Glassmorphism and modern UI components */
 @layer components {
+  /* The new Aurora background */
+  .aurora-background {
+    @apply fixed inset-0 -z-20 h-full w-full overflow-hidden transition-colors duration-300;
+  }
+  .aurora-background::before, .aurora-background::after {
+    content: "";
+    @apply absolute -top-1/2 left-1/2 h-[200%] w-[200%] -translate-x-1/2 -translate-y-1/2 transform-gpu animate-aurora;
+    background: radial-gradient(circle at center, hsla(var(--primary), 0.2) 0%, transparent 40%),
+                radial-gradient(circle at 20% 80%, hsla(var(--accent), 0.2) 0%, transparent 30%),
+                radial-gradient(circle at 80% 30%, hsla(var(--secondary), 0.3) 0%, transparent 30%);
+  }
+  .aurora-background::after {
+    @apply animation-delay-[4s];
+  }
+
+  @keyframes aurora {
+    0%, 100% { transform: translate(-50%, -50%) rotate(0deg) scale(1); }
+    50% { transform: translate(-50%, -50%) rotate(180deg) scale(1.1); }
+  }
+
+  /* New Glass Card Style */
   .glass-card {
-    @apply bg-card/60 backdrop-blur-xl border-2 border-primary/20 rounded-2xl shadow-2xl;
+    @apply bg-card/50 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl transition-all duration-300;
   }
 
-  .metric-card {
-    @apply bg-secondary/30 backdrop-blur-lg border border-white/10 rounded-xl shadow-lg;
-  }
-
-  .modern-input {
-    @apply bg-white/10 border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all;
-  }
-
+  /* Modernized UI Components */
   .modern-button-primary {
-    @apply bg-primary text-primary-foreground font-semibold rounded-lg shadow-lg hover:bg-primary/90 transition-all duration-300 transform hover:scale-105;
+    @apply bg-primary text-primary-foreground font-semibold rounded-lg shadow-lg hover:bg-primary/90 transition-all duration-300 transform hover:scale-105 active:scale-95;
   }
-  
   .modern-button-secondary {
     @apply bg-secondary text-secondary-foreground font-semibold rounded-lg shadow-md border border-border hover:bg-secondary/80 transition-all;
   }
+  .modern-input {
+    @apply bg-white/5 border-white/10 text-white placeholder-muted-foreground rounded-lg focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:border-primary transition-all;
+  }
 
-  .gradient-text {
-    @apply bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent;
+  .page-header {
+    @apply mb-8 animate-fade-in-down;
+  }
+  .page-header h1 {
+    @apply text-4xl font-extrabold tracking-tighter;
+  }
+  .page-header p {
+    @apply text-lg text-muted-foreground mt-1;
+  }
+
+  /* Animations */
+  @keyframes fade-in-down {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fade-in-down {
+    animation: fade-in-down 0.5s ease-out forwards;
   }
 }
