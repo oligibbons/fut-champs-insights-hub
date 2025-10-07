@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   Home,
-  Calendar,
   Users,
   TrendingUp,
   Settings,
@@ -16,7 +15,7 @@ import {
   Award,
   Shield,
   BarChart3,
-  Brain // <-- THE FIX: Added Brain icon to the import list
+  Brain
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -27,8 +26,6 @@ interface NavigationProps {
 
 const Navigation = ({ isExpanded, setIsExpanded }: NavigationProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const location = useLocation();
-  const navigate = useNavigate();
   const { signOut, user, isAdmin } = useAuth();
   const [isMobile, setIsMobile] = useState(false);
 
