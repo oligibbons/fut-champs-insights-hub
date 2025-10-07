@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { useDataSync } from '@/hooks/useDataSync';
+import { useDataSync } from '@/hooks/useDataSync.tsx'; // Ensure path ends with .tsx
 
 interface DashboardSectionProps {
   settingKey: string;
