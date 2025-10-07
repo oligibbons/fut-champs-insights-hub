@@ -4,54 +4,34 @@
 
 @layer base {
   :root {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
-    --card: 222 47% 11%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 47% 11%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222 47% 11%;
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 217 33% 17%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
-    --ring: 215 20% 65%;
+    --background: 230 25% 10%;
+    --foreground: 210 20% 95%;
+    --card: 230 20% 14%;
+    --card-foreground: 210 20% 95%;
+    --popover: 230 20% 12%;
+    --popover-foreground: 210 20% 95%;
+    --primary: 190 95% 60%;
+    --primary-foreground: 210 20% 95%;
+    --secondary: 230 15% 25%;
+    --secondary-foreground: 210 20% 95%;
+    --muted: 230 15% 40%;
+    --muted-foreground: 230 10% 65%;
+    --accent: 290 85% 65%;
+    --accent-foreground: 210 20% 95%;
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 210 20% 95%;
+    --border: 190 95% 60% / 0.2;
+    --input: 230 15% 20%;
+    --ring: 190 95% 70%;
     --radius: 0.5rem;
-    /* Custom RGB values for glass-card background */
-    --card-rgb: 31, 41, 55;
+    --card-rgb: 30, 34, 46;
   }
  
   .dark {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
-    --card: 222 47% 11%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 47% 11%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222 47% 11%;
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 217 33% 17%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
-    --ring: 215 20% 65%;
-    --card-rgb: 31, 41, 55;
+    /* Values will be set by useTheme hook */
   }
 }
- 
+
 @layer base {
   * {
     @apply border-border;
@@ -59,23 +39,22 @@
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', sans-serif;
+
+    /* New Dynamic Background */
+    background-color: hsl(var(--background));
     background-image:
-        radial-gradient(hsl(var(--secondary)) 1px, transparent 1px),
-        radial-gradient(hsl(var(--secondary)) 1px, hsl(var(--background)) 1px);
-    background-size: 40px 40px;
-    background-position: 0 0, 20px 20px;
-  }
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'Inter', sans-serif;
-    font-weight: 700;
+      radial-gradient(at 27% 37%, hsla(var(--primary), 0.1) 0px, transparent 50%),
+      radial-gradient(at 97% 21%, hsla(var(--accent), 0.15) 0px, transparent 50%),
+      radial-gradient(at 82% 99%, hsla(var(--secondary), 0.15) 0px, transparent 50%);
+    background-attachment: fixed;
   }
 }
 
 @layer components {
   .glass-card {
-    background: rgba(var(--card-rgb), 0.6);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: rgba(var(--card-rgb), 0.5); /* Less opaque */
+    backdrop-filter: blur(24px); /* Much more blur */
+    -webkit-backdrop-filter: blur(24px);
     border-radius: 1rem;
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
@@ -83,14 +62,55 @@
   }
 
   .glass-card:hover {
-    background: rgba(var(--card-rgb), 0.7);
+    background: rgba(var(--card-rgb), 0.6);
     transform: translateY(-5px);
     box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.2);
   }
 
   .gradient-text {
-    background: linear-gradient(to right, #3b82f6, #8b5cf6);
+    background: linear-gradient(to right, hsl(var(--primary)), hsl(var(--accent)));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+  }
+
+  .primary-insight-card {
+    @apply glass-card;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .primary-insight-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 1rem;
+    border: 2px solid transparent;
+    background: linear-gradient(120deg, hsl(var(--primary)), hsl(var(--accent)), hsl(var(--primary))) border-box;
+    -webkit-mask:
+      linear-gradient(#fff 0 0) padding-box, 
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: destination-out;
+    mask-composite: exclude;
+    animation: gradient-spin 5s linear infinite;
+  }
+
+  @keyframes gradient-spin {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  .stat-card {
+    @apply glass-card p-4 flex flex-col items-center justify-center gap-2;
   }
 }
