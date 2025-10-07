@@ -28,9 +28,7 @@
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
+  /* The problematic global border rule has been removed from here */
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', sans-serif;
@@ -55,12 +53,7 @@
                 radial-gradient(circle at 80% 30%, hsla(var(--secondary), 0.3) 0%, transparent 30%);
   }
   .aurora-background::after {
-    @apply animation-delay-[4s];
-  }
-
-  @keyframes aurora {
-    0%, 100% { transform: translate(-50%, -50%) rotate(0deg) scale(1); }
-    50% { transform: translate(-50%, -50%) rotate(180deg) scale(1.1); }
+    animation-delay: 4s; /* Direct property since it's not a utility */
   }
 
   /* New Glass Card Style */
