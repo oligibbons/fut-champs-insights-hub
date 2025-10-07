@@ -1,5 +1,4 @@
 import { Insight } from '@/utils/aiInsights';
-import { CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Lightbulb, TrendingUp, AlertTriangle, CheckCircle, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -8,33 +7,24 @@ interface PrimaryInsightCardProps {
   insight: Insight | null;
 }
 
-/**
- * A dedicated card to display the single, highest-priority AI insight on the main dashboard.
- */
 const PrimaryInsightCard = ({ insight }: PrimaryInsightCardProps) => {
   // Renders a placeholder state if no insights are available yet.
   if (!insight) {
     return (
       <div className="primary-insight-card">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Lightbulb className="h-5 w-5 text-primary" />
-            Your Primary Insight
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            Play at least 5 games and generate an analysis on the AI Insights page to see your top priority focus here.
-          </p>
-        </CardContent>
-        <CardFooter>
-           <Button asChild className="w-full" variant="outline">
-             <Link to="/ai-insights">
-               Go to AI Insights
-               <ArrowRight className="h-4 w-4 ml-2" />
-             </Link>
-           </Button>
-        </CardFooter>
+        <div className="flex items-center gap-2 mb-4">
+          <Lightbulb className="h-5 w-5 text-primary" />
+          <h2 className="text-lg font-semibold">Your Primary Insight</h2>
+        </div>
+        <p className="text-muted-foreground mb-4">
+          Play at least 5 games and generate an analysis on the AI Insights page to see your top priority focus here.
+        </p>
+        <Button asChild className="w-full" variant="outline">
+          <Link to="/ai-insights">
+            Go to AI Insights
+            <ArrowRight className="h-4 w-4 ml-2" />
+          </Link>
+        </Button>
       </div>
     );
   }
@@ -50,22 +40,20 @@ const PrimaryInsightCard = ({ insight }: PrimaryInsightCardProps) => {
 
   return (
     <div className="primary-insight-card">
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span className="flex items-center gap-2">
-             <Lightbulb className="h-5 w-5 text-primary" />
-             Your Top Priority Insight
-          </span>
-           <span className={`text-sm font-semibold capitalize ${
-             insight.category === 'strength' ? 'text-green-400' :
-             insight.category === 'weakness' ? 'text-red-400' :
-             'text-blue-400'
-           }`}>
-            {insight.category}
-           </span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex items-start gap-4">
+      <div className="flex items-center justify-between mb-4">
+        <span className="flex items-center gap-2 font-semibold">
+           <Lightbulb className="h-5 w-5 text-primary" />
+           Your Top Priority Insight
+        </span>
+         <span className={`text-sm font-semibold capitalize px-2 py-1 rounded-md ${
+           insight.category === 'strength' ? 'text-green-400 bg-green-500/10' :
+           insight.category === 'weakness' ? 'text-red-400 bg-red-500/10' :
+           'text-blue-400 bg-blue-500/10'
+         }`}>
+          {insight.category}
+         </span>
+      </div>
+      <div className="flex items-start gap-4">
         <div className="mt-1">
           {getInsightIcon(insight.category)}
         </div>
@@ -75,15 +63,15 @@ const PrimaryInsightCard = ({ insight }: PrimaryInsightCardProps) => {
             {insight.description}
           </p>
         </div>
-      </CardContent>
-      <CardFooter>
+      </div>
+      <div className="mt-4">
         <Button asChild className="w-full">
           <Link to="/ai-insights">
             View Full Analysis & Generate New Insights
             <ArrowRight className="h-4 w-4 ml-2" />
           </Link>
         </Button>
-      </CardFooter>
+      </div>
     </div>
   );
 };
