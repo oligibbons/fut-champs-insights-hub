@@ -23,10 +23,8 @@ import { Button } from './components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './components/ui/avatar';
 import { ArrowRight, BarChart2 } from 'lucide-react';
 
-// New Animated Background Component
 const AuroraBackground = () => <div className="aurora-background"></div>;
 
-// New Header Component
 const Header = () => {
   const { user } = useAuth();
   const location = useLocation();
@@ -36,21 +34,14 @@ const Header = () => {
   }
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-16 flex items-center justify-end px-6 bg-transparent z-10">
+    <header className="fixed top-0 right-0 h-20 flex items-center justify-end px-8 z-30">
       <div className="flex items-center gap-4">
-        <Button asChild size="sm">
+        <Button asChild>
           <Link to="/current-run">
-            Start New Run
-            <ArrowRight className="ml-2 h-4 w-4" />
+            New Run <ArrowRight className="ml-2 h-4 w-4" />
           </Link>
         </Button>
-        <Button asChild variant="outline" size="sm">
-          <Link to="/analytics">
-            Deep Dive
-            <BarChart2 className="ml-2 h-4 w-4" />
-          </Link>
-        </Button>
-        <Avatar className="h-9 w-9">
+        <Avatar className="h-10 w-10">
           <AvatarImage src={user.user_metadata?.avatar_url} />
           <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
         </Avatar>
@@ -62,14 +53,15 @@ const Header = () => {
 function App() {
   const [isNavExpanded, setIsNavExpanded] = useState(false);
 
-  // New, more structured Layout component
   const Layout = ({ children }: { children: React.ReactNode }) => (
     <div className="flex min-h-screen">
       <Navigation isExpanded={isNavExpanded} setIsExpanded={setIsNavExpanded} />
       <div className="flex-1 flex flex-col transition-all duration-300 ease-in-out" style={{ paddingLeft: isNavExpanded ? '16rem' : '5.5rem' }}>
         <Header />
         <main className="flex-1 overflow-y-auto p-6 lg:p-8 pt-24">
-          {children}
+          <div className="w-full max-w-7xl mx-auto">
+            {children}
+          </div>
         </main>
       </div>
     </div>
