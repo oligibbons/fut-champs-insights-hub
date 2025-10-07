@@ -63,14 +63,14 @@ export const DataSyncProvider = ({ children }: { children: ReactNode }) => {
     return Array.from(playerStatsMap.values()).map((stats, index) => ({ id: `stat-${index}`, name: stats.name, position: stats.position, rating: stats.games > 0 ? stats.totalRating / stats.games : 0, goals: stats.goals, assists: stats.assists, yellowCards: 0, redCards: 0, ownGoals: 0, minutesPlayed: stats.totalMinutes, wasSubstituted: false, goalInvolvementsPer90: stats.totalMinutes > 0 ? ((stats.goals + stats.assists) / stats.totalMinutes) * 90 : 0 }));
   };
 
-  // INFINITE LOOP FIX: The dependency array now only includes the specific properties and functions used, preventing the loop.
+  const { getCurrentWeek, updateWeek, weeklyData } = supabaseData;
+
   useEffect(() => {
-    const { getCurrentWeek, updateWeek, weeklyData } = supabaseData;
     const currentWeek = getCurrentWeek();
     if (currentWeek && currentWeek.games.length >= 15 && !currentWeek.isCompleted) {
       updateWeek(currentWeek.id, { isCompleted: true, endDate: new Date().toISOString() });
     }
-  }, [supabaseData.weeklyData, supabaseData.getCurrentWeek, supabaseData.updateWeek]);
+  }, [weeklyData, getCurrentWeek, updateWeek]);
 
   const deleteAllData = () => console.log('Delete all data functionality not implemented with Supabase');
 
