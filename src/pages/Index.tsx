@@ -9,7 +9,7 @@ import DashboardOverview from "@/components/DashboardOverview";
 import TopPerformers from "@/components/TopPerformers";
 import WeeklyOverview from "@/components/WeeklyOverview";
 import { generateEnhancedAIInsights, Insight } from "@/utils/aiInsights";
-import { BarChart2, Users, Trophy, GaugeCircle, TrendingUp, TrendingDown, Brain } from "lucide-react";
+import { BarChart2, Users, Trophy, GaugeCircle, TrendingUp, TrendingDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const Index = () => {
@@ -51,14 +51,14 @@ const Index = () => {
   }, [weeklyData, loading]);
 
   const StatCard = ({ title, value, icon: Icon, color, className }: { title: string; value: string | number; icon: React.ElementType; color: string; className?: string }) => (
-    <div className={cn("glass-card p-6 flex flex-col justify-between group", className)}>
+    <div className={cn("glass-card p-6 flex flex-col justify-between group animate-fade-in-down", className)}>
       <div className="flex justify-between items-start">
         <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
         <Icon className={cn("h-5 w-5 text-muted-foreground transition-transform group-hover:scale-110", color)} />
       </div>
       <div>
         {loading ? (
-          <Skeleton className="h-10 w-3/4 mt-2" />
+          <Skeleton className="h-10 w-3/4 mt-2 bg-white/10" />
         ) : (
           <p className="text-4xl font-bold text-foreground">{value}</p>
         )}
@@ -70,7 +70,7 @@ const Index = () => {
     <div className="space-y-8">
       <div className="page-header">
         <h1>Welcome back, {user?.user_metadata?.username || 'Player'}!</h1>
-        <p>Here's your performance snapshot for the season.</p>
+        <p>This is your command center. Track your performance, gain insights, and conquer the weekend league.</p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -88,32 +88,30 @@ const Index = () => {
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
           {loading || insightsLoading ? (
-            <Skeleton className="h-full min-h-[200px] w-full rounded-2xl" />
+            <Skeleton className="h-full min-h-[200px] w-full rounded-2xl bg-white/10" />
           ) : (
             <PrimaryInsightCard insight={topInsight} />
           )}
         </div>
-        <div className="space-y-6">
-            <Card className="glass-card">
-              <CardHeader>
-                <CardTitle className="flex items-center text-lg">
-                  <GaugeCircle className="h-5 w-5 mr-2 text-primary" />
-                  Champs Player Score
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="flex items-center justify-center p-6">
-                {loading ? <Skeleton className="h-[150px] w-[150px] rounded-full" /> : <CPSGauge games={stats.allGames} size={150}/>}
-              </CardContent>
-            </Card>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center text-lg">
+              <GaugeCircle className="h-5 w-5 mr-2 text-primary" />
+              Champs Player Score
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex items-center justify-center p-6">
+            {loading ? <Skeleton className="h-[150px] w-[150px] rounded-full bg-white/10" /> : <CPSGauge games={stats.allGames} size={150}/>}
+          </CardContent>
+        </Card>
       </div>
       
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <DashboardOverview games={stats.allGames} />
         </div>
-        <div className="space-y-6">
-            <TopPerformers />
+        <div>
+          <TopPerformers />
         </div>
       </div>
       
