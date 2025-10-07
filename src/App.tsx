@@ -12,7 +12,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './hooks/useTheme';
 import { Toaster } from "@/components/ui/sonner";
-import { DataSyncProvider } from './hooks/useDataSync.tsx'; // Ensure path ends with .tsx
+import { DataSyncProvider } from './hooks/useDataSync.tsx';
 import { GameVersionProvider } from './contexts/GameVersionContext';
 import AIInsights from './pages/AIInsights';
 import Achievements from './pages/Achievements';
@@ -21,9 +21,14 @@ import Squads from './pages/Squads';
 
 function App() {
   const Layout = ({ children }: { children: React.ReactNode }) => (
-    <div className="flex h-screen bg-transparent">
+    <div className="flex min-h-screen bg-transparent">
       <Navigation />
-      <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+      {/* This is the main fix for your layout.
+        - `pl-[5.5rem]` provides the initial padding for the collapsed sidebar.
+        - `lg:pl-[16rem]` increases the padding when the sidebar is hovered and expanded on larger screens.
+        - `transition-all duration-300` ensures a smooth animation as the padding changes.
+      */}
+      <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 lg:pl-[16rem] transition-all duration-300">
         {children}
       </main>
     </div>
@@ -35,7 +40,6 @@ function App() {
       <AuthProvider>
         <GameVersionProvider>
           <DataSyncProvider>
-            {/* The <Router> component has been removed from here */}
             <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route path="/" element={<ProtectedRoute><Layout><Index /></Layout></ProtectedRoute>} />
