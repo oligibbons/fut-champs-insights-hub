@@ -2,7 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 1. Define all custom CSS variables within the base layer */
 @layer base {
   :root {
     --background: 240 10% 3.9%;
@@ -17,7 +16,7 @@
     --secondary-foreground: 0 0% 98%;
     --muted: 240 3.7% 15.9%;
     --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
+    --accent: 240 4.9% 83.9%; /* Changed for more pop */
     --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
@@ -27,51 +26,28 @@
     --radius: 0.75rem;
   }
 
-  /* 2. Apply base styles using standard CSS properties to avoid build errors */
   body {
-    background-color: hsl(var(--background));
-    color: hsl(var(--foreground));
+    @apply bg-background text-foreground;
     font-family: 'Inter', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
-  
-  h1, h2, h3 {
-    @apply font-bold tracking-tight;
-  }
 }
 
-/* 3. Define all custom components */
 @layer components {
-  /* The new Aurora background */
   .aurora-background {
-    @apply fixed inset-0 -z-20 h-full w-full overflow-hidden transition-colors duration-300;
+    @apply fixed inset-0 -z-20 h-full w-full overflow-hidden;
   }
-  .aurora-background::before, .aurora-background::after {
+  .aurora-background::before {
     content: "";
-    @apply absolute -top-1/2 left-1/2 h-[200%] w-[200%] -translate-x-1/2 -translate-y-1/2 transform-gpu animate-aurora;
-    background: radial-gradient(circle at center, hsla(var(--primary), 0.15) 0%, transparent 40%),
-                radial-gradient(circle at 20% 80%, hsla(var(--accent), 0.2) 0%, transparent 30%),
-                radial-gradient(circle at 80% 30%, hsla(var(--secondary), 0.3) 0%, transparent 30%);
+    @apply absolute -top-1/2 left-1/2 h-[200%] w-[200%] -translate-x-1/2 -translate-y-1/2 animate-aurora;
+    background: radial-gradient(circle at center, hsla(var(--primary), 0.1) 0%, transparent 30%),
+                radial-gradient(circle at 20% 80%, hsla(260, 100%, 70%, 0.15) 0%, transparent 35%),
+                radial-gradient(circle at 80% 30%, hsla(180, 100%, 50%, 0.15) 0%, transparent 35%);
   }
-  .aurora-background::after {
-    animation-delay: 4s;
-  }
-
-  /* New Glass Card Style */
+  
   .glass-card {
-    @apply bg-card/50 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl transition-all duration-300;
-  }
-
-  /* Modernized UI Components */
-  .modern-button-primary {
-    @apply bg-primary text-primary-foreground font-semibold rounded-lg shadow-lg hover:bg-primary/90 transition-all duration-300 transform hover:scale-105 active:scale-95;
-  }
-  .modern-button-secondary {
-    @apply bg-secondary text-secondary-foreground font-semibold rounded-lg shadow-md border border-border hover:bg-secondary/80 transition-all;
-  }
-  .modern-input {
-    @apply bg-white/5 border-white/10 text-white placeholder-muted-foreground rounded-lg focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:border-primary transition-all;
+    @apply bg-black/30 backdrop-blur-lg border border-white/10 rounded-2xl shadow-2xl;
   }
 
   .page-header {
@@ -82,14 +58,5 @@
   }
   .page-header p {
     @apply text-lg text-muted-foreground mt-1;
-  }
-
-  /* Animations */
-  @keyframes fade-in-down {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .animate-fade-in-down {
-    animation: fade-in-down 0.5s ease-out forwards;
   }
 }
