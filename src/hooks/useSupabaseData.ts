@@ -209,7 +209,7 @@ export function useSupabaseData() {
     }
   };
 
-  const updateWeek = async (weekId: string, updates: Partial<WeeklyPerformance>) => {
+  const updateWeek = useCallback(async (weekId: string, updates: Partial<WeeklyPerformance>) => {
      if (!user) return;
     try {
         await supabase
@@ -225,7 +225,7 @@ export function useSupabaseData() {
     } catch(error) {
         console.error('Error updating week', error)
     }
-  };
+  }, [user, fetchWeeklyData]);
   
   const updateGame = async (gameId: string, gameData: Partial<GameResult>) => {
     if (!user) return;
@@ -263,9 +263,9 @@ export function useSupabaseData() {
     fetchWeeklyData();
   }, [user, gameVersion, fetchWeeklyData]);
 
-  const getCurrentWeek = (): WeeklyPerformance | null => {
+  const getCurrentWeek = useCallback((): WeeklyPerformance | null => {
     return weeklyData.find(week => !week.isCompleted) || null;
-  };
+  }, [weeklyData]);
 
   return {
     weeklyData,
