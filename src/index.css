@@ -23,12 +23,7 @@
     --border: 190 95% 60% / 0.2;
     --input: 230 15% 20%;
     --ring: 190 95% 70%;
-    --radius: 0.5rem;
-    --card-rgb: 30, 34, 46;
-  }
- 
-  .dark {
-    /* CSS variables are applied by the useTheme hook */
+    --radius: 0.75rem; /* Increased for a more modern feel */
   }
 }
 
@@ -39,5 +34,36 @@
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', sans-serif;
+  }
+  /* For a more premium feel on headings */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold tracking-tight;
+  }
+}
+
+/* Glassmorphism and modern UI components */
+@layer components {
+  .glass-card {
+    @apply bg-card/60 backdrop-blur-xl border-2 border-primary/20 rounded-2xl shadow-2xl;
+  }
+
+  .metric-card {
+    @apply bg-secondary/30 backdrop-blur-lg border border-white/10 rounded-xl shadow-lg;
+  }
+
+  .modern-input {
+    @apply bg-white/10 border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all;
+  }
+
+  .modern-button-primary {
+    @apply bg-primary text-primary-foreground font-semibold rounded-lg shadow-lg hover:bg-primary/90 transition-all duration-300 transform hover:scale-105;
+  }
+  
+  .modern-button-secondary {
+    @apply bg-secondary text-secondary-foreground font-semibold rounded-lg shadow-md border border-border hover:bg-secondary/80 transition-all;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent;
   }
 }
