@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   Home,
@@ -13,12 +12,12 @@ import {
   X,
   Trophy,
   History,
-  UserPlus,
-  Crown,
   LogOut,
   Award,
-  Shield
+  Shield,
+  BarChart3
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface NavigationProps {
   isExpanded: boolean;
@@ -29,7 +28,6 @@ const Navigation = ({ isExpanded, setIsExpanded }: NavigationProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { currentTheme } = useTheme();
   const { signOut, user, isAdmin } = useAuth();
   const [isMobile, setIsMobile] = useState(false);
 
@@ -42,34 +40,20 @@ const Navigation = ({ isExpanded, setIsExpanded }: NavigationProps) => {
   
   const navigationItems = [
     { name: 'Dashboard', path: '/', icon: Home },
-    { name: 'Current Run', path: '/current-run', icon: Calendar },
+    { name: 'Current Run', path: '/current-run', icon: Trophy },
     { name: 'History', path: '/history', icon: History },
     { name: 'Squads', path: '/squads', icon: Users },
     { name: 'Players', path: '/players', icon: TrendingUp },
-    { name: 'Analytics', path: '/analytics', icon: TrendingUp },
-    { name: 'AI Insights', path: '/ai-insights', icon: Trophy },
+    { name: 'Analytics', path: '/analytics', icon: BarChart3 },
+    { name: 'AI Insights', path: '/ai-insights', icon: Brain },
     { name: 'Achievements', path: '/achievements', icon: Award },
-    { name: 'Friends', path: '/friends', icon: UserPlus },
-    { name: 'Leaderboards', path: '/leaderboards', icon: Crown },
-    { name: 'Settings', path: '/settings', icon: Settings },
+  ];
+  
+  const bottomNavItems = [
+      { name: 'Settings', path: '/settings', icon: Settings },
   ];
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/auth');
-  };
-
-  const handleNavClick = () => {
-    setIsMobileMenuOpen(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  if (!user && location.pathname !== '/auth') {
-    return null;
-  }
-  if (location.pathname === '/auth') {
-    return null;
-  }
+  if (!user) return null;
 
   const navWidth = isExpanded ? '16rem' : '5.5rem';
 
@@ -80,92 +64,53 @@ const Navigation = ({ isExpanded, setIsExpanded }: NavigationProps) => {
           variant="outline"
           size="icon"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="bg-background/50 backdrop-blur-md"
         >
           {isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
         </Button>
       </div>
 
-      {isMobileMenuOpen && isMobile && (
-        <div
-          className="fixed inset-0 bg-black/60 z-30 backdrop-blur-sm"
-          onClick={() => setIsMobileMenuOpen(false)}
-        />
-      )}
-
       <nav 
-        className={`
+        className={cn(`
           fixed left-0 top-0 h-full border-r z-40
-          transform transition-all duration-300 ease-in-out
-          flex flex-col
-          ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
-          lg:translate-x-0
-        `}
-        style={{
-          width: isMobile ? '280px' : navWidth,
-        }}
+          transform transition-all duration-300 ease-in-out flex flex-col
+          bg-background/30 backdrop-blur-xl border-white/10`,
+          isMobile ? (isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full') : 'translate-x-0'
+        )}
+        style={{ width: isMobile ? '280px' : navWidth }}
         onMouseEnter={() => !isMobile && setIsExpanded(true)}
         onMouseLeave={() => !isMobile && setIsExpanded(false)}
       >
-        <div className="p-4 flex flex-col h-full bg-background/80 backdrop-blur-lg">
-          <div className={`flex items-center mb-8 pt-2 pl-2 ${!isExpanded && !isMobile ? 'lg:justify-center' : ''}`}>
+        <div className="flex flex-col h-full p-4">
+          <div className="flex items-center gap-2 h-16 flex-shrink-0 px-2 mb-4">
             <img 
               src="/lovable-uploads/6b6465f4-e466-4f3b-9761-8a829fbe395c.png" 
               alt="FUTTrackr Logo" 
-              className="w-10 h-10 object-contain flex-shrink-0"
+              className="w-8 h-8 object-contain flex-shrink-0"
             />
-            <div className={`transition-all duration-300 overflow-hidden ${!isExpanded && !isMobile ? 'lg:w-0 lg:opacity-0' : 'lg:w-auto lg:opacity-100 pl-2'}`}>
+            <div className={`transition-all duration-200 overflow-hidden ${!isExpanded && !isMobile ? 'lg:w-0 lg:opacity-0' : 'lg:w-auto lg:opacity-100'}`}>
               <h1 className="text-xl font-bold whitespace-nowrap">FUTTrackr</h1>
             </div>
           </div>
 
           <div className="flex-1 space-y-2 overflow-y-auto">
-            {navigationItems.map((item) => {
-              const isActive = location.pathname === item.path;
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  onClick={handleNavClick}
-                  className={`
-                    flex items-center px-4 py-3 rounded-lg transition-all duration-200
-                    ${!isExpanded && !isMobile ? 'lg:justify-center' : 'space-x-3'}
-                    ${isActive ? 'bg-primary text-primary-foreground shadow-lg' : 'hover:bg-primary/10'}
-                  `}
-                >
-                  <item.icon className="h-5 w-5 flex-shrink-0" />
-                  <span className={`font-medium transition-opacity duration-200 whitespace-nowrap ${!isExpanded && !isMobile ? 'lg:opacity-0 lg:hidden' : 'lg:opacity-100'}`}>
-                    {item.name}
-                  </span>
-                </Link>
-              );
-            })}
-            
-            {isAdmin && (
-              <Link
-                to="/admin"
-                onClick={handleNavClick}
-                className={`
-                  flex items-center px-4 py-3 rounded-lg transition-all duration-200
-                  ${!isExpanded && !isMobile ? 'lg:justify-center' : 'space-x-3'}
-                  ${location.pathname === '/admin' ? 'bg-primary text-primary-foreground shadow-lg' : 'hover:bg-primary/10'}
-                `}
-              >
-                <Shield className="h-5 w-5 flex-shrink-0" />
-                <span className={`font-medium transition-opacity duration-200 whitespace-nowrap ${!isExpanded && !isMobile ? 'lg:opacity-0 lg:hidden' : 'lg:opacity-100'}`}>
-                  Admin
-                </span>
-              </Link>
-            )}
+            {navigationItems.map((item) => (
+              <NavItem key={item.path} item={item} isExpanded={isExpanded || isMobile} />
+            ))}
+            {isAdmin && <NavItem item={{ name: 'Admin', path: '/admin', icon: Shield }} isExpanded={isExpanded || isMobile} />}
           </div>
 
-          <div className="mt-auto pt-4 border-t">
+          <div className="mt-auto pt-4 border-t border-white/10 space-y-2">
+             {bottomNavItems.map((item) => (
+              <NavItem key={item.path} item={item} isExpanded={isExpanded || isMobile} />
+            ))}
             <Button
-              onClick={handleSignOut}
+              onClick={() => signOut()}
               variant="ghost"
-              className={`w-full flex items-center gap-2 rounded-lg transition-all duration-300 justify-start ${!isExpanded && !isMobile ? 'lg:w-12 lg:justify-center' : 'px-4'}`}
+              className="w-full flex items-center gap-3 rounded-lg transition-all duration-300 justify-start px-4 py-3 text-muted-foreground hover:bg-destructive/20 hover:text-red-400"
             >
-              <LogOut className="h-4 w-4 flex-shrink-0" />
-              <span className={`transition-opacity duration-200 whitespace-nowrap ${!isExpanded && !isMobile ? 'lg:opacity-0 lg:hidden' : 'lg:opacity-100'}`}>
+              <LogOut className="h-5 w-5 flex-shrink-0" />
+              <span className={`font-medium transition-opacity duration-200 whitespace-nowrap ${!isExpanded && !isMobile ? 'lg:opacity-0 lg:hidden' : 'lg:opacity-100'}`}>
                 Sign Out
               </span>
             </Button>
@@ -175,5 +120,29 @@ const Navigation = ({ isExpanded, setIsExpanded }: NavigationProps) => {
     </>
   );
 };
+
+const NavItem = ({ item, isExpanded }: { item: { name: string; path: string; icon: React.ElementType }, isExpanded: boolean }) => {
+    const location = useLocation();
+    const isActive = location.pathname === item.path;
+    return (
+        <Link
+            to={item.path}
+            className={cn(`
+                flex items-center px-4 py-3 rounded-lg transition-all duration-200 group
+                hover:bg-primary/10`,
+                isActive ? 'bg-primary text-primary-foreground shadow-lg' : 'text-foreground hover:text-primary',
+                !isExpanded ? 'justify-center' : 'space-x-3'
+            )}
+        >
+            <item.icon className="h-5 w-5 flex-shrink-0" />
+            <span className={cn(
+                `font-semibold transition-all duration-200 whitespace-nowrap`,
+                !isExpanded ? 'lg:opacity-0 lg:hidden' : 'lg:opacity-100'
+            )}>
+                {item.name}
+            </span>
+        </Link>
+    )
+}
 
 export default Navigation;
