@@ -11,12 +11,59 @@ import WeeklyOverview from "@/components/WeeklyOverview";
 import { generateEnhancedAIInsights, Insight } from "@/utils/aiInsights";
 import { BarChart2, Users, Trophy, GaugeCircle, TrendingUp, TrendingDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { FUTTrackrRecords } from "@/components/FUTTrackrRecords";
+import { Playstyle } from "@/components/Playstyle";
+
+const SortableItem = ({ id, children }: { id: string; children: React.ReactNode }) => {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="touch-none">
+      {children}
+    </div>
+  );
+};
 
 const Index = () => {
   const { user } = useAuth();
   const { weeklyData, loading } = useSupabaseData();
   const [topInsight, setTopInsight] = useState<Insight | null>(null);
   const [insightsLoading, setInsightsLoading] = useState(true);
+  const [components, setComponents] = useState([
+    "stats",
+    "insights",
+    "overview",
+    "records",
+    "weekly",
+  ]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setComponents((items) => {
+        const oldIndex = items.indexOf(active.id as string);
+        const newIndex = items.indexOf(over.id as string);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  }
 
   const stats = useMemo(() => {
     const allGames = weeklyData.flatMap(w => w.games);
@@ -65,6 +112,56 @@ const Index = () => {
       </div>
     </div>
   );
+  
+  const componentMap: { [key: string]: React.ReactNode } = {
+    stats: (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <StatCard title="Overall Wins" value={stats.totalWins} icon={Trophy} color="text-yellow-400" />
+            <StatCard title="Win Rate" value={`${stats.winRate.toFixed(0)}%`} icon={BarChart2} color="text-blue-400" />
+            <StatCard title="Total Games" value={stats.totalGames} icon={Users} color="text-purple-400" />
+            <StatCard
+                title="Current Streak"
+                value={stats.currentStreak > 0 ? `W${stats.currentStreak}` : `L${Math.abs(stats.currentStreak)}`}
+                icon={stats.currentStreak >= 0 ? TrendingUp : TrendingDown}
+                color={stats.currentStreak >= 0 ? "text-green-400" : "text-red-400"}
+            />
+        </div>
+    ),
+    insights: (
+        <div className="grid gap-6 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+                {loading || insightsLoading ? (
+                    <Skeleton className="h-full min-h-[200px] w-full rounded-2xl bg-white/10" />
+                ) : (
+                    <PrimaryInsightCard insight={topInsight} />
+                )}
+            </div>
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center text-lg">
+                        <GaugeCircle className="h-5 w-5 mr-2 text-primary" />
+                        Champs Player Score
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="flex items-center justify-center p-6">
+                    {loading ? <Skeleton className="h-[150px] w-[150px] rounded-full bg-white/10" /> : <CPSGauge games={stats.allGames} size={150}/>}
+                </CardContent>
+            </Card>
+        </div>
+    ),
+    overview: (
+        <div className="grid gap-6 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+                <DashboardOverview games={stats.allGames} />
+            </div>
+            <div>
+                <TopPerformers />
+            </div>
+        </div>
+    ),
+    records: <FUTTrackrRecords />,
+    weekly: <WeeklyOverview />,
+  };
 
   return (
     <div className="space-y-8">
@@ -73,50 +170,20 @@ const Index = () => {
         <p>This is your command center. Track your performance, gain insights, and conquer the weekend league.</p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Overall Wins" value={stats.totalWins} icon={Trophy} color="text-yellow-400" />
-        <StatCard title="Win Rate" value={`${stats.winRate.toFixed(0)}%`} icon={BarChart2} color="text-blue-400" />
-        <StatCard title="Total Games" value={stats.totalGames} icon={Users} color="text-purple-400" />
-        <StatCard
-          title="Current Streak"
-          value={stats.currentStreak > 0 ? `W${stats.currentStreak}` : `L${Math.abs(stats.currentStreak)}`}
-          icon={stats.currentStreak >= 0 ? TrendingUp : TrendingDown}
-          color={stats.currentStreak >= 0 ? "text-green-400" : "text-red-400"}
-        />
-      </div>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={components} strategy={verticalListSortingStrategy}>
+            <div className="space-y-8">
+                {components.map(id => (
+                    <SortableItem key={id} id={id}>
+                        {componentMap[id]}
+                    </SortableItem>
+                ))}
+            </div>
+        </SortableContext>
+      </DndContext>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          {loading || insightsLoading ? (
-            <Skeleton className="h-full min-h-[200px] w-full rounded-2xl bg-white/10" />
-          ) : (
-            <PrimaryInsightCard insight={topInsight} />
-          )}
-        </div>
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center text-lg">
-              <GaugeCircle className="h-5 w-5 mr-2 text-primary" />
-              Champs Player Score
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex items-center justify-center p-6">
-            {loading ? <Skeleton className="h-[150px] w-[150px] rounded-full bg-white/10" /> : <CPSGauge games={stats.allGames} size={150}/>}
-          </CardContent>
-        </Card>
-      </div>
-      
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <DashboardOverview games={stats.allGames} />
-        </div>
-        <div>
-          <TopPerformers />
-        </div>
-      </div>
-      
-      <div>
-        <WeeklyOverview />
+      <div className="mt-8">
+        <Playstyle />
       </div>
     </div>
   );
