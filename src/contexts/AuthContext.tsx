@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
@@ -31,7 +31,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Start with an immediate check of the current session
     const getInitialSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setSession(session);
@@ -42,8 +41,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .from('profiles')
             .select('is_admin')
             .eq('id', session.user.id)
-            .maybeSingle(); // Use maybeSingle() to prevent errors
-            
+            .maybeSingle();
+
           if (error) throw error;
           setIsAdmin(data?.is_admin || false);
         } catch (error) {
@@ -58,20 +57,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     getInitialSession();
 
-    // Then, listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       const currentUser = session?.user ?? null;
       setUser(currentUser);
 
-      if (currentUser) {
-        // No need to fetch profile again here unless you expect it to change
-        // The initial load handles the admin check.
-      } else {
+      if (!currentUser) {
         setIsAdmin(false);
       }
-      // If the user logs in or out, the loading state should already be false.
-      // We only want the initial page load to show the spinner.
+      // Re-check admin status on auth change if necessary, otherwise initial check is enough
     });
 
     return () => {
@@ -100,7 +94,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     navigate('/auth');
   };
 
-  const value = {
+  // FIX: Memoize the context value
+  const value = useMemo(() => ({
     user,
     session,
     loading,
@@ -108,8 +103,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signIn,
     signUp,
     signOut,
-  };
-  
+  }), [user, session, loading, isAdmin]);
+
   return (
     <AuthContext.Provider value={value}>
       {children}
