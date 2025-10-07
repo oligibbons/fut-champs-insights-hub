@@ -15,7 +15,8 @@ import {
   LogOut,
   Award,
   Shield,
-  BarChart3
+  BarChart3,
+  Brain // <-- THE FIX: Added Brain icon to the import list
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
