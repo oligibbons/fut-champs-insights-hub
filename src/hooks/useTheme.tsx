@@ -1,147 +1,145 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 
-// Helper to convert HSL string to Tailwind-compatible HSL values
 const parseHsl = (hsl: string | undefined): string => {
   if (!hsl) return '';
   const match = hsl.match(/hsl\(([\d.]+),\s*([\d.]+)%,\s*([\d.]+)%\)/);
   if (match) {
     return `${match[1]} ${match[2]}% ${match[3]}%`;
   }
-  return hsl; // Fallback for other formats if any
+  return hsl;
 };
 
-// Define your beautiful custom themes
 const themes = {
   futuristicHud: {
     name: 'Futuristic HUD',
     mode: 'dark',
     colors: {
-      primary: 'hsl(190, 95%, 60%)',
-      secondary: 'hsl(230, 15%, 25%)',
-      accent: 'hsl(290, 85%, 65%)',
-      background: 'hsl(230, 25%, 10%)',
-      foreground: 'hsl(210, 20%, 95%)',
-      card: 'hsl(230, 20%, 14%)',
-      cardForeground: 'hsl(210, 20%, 95%)',
-      popover: 'hsl(230, 20%, 12%)',
-      popoverForeground: 'hsl(210, 20%, 95%)',
-      muted: 'hsl(230, 15%, 40%)',
-      mutedForeground: 'hsl(230, 10%, 65%)',
-      destructive: 'hsl(0, 70%, 55%)',
-      border: 'hsla(190, 95%, 60%, 0.2)',
-      input: 'hsl(230, 15%, 20%)',
-      ring: 'hsl(190, 95%, 70%)',
-      cardRgb: '30, 34, 46', 
+      primary: 'hsl(180, 100%, 50%)', // Vibrant Cyan
+      secondary: 'hsl(240, 15%, 25%)', // Deep Blue-Gray
+      accent: 'hsl(300, 100%, 70%)', // Electric Magenta
+      background: 'hsl(240, 20%, 6%)', // Near Black with a hint of blue
+      foreground: 'hsl(210, 50%, 95%)',
+      card: 'hsl(240, 15%, 12%)',
+      cardForeground: 'hsl(210, 50%, 95%)',
+      popover: 'hsl(240, 20%, 10%)',
+      popoverForeground: 'hsl(210, 50%, 95%)',
+      muted: 'hsl(240, 10%, 40%)',
+      mutedForeground: 'hsl(240, 5%, 65%)',
+      destructive: 'hsl(0, 84%, 60%)',
+      border: 'hsla(180, 100%, 50%, 0.2)',
+      input: 'hsl(240, 15%, 18%)',
+      ring: 'hsl(180, 100%, 60%)',
+      cardRgb: '26, 30, 41',
     }
   },
   champsElite: {
     name: 'Champs Elite',
     mode: 'dark',
     colors: {
-      primary: 'hsl(45, 100%, 55%)',
-      secondary: 'hsl(340, 25%, 20%)',
-      accent: 'hsl(50, 100%, 65%)',
-      background: 'hsl(340, 30%, 10%)',
-      foreground: 'hsl(45, 20%, 95%)',
-      card: 'hsl(340, 25%, 15%)',
-      cardForeground: 'hsl(45, 20%, 95%)',
-      popover: 'hsl(340, 25%, 15%)',
-      popoverForeground: 'hsl(45, 20%, 95%)',
-      muted: 'hsl(340, 10%, 70%)',
-      mutedForeground: 'hsl(340, 10%, 40%)',
-      destructive: 'hsl(0, 80%, 60%)',
-      border: 'hsla(45, 100%, 55%, 0.3)',
-      input: 'hsl(340, 25%, 20%)',
-      ring: 'hsl(45, 100%, 55%)',
-      cardRgb: '48, 29, 36', 
+      primary: 'hsl(45, 100%, 51%)', // Gold
+      secondary: 'hsl(0, 0%, 13%)', // Dark Charcoal
+      accent: 'hsl(0, 0%, 98%)', // White
+      background: 'hsl(0, 0%, 8%)', // True Black
+      foreground: 'hsl(0, 0%, 90%)',
+      card: 'hsl(0, 0%, 11%)',
+      cardForeground: 'hsl(0, 0%, 90%)',
+      popover: 'hsl(0, 0%, 10%)',
+      popoverForeground: 'hsl(0, 0%, 90%)',
+      muted: 'hsl(0, 0%, 40%)',
+      mutedForeground: 'hsl(0, 0%, 60%)',
+      destructive: 'hsl(0, 72%, 51%)',
+      border: 'hsla(45, 100%, 51%, 0.25)',
+      input: 'hsl(0, 0%, 15%)',
+      ring: 'hsl(45, 100%, 51%)',
+      cardRgb: '28, 28, 28',
     }
   },
   midnightPitch: {
     name: 'Midnight Pitch',
     mode: 'dark',
     colors: {
-      primary: 'hsl(130, 80%, 50%)',
-      secondary: 'hsl(210, 50%, 60%)',
-      accent: 'hsl(130, 80%, 50%)',
-      background: 'hsl(220, 15%, 5%)',
-      foreground: 'hsl(220, 10%, 90%)',
-      card: 'hsl(220, 15%, 8%)',
-      cardForeground: 'hsl(220, 10%, 90%)',
-      popover: 'hsl(220, 15%, 8%)',
-      popoverForeground: 'hsl(220, 10%, 90%)',
-      muted: 'hsl(220, 10%, 60%)',
-      mutedForeground: 'hsl(220, 10%, 40%)',
+      primary: 'hsl(120, 70%, 45%)', // Pitch Green
+      secondary: 'hsl(210, 15%, 20%)', // Chalk Line Gray
+      accent: 'hsl(0, 0%, 100%)', // White
+      background: 'hsl(120, 30%, 8%)', // Very Dark Green
+      foreground: 'hsl(210, 20%, 90%)',
+      card: 'hsl(120, 20%, 11%)',
+      cardForeground: 'hsl(210, 20%, 90%)',
+      popover: 'hsl(120, 30%, 9%)',
+      popoverForeground: 'hsl(210, 20%, 90%)',
+      muted: 'hsl(210, 10%, 40%)',
+      mutedForeground: 'hsl(210, 10%, 60%)',
       destructive: 'hsl(0, 80%, 60%)',
-      border: 'hsla(130, 80%, 50%, 0.2)',
-      input: 'hsl(220, 15%, 15%)',
-      ring: 'hsl(130, 80%, 50%)',
-      cardRgb: '19, 21, 23',
+      border: 'hsla(120, 70%, 45%, 0.2)',
+      input: 'hsl(210, 15%, 15%)',
+      ring: 'hsl(120, 70%, 45%)',
+      cardRgb: '23, 29, 23',
     }
   },
   goldenGoal: {
     name: 'Golden Goal',
-    mode: 'dark',
+    mode: 'light',
     colors: {
-      primary: 'hsl(45, 80%, 60%)',
-      secondary: 'hsl(215, 30%, 30%)',
-      accent: 'hsl(45, 80%, 60%)',
-      background: 'hsl(215, 60%, 10%)',
-      foreground: 'hsl(45, 20%, 95%)',
-      card: 'hsl(215, 60%, 13%)',
-      cardForeground: 'hsl(45, 20%, 95%)',
-      popover: 'hsl(215, 60%, 13%)',
-      popoverForeground: 'hsl(45, 20%, 95%)',
-      muted: 'hsl(215, 20%, 65%)',
-      mutedForeground: 'hsl(215, 20%, 45%)',
+      primary: 'hsl(35, 85%, 55%)', // Deep Gold
+      secondary: 'hsl(20, 5%, 30%)', // Dark Gray
+      accent: 'hsl(5, 75%, 55%)', // Fiery Red
+      background: 'hsl(30, 50%, 98%)', // Off-white
+      foreground: 'hsl(20, 15%, 20%)',
+      card: 'hsl(0, 0%, 100%)',
+      cardForeground: 'hsl(20, 15%, 20%)',
+      popover: 'hsl(0, 0%, 100%)',
+      popoverForeground: 'hsl(20, 15%, 20%)',
+      muted: 'hsl(30, 20%, 85%)',
+      mutedForeground: 'hsl(30, 10%, 45%)',
       destructive: 'hsl(0, 80%, 60%)',
-      border: 'hsla(45, 80%, 60%, 0.2)',
-      input: 'hsl(215, 30%, 30%)',
-      ring: 'hsl(45, 80%, 60%)',
-      cardRgb: '23, 30, 43',
+      border: 'hsla(35, 85%, 55%, 0.3)',
+      input: 'hsl(30, 30%, 95%)',
+      ring: 'hsl(35, 85%, 55%)',
+      cardRgb: '255, 255, 255',
     }
   },
   hyperMotion: {
     name: 'Hyper Motion',
     mode: 'dark',
     colors: {
-      primary: 'hsl(200, 100%, 50%)',
-      secondary: 'hsl(320, 100%, 60%)',
-      accent: 'hsl(320, 100%, 60%)',
-      background: 'hsl(230, 10%, 10%)',
-      foreground: 'hsl(230, 10%, 85%)',
-      card: 'hsl(230, 10%, 14%)',
-      cardForeground: 'hsl(230, 10%, 85%)',
-      popover: 'hsl(230, 10%, 14%)',
-      popoverForeground: 'hsl(230, 10%, 85%)',
-      muted: 'hsl(230, 10%, 50%)',
-      mutedForeground: 'hsl(230, 10%, 40%)',
-      destructive: 'hsl(320, 90%, 60%)',
-      border: 'hsla(200, 100%, 50%, 0.2)',
-      input: 'hsl(230, 10%, 20%)',
-      ring: 'hsl(200, 100%, 50%)',
-      cardRgb: '33, 34, 38',
+      primary: 'hsl(260, 100%, 70%)', // Electric Violet
+      secondary: 'hsl(180, 90%, 50%)', // Bright Cyan
+      accent: 'hsl(330, 100%, 65%)', // Hot Pink
+      background: 'hsl(235, 25%, 12%)', // Deep Indigo
+      foreground: 'hsl(240, 20%, 92%)',
+      card: 'hsl(235, 22%, 16%)',
+      cardForeground: 'hsl(240, 20%, 92%)',
+      popover: 'hsl(235, 25%, 14%)',
+      popoverForeground: 'hsl(240, 20%, 92%)',
+      muted: 'hsl(235, 10%, 50%)',
+      mutedForeground: 'hsl(235, 5%, 65%)',
+      destructive: 'hsl(330, 90%, 60%)',
+      border: 'hsla(260, 100%, 70%, 0.25)',
+      input: 'hsl(235, 20%, 20%)',
+      ring: 'hsl(260, 100%, 70%)',
+      cardRgb: '36, 38, 51',
     }
   },
   tacticsBoard: {
     name: 'Tactics Board',
     mode: 'light',
     colors: {
-      primary: 'hsl(210, 90%, 50%)',
-      secondary: 'hsl(210, 15%, 90%)',
-      accent: 'hsl(0, 80%, 60%)',
-      background: 'hsl(210, 20%, 98%)',
-      foreground: 'hsl(210, 20%, 15%)',
-      card: 'hsl(0, 0%, 100%)',
-      cardForeground: 'hsl(210, 20%, 15%)',
+      primary: 'hsl(217, 91%, 60%)', // Classic Blue
+      secondary: 'hsl(210, 40%, 96%)', // Light Gray
+      accent: 'hsl(346, 77%, 58%)', // Strong Red
+      background: 'hsl(0, 0%, 100%)', // White
+      foreground: 'hsl(222, 47%, 11%)', // Dark Blue Text
+      card: 'hsl(210, 40%, 98%)',
+      cardForeground: 'hsl(222, 47%, 11%)',
       popover: 'hsl(0, 0%, 100%)',
-      popoverForeground: 'hsl(210, 20%, 15%)',
-      muted: 'hsl(210, 15%, 85%)',
-      mutedForeground: 'hsl(210, 15%, 45%)',
-      destructive: 'hsl(0, 80%, 60%)',
-      border: 'hsla(210, 90%, 50%, 0.2)',
-      input: 'hsl(210, 15%, 95%)',
-      ring: 'hsl(210, 90%, 50%)',
-      cardRgb: '255, 255, 255',
+      popoverForeground: 'hsl(222, 47%, 11%)',
+      muted: 'hsl(210, 30%, 90%)',
+      mutedForeground: 'hsl(215, 15%, 55%)',
+      destructive: 'hsl(0, 84%, 60%)',
+      border: 'hsla(217, 91%, 60%, 0.2)',
+      input: 'hsl(210, 40%, 94%)',
+      ring: 'hsl(217, 91%, 60%)',
+      cardRgb: '250, 250, 250',
     }
   },
 };
@@ -168,31 +166,17 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     const theme = themes[currentThemeName];
     if (!theme) return;
 
-    // Apply .dark or .light class for Tailwind's darkMode selector
     root.classList.remove('light', 'dark');
     root.classList.add(theme.mode);
     
-    // Set CSS variables for Tailwind to use
-    root.style.setProperty('--background', parseHsl(theme.colors.background));
-    root.style.setProperty('--foreground', parseHsl(theme.colors.foreground));
-    root.style.setProperty('--card', parseHsl(theme.colors.card));
-    root.style.setProperty('--card-foreground', parseHsl(theme.colors.cardForeground));
-    root.style.setProperty('--popover', parseHsl(theme.colors.popover));
-    root.style.setProperty('--popover-foreground', parseHsl(theme.colors.popoverForeground));
-    root.style.setProperty('--primary', parseHsl(theme.colors.primary));
-    root.style.setProperty('--primary-foreground', parseHsl(theme.colors.foreground)); // Use main text color on primary buttons
-    root.style.setProperty('--secondary', parseHsl(theme.colors.secondary));
-    root.style.setProperty('--secondary-foreground', parseHsl(theme.colors.foreground));
-    root.style.setProperty('--muted', parseHsl(theme.colors.muted));
-    root.style.setProperty('--muted-foreground', parseHsl(theme.colors.muted));
-    root.style.setProperty('--accent', parseHsl(theme.colors.accent));
-    root.style.setProperty('--accent-foreground', parseHsl(theme.colors.foreground));
-    root.style.setProperty('--destructive', parseHsl(theme.colors.destructive));
-    root.style.setProperty('--destructive-foreground', parseHsl(theme.colors.foreground));
-    root.style.setProperty('--border', parseHsl(theme.colors.border));
-    root.style.setProperty('--input', parseHsl(theme.colors.input));
-    root.style.setProperty('--ring', parseHsl(theme.colors.ring));
-    root.style.setProperty('--card-rgb', theme.colors.cardRgb);
+    // Set CSS variables
+    Object.entries(theme.colors).forEach(([key, value]) => {
+      // Convert property name from camelCase to kebab-case
+      const cssVarName = `--${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
+      // Parse HSL values for direct use in CSS
+      const parsedValue = key.endsWith('Rgb') ? value : parseHsl(value);
+      root.style.setProperty(cssVarName, parsedValue);
+    });
 
   }, [currentThemeName]);
 
