@@ -14,16 +14,18 @@ const DashboardSection = ({
 }: DashboardSectionProps) => {
   const { settings } = useDataSync();
   
-  const sectionSettings = settings[settingsSection] || {};
+  const sectionSettings = settings[settingsSection as keyof typeof settings] || {};
   const isEnabled = sectionSettings[settingKey as keyof typeof sectionSettings];
   
   if (isEnabled === false) {
     return null;
   }
   
-  // We apply the glass-card style directly to this wrapper div.
-  // The p-6 class adds padding inside the card.
-  return <div className="glass-card p-6">{children}</div>;
+  return (
+    <div className="p-6 bg-card/50 backdrop-blur-xl border border-white/10 rounded-2xl shadow-lg">
+      {children}
+    </div>
+  );
 };
 
 export default DashboardSection;
