@@ -40,36 +40,4 @@
     @apply bg-background text-foreground;
     font-family: 'Inter', sans-serif;
   }
-/* A specific style for the small stat cards */
-  .stat-card {
-    @apply glass-card; /* Inherits the base glass style */
-  }
-  
-  /* A prominent style for the main AI insight card with an animated border */
-  .primary-insight-card {
-    @apply glass-card relative overflow-hidden p-6;
-  }
-
-  .primary-insight-card::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: 1rem; 
-    padding: 2px; 
-    background: linear-gradient(120deg, hsl(var(--primary)), hsl(var(--accent)), hsl(var(--primary)));
-    background-size: 200% 200%;
-    -webkit-mask: 
-      linear-gradient(#fff 0 0) content-box, 
-      linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    animation: gradient-spin 4s linear infinite;
-  }
-
-  @keyframes gradient-spin {
-    to {
-      transform: rotate(360deg);
-      background-position: -200% 0;
-    }
-  }
 }
