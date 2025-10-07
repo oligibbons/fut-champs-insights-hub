@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
 import { useSupabaseData } from './useSupabaseData';
 import { WeeklyPerformance, PlayerPerformance } from '@/types/futChampions';
 
@@ -74,9 +74,30 @@ export const DataSyncProvider = ({ children }: { children: ReactNode }) => {
 
   const deleteAllData = () => console.log('Delete all data functionality not implemented with Supabase');
 
-  const value: DataSyncContextType = {
-    weeklyData: supabaseData.weeklyData, loading: supabaseData.loading, saveGame: supabaseData.saveGame, createWeek: supabaseData.createWeek, updateWeek: supabaseData.updateWeek, updateGame: supabaseData.updateGame, getCurrentWeek: supabaseData.getCurrentWeek, refreshData: supabaseData.refreshData, weeks: supabaseData.weeklyData, activeAccount: null, accounts: [], addAccount: () => {}, switchAccount: () => {}, updateAccountData: () => {}, setWeeklyData: () => {}, calculatePlayerStats, settings, setSettings, players: [], squads: [], deleteAllData,
-  };
+  // FIX: Memoize the context value to prevent unnecessary re-renders
+  const value = useMemo(() => ({
+    weeklyData: supabaseData.weeklyData,
+    loading: supabaseData.loading,
+    saveGame: supabaseData.saveGame,
+    createWeek: supabaseData.createWeek,
+    updateWeek: supabaseData.updateWeek,
+    updateGame: supabaseData.updateGame,
+    getCurrentWeek: supabaseData.getCurrentWeek,
+    refreshData: supabaseData.refreshData,
+    weeks: supabaseData.weeklyData,
+    activeAccount: null,
+    accounts: [],
+    addAccount: () => {},
+    switchAccount: () => {},
+    updateAccountData: () => {},
+    setWeeklyData: () => {},
+    calculatePlayerStats,
+    settings,
+    setSettings,
+    players: [],
+    squads: [],
+    deleteAllData,
+  }), [supabaseData, settings, calculatePlayerStats]); // Dependencies for useMemo
 
   return (
     <DataSyncContext.Provider value={value}>
