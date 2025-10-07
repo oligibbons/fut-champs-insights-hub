@@ -17,15 +17,12 @@ const DashboardSection = ({
   const sectionSettings = settings[settingsSection] || {};
   const isEnabled = sectionSettings[settingKey as keyof typeof sectionSettings];
   
-  // Default to true if setting doesn't exist
-  if (isEnabled === undefined) {
-    return <div className="glass-card p-6">{children}</div>;
-  }
-  
-  if (!isEnabled) {
+  if (isEnabled === false) {
     return null;
   }
   
+  // We apply the glass-card style directly to this wrapper div.
+  // The p-6 class adds padding inside the card.
   return <div className="glass-card p-6">{children}</div>;
 };
 
