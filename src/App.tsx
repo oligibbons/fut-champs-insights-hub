@@ -20,9 +20,18 @@ import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
-// The "./App.css" import has been removed.
 
 function App() {
+  const Layout = ({ children }: { children: React.ReactNode }) => (
+    <div className="flex h-screen bg-transparent">
+      <Navigation />
+      <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        {children}
+      </main>
+    </div>
+  );
+
+  function App() {
   const { setTheme } = useTheme();
   const { loading, user } = useAuth();
 
@@ -38,8 +47,8 @@ function App() {
       </div>
     );
   }
-
-  return (
+  
+ return (
     <div className="min-h-screen bg-background text-foreground">
       {user && <Navigation />}
       <main className={`transition-all duration-300 ${user ? 'lg:pl-24' : ''}`}>
