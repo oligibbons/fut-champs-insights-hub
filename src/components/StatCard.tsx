@@ -10,10 +10,11 @@ interface StatCardProps {
 }
 
 const StatCard = ({ title, value, icon, trend, subtitle, className = '' }: StatCardProps) => {
+  // We use a div with the `stat-card` class, which applies the glass effect.
   return (
     <div className={`stat-card p-4 ${className}`}>
       <div className="flex items-start justify-between">
-        <div className="space-y-2">
+        <div className="space-y-1">
           <p className="text-sm text-muted-foreground font-medium">{title}</p>
           <p className="text-2xl font-bold text-foreground">{value}</p>
           {subtitle && (
@@ -21,7 +22,7 @@ const StatCard = ({ title, value, icon, trend, subtitle, className = '' }: StatC
           )}
         </div>
         {icon && (
-          <div className="p-2 bg-primary/20 rounded-lg">
+          <div className="p-2 bg-primary/20 rounded-lg text-primary">
             {icon}
           </div>
         )}
