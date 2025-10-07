@@ -1,7 +1,9 @@
+/* 1. Import Tailwind's base, components, and utilities */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* 2. Define all custom CSS variables within the base layer */
 @layer base {
   :root {
     --background: 240 10% 3.9%;
@@ -25,21 +27,21 @@
     --ring: 240 4.9% 83.9%;
     --radius: 0.75rem;
   }
-}
 
-@layer base {
-  /* The problematic global border rule has been removed from here */
+  /* 3. Now, apply the base styles using those variables */
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+  
   h1, h2, h3 {
     @apply font-bold tracking-tight;
   }
 }
 
+/* 4. Define all custom components */
 @layer components {
   /* The new Aurora background */
   .aurora-background {
@@ -53,7 +55,7 @@
                 radial-gradient(circle at 80% 30%, hsla(var(--secondary), 0.3) 0%, transparent 30%);
   }
   .aurora-background::after {
-    animation-delay: 4s; /* Direct property since it's not a utility */
+    animation-delay: 4s;
   }
 
   /* New Glass Card Style */
@@ -82,11 +84,6 @@
     @apply text-lg text-muted-foreground mt-1;
   }
 
-  /* Animations */
-  @keyframes fade-in-down {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
   .animate-fade-in-down {
     animation: fade-in-down 0.5s ease-out forwards;
   }
