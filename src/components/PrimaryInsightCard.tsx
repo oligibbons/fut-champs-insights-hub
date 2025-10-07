@@ -11,7 +11,7 @@ const PrimaryInsightCard = ({ insight }: PrimaryInsightCardProps) => {
   // Renders a placeholder state if no insights are available yet.
   if (!insight) {
     return (
-      <div className="primary-insight-card">
+      <div className="p-6 bg-card/60 backdrop-blur-xl border-2 border-primary/30 rounded-2xl shadow-2xl">
         <div className="flex items-center gap-2 mb-4">
           <Lightbulb className="h-5 w-5 text-primary" />
           <h2 className="text-lg font-semibold">Your Primary Insight</h2>
@@ -39,7 +39,7 @@ const PrimaryInsightCard = ({ insight }: PrimaryInsightCardProps) => {
   };
 
   return (
-    <div className="primary-insight-card">
+    <div className="p-6 bg-card/60 backdrop-blur-xl border-2 border-primary/30 rounded-2xl shadow-2xl">
       <div className="flex items-center justify-between mb-4">
         <span className="flex items-center gap-2 font-semibold">
            <Lightbulb className="h-5 w-5 text-primary" />
