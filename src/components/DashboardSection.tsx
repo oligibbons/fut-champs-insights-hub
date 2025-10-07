@@ -1,4 +1,3 @@
-
 import { ReactNode } from 'react';
 import { useDataSync } from '@/hooks/useDataSync';
 
@@ -20,14 +19,14 @@ const DashboardSection = ({
   
   // Default to true if setting doesn't exist
   if (isEnabled === undefined) {
-    return <>{children}</>;
+    return <div className="glass-card p-6">{children}</div>;
   }
   
   if (!isEnabled) {
     return null;
   }
   
-  return <>{children}</>;
+  return <div className="glass-card p-6">{children}</div>;
 };
 
 export default DashboardSection;
