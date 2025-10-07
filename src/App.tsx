@@ -31,12 +31,11 @@ function App() {
 
   return (
     <ThemeProvider>
-      {/* This new div creates the dynamic background behind everything */}
       <div className="fixed inset-0 -z-10 h-full w-full bg-background bg-[radial-gradient(at_27%_37%,hsla(var(--primary),0.1)_0px,transparent_50%),radial-gradient(at_97%_21%,hsla(var(--accent),0.15)_0px,transparent_50%),radial-gradient(at_82%_99%,hsla(var(--secondary),0.15)_0px,transparent_50%)]" />
-      
       <AuthProvider>
         <GameVersionProvider>
-          <DataSyncProvider>
+          {/* This component no longer exists, so we remove it to prevent build errors */}
+          {/* <DataSyncProvider> */}
             <Router>
               <Routes>
                 <Route path="/auth" element={<Auth />} />
@@ -54,7 +53,7 @@ function App() {
               </Routes>
             </Router>
             <Toaster />
-          </DataSyncProvider>
+          {/* </DataSyncProvider> */}
         </GameVersionProvider>
       </AuthProvider>
     </ThemeProvider>
