@@ -12,26 +12,48 @@ const parseHsl = (hsl: string | undefined): string => {
 
 // Define your beautiful custom themes
 const themes = {
+  futuristicHud: {
+    name: 'Futuristic HUD',
+    mode: 'dark',
+    colors: {
+      primary: 'hsl(190, 95%, 60%)',
+      secondary: 'hsl(230, 15%, 25%)',
+      accent: 'hsl(290, 85%, 65%)',
+      background: 'hsl(230, 25%, 10%)',
+      foreground: 'hsl(210, 20%, 95%)',
+      card: 'hsl(230, 20%, 14%)',
+      cardForeground: 'hsl(210, 20%, 95%)',
+      popover: 'hsl(230, 20%, 12%)',
+      popoverForeground: 'hsl(210, 20%, 95%)',
+      muted: 'hsl(230, 15%, 40%)',
+      mutedForeground: 'hsl(230, 10%, 65%)',
+      destructive: 'hsl(0, 70%, 55%)',
+      border: 'hsla(190, 95%, 60%, 0.2)',
+      input: 'hsl(230, 15%, 20%)',
+      ring: 'hsl(190, 95%, 70%)',
+      cardRgb: '30, 34, 46', 
+    }
+  },
   champsElite: {
     name: 'Champs Elite',
     mode: 'dark',
     colors: {
-      primary: 'hsl(350, 70%, 55%)',
-      secondary: 'hsl(210, 30%, 25%)',
-      accent: 'hsl(45, 100%, 50%)',
-      background: 'hsl(220, 15%, 10%)',
-      foreground: 'hsl(0, 0%, 100%)',
-      card: 'hsl(220, 15%, 15%)',
-      cardForeground: 'hsl(0, 0%, 100%)',
-      popover: 'hsl(220, 15%, 15%)',
-      popoverForeground: 'hsl(0, 0%, 100%)',
-      muted: 'hsl(220, 10%, 70%)',
-      mutedForeground: 'hsl(220, 10%, 40%)',
+      primary: 'hsl(45, 100%, 55%)',
+      secondary: 'hsl(340, 25%, 20%)',
+      accent: 'hsl(50, 100%, 65%)',
+      background: 'hsl(340, 30%, 10%)',
+      foreground: 'hsl(45, 20%, 95%)',
+      card: 'hsl(340, 25%, 15%)',
+      cardForeground: 'hsl(45, 20%, 95%)',
+      popover: 'hsl(340, 25%, 15%)',
+      popoverForeground: 'hsl(45, 20%, 95%)',
+      muted: 'hsl(340, 10%, 70%)',
+      mutedForeground: 'hsl(340, 10%, 40%)',
       destructive: 'hsl(0, 80%, 60%)',
-      border: 'hsla(350, 70%, 55%, 0.4)',
-      input: 'hsl(210, 30%, 25%)',
-      ring: 'hsl(350, 70%, 55%)',
-      cardRgb: '34, 38, 46', // RGB for hsl(220, 15%, 15%)
+      border: 'hsla(45, 100%, 55%, 0.3)',
+      input: 'hsl(340, 25%, 20%)',
+      ring: 'hsl(45, 100%, 55%)',
+      cardRgb: '48, 29, 36', 
     }
   },
   midnightPitch: {
@@ -138,7 +160,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     if (savedTheme && themes[savedTheme as keyof typeof themes]) {
       return savedTheme as keyof typeof themes;
     }
-    return 'champsElite'; // Default theme
+    return 'futuristicHud'; // Default theme
   });
 
   useEffect(() => {
