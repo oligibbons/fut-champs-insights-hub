@@ -28,9 +28,10 @@
     --radius: 0.75rem;
   }
 
-  /* 3. Now, apply the base styles using those variables */
+  /* 3. Apply base styles using standard CSS properties to avoid build errors */
   body {
-    @apply bg-background text-foreground;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
     font-family: 'Inter', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
