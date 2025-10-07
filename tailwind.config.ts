@@ -18,10 +18,6 @@ const config = {
       },
     },
     extend: {
-      // THIS IS THE CRITICAL FIX
-      // By defining the colors here and pointing them to the CSS variables,
-      // we make Tailwind aware of them, allowing it to generate all
-      // necessary utility classes, including those with opacity modifiers (e.g., bg-card/50).
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
