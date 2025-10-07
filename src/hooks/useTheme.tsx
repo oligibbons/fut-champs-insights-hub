@@ -1,205 +1,212 @@
-import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState } from "react";
 
-// The original Theme interface your components expect
-export interface Theme {
-  name: string;
-  colors: {
-    primary: string; secondary: string; accent: string; background: string;
-    surface: string; cardBg: string; text: string; muted: string; border: string;
-    success: string; warning: string; error: string;
-    accent2: string; textOnPrimary: string;
-    fifa: { blue: string; green: string; gold: string; red: string; purple: string; };
-  };
-}
+type Theme = "dark" | "light" | "system"
 
-// Your beautiful custom themes
-const themes: Record<string, Theme> = {
-  champsElite: {
-    name: 'Champs Elite',
+// Define your custom themes here using HSL values without the hsl() wrapper
+const themes = {
+  default: {
+    name: 'Default',
     colors: {
-      primary: 'hsl(350, 70%, 55%)',
-      secondary: 'hsl(210, 30%, 25%)',
-      accent: 'hsl(45, 100%, 50%)',
-      background: 'hsl(220, 15%, 10%)',
-      surface: 'rgba(30, 41, 59, 0.6)',
-      cardBg: 'hsl(220, 15%, 15%)',
-      text: 'hsl(0, 0%, 100%)',
-      muted: 'hsl(220, 10%, 70%)',
-      border: 'hsla(350, 70%, 55%, 0.4)',
-      success: 'hsl(140, 70%, 45%)',
-      warning: 'hsl(45, 100%, 50%)',
-      error: 'hsl(0, 80%, 60%)',
-      accent2: 'hsl(0, 0%, 100%)', // White accent
-      textOnPrimary: 'hsl(0, 0%, 100%)',
-      fifa: { blue: 'hsl(210, 90%, 60%)', green: 'hsl(130, 80%, 50%)', gold: 'hsl(45, 100%, 50%)', red: 'hsl(0, 80%, 60%)', purple: 'hsl(260, 80%, 70%)' }
+      background: '0 0% 3.9%',
+      foreground: '0 0% 98%',
+      card: '0 0% 3.9%',
+      cardForeground: '0 0% 98%',
+      popover: '0 0% 3.9%',
+      popoverForeground: '0 0% 98%',
+      primary: '0 0% 98%',
+      primaryForeground: '0 0% 9%',
+      secondary: '0 0% 14.9%',
+      secondaryForeground: '0 0% 98%',
+      muted: '0 0% 14.9%',
+      mutedForeground: '0 0% 63.9%',
+      accent: '0 0% 14.9%',
+      accentForeground: '0 0% 98%',
+      destructive: '0 84.2% 60.2%',
+      destructiveForeground: '0 0% 98%',
+      border: '0 0% 14.9%',
+      input: '0 0% 14.9%',
+      ring: '0 0% 83.1%',
+      cardRgb: '10, 10, 10',
+      surface: 'rgba(42, 58, 82, 0.5)'
     }
   },
-  midnightPitch: {
-    name: 'Midnight Pitch',
+  futvisionary: {
+    name: 'Futvisionary',
     colors: {
-        primary: 'hsl(130, 80%, 50%)',
-        secondary: 'hsl(210, 50%, 60%)',
-        accent: 'hsl(130, 80%, 50%)',
-        background: 'hsl(220, 15%, 5%)',
-        surface: 'rgba(30, 41, 59, 0.5)',
-        cardBg: 'hsl(220, 15%, 8%)',
-        text: 'hsl(220, 10%, 90%)',
-        muted: 'hsl(220, 10%, 60%)',
-        border: 'hsla(130, 80%, 50%, 0.2)',
-        success: 'hsl(140, 70%, 45%)',
-        warning: 'hsl(45, 90%, 55%)',
-        error: 'hsl(0, 80%, 60%)',
-        accent2: 'hsl(210, 50%, 80%)',
-        textOnPrimary: 'hsl(220, 15%, 5%)',
-        fifa: { blue: 'hsl(210, 90%, 60%)', green: 'hsl(130, 80%, 50%)', gold: 'hsl(45, 90%, 55%)', red: 'hsl(0, 80%, 60%)', purple: 'hsl(260, 80%, 70%)' }
+      background: '215 39% 11%',    // #0D1B2A
+      foreground: '80 13% 94%',    // #E0E1DD
+      card: '215 39% 17%',        // #1B263B
+      cardForeground: '80 13% 94%',    // #E0E1DD
+      popover: '215 39% 11%',        // #0D1B2A
+      popoverForeground: '80 13% 94%',    // #E0E1DD
+      primary: '212 18% 64%',      // #778DA9
+      primaryForeground: '215 39% 11%',    // #0D1B2A
+      secondary: '211 25% 36%',    // #415A77
+      secondaryForeground: '80 13% 94%',    // #E0E1DD
+      muted: '212 16% 50%',        // #6b7b90
+      mutedForeground: '212 18% 64%',      // #778DA9
+      accent: '210 100% 85%',     // #B4D2FF
+      accentForeground: '215 39% 11%',    // #0D1B2A
+      destructive: '0 63% 31%',
+      destructiveForeground: '80 13% 94%',
+      border: '212 18% 64% / 0.2',
+      input: '214 27% 25%',        // #2a3a52
+      ring: '212 18% 64%',
+      cardRgb: '27, 38, 59',
+      surface: 'rgba(42, 58, 82, 0.5)'
     }
-  },
-  goldenGoal: {
-      name: 'Golden Goal',
-      colors: {
-          primary: 'hsl(45, 80%, 60%)',
-          secondary: 'hsl(215, 30%, 30%)',
-          accent: 'hsl(45, 80%, 60%)',
-          background: 'hsl(215, 60%, 10%)',
-          surface: 'rgba(23, 37, 84, 0.5)',
-          cardBg: 'hsl(215, 60%, 13%)',
-          text: 'hsl(45, 20%, 95%)',
-          muted: 'hsl(215, 20%, 65%)',
-          border: 'hsla(45, 80%, 60%, 0.2)',
-          success: 'hsl(140, 70%, 45%)',
-          warning: 'hsl(45, 90%, 55%)',
-          error: 'hsl(0, 80%, 60%)',
-          accent2: 'hsl(0, 0%, 100%)',
-          textOnPrimary: 'hsl(215, 60%, 10%)',
-          fifa: { blue: 'hsl(210, 90%, 60%)', green: 'hsl(130, 80%, 50%)', gold: 'hsl(45, 80%, 60%)', red: 'hsl(0, 80%, 60%)', purple: 'hsl(260, 80%, 70%)' }
-      }
-  },
-  hyperMotion: {
-      name: 'Hyper Motion',
-      colors: {
-          primary: 'hsl(200, 100%, 50%)',
-          secondary: 'hsl(320, 100%, 60%)',
-          accent: 'hsl(320, 100%, 60%)',
-          background: 'hsl(230, 10%, 10%)',
-          surface: 'rgba(31, 41, 55, 0.5)',
-          cardBg: 'hsl(230, 10%, 14%)',
-          text: 'hsl(230, 10%, 85%)',
-          muted: 'hsl(230, 10%, 50%)',
-          border: 'hsla(200, 100%, 50%, 0.2)',
-          success: 'hsl(140, 70%, 45%)',
-          warning: 'hsl(45, 90%, 55%)',
-          error: 'hsl(320, 90%, 60%)',
-          accent2: 'hsl(50, 100%, 50%)',
-          textOnPrimary: 'hsl(0, 0%, 100%)',
-          fifa: { blue: 'hsl(200, 100%, 50%)', green: 'hsl(130, 80%, 50%)', gold: 'hsl(45, 90%, 55%)', red: 'hsl(0, 80%, 60%)', purple: 'hsl(320, 100%, 60%)' }
-      }
-  },
-  tacticsBoard: {
-      name: 'Tactics Board',
-      colors: {
-          primary: 'hsl(210, 90%, 50%)',
-          secondary: 'hsl(210, 15%, 50%)',
-          accent: 'hsl(0, 80%, 60%)',
-          background: 'hsl(210, 20%, 98%)',
-          surface: 'rgba(255, 255, 255, 0.8)',
-          cardBg: 'hsl(0, 0%, 100%)',
-          text: 'hsl(210, 20%, 15%)',
-          muted: 'hsl(210, 15%, 45%)',
-          border: 'hsla(210, 90%, 50%, 0.2)',
-          success: 'hsl(140, 70%, 40%)',
-          warning: 'hsl(45, 90%, 55%)',
-          error: 'hsl(0, 80%, 60%)',
-          accent2: 'hsl(210, 15%, 20%)',
-          textOnPrimary: 'hsl(0, 0%, 100%)',
-          fifa: { blue: 'hsl(210, 90%, 50%)', green: 'hsl(140, 70%, 40%)', gold: 'hsl(45, 90%, 55%)', red: 'hsl(0, 80%, 60%)', purple: 'hsl(260, 80%, 70%)' }
-      }
   },
 };
 
-interface ThemeContextType {
-  currentTheme: Theme;
-  currentThemeName: string;
-  setTheme: (themeName: string) => void;
-  themes: string[];
-  themeData: Record<string, Theme>;
+
+type ThemeProviderProps = {
+  children: React.ReactNode
+  defaultTheme?: Theme
+  storageKey?: string
 }
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+type ThemeProviderState = {
+  theme: Theme
+  setTheme: (theme: Theme) => void
+  currentTheme: typeof themes.default,
+  setCurrentTheme: (themeName: keyof typeof themes) => void
+  themes: typeof themes
+}
 
-export const ThemeProvider = ({ children }: { children: ReactNode }) => {
-  const [currentThemeName, setCurrentThemeName] = useState<string>(() => {
-    const savedTheme = localStorage.getItem('futalyst-theme');
-    // Prevents crash if saved theme is no longer valid
-    if (savedTheme && themes[savedTheme]) {
-      return savedTheme;
-    }
-    return 'champsElite'; // Default theme
+const initialState: ThemeProviderState = {
+  theme: "system",
+  setTheme: () => null,
+  currentTheme: themes.default,
+  setCurrentTheme: () => null,
+  themes: themes,
+}
+
+const ThemeProviderContext = createContext<ThemeProviderState>(initialState)
+
+export function ThemeProvider({
+  children,
+  defaultTheme = "system",
+  storageKey = "vite-ui-theme",
+  ...props
+}: ThemeProviderProps) {
+  const [theme, setTheme] = useState<Theme>(
+    () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
+  )
+  const [currentThemeKey, setCurrentThemeKey] = useState<keyof typeof themes>(() => {
+    return (localStorage.getItem('futalyst-theme') as keyof typeof themes) || 'futvisionary';
   });
 
   useEffect(() => {
-    const root = document.documentElement;
-    const theme = themes[currentThemeName];
-    if (!theme) return;
+    const root = window.document.documentElement;
+    root.classList.remove("light", "dark");
+    root.classList.add(theme);
+  }, [theme]);
 
-    // Apply .dark or .light class for Tailwind's darkMode selector
-    root.classList.remove('light', 'dark');
-    root.classList.add(currentThemeName === 'tacticsBoard' ? 'light' : 'dark');
+  useEffect(() => {
+    const selectedTheme = themes[currentThemeKey] || themes.futvisionary;
+    const root = window.document.documentElement.style;
     
-    // This function sets BOTH sets of variables, unifying the systems
-    const setCssVariables = (themeColors: Theme['colors']) => {
-      // Set your original theme variables for the navbar etc.
-      root.style.setProperty('--theme-primary', themeColors.primary);
-      root.style.setProperty('--theme-card-bg', themeColors.cardBg);
-      // ... (add any other custom variables your navbar uses here) ...
+    // Apply colors to CSS variables
+    Object.entries(selectedTheme.colors).forEach(([key, value]) => {
+      const cssVar = `--${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
+      root.setProperty(cssVar, value);
+    });
 
-      // Set the standard shadcn/ui variables for all other components
-      root.style.setProperty('--background', themeColors.background);
-      root.style.setProperty('--foreground', themeColors.text);
-      root.style.setProperty('--card', themeColors.cardBg);
-      root.style.setProperty('--card-foreground', themeColors.text);
-      root.style.setProperty('--popover', themeColors.cardBg);
-      root.style.setProperty('--popover-foreground', themeColors.text);
-      root.style.setProperty('--primary', themeColors.primary);
-      root.style.setProperty('--primary-foreground', themeColors.textOnPrimary);
-      root.style.setProperty('--secondary', themeColors.secondary);
-      root.style.setProperty('--secondary-foreground', themeColors.text);
-      root.style.setProperty('--muted', themeColors.muted);
-      root.style.setProperty('--muted-foreground', themeColors.text);
-      root.style.setProperty('--accent', themeColors.accent);
-      root.style.setProperty('--accent-foreground', themeColors.text);
-      root.style.setProperty('--destructive', themeColors.error);
-      root.style.setProperty('--border', themeColors.border);
-      root.style.setProperty('--input', themeColors.border);
-        root.style.setProperty('--ring', themeColors.primary);
-        root.style.setProperty('--accent2', themeColors.accent2);
-    };
-
-    setCssVariables(theme.colors);
-
-  }, [currentThemeName]);
-
-  const setTheme = (themeName: string) => {
-    if (themes[themeName]) {
-      localStorage.setItem('futalyst-theme', themeName);
-      setCurrentThemeName(themeName);
-    }
-  };
+    localStorage.setItem('futalyst-theme', currentThemeKey);
+  }, [currentThemeKey]);
 
   const value = {
-    currentThemeName,
-    currentTheme: themes[currentThemeName],
-    setTheme,
-    themes: Object.keys(themes),
-    themeData: themes,
-  };
+    theme,
+    setTheme: (theme: Theme) => {
+      localStorage.setItem(storageKey, theme)
+      setTheme(theme)
+    },
+    currentTheme: themes[currentThemeKey] || themes.default,
+    setCurrentTheme: setCurrentThemeKey,
+    themes: themes,
+  }
 
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
-};
+  return (
+    <ThemeProviderContext.Provider {...props} value={value}>
+      {children}
+    </ThemeProviderContext.Provider>
+  )
+}
 
 export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  if (context === undefined) {
-    throw new Error('useTheme must be used within a ThemeProvider');
+  const context = useContext(ThemeProviderContext)
+
+  if (context === undefined)
+    throw new Error("useTheme must be used within a ThemeProvider")
+
+  return context
+}
+```
+
+**File to Update:** `src/App.tsx` (This removes the redundant `useEffect` and the faulty import)
+
+```typescript
+import { Routes, Route, Navigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import Navigation from "@/components/Navigation";
+import Index from "./pages/Index";
+import CurrentWeek from "./pages/CurrentWeek";
+import Analytics from "./pages/Analytics";
+import Settings from "./pages/Settings";
+import Squads from "./pages/Squads";
+import Players from "./pages/Players";
+import Insights from "./pages/Insights";
+import History from "./pages/History";
+import Auth from "./pages/Auth";
+import Friends from "./pages/Friends";
+import Leaderboards from "./pages/Leaderboards";
+import Achievements from "./pages/Achievements";
+import Admin from "./pages/Admin";
+import NotFound from "./pages/NotFound";
+import { Loader2 } from "lucide-react";
+import { Toaster } from "@/components/ui/sonner";
+
+function App() {
+  const { loading, user } = useAuth();
+
+  // The useEffect to set theme has been removed from here as it's now correctly handled in the ThemeProvider
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary"/>
+      </div>
+    );
   }
-  return context;
-};
+
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      {user && <Navigation />}
+      <main className={`transition-all duration-300 ${user ? 'lg:pl-[5.5rem]' : ''}`}>
+        <div className="p-4 md:p-8">
+          <Routes>
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+            <Route path="/current-week" element={<ProtectedRoute><CurrentWeek /></ProtectedRoute>} />
+            <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+            <Route path="/squads" element={<ProtectedRoute><Squads /></ProtectedRoute>} />
+            <Route path="/players" element={<ProtectedRoute><Players /></ProtectedRoute>} />
+            <Route path="/insights" element={<ProtectedRoute><Insights /></ProtectedRoute>} />
+            <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
+            <Route path="/friends" element={<ProtectedRoute><Friends /></ProtectedRoute>} />
+            <Route path="/leaderboards" element={<ProtectedRoute><Leaderboards /></ProtectedRoute>} />
+            <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute adminOnly={true}><Admin /></ProtectedRoute>} />
+            <Route path="/404" element={<NotFound />} />
+            <Route path="*" element={<Navigate to="/404" replace />} />
+          </Routes>
+        </div>
+      </main>
+      <Toaster />
+    </div>
+  );
+}
+
+export default App;
