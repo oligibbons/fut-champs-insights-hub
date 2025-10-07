@@ -1,5 +1,5 @@
 import { Insight } from '@/utils/aiInsights';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Lightbulb, TrendingUp, AlertTriangle, CheckCircle, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -15,7 +15,7 @@ const PrimaryInsightCard = ({ insight }: PrimaryInsightCardProps) => {
   // Renders a placeholder state if no insights are available yet.
   if (!insight) {
     return (
-      <Card>
+      <div className="primary-insight-card">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Lightbulb className="h-5 w-5 text-primary" />
@@ -29,13 +29,13 @@ const PrimaryInsightCard = ({ insight }: PrimaryInsightCardProps) => {
         </CardContent>
         <CardFooter>
            <Button asChild className="w-full" variant="outline">
-              <Link to="/ai-insights">
-                Go to AI Insights
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </Link>
-            </Button>
+             <Link to="/ai-insights">
+               Go to AI Insights
+               <ArrowRight className="h-4 w-4 ml-2" />
+             </Link>
+           </Button>
         </CardFooter>
-      </Card>
+      </div>
     );
   }
 
@@ -49,7 +49,7 @@ const PrimaryInsightCard = ({ insight }: PrimaryInsightCardProps) => {
   };
 
   return (
-    <Card className="bg-gradient-to-br from-secondary/50 to-secondary/30 border-primary/20 hover:border-primary/40 transition-all shadow-lg">
+    <div className="primary-insight-card">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span className="flex items-center gap-2">
@@ -84,7 +84,7 @@ const PrimaryInsightCard = ({ insight }: PrimaryInsightCardProps) => {
           </Link>
         </Button>
       </CardFooter>
-    </Card>
+    </div>
   );
 };
 
