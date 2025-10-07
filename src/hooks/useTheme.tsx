@@ -1,212 +1,293 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 
-type Theme = "dark" | "light" | "system"
+// Helper to convert HSL string to Tailwind-compatible HSL values
+const parseHsl = (hsl: string | undefined): string => {
+  if (!hsl) return '';
+  const match = hsl.match(/hsl\(([\d.]+),\s*([\d.]+)%,\s*([\d.]+)%\)/);
+  if (match) {
+    return `${match[1]} ${match[2]}% ${match[3]}%`;
+  }
+  return hsl; // Fallback for other formats if any
+};
 
-// Define your custom themes here using HSL values without the hsl() wrapper
+// Define your beautiful custom themes
 const themes = {
-  default: {
-    name: 'Default',
+  champsElite: {
+    name: 'Champs Elite',
+    mode: 'dark',
     colors: {
-      background: '0 0% 3.9%',
-      foreground: '0 0% 98%',
-      card: '0 0% 3.9%',
-      cardForeground: '0 0% 98%',
-      popover: '0 0% 3.9%',
-      popoverForeground: '0 0% 98%',
-      primary: '0 0% 98%',
-      primaryForeground: '0 0% 9%',
-      secondary: '0 0% 14.9%',
-      secondaryForeground: '0 0% 98%',
-      muted: '0 0% 14.9%',
-      mutedForeground: '0 0% 63.9%',
-      accent: '0 0% 14.9%',
-      accentForeground: '0 0% 98%',
-      destructive: '0 84.2% 60.2%',
-      destructiveForeground: '0 0% 98%',
-      border: '0 0% 14.9%',
-      input: '0 0% 14.9%',
-      ring: '0 0% 83.1%',
-      cardRgb: '10, 10, 10',
-      surface: 'rgba(42, 58, 82, 0.5)'
+      primary: 'hsl(350, 70%, 55%)',
+      secondary: 'hsl(210, 30%, 25%)',
+      accent: 'hsl(45, 100%, 50%)',
+      background: 'hsl(220, 15%, 10%)',
+      foreground: 'hsl(0, 0%, 100%)',
+      card: 'hsl(220, 15%, 15%)',
+      cardForeground: 'hsl(0, 0%, 100%)',
+      popover: 'hsl(220, 15%, 15%)',
+      popoverForeground: 'hsl(0, 0%, 100%)',
+      muted: 'hsl(220, 10%, 70%)',
+      mutedForeground: 'hsl(220, 10%, 40%)',
+      destructive: 'hsl(0, 80%, 60%)',
+      border: 'hsla(350, 70%, 55%, 0.4)',
+      input: 'hsl(210, 30%, 25%)',
+      ring: 'hsl(350, 70%, 55%)',
+      cardRgb: '34, 38, 46', // RGB for hsl(220, 15%, 15%)
     }
   },
-  futvisionary: {
-    name: 'Futvisionary',
+  midnightPitch: {
+    name: 'Midnight Pitch',
+    mode: 'dark',
     colors: {
-      background: '215 39% 11%',    // #0D1B2A
-      foreground: '80 13% 94%',    // #E0E1DD
-      card: '215 39% 17%',        // #1B263B
-      cardForeground: '80 13% 94%',    // #E0E1DD
-      popover: '215 39% 11%',        // #0D1B2A
-      popoverForeground: '80 13% 94%',    // #E0E1DD
-      primary: '212 18% 64%',      // #778DA9
-      primaryForeground: '215 39% 11%',    // #0D1B2A
-      secondary: '211 25% 36%',    // #415A77
-      secondaryForeground: '80 13% 94%',    // #E0E1DD
-      muted: '212 16% 50%',        // #6b7b90
-      mutedForeground: '212 18% 64%',      // #778DA9
-      accent: '210 100% 85%',     // #B4D2FF
-      accentForeground: '215 39% 11%',    // #0D1B2A
-      destructive: '0 63% 31%',
-      destructiveForeground: '80 13% 94%',
-      border: '212 18% 64% / 0.2',
-      input: '214 27% 25%',        // #2a3a52
-      ring: '212 18% 64%',
-      cardRgb: '27, 38, 59',
-      surface: 'rgba(42, 58, 82, 0.5)'
+      primary: 'hsl(130, 80%, 50%)',
+      secondary: 'hsl(210, 50%, 60%)',
+      accent: 'hsl(130, 80%, 50%)',
+      background: 'hsl(220, 15%, 5%)',
+      foreground: 'hsl(220, 10%, 90%)',
+      card: 'hsl(220, 15%, 8%)',
+      cardForeground: 'hsl(220, 10%, 90%)',
+      popover: 'hsl(220, 15%, 8%)',
+      popoverForeground: 'hsl(220, 10%, 90%)',
+      muted: 'hsl(220, 10%, 60%)',
+      mutedForeground: 'hsl(220, 10%, 40%)',
+      destructive: 'hsl(0, 80%, 60%)',
+      border: 'hsla(130, 80%, 50%, 0.2)',
+      input: 'hsl(220, 15%, 15%)',
+      ring: 'hsl(130, 80%, 50%)',
+      cardRgb: '19, 21, 23',
+    }
+  },
+  goldenGoal: {
+    name: 'Golden Goal',
+    mode: 'dark',
+    colors: {
+      primary: 'hsl(45, 80%, 60%)',
+      secondary: 'hsl(215, 30%, 30%)',
+      accent: 'hsl(45, 80%, 60%)',
+      background: 'hsl(215, 60%, 10%)',
+      foreground: 'hsl(45, 20%, 95%)',
+      card: 'hsl(215, 60%, 13%)',
+      cardForeground: 'hsl(45, 20%, 95%)',
+      popover: 'hsl(215, 60%, 13%)',
+      popoverForeground: 'hsl(45, 20%, 95%)',
+      muted: 'hsl(215, 20%, 65%)',
+      mutedForeground: 'hsl(215, 20%, 45%)',
+      destructive: 'hsl(0, 80%, 60%)',
+      border: 'hsla(45, 80%, 60%, 0.2)',
+      input: 'hsl(215, 30%, 30%)',
+      ring: 'hsl(45, 80%, 60%)',
+      cardRgb: '23, 30, 43',
+    }
+  },
+  hyperMotion: {
+    name: 'Hyper Motion',
+    mode: 'dark',
+    colors: {
+      primary: 'hsl(200, 100%, 50%)',
+      secondary: 'hsl(320, 100%, 60%)',
+      accent: 'hsl(320, 100%, 60%)',
+      background: 'hsl(230, 10%, 10%)',
+      foreground: 'hsl(230, 10%, 85%)',
+      card: 'hsl(230, 10%, 14%)',
+      cardForeground: 'hsl(230, 10%, 85%)',
+      popover: 'hsl(230, 10%, 14%)',
+      popoverForeground: 'hsl(230, 10%, 85%)',
+      muted: 'hsl(230, 10%, 50%)',
+      mutedForeground: 'hsl(230, 10%, 40%)',
+      destructive: 'hsl(320, 90%, 60%)',
+      border: 'hsla(200, 100%, 50%, 0.2)',
+      input: 'hsl(230, 10%, 20%)',
+      ring: 'hsl(200, 100%, 50%)',
+      cardRgb: '33, 34, 38',
+    }
+  },
+  tacticsBoard: {
+    name: 'Tactics Board',
+    mode: 'light',
+    colors: {
+      primary: 'hsl(210, 90%, 50%)',
+      secondary: 'hsl(210, 15%, 90%)',
+      accent: 'hsl(0, 80%, 60%)',
+      background: 'hsl(210, 20%, 98%)',
+      foreground: 'hsl(210, 20%, 15%)',
+      card: 'hsl(0, 0%, 100%)',
+      cardForeground: 'hsl(210, 20%, 15%)',
+      popover: 'hsl(0, 0%, 100%)',
+      popoverForeground: 'hsl(210, 20%, 15%)',
+      muted: 'hsl(210, 15%, 85%)',
+      mutedForeground: 'hsl(210, 15%, 45%)',
+      destructive: 'hsl(0, 80%, 60%)',
+      border: 'hsla(210, 90%, 50%, 0.2)',
+      input: 'hsl(210, 15%, 95%)',
+      ring: 'hsl(210, 90%, 50%)',
+      cardRgb: '255, 255, 255',
     }
   },
 };
 
-
-type ThemeProviderProps = {
-  children: React.ReactNode
-  defaultTheme?: Theme
-  storageKey?: string
+interface ThemeContextType {
+  currentTheme: (typeof themes)[keyof typeof themes];
+  setTheme: (themeName: keyof typeof themes) => void;
+  themes: Record<string, {name: string}>;
 }
 
-type ThemeProviderState = {
-  theme: Theme
-  setTheme: (theme: Theme) => void
-  currentTheme: typeof themes.default,
-  setCurrentTheme: (themeName: keyof typeof themes) => void
-  themes: typeof themes
-}
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-const initialState: ThemeProviderState = {
-  theme: "system",
-  setTheme: () => null,
-  currentTheme: themes.default,
-  setCurrentTheme: () => null,
-  themes: themes,
-}
-
-const ThemeProviderContext = createContext<ThemeProviderState>(initialState)
-
-export function ThemeProvider({
-  children,
-  defaultTheme = "system",
-  storageKey = "vite-ui-theme",
-  ...props
-}: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(
-    () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
-  )
-  const [currentThemeKey, setCurrentThemeKey] = useState<keyof typeof themes>(() => {
-    return (localStorage.getItem('futalyst-theme') as keyof typeof themes) || 'futvisionary';
+export const ThemeProvider = ({ children }: { children: ReactNode }) => {
+  const [currentThemeName, setCurrentThemeName] = useState<keyof typeof themes>(() => {
+    const savedTheme = localStorage.getItem('futalyst-theme');
+    if (savedTheme && themes[savedTheme as keyof typeof themes]) {
+      return savedTheme as keyof typeof themes;
+    }
+    return 'champsElite'; // Default theme
   });
 
   useEffect(() => {
-    const root = window.document.documentElement;
-    root.classList.remove("light", "dark");
-    root.classList.add(theme);
-  }, [theme]);
+    const root = document.documentElement;
+    const theme = themes[currentThemeName];
+    if (!theme) return;
 
-  useEffect(() => {
-    const selectedTheme = themes[currentThemeKey] || themes.futvisionary;
-    const root = window.document.documentElement.style;
+    // Apply .dark or .light class for Tailwind's darkMode selector
+    root.classList.remove('light', 'dark');
+    root.classList.add(theme.mode);
     
-    // Apply colors to CSS variables
-    Object.entries(selectedTheme.colors).forEach(([key, value]) => {
-      const cssVar = `--${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
-      root.setProperty(cssVar, value);
-    });
+    // Set CSS variables for Tailwind to use
+    root.style.setProperty('--background', parseHsl(theme.colors.background));
+    root.style.setProperty('--foreground', parseHsl(theme.colors.foreground));
+    root.style.setProperty('--card', parseHsl(theme.colors.card));
+    root.style.setProperty('--card-foreground', parseHsl(theme.colors.cardForeground));
+    root.style.setProperty('--popover', parseHsl(theme.colors.popover));
+    root.style.setProperty('--popover-foreground', parseHsl(theme.colors.popoverForeground));
+    root.style.setProperty('--primary', parseHsl(theme.colors.primary));
+    root.style.setProperty('--primary-foreground', parseHsl(theme.colors.foreground)); // Use main text color on primary buttons
+    root.style.setProperty('--secondary', parseHsl(theme.colors.secondary));
+    root.style.setProperty('--secondary-foreground', parseHsl(theme.colors.foreground));
+    root.style.setProperty('--muted', parseHsl(theme.colors.muted));
+    root.style.setProperty('--muted-foreground', parseHsl(theme.colors.muted));
+    root.style.setProperty('--accent', parseHsl(theme.colors.accent));
+    root.style.setProperty('--accent-foreground', parseHsl(theme.colors.foreground));
+    root.style.setProperty('--destructive', parseHsl(theme.colors.destructive));
+    root.style.setProperty('--destructive-foreground', parseHsl(theme.colors.foreground));
+    root.style.setProperty('--border', parseHsl(theme.colors.border));
+    root.style.setProperty('--input', parseHsl(theme.colors.input));
+    root.style.setProperty('--ring', parseHsl(theme.colors.ring));
+    root.style.setProperty('--card-rgb', theme.colors.cardRgb);
 
-    localStorage.setItem('futalyst-theme', currentThemeKey);
-  }, [currentThemeKey]);
+  }, [currentThemeName]);
+
+  const setTheme = (themeName: keyof typeof themes) => {
+    if (themes[themeName]) {
+      localStorage.setItem('futalyst-theme', themeName);
+      setCurrentThemeName(themeName);
+    }
+  };
+
+  const themeInfo = Object.keys(themes).reduce((acc, key) => {
+    acc[key] = { name: themes[key as keyof typeof themes].name };
+    return acc;
+  }, {} as Record<string, {name: string}>);
 
   const value = {
-    theme,
-    setTheme: (theme: Theme) => {
-      localStorage.setItem(storageKey, theme)
-      setTheme(theme)
-    },
-    currentTheme: themes[currentThemeKey] || themes.default,
-    setCurrentTheme: setCurrentThemeKey,
-    themes: themes,
-  }
+    currentTheme: themes[currentThemeName],
+    setTheme,
+    themes: themeInfo,
+  };
 
-  return (
-    <ThemeProviderContext.Provider {...props} value={value}>
-      {children}
-    </ThemeProviderContext.Provider>
-  )
-}
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+};
 
 export const useTheme = () => {
-  const context = useContext(ThemeProviderContext)
-
-  if (context === undefined)
-    throw new Error("useTheme must be used within a ThemeProvider")
-
-  return context
-}
+  const context = useContext(ThemeContext);
+  if (context === undefined) {
+    throw new Error('useTheme must be used within a ThemeProvider');
+  }
+  return context;
+};
 ```
 
-**File to Update:** `src/App.tsx` (This removes the redundant `useEffect` and the faulty import)
+**File to Update:** `tailwind.config.ts` (This configures Tailwind to use the CSS variables set by the hook)
 
 ```typescript
-import { Routes, Route, Navigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import ProtectedRoute from "@/components/ProtectedRoute";
-import Navigation from "@/components/Navigation";
-import Index from "./pages/Index";
-import CurrentWeek from "./pages/CurrentWeek";
-import Analytics from "./pages/Analytics";
-import Settings from "./pages/Settings";
-import Squads from "./pages/Squads";
-import Players from "./pages/Players";
-import Insights from "./pages/Insights";
-import History from "./pages/History";
-import Auth from "./pages/Auth";
-import Friends from "./pages/Friends";
-import Leaderboards from "./pages/Leaderboards";
-import Achievements from "./pages/Achievements";
-import Admin from "./pages/Admin";
-import NotFound from "./pages/NotFound";
-import { Loader2 } from "lucide-react";
-import { Toaster } from "@/components/ui/sonner";
+import type { Config } from "tailwindcss"
 
-function App() {
-  const { loading, user } = useAuth();
+const config = {
+  darkMode: ["class"],
+  content: [
+    './pages/**/*.{ts,tsx}',
+    './components/**/*.{ts,tsx}',
+    './app/**/*.{ts,tsx}',
+    './src/**/*.{ts,tsx}',
+	],
+  prefix: "",
+  theme: {
+    container: {
+      center: true,
+      padding: "2rem",
+      screens: {
+        "2xl": "1400px",
+      },
+    },
+    extend: {
+      fontFamily: {
+        sans: ["Inter", "sans-serif"],
+      },
+      colors: {
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
+      },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
+      },
+      keyframes: {
+        "accordion-down": {
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
+        },
+        "accordion-up": {
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
+      },
+      animation: {
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
+      },
+    },
+  },
+  plugins: [require("tailwindcss-animate")],
+} satisfies Config
 
-  // The useEffect to set theme has been removed from here as it's now correctly handled in the ThemeProvider
+export default config
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary"/>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-background text-foreground">
-      {user && <Navigation />}
-      <main className={`transition-all duration-300 ${user ? 'lg:pl-[5.5rem]' : ''}`}>
-        <div className="p-4 md:p-8">
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-            <Route path="/current-week" element={<ProtectedRoute><CurrentWeek /></ProtectedRoute>} />
-            <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-            <Route path="/squads" element={<ProtectedRoute><Squads /></ProtectedRoute>} />
-            <Route path="/players" element={<ProtectedRoute><Players /></ProtectedRoute>} />
-            <Route path="/insights" element={<ProtectedRoute><Insights /></ProtectedRoute>} />
-            <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
-            <Route path="/friends" element={<ProtectedRoute><Friends /></ProtectedRoute>} />
-            <Route path="/leaderboards" element={<ProtectedRoute><Leaderboards /></ProtectedRoute>} />
-            <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
-            <Route path="/admin" element={<ProtectedRoute adminOnly={true}><Admin /></ProtectedRoute>} />
-            <Route path="/404" element={<NotFound />} />
-            <Route path="*" element={<Navigate to="/404" replace />} />
-          </Routes>
-        </div>
-      </main>
-      <Toaster />
-    </div>
-  );
-}
-
-export default App;
