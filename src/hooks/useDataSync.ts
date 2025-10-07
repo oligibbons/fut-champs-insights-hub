@@ -155,7 +155,7 @@ export const DataSyncProvider = ({ children }: { children: ReactNode }) => {
 
   const deleteAllData = () => console.log('Delete all data functionality not implemented with Supabase');
 
-  const value = {
+  const value: DataSyncContextType = {
     weeklyData: supabaseData.weeklyData,
     loading: supabaseData.loading,
     saveGame: supabaseData.saveGame,
