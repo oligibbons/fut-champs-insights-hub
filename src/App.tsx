@@ -1,25 +1,23 @@
-import { useEffect } from 'react';
-import { Routes, Route, Navigate } from "react-router-dom";
-import { useTheme } from "@/hooks/useTheme.tsx";
-import { useAuth } from "@/contexts/AuthContext";
-import ProtectedRoute from "@/components/ProtectedRoute";
-import Navigation from "@/components/Navigation";
-import Index from "./pages/Index";
-import CurrentWeek from "./pages/CurrentWeek";
-import Analytics from "./pages/Analytics";
-import Settings from "./pages/Settings";
-import Squads from "./pages/Squads";
-import Players from "./pages/Players";
-import Insights from "./pages/Insights";
-import History from "./pages/History";
-import Auth from "./pages/Auth";
-import Friends from "./pages/Friends";
-import Leaderboards from "./pages/Leaderboards";
-import Achievements from "./pages/Achievements";
-import Admin from "./pages/Admin";
-import NotFound from "./pages/NotFound";
-import { Loader2 } from "lucide-react";
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import Index from './pages/Index';
+import CurrentRun from './pages/CurrentRun';
+import History from './pages/History';
+import Analytics from './pages/Analytics';
+import Players from './pages/Players';
+import Settings from './pages/Settings';
+import Auth from './pages/Auth';
+import NotFound from './pages/NotFound';
+import Navigation from './components/Navigation';
+import ProtectedRoute from './components/ProtectedRoute';
+import { AuthProvider } from './contexts/AuthContext';
+import { ThemeProvider } from './hooks/useTheme';
 import { Toaster } from "@/components/ui/sonner";
+import { DataSyncProvider } from './hooks/useDataSync';
+import { GameVersionProvider } from './contexts/GameVersionContext';
+import AIInsights from './pages/AIInsights';
+import Achievements from './pages/Achievements';
+import Admin from './pages/Admin';
+import Squads from './pages/Squads';
 
 function App() {
   const Layout = ({ children }: { children: React.ReactNode }) => (
@@ -31,49 +29,35 @@ function App() {
     </div>
   );
 
-  function App() {
-  const { setTheme } = useTheme();
-  const { loading, user } = useAuth();
-
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('futalyst-theme') || 'futvisionary';
-    setTheme(savedTheme);
-  }, [setTheme]);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary"/>
-      </div>
-    );
-  }
-  
- return (
-    <div className="min-h-screen bg-background text-foreground">
-      {user && <Navigation />}
-      <main className={`transition-all duration-300 ${user ? 'lg:pl-24' : ''}`}>
-        <div className="p-4 md:p-8">
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-            <Route path="/current-week" element={<ProtectedRoute><CurrentWeek /></ProtectedRoute>} />
-            <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-            <Route path="/squads" element={<ProtectedRoute><Squads /></ProtectedRoute>} />
-            <Route path="/players" element={<ProtectedRoute><Players /></ProtectedRoute>} />
-            <Route path="/insights" element={<ProtectedRoute><Insights /></ProtectedRoute>} />
-            <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
-            <Route path="/friends" element={<ProtectedRoute><Friends /></ProtectedRoute>} />
-            <Route path="/leaderboards" element={<ProtectedRoute><Leaderboards /></ProtectedRoute>} />
-            <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
-            <Route path="/admin" element={<ProtectedRoute adminOnly={true}><Admin /></ProtectedRoute>} />
-            <Route path="/404" element={<NotFound />} />
-            <Route path="*" element={<Navigate to="/404" replace />} />
-          </Routes>
-        </div>
-      </main>
-      <Toaster />
-    </div>
+  return (
+    <ThemeProvider>
+      {/* This new div creates the dynamic background behind everything */}
+      <div className="fixed inset-0 -z-10 h-full w-full bg-background bg-[radial-gradient(at_27%_37%,hsla(var(--primary),0.1)_0px,transparent_50%),radial-gradient(at_97%_21%,hsla(var(--accent),0.15)_0px,transparent_50%),radial-gradient(at_82%_99%,hsla(var(--secondary),0.15)_0px,transparent_50%)]" />
+      
+      <AuthProvider>
+        <GameVersionProvider>
+          <DataSyncProvider>
+            <Router>
+              <Routes>
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/" element={<ProtectedRoute><Layout><Index /></Layout></ProtectedRoute>} />
+                <Route path="/current-run" element={<ProtectedRoute><Layout><CurrentRun /></Layout></ProtectedRoute>} />
+                <Route path="/history" element={<ProtectedRoute><Layout><History /></Layout></ProtectedRoute>} />
+                <Route path="/analytics" element={<ProtectedRoute><Layout><Analytics /></Layout></ProtectedRoute>} />
+                <Route path="/players" element={<ProtectedRoute><Layout><Players /></Layout></ProtectedRoute>} />
+                <Route path="/squads" element={<ProtectedRoute><Layout><Squads /></Layout></ProtectedRoute>} />
+                <Route path="/ai-insights" element={<ProtectedRoute><Layout><AIInsights /></Layout></ProtectedRoute>} />
+                <Route path="/achievements" element={<ProtectedRoute><Layout><Achievements /></Layout></ProtectedRoute>} />
+                <Route path="/settings" element={<ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>} />
+                <Route path="/admin" element={<ProtectedRoute><Layout><Admin /></Layout></ProtectedRoute>} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Router>
+            <Toaster />
+          </DataSyncProvider>
+        </GameVersionProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 
