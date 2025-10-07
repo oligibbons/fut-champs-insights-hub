@@ -40,9 +40,9 @@ const Index = () => {
   const [insightsLoading, setInsightsLoading] = useState(true);
   const [components, setComponents] = useState([
     "stats",
+    "records",
     "insights",
     "overview",
-    "records",
     "weekly",
   ]);
 
