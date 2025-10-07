@@ -28,7 +28,7 @@
   }
  
   .dark {
-    /* Values will be set by useTheme hook */
+    /* CSS variables are applied by the useTheme hook */
   }
 }
 
@@ -43,34 +43,50 @@
 }
 
 @layer components {
-  /* The main glass card style. All other cards will use this as a base. */
+  /* The core style for our glass effect. */
   .glass-card {
-    background-color: hsla(var(--card), 0.5);
+    background: rgba(var(--card-rgb), 0.5);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
-    @apply rounded-2xl border border-white/10 shadow-lg;
+    border-radius: 1rem; /* 16px */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
   }
 
-  /* Style for the small stat cards at the top. */
+  /* A specific style for the small stat cards */
   .stat-card {
-    background-color: hsla(var(--card), 0.5);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    @apply rounded-2xl border border-white/10 shadow-lg;
+    @apply glass-card; /* Inherits the base glass style */
+    /* Add any additional stat-card specific styles here if needed */
   }
   
-  /* A more prominent style for the main AI insight card. */
+  /* A prominent style for the main AI insight card with an animated border */
   .primary-insight-card {
-    background-color: hsla(var(--card), 0.6); /* Slightly more opaque to stand out */
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    @apply rounded-2xl border-2 border-primary/50 shadow-2xl;
+    @apply glass-card relative overflow-hidden;
+    padding: 1.5rem; /* 24px */
   }
 
-  /* Helper for gradient text if needed */
-  .gradient-text {
-    background: linear-gradient(to right, hsl(var(--primary)), hsl(var(--accent)));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+  .primary-insight-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 1rem;
+    border: 2px solid transparent;
+    background: linear-gradient(120deg, hsl(var(--primary)), hsl(var(--accent)), hsl(var(--primary))) border-box;
+    background-size: 200% 100%;
+    -webkit-mask:
+      linear-gradient(#fff 0 0) padding-box, 
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: destination-out;
+    mask-composite: exclude;
+    animation: gradient-spin 4s linear infinite;
+  }
+
+  @keyframes gradient-spin {
+    to {
+      background-position: -200% 0;
+    }
   }
 }
