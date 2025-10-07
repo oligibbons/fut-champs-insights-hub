@@ -40,20 +40,7 @@
     @apply bg-background text-foreground;
     font-family: 'Inter', sans-serif;
   }
-}
-
-@layer components {
-  /* The core style for our glass effect. */
-  .glass-card {
-    background: rgba(var(--card-rgb), 0.5);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border-radius: 1rem; /* 16px */
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-  }
-
-  /* A specific style for the small stat cards */
+/* A specific style for the small stat cards */
   .stat-card {
     @apply glass-card; /* Inherits the base glass style */
   }
