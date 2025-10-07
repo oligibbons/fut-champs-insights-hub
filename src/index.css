@@ -39,78 +39,38 @@
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', sans-serif;
-
-    /* New Dynamic Background */
-    background-color: hsl(var(--background));
-    background-image:
-      radial-gradient(at 27% 37%, hsla(var(--primary), 0.1) 0px, transparent 50%),
-      radial-gradient(at 97% 21%, hsla(var(--accent), 0.15) 0px, transparent 50%),
-      radial-gradient(at 82% 99%, hsla(var(--secondary), 0.15) 0px, transparent 50%);
-    background-attachment: fixed;
   }
 }
 
 @layer components {
+  /* The main glass card style. All other cards will use this as a base. */
   .glass-card {
-    background: rgba(var(--card-rgb), 0.5); /* Less opaque */
-    backdrop-filter: blur(24px); /* Much more blur */
+    background-color: hsla(var(--card), 0.5);
+    backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
-    border-radius: 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-    transition: all 0.3s ease;
+    @apply rounded-2xl border border-white/10 shadow-lg;
   }
 
-  .glass-card:hover {
-    background: rgba(var(--card-rgb), 0.6);
-    transform: translateY(-5px);
-    box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.45);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+  /* Style for the small stat cards at the top. */
+  .stat-card {
+    background-color: hsla(var(--card), 0.5);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    @apply rounded-2xl border border-white/10 shadow-lg;
+  }
+  
+  /* A more prominent style for the main AI insight card. */
+  .primary-insight-card {
+    background-color: hsla(var(--card), 0.6); /* Slightly more opaque to stand out */
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    @apply rounded-2xl border-2 border-primary/50 shadow-2xl;
   }
 
+  /* Helper for gradient text if needed */
   .gradient-text {
     background: linear-gradient(to right, hsl(var(--primary)), hsl(var(--accent)));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-  }
-
-  .primary-insight-card {
-    @apply glass-card;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .primary-insight-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border-radius: 1rem;
-    border: 2px solid transparent;
-    background: linear-gradient(120deg, hsl(var(--primary)), hsl(var(--accent)), hsl(var(--primary))) border-box;
-    -webkit-mask:
-      linear-gradient(#fff 0 0) padding-box, 
-      linear-gradient(#fff 0 0);
-    -webkit-mask-composite: destination-out;
-    mask-composite: exclude;
-    animation: gradient-spin 5s linear infinite;
-  }
-
-  @keyframes gradient-spin {
-    0% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-    100% {
-      background-position: 0% 50%;
-    }
-  }
-
-  .stat-card {
-    @apply glass-card p-4 flex flex-col items-center justify-center gap-2;
   }
 }
