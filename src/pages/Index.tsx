@@ -1,12 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSupabaseData } from "@/hooks/useSupabaseData";
 import { Skeleton } from "@/components/ui/skeleton";
 import CPSGauge from "@/components/CPSGauge";
 import PrimaryInsightCard from "@/components/PrimaryInsightCard";
+import DashboardOverview from "@/components/DashboardOverview";
+import TopPerformers from "@/components/TopPerformers";
+import WeeklyOverview from "@/components/WeeklyOverview";
 import { generateEnhancedAIInsights, Insight } from "@/utils/aiInsights";
-import { BarChart2, Calendar, Users, Trophy, GaugeCircle, TrendingUp, TrendingDown } from "lucide-react";
+import { BarChart2, Users, Trophy, GaugeCircle, TrendingUp, TrendingDown, Brain } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const Index = () => {
@@ -74,33 +77,48 @@ const Index = () => {
         <StatCard title="Overall Wins" value={stats.totalWins} icon={Trophy} color="text-yellow-400" />
         <StatCard title="Win Rate" value={`${stats.winRate.toFixed(0)}%`} icon={BarChart2} color="text-blue-400" />
         <StatCard title="Total Games" value={stats.totalGames} icon={Users} color="text-purple-400" />
-        <StatCard 
-          title="Current Streak" 
-          value={stats.currentStreak > 0 ? `W${stats.currentStreak}` : `L${Math.abs(stats.currentStreak)}`} 
-          icon={stats.currentStreak >= 0 ? TrendingUp : TrendingDown} 
-          color={stats.currentStreak >= 0 ? "text-green-400" : "text-red-400"} 
+        <StatCard
+          title="Current Streak"
+          value={stats.currentStreak > 0 ? `W${stats.currentStreak}` : `L${Math.abs(stats.currentStreak)}`}
+          icon={stats.currentStreak >= 0 ? TrendingUp : TrendingDown}
+          color={stats.currentStreak >= 0 ? "text-green-400" : "text-red-400"}
         />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
           {loading || insightsLoading ? (
-            <Skeleton className="h-full min-h-[200px] w-full" />
+            <Skeleton className="h-full min-h-[200px] w-full rounded-2xl" />
           ) : (
             <PrimaryInsightCard insight={topInsight} />
           )}
         </div>
-        <Card className="glass-card">
-          <CardHeader>
-            <CardTitle className="flex items-center text-lg">
-              <GaugeCircle className="h-5 w-5 mr-2 text-primary" />
-              Champs Player Score
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex items-center justify-center p-6">
-            {loading ? <Skeleton className="h-[150px] w-[150px] rounded-full" /> : <CPSGauge games={stats.allGames} size={150}/>}
-          </CardContent>
-        </Card>
+        <div className="space-y-6">
+            <Card className="glass-card">
+              <CardHeader>
+                <CardTitle className="flex items-center text-lg">
+                  <GaugeCircle className="h-5 w-5 mr-2 text-primary" />
+                  Champs Player Score
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="flex items-center justify-center p-6">
+                {loading ? <Skeleton className="h-[150px] w-[150px] rounded-full" /> : <CPSGauge games={stats.allGames} size={150}/>}
+              </CardContent>
+            </Card>
+        </div>
+      </div>
+      
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <DashboardOverview games={stats.allGames} />
+        </div>
+        <div className="space-y-6">
+            <TopPerformers />
+        </div>
+      </div>
+      
+      <div>
+        <WeeklyOverview />
       </div>
     </div>
   );
