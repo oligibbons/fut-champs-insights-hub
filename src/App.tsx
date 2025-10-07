@@ -42,7 +42,7 @@ function App() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {user && <Navigation />}
-      <main className={`transition-all duration-300 ${user ? 'lg:pl-[5.5rem]' : ''}`}>
+      <main className={`transition-all duration-300 ${user ? 'lg:pl-24' : ''}`}>
         <div className="p-4 md:p-8">
           <Routes>
             <Route path="/auth" element={<Auth />} />
