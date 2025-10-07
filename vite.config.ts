@@ -10,9 +10,6 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    // Commented out componentTagger as it's causing pre-transform errors
-    // mode === 'development' &&
-    // componentTagger(),
   ].filter(Boolean),
   resolve: {
     alias: {
@@ -20,7 +17,6 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    // Optimize for mobile
     minify: 'terser',
     rollupOptions: {
       output: {
