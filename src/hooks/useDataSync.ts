@@ -251,4 +251,3 @@ export const useDataSync = () => {
     deleteAllData,
   };
 };
-
