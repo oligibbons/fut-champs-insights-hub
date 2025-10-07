@@ -10,9 +10,8 @@ interface StatCardProps {
 }
 
 const StatCard = ({ title, value, icon, trend, subtitle, className = '' }: StatCardProps) => {
-  // We use a div with the `stat-card` class, which applies the glass effect.
   return (
-    <div className={`stat-card p-4 ${className}`}>
+    <div className={`p-4 bg-card/50 backdrop-blur-xl border border-white/10 rounded-2xl shadow-lg transition-all hover:border-white/20 hover:bg-card/60 ${className}`}>
       <div className="flex items-start justify-between">
         <div className="space-y-1">
           <p className="text-sm text-muted-foreground font-medium">{title}</p>
