@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react'; // MODIFICATION: Added 'useEffect' to the import list.
 import { Route, Routes, Link, useLocation } from 'react-router-dom';
 import Index from './pages/Index';
 import CurrentRun from './pages/CurrentRun';
@@ -55,7 +55,6 @@ function App() {
   const [isNavExpanded, setIsNavExpanded] = useState(false);
 
   const Layout = ({ children }: { children: React.ReactNode }) => {
-    // The mobile check is needed here to apply an overlay when the mobile menu is open
     const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
     useEffect(() => {
       const checkMobile = () => setIsMobile(window.innerWidth < 1024);
@@ -66,8 +65,6 @@ function App() {
     return (
       <div className="flex min-h-screen">
         <Navigation isExpanded={isNavExpanded} setIsExpanded={setIsNavExpanded} />
-        {/* MODIFICATION: Replaced inline style with responsive Tailwind classes. */}
-        {/* On large screens (lg), padding is applied. On smaller screens, padding is 0. */}
         <div className={cn(
           "flex-1 flex flex-col transition-all duration-300 ease-in-out",
           isNavExpanded ? "lg:pl-[16rem]" : "lg:pl-[5.5rem]"
@@ -82,7 +79,6 @@ function App() {
       </div>
     );
   };
-
 
   return (
     <ThemeProvider>
