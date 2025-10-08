@@ -95,7 +95,6 @@ const Settings = () => {
     });
   };
 
-
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
@@ -109,15 +108,18 @@ const Settings = () => {
       </div>
 
       <Tabs defaultValue="account" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
-          <TabsTrigger value="account"><User className="h-4 w-4 mr-2" />Account</TabsTrigger>
-          <TabsTrigger value="game"><Trophy className="h-4 w-4 mr-2" />Game</TabsTrigger>
-          <TabsTrigger value="gaming-accounts"><Gamepad2 className="h-4 w-4 mr-2" />Gaming</TabsTrigger>
-          <TabsTrigger value="appearance"><Palette className="h-4 w-4 mr-2" />Appearance</TabsTrigger>
-          <TabsTrigger value="dashboard"><BarChart3 className="h-4 w-4 mr-2" />Dashboard</TabsTrigger>
-          <TabsTrigger value="targets"><Target className="h-4 w-4 mr-2" />Current Week</TabsTrigger>
-          <TabsTrigger value="data"><Database className="h-4 w-4 mr-2" />Data</TabsTrigger>
-        </TabsList>
+        {/* MODIFICATION: Wrapped TabsList in a div that allows horizontal scrolling on mobile. */}
+        <div className="w-full overflow-x-auto pb-2">
+          <TabsList className="grid w-full grid-cols-[repeat(7,max-content)] sm:w-full sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
+            <TabsTrigger value="account"><User className="h-4 w-4 mr-2" />Account</TabsTrigger>
+            <TabsTrigger value="game"><Trophy className="h-4 w-4 mr-2" />Game</TabsTrigger>
+            <TabsTrigger value="gaming-accounts"><Gamepad2 className="h-4 w-4 mr-2" />Gaming</TabsTrigger>
+            <TabsTrigger value="appearance"><Palette className="h-4 w-4 mr-2" />Appearance</TabsTrigger>
+            <TabsTrigger value="dashboard"><BarChart3 className="h-4 w-4 mr-2" />Dashboard</TabsTrigger>
+            <TabsTrigger value="targets"><Target className="h-4 w-4 mr-2" />Current Week</TabsTrigger>
+            <TabsTrigger value="data"><Database className="h-4 w-4 mr-2" />Data</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="account" className="mt-6">
           <UserAccountSettings />
