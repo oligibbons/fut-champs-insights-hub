@@ -1,321 +1,210 @@
-import { useState } from 'react';
-import { useDataSync } from '@/hooks/useDataSync';
-import Navigation from '@/components/Navigation';
-import CurrentRunStats from '@/components/CurrentRunStats';
-import GameRecordForm from '@/components/GameRecordForm';
-import GameEditModal from '@/components/GameEditModal';
-import RunNamingModal from '@/components/RunNamingModal';
-import TargetEditModal from '@/components/TargetEditModal';
-import DashboardSection from '@/components/DashboardSection';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useGameVersion } from '@/contexts/GameVersionContext';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { PlusCircle, Loader2, FlagOff, ArrowLeft } from 'lucide-react';
+import GameCard from '@/components/GameCard';
+import WeekProgress from '@/components/WeekProgress';
+import { Game, FutChampsWeek } from '@/types/futChampions';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import GameRecordForm from '@/components/GameRecordForm';
 import { useToast } from '@/hooks/use-toast';
-import { Play, Edit3, Target, Calendar, Trophy, TrendingUp, Users, BarChart3 } from 'lucide-react';
-import { GameResult, WeeklyTarget } from '@/types/futChampions';
+import { Squad } from '@/types/squads';
+import WeekCompletionPopup from '@/components/WeekCompletionPopup';
+import CurrentRunStats from '@/components/CurrentRunStats';
+import TopPerformers from '@/components/TopPerformers';
+import RunSelector from '@/components/RunSelector';
+import GameListItem from '@/components/GameListItem';
+import DeleteDialog from '@/components/DeleteDialog';
 
 const CurrentRun = () => {
-  const { toast } = useToast();
-  const { getCurrentWeek, weeklyData, updateWeek, settings } = useDataSync();
-  const currentWeek = getCurrentWeek();
-  
-  const [showGameForm, setShowGameForm] = useState(false);
-  const [editingGame, setEditingGame] = useState<GameResult | null>(null);
-  const [showRunNaming, setShowRunNaming] = useState(false);
-  const [showTargetEdit, setShowTargetEdit] = useState(false);
+    const { user } = useAuth();
+    const { toast } = useToast();
+    const { gameVersion } = useGameVersion();
 
-  const handleGameSaved = () => {
-    setShowGameForm(false);
-    toast({
-      title: "Game Recorded!",
-      description: "Your game has been successfully saved.",
-    });
-  };
-
-  const handleGameEdit = async (updatedGame: GameResult) => {
-    if (!currentWeek) return;
+    const [allRuns, setAllRuns] = useState<FutChampsWeek[]>([]);
+    const [selectedRun, setSelectedRun] = useState<FutChampsWeek | null>(null);
+    const [games, setGames] = useState<Game[]>([]);
+    const [squads, setSquads] = useState<Squad[]>([]);
+    const [loading, setLoading] = useState(true);
     
-    try {
-      // Use updateWeek to update the game within the week
-      const updatedGames = currentWeek.games.map(game =>
-        game.id === updatedGame.id ? updatedGame : game
-      );
-      
-      await updateWeek(currentWeek.id, { games: updatedGames });
-      setEditingGame(null);
-      
-      toast({
-        title: "Game Updated",
-        description: "Your game has been successfully updated.",
-      });
-    } catch (error) {
-      console.error('Error updating game:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update game. Please try again.",
-        variant: "destructive"
-      });
+    // Modal States
+    const [isFormOpen, setIsFormOpen] = useState(false);
+    const [gameToEdit, setGameToEdit] = useState<Game | null>(null);
+    const [itemToDelete, setItemToDelete] = useState<{ type: 'run' | 'game', id: string } | null>(null);
+    const [showCompletionPopup, setShowCompletionPopup] = useState(false);
+    const [justCompletedWeek, setJustCompletedWeek] = useState<FutChampsWeek | null>(null);
+
+    const fetchData = useCallback(async () => {
+        if (!user) return;
+        setLoading(true);
+        try {
+            const { data: runsData } = await supabase.from('weekly_performances').select('*').eq('user_id', user.id).eq('game_version', gameVersion).order('start_date', { ascending: false });
+            setAllRuns(runsData || []);
+
+            const { data: squadsData } = await supabase.from('squads').select('*, squad_players(*, players(*))').eq('user_id', user.id).eq('game_version', gameVersion);
+            setSquads(squadsData || []);
+
+        } catch (error: any) {
+            toast({ title: "Error", description: "Failed to fetch initial data.", variant: "destructive" });
+        } finally {
+            setLoading(false);
+        }
+    }, [user, gameVersion, toast]);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
+
+    const fetchGamesForRun = async (runId: string) => {
+        setLoading(true);
+        const { data: gamesData, error } = await supabase.from('game_results').select('*, player_performances(*), team_statistics(*)').eq('week_id', runId).order('game_number', { ascending: true });
+        if (error) {
+            toast({ title: "Error", description: "Failed to fetch games for this run.", variant: "destructive" });
+        } else {
+            setGames(gamesData || []);
+        }
+        setLoading(false);
+    };
+    
+    const handleSelectRun = (runId: string) => {
+        const run = allRuns && allRuns.find(r => r.id === runId);
+        if (run) {
+            setSelectedRun(run);
+            fetchGamesForRun(runId);
+        }
+    };
+
+    const handleStartNewRun = async () => {
+        if (!user) return;
+        const { data, error } = await supabase.from('weekly_performances').insert({ user_id: user.id, game_version: gameVersion, week_number: allRuns.length + 1, start_date: new Date().toISOString() }).select().single();
+        if (error) {
+            toast({ title: "Error", description: "Could not start new run.", variant: "destructive" });
+        } else if (data) {
+            toast({ title: "Success", description: "New run started!" });
+            await fetchData();
+            handleSelectRun(data.id);
+        }
+    };
+
+    const handleEndRun = async () => {
+        if (!selectedRun) return;
+        const { data: completedWeek, error } = await supabase.from('weekly_performances').update({ is_completed: true, end_date: new Date().toISOString() }).eq('id', selectedRun.id).select().single();
+        if (error) {
+            toast({ title: "Error", description: "Failed to end run.", variant: "destructive" });
+        } else {
+            setJustCompletedWeek(completedWeek);
+            setShowCompletionPopup(true);
+            await fetchData();
+            setSelectedRun(null);
+        }
+    };
+    
+    const handleDelete = async () => {
+        if (!itemToDelete) return;
+        const { type, id } = itemToDelete;
+
+        if (type === 'run') {
+            await supabase.from('weekly_performances').delete().eq('id', id);
+            toast({ title: "Success", description: "Run deleted successfully." });
+            await fetchData();
+            setSelectedRun(null);
+        } else if (type === 'game') {
+            await supabase.from('game_results').delete().eq('id', id);
+            toast({ title: "Success", description: "Game deleted successfully." });
+            if (selectedRun) fetchGamesForRun(selectedRun.id);
+        }
+        setItemToDelete(null);
+    };
+    
+    const handleSaveGame = async () => {
+        setIsFormOpen(false);
+        setGameToEdit(null);
+        if (selectedRun) {
+            await fetchData();
+            await fetchGamesForRun(selectedRun.id);
+            const updatedRun = allRuns.find(r => r.id === selectedRun.id);
+            if (updatedRun && games.length + 1 >= 15 && !updatedRun.is_completed) {
+                toast({ title: "Run Auto-Completed", description: "You've reached 15 games." });
+                handleEndRun();
+            }
+        }
+    };
+
+    const handleOpenForm = (game: Game | null = null) => {
+        setGameToEdit(game);
+        setIsFormOpen(true);
     }
-  };
 
-  const handleRunNameSave = async (name: string) => {
-    if (!currentWeek) return;
-    
-    try {
-      await updateWeek(currentWeek.id, { customName: name });
-      toast({
-        title: "Run Named",
-        description: `Your run has been named: ${name}`,
-      });
-    } catch (error) {
-      console.error('Error updating run name:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update run name. Please try again.",
-        variant: "destructive"
-      });
+    if (loading && !selectedRun) {
+        return <div className="flex justify-center items-center h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>;
     }
-  };
 
-  const handleTargetSave = async (target: WeeklyTarget) => {
-    if (!currentWeek) return;
-    
-    try {
-      await updateWeek(currentWeek.id, { winTarget: target });
-      toast({
-        title: "Targets Updated",
-        description: "Your weekly targets have been updated.",
-      });
-    } catch (error) {
-      console.error('Error updating targets:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update targets. Please try again.",
-        variant: "destructive"
-      });
+    if (!selectedRun) {
+        return <RunSelector runs={allRuns} onSelectRun={handleSelectRun} onStartNewRun={handleStartNewRun} />;
     }
-  };
 
-  const getRunDisplayName = () => {
-    if (!currentWeek) return "No Active Run";
-    if (currentWeek.customName) return currentWeek.customName;
-    
-    const now = new Date();
-    const month = now.toLocaleString('default', { month: 'long' });
-    const year = now.getFullYear();
-    const week = Math.ceil(now.getDate() / 7);
-    return `${month} ${year} - Week ${week}`;
-  };
+    const wins = games.filter(g => g.result === 'win').length;
+    const losses = games.filter(g => g.result === 'loss').length;
+    const nextGameNumber = games.length + 1;
 
-  return (
-    <div className="min-h-screen">
-      <Navigation />
-      
-      <main className="lg:ml-20 lg:hover:ml-64 transition-all duration-500 p-4 lg:p-6">
-        <div className="max-w-7xl mx-auto space-y-8">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-2xl bg-gradient-to-r from-fifa-blue/20 to-fifa-purple/20">
-                <Play className="h-8 w-8 text-fifa-blue" />
-              </div>
-              <div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-fifa-blue via-fifa-purple to-fifa-gold bg-clip-text text-transparent">
-                  Current Run
-                </h1>
-                <div className="flex items-center gap-2 mt-1">
-                  <p className="text-gray-400">{getRunDisplayName()}</p>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowRunNaming(true)}
-                    className="text-fifa-blue hover:text-fifa-blue/80 p-1 h-auto"
-                  >
-                    <Edit3 className="h-3 w-3" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-            
-            {currentWeek && (
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => setShowTargetEdit(true)}
-                  variant="outline"
-                  className="text-fifa-purple border-fifa-purple/30 hover:bg-fifa-purple/10"
-                >
-                  <Target className="h-4 w-4 mr-2" />
-                  Edit Targets
-                </Button>
-                <Button
-                  onClick={() => setShowGameForm(true)}
-                  className="modern-button-primary"
-                >
-                  <Trophy className="h-4 w-4 mr-2" />
-                  Record Game
-                </Button>
-              </div>
-            )}
-          </div>
+    return (
+        <div className="space-y-6">
+            <Button variant="ghost" onClick={() => setSelectedRun(null)}><ArrowLeft className="mr-2 h-4 w-4" /> Back to All Runs</Button>
 
-          {currentWeek ? (
-            <div className="space-y-8">
-              {/* Quick Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card className="metric-card">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-fifa-green text-sm">
-                      <Trophy className="h-4 w-4" />
-                      Games Played
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-fifa-green font-bold text-2xl">{currentWeek.games.length}/15</p>
-                    <p className="text-xs text-gray-400">{15 - currentWeek.games.length} remaining</p>
-                  </CardContent>
-                </Card>
+            <WeekProgress wins={wins} losses={losses} gamesPlayed={games.length} target={15} />
 
-                <Card className="metric-card">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-fifa-blue text-sm">
-                      <TrendingUp className="h-4 w-4" />
-                      Current Record
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-fifa-blue font-bold text-2xl">{currentWeek.totalWins}W - {currentWeek.totalLosses}L</p>
-                    <p className="text-xs text-gray-400">
-                      {currentWeek.games.length > 0 ? `${Math.round((currentWeek.totalWins / currentWeek.games.length) * 100)}% win rate` : 'No games played'}
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card className="metric-card">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-fifa-purple text-sm">
-                      <BarChart3 className="h-4 w-4" />
-                      Goal Difference
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className={`font-bold text-2xl ${(currentWeek.totalGoals - currentWeek.totalConceded) >= 0 ? 'text-fifa-green' : 'text-fifa-red'}`}>
-                      {currentWeek.totalGoals - currentWeek.totalConceded > 0 ? '+' : ''}{currentWeek.totalGoals - currentWeek.totalConceded}
-                    </p>
-                    <p className="text-xs text-gray-400">{currentWeek.totalGoals} for, {currentWeek.totalConceded} against</p>
-                  </CardContent>
-                </Card>
-
-                <Card className="metric-card">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-fifa-gold text-sm">
-                      <Target className="h-4 w-4" />
-                      Target Progress
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-fifa-gold font-bold text-2xl">
-                      {currentWeek.winTarget ? `${currentWeek.totalWins}/${currentWeek.winTarget.wins}` : 'None Set'}
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      {currentWeek.winTarget ? `${currentWeek.winTarget.wins - currentWeek.totalWins} wins needed` : 'Click to set targets'}
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Recent Games */}
-              {currentWeek.games.length > 0 && (
-                <Card className="glass-card">
-                  <CardHeader>
-                    <CardTitle className="text-white flex items-center gap-2">
-                      <Calendar className="h-5 w-5" />
-                      Recent Games
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {currentWeek.games.slice(-5).reverse().map((game) => (
-                        <div key={game.id} className="flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
-                          <div className="flex items-center gap-3">
-                            <Badge className={`${game.result === 'win' ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-red-500/20 text-red-400 border-red-500/30'}`}>
-                              Game {game.gameNumber}
-                            </Badge>
-                            <div>
-                              <p className="font-medium text-white">{game.scoreLine}</p>
-                              <p className="text-sm text-gray-400">
-                                {game.result === 'win' ? 'Victory' : 'Defeat'} • {game.duration} mins • Opponent: {game.opponentSkill}/10
-                              </p>
-                            </div>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setEditingGame(game)}
-                            className="text-fifa-blue hover:text-fifa-blue/80"
-                          >
-                            <Edit3 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                <h1 className="text-3xl font-bold">{selectedRun.custom_name || `Week ${selectedRun.week_number}`}</h1>
+                {!selectedRun.is_completed && (
+                    <div className="flex gap-2">
+                        <Button onClick={() => handleOpenForm()} disabled={games.length >= 15}><PlusCircle className="mr-2 h-4 w-4" /> Record Game</Button>
+                        <Button variant="outline" onClick={handleEndRun}><FlagOff className="mr-2 h-4 w-4" /> End Run</Button>
                     </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Detailed Analytics */}
-              <DashboardSection settingKey="showCurrentRunStats" settingsSection="currentWeekSettings">
-                <CurrentRunStats />
-              </DashboardSection>
-
-              {/* Game Recording Form */}
-              {showGameForm && (
-                <GameRecordForm
-                  onGameSaved={handleGameSaved}
-                  onClose={() => setShowGameForm(false)}
-                  gameNumber={currentWeek.games.length + 1}
-                  weekId={currentWeek.id}
-                />
-              )}
+                )}
             </div>
-          ) : (
-            <Card className="glass-card">
-              <CardContent className="text-center py-12">
-                <Play className="h-16 w-16 mx-auto mb-4 text-gray-400 opacity-50" />
-                <h3 className="text-xl font-medium text-white mb-2">No Active Run</h3>
-                <p className="text-gray-400 mb-6">Start your Champions League run by recording your first game.</p>
-                <Button onClick={() => setShowGameForm(true)} className="modern-button-primary">
-                  <Trophy className="h-4 w-4 mr-2" />
-                  Start New Run
-                </Button>
-              </CardContent>
-            </Card>
-          )}
+
+            <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+                <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+                    <DialogHeader>
+                        <DialogTitle>{gameToEdit ? 'Edit Game' : 'Record a Game'}</DialogTitle>
+                        <DialogDescription>
+                            {gameToEdit ? `Update details for game #${gameToEdit.game_number}` : `Enter details for game #${nextGameNumber}`}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex-1 min-h-0">
+                        <GameRecordForm existingGame={gameToEdit} squads={squads} weekId={selectedRun.id} nextGameNumber={nextGameNumber} onSave={handleSaveGame} onCancel={() => setIsFormOpen(false)} />
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            <DeleteDialog isOpen={!!itemToDelete} onClose={() => setItemToDelete(null)} onConfirm={handleDelete} itemName={itemToDelete?.type || ''} />
+            <WeekCompletionPopup isOpen={showCompletionPopup} onClose={() => setShowCompletionPopup(false)} week={justCompletedWeek} />
+
+            <Tabs defaultValue="overview" className="w-full">
+              <div className="w-full overflow-x-auto pb-2">
+                <TabsList className="grid w-full grid-cols-4 min-w-[400px]">
+                  <TabsTrigger value="overview">Overview</TabsTrigger>
+                  <TabsTrigger value="gamelist">Game List</TabsTrigger>
+                  <TabsTrigger value="stats">Run Stats</TabsTrigger>
+                  <TabsTrigger value="performers">Top Performers</TabsTrigger>
+                </TabsList>
+              </div>
+              <TabsContent value="overview" className="mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {games.map(game => (<GameCard key={game.id} game={game} onEdit={handleOpenForm} onDelete={(id) => setItemToDelete({type: 'game', id})} />))}
+                </div>
+              </TabsContent>
+               <TabsContent value="gamelist" className="mt-4 space-y-2">
+                    {games.map(game => (<GameListItem key={game.id} game={game} onEdit={handleOpenForm} onDelete={(id) => setItemToDelete({type: 'game', id})} />))}
+               </TabsContent>
+               <TabsContent value="stats" className="mt-4"><CurrentRunStats week={selectedRun} games={games} /></TabsContent>
+              <TabsContent value="performers" className="mt-4"><TopPerformers games={games} /></TabsContent>
+            </Tabs>
         </div>
-      </main>
-
-      {/* Modals */}
-      <GameEditModal
-        game={editingGame}
-        isOpen={!!editingGame}
-        onClose={() => setEditingGame(null)}
-        onSave={handleGameEdit}
-      />
-
-      <RunNamingModal
-        isOpen={showRunNaming}
-        onClose={() => setShowRunNaming(false)}
-        onSave={handleRunNameSave}
-        currentName={currentWeek?.customName}
-      />
-
-      <TargetEditModal
-        isOpen={showTargetEdit}
-        onClose={() => setShowTargetEdit(false)}
-        onSave={handleTargetSave}
-        currentTarget={currentWeek?.winTarget}
-      />
-    </div>
-  );
+    );
 };
 
 export default CurrentRun;
