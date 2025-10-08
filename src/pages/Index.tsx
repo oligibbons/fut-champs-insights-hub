@@ -38,7 +38,10 @@ const Index = () => {
   const { weeklyData, loading } = useSupabaseData();
   const [topInsight, setTopInsight] = useState<Insight | null>(null);
   const [insightsLoading, setInsightsLoading] = useState(true);
+  
+  // MODIFICATION: Added "playstyle" to the list and moved it to the top.
   const [components, setComponents] = useState([
+    "playstyle",
     "stats",
     "records",
     "insights",
@@ -113,7 +116,9 @@ const Index = () => {
     </div>
   );
   
+  // MODIFICATION: Added "playstyle" to the component map.
   const componentMap: { [key: string]: React.ReactNode } = {
+    playstyle: <Playstyle />,
     stats: (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             <StatCard title="Overall Wins" value={stats.totalWins} icon={Trophy} color="text-yellow-400" />
@@ -182,9 +187,7 @@ const Index = () => {
         </SortableContext>
       </DndContext>
 
-      <div className="mt-8">
-        <Playstyle />
-      </div>
+      {/* MODIFICATION: Removed the old Playstyle component from the bottom. */}
     </div>
   );
 };
