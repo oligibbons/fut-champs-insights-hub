@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'; // MODIFICATION: Added 'useEffect' to the import list.
+import { useState, useEffect } from 'react';
 import { Route, Routes, Link, useLocation } from 'react-router-dom';
 import Index from './pages/Index';
 import CurrentRun from './pages/CurrentRun';
