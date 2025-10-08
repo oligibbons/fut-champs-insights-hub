@@ -146,8 +146,9 @@ const themes = {
 
 interface ThemeContextType {
   currentTheme: (typeof themes)[keyof typeof themes];
+  currentThemeName: keyof typeof themes;
   setTheme: (themeName: keyof typeof themes) => void;
-  themes: Record<string, {name: string}>;
+  themeData: Record<string, {name: string}>;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -169,11 +170,8 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     root.classList.remove('light', 'dark');
     root.classList.add(theme.mode);
     
-    // Set CSS variables
     Object.entries(theme.colors).forEach(([key, value]) => {
-      // Convert property name from camelCase to kebab-case
       const cssVarName = `--${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
-      // Parse HSL values for direct use in CSS
       const parsedValue = key.endsWith('Rgb') ? value : parseHsl(value);
       root.style.setProperty(cssVarName, parsedValue);
     });
@@ -194,8 +192,9 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
 
   const value = {
     currentTheme: themes[currentThemeName],
+    currentThemeName,
     setTheme,
-    themes: themeInfo,
+    themeData: themeInfo,
   };
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
