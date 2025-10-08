@@ -30,23 +30,24 @@ interface CurrentWeekSettings {
 }
 
 const Settings = () => {
-  // THIS IS THE CRITICAL FIX: We are now using all the correct data from your custom useTheme hook
-  const { currentThemeName, setTheme, themes: themeNames, themeData } = useTheme();
+  const { currentThemeName, setTheme, themeData } = useTheme();
   const { toast } = useToast();
   const { gameVersion, setGameVersion } = useGameVersion();
   const { settings, setSettings } = useDataSync();
 
+  // FIX: Provide a fallback empty object to prevent crashes if settings are not immediately available.
   const [dashboardSettings, setDashboardSettings] = useState<DashboardSettings>(
-    settings.dashboardSettings as DashboardSettings
+    (settings.dashboardSettings as DashboardSettings) || ({} as DashboardSettings)
   );
 
   const [currentWeekSettings, setCurrentWeekSettings] = useState<CurrentWeekSettings>(
-    settings.currentWeekSettings as CurrentWeekSettings
+    (settings.currentWeekSettings as CurrentWeekSettings) || ({} as CurrentWeekSettings)
   );
 
   useEffect(() => {
-    setDashboardSettings(settings.dashboardSettings as DashboardSettings);
-    setCurrentWeekSettings(settings.currentWeekSettings as CurrentWeekSettings);
+    // FIX: Provide a fallback empty object here as well for consistency.
+    setDashboardSettings((settings.dashboardSettings as DashboardSettings) || ({} as DashboardSettings));
+    setCurrentWeekSettings((settings.currentWeekSettings as CurrentWeekSettings) || ({} as CurrentWeekSettings));
   }, [settings]);
 
   const handleGameVersionChange = (value: string) => {
@@ -160,7 +161,8 @@ const Settings = () => {
                      <SelectValue placeholder="Select a theme" />
                    </SelectTrigger>
                    <SelectContent>
-                     {themeNames.map((themeName) => (
+                     {/* FIX: Use Object.keys() to create an array of theme names to map over, as themeData is an object. */}
+                     {Object.keys(themeData).map((themeName) => (
                        <SelectItem key={themeName} value={themeName}>
                          {themeData[themeName]?.name || themeName}
                        </SelectItem>
