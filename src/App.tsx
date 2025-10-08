@@ -21,7 +21,8 @@ import Admin from './pages/Admin';
 import Squads from './pages/Squads';
 import { Button } from './components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './components/ui/avatar';
-import { ArrowRight, BarChart2 } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
+import { cn } from './lib/utils';
 
 const AuroraBackground = () => <div className="aurora-background"></div>;
 
@@ -34,7 +35,7 @@ const Header = () => {
   }
 
   return (
-    <header className="fixed top-0 right-0 h-20 flex items-center justify-end px-8 z-30">
+    <header className="fixed top-0 right-0 h-20 flex items-center justify-end px-4 sm:px-8 z-30 w-full lg:w-auto">
       <div className="flex items-center gap-4">
         <Button asChild>
           <Link to="/current-run">
@@ -53,19 +54,35 @@ const Header = () => {
 function App() {
   const [isNavExpanded, setIsNavExpanded] = useState(false);
 
-  const Layout = ({ children }: { children: React.ReactNode }) => (
-    <div className="flex min-h-screen">
-      <Navigation isExpanded={isNavExpanded} setIsExpanded={setIsNavExpanded} />
-      <div className="flex-1 flex flex-col transition-all duration-300 ease-in-out" style={{ paddingLeft: isNavExpanded ? '16rem' : '5.5rem' }}>
-        <Header />
-        <main className="flex-1 overflow-y-auto p-6 lg:p-8 pt-24">
-          <div className="w-full max-w-7xl mx-auto">
-            {children}
-          </div>
-        </main>
+  const Layout = ({ children }: { children: React.ReactNode }) => {
+    // The mobile check is needed here to apply an overlay when the mobile menu is open
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+    useEffect(() => {
+      const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+      window.addEventListener('resize', checkMobile);
+      return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
+    return (
+      <div className="flex min-h-screen">
+        <Navigation isExpanded={isNavExpanded} setIsExpanded={setIsNavExpanded} />
+        {/* MODIFICATION: Replaced inline style with responsive Tailwind classes. */}
+        {/* On large screens (lg), padding is applied. On smaller screens, padding is 0. */}
+        <div className={cn(
+          "flex-1 flex flex-col transition-all duration-300 ease-in-out",
+          isNavExpanded ? "lg:pl-[16rem]" : "lg:pl-[5.5rem]"
+        )}>
+          <Header />
+          <main className="flex-1 overflow-y-auto p-6 lg:p-8 pt-24">
+            <div className="w-full max-w-7xl mx-auto">
+              {children}
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
+
 
   return (
     <ThemeProvider>
