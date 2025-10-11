@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useSquadData } from '@/hooks/useSquadData';
-import { Squad, CardType } from '@/types/squads';
+import { Squad, CardType, PlayerCard, FORMATIONS } from '@/types/squads';
 import SquadBuilder from '@/components/SquadBuilder';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
@@ -19,29 +19,61 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/hooks/useTheme';
 import { useGameVersion } from '@/contexts/GameVersionContext';
+import { cn } from '@/lib/utils';
 
-// New component for the auto-generated squad image
+// --- NEW SquadVisual Component ---
 const SquadVisual = ({ squad, cardTypes }: { squad: Squad, cardTypes: CardType[] }) => {
-    const getCardColor = (cardType: string) => {
-        const type = cardTypes.find(ct => ct.id === cardType);
-        return type ? type.primary_color : '#555'; // Fallback color
+    const { currentTheme } = useTheme();
+    const formation = FORMATIONS.find(f => f.name === squad.formation);
+
+    const getCardStyle = (player: PlayerCard) => {
+        const cardType = cardTypes.find(ct => ct.id === player.card_type);
+        if (cardType) {
+            return {
+                background: `linear-gradient(135deg, ${cardType.primary_color}, ${cardType.secondary_color || cardType.primary_color})`,
+                color: cardType.highlight_color,
+                borderColor: cardType.secondary_color || 'transparent',
+            };
+        }
+        return { background: '#555', color: '#FFF', borderColor: '#888' };
     };
 
-    const startingXI = squad.squad_players?.filter(p => p.slot_id?.startsWith('starting-')).slice(0, 11) || [];
-
-    if (startingXI.length === 0) {
-        return <Users className="h-16 w-16 text-muted-foreground" />;
+    if (!formation || !squad.squad_players || squad.squad_players.length === 0) {
+        return (
+            <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                <Users className="h-12 w-12" />
+                <p className="mt-2 text-sm">Empty Squad</p>
+            </div>
+        );
     }
 
+    const startingXI = formation.positions.map(pos => {
+        const playerSlot = squad.squad_players.find(sp => sp.slot_id === pos.id);
+        return { ...pos, player: playerSlot?.players };
+    });
+
     return (
-        <div className="grid grid-cols-4 gap-2 p-4">
-            {startingXI.map((playerSlot) => (
-                <div 
-                    key={playerSlot.id} 
-                    className="w-8 h-8 rounded-full border-2 border-white/20"
-                    style={{ backgroundColor: getCardColor(playerSlot.players.card_type) }}
-                    title={playerSlot.players.name}
-                />
+        <div className="w-full h-full bg-cover bg-center rounded-lg relative" style={{ backgroundImage: "url('/pitch-horizontal.svg')" }}>
+            {startingXI.map(({ id, x, y, position, player }) => (
+                <div
+                    key={id}
+                    className="absolute transform -translate-x-1/2 -translate-y-1/2"
+                    style={{ top: `${y}%`, left: `${x}%`, width: 'calc(100% / 6)' }}
+                >
+                    {player ? (
+                        <div className="relative group">
+                            <div className={cn("aspect-[3/4] rounded-md flex flex-col items-center justify-center text-xs font-bold shadow-lg border-2", player.is_evolution && "border-teal-400")} style={getCardStyle(player)}>
+                                <span className="text-base font-black">{player.rating}</span>
+                                <span className="text-xs -mt-1">{position}</span>
+                            </div>
+                            <p className="text-white text-[10px] font-semibold text-center truncate bg-black/50 rounded-b-md px-1 absolute bottom-0 w-full">{player.name.split(' ').pop()}</p>
+                        </div>
+                    ) : (
+                        <div className="aspect-[3/4] rounded-md flex flex-col items-center justify-center bg-black/40 border-2 border-dashed border-white/20">
+                            <span className="text-white text-[10px] font-bold">{position}</span>
+                        </div>
+                    )}
+                </div>
             ))}
         </div>
     );
@@ -90,7 +122,7 @@ const Squads = () => {
 
   const handleSetDefault = async (squadId: string) => {
     const currentDefault = squads.find(s => s.is_default);
-    if (currentDefault) {
+    if (currentDefault && currentDefault.id !== squadId) {
       await updateSquad(currentDefault.id, { is_default: false });
     }
     await updateSquad(squadId, { is_default: true });
@@ -98,7 +130,7 @@ const Squads = () => {
   };
 
   if (loading) {
-      return <div>Loading your squads...</div>;
+      return <div className="flex items-center justify-center h-64">Loading your squads...</div>;
   }
 
   if (isBuilding) {
@@ -113,26 +145,26 @@ const Squads = () => {
 
   return (
     <div className="animate-fade-in">
-      <header className="flex items-center justify-between mb-8">
+      <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
         <div>
             <h1 className="text-4xl font-bold tracking-tighter" style={{color: currentTheme.colors.primary}}>My Squads</h1>
             <p className="text-muted-foreground mt-1">Manage your squads for different game versions.</p>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 rounded-full p-1" style={{backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border, borderWidth: 1}}>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto">
+          <div className="flex items-center gap-2 rounded-full p-1 w-full sm:w-auto" style={{backgroundColor: currentTheme.colors.card, borderColor: currentTheme.colors.border, borderWidth: 1}}>
             {['FC25', 'FC26'].map(version => (
               <Button
                 key={version}
                 size="sm"
                 onClick={() => setGameVersion(version as 'FC25' | 'FC26')}
-                className={`rounded-full transition-all duration-300 ${gameVersion === version ? 'text-white' : 'text-muted-foreground'}`}
+                className={`rounded-full transition-all duration-300 flex-1 ${gameVersion === version ? 'text-white' : 'text-muted-foreground'}`}
                 style={{backgroundColor: gameVersion === version ? currentTheme.colors.primary : 'transparent'}}
               >
                 {version}
               </Button>
             ))}
           </div>
-          <Button onClick={handleAddNewSquad} className="modern-button-primary">
+          <Button onClick={handleAddNewSquad} className="modern-button-primary w-full sm:w-auto">
             <Plus className="h-4 w-4 mr-2" />
             Create New Squad
           </Button>
@@ -140,35 +172,34 @@ const Squads = () => {
       </header>
       
       {squads.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {squads.map((squad) => (
             <div key={squad.id}>
               <Card
-                style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: squad.is_default ? currentTheme.colors.primary : currentTheme.colors.border, '--tw-ring-color': currentTheme.colors.primary }}
-                className={`rounded-3xl shadow-depth-lg border-2 group transition-all duration-300 ${squad.is_default ? 'ring-2 ring-offset-2 ring-offset-background' : ''}`}
+                style={{ backgroundColor: currentTheme.colors.card, borderColor: squad.is_default ? currentTheme.colors.primary : currentTheme.colors.border, '--tw-ring-color': currentTheme.colors.primary }}
+                className={`rounded-3xl shadow-lg border group transition-all duration-300 ${squad.is_default ? 'ring-2 ring-offset-2 ring-offset-background' : ''}`}
               >
                 <CardHeader className="pb-4">
                   <div className="flex items-start justify-between">
                     <div>
-                      <CardTitle className="text-2xl font-bold tracking-tight" style={{color: currentTheme.colors.heading}}>{squad.name}</CardTitle>
-                      <p className="text-sm" style={{color: currentTheme.colors.textSecondary}}>{squad.formation}</p>
+                      <CardTitle className="text-2xl font-bold tracking-tight" style={{color: currentTheme.colors.foreground}}>{squad.name}</CardTitle>
+                      <p className="text-sm" style={{color: currentTheme.colors.mutedForeground}}>{squad.formation}</p>
                     </div>
                     {squad.is_default && (
-                      <div className="flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-full" style={{backgroundColor: currentTheme.colors.primary, color: currentTheme.colors.primaryContrast}}>
+                      <div className="flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-full" style={{backgroundColor: currentTheme.colors.primary, color: currentTheme.colors.primaryForeground}}>
                         <Shield size={14} />Default
                       </div>
                     )}
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  <div className="aspect-video rounded-xl mb-4 overflow-hidden relative flex items-center justify-center" style={{backgroundColor: currentTheme.colors.background}}>
+                  <div className="aspect-video rounded-xl mb-4 overflow-hidden relative flex items-center justify-center border" style={{backgroundColor: 'rgba(0,0,0,0.2)', borderColor: currentTheme.colors.border}}>
                     <SquadVisual squad={squad} cardTypes={cardTypes} />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
                   </div>
                   <div className="grid grid-cols-3 gap-2 text-center text-sm">
-                    <div><p className="font-bold text-lg" style={{color: currentTheme.colors.text}}>{squad.games_played || 0}</p><p style={{color: currentTheme.colors.textSecondary}}>Played</p></div>
-                    <div><p className="font-bold text-lg" style={{color: 'hsl(var(--primary-green))'}}>{squad.wins || 0}</p><p style={{color: currentTheme.colors.textSecondary}}>Wins</p></div>
-                    <div><p className="font-bold text-lg" style={{color: 'hsl(var(--primary-red))'}}>{squad.losses || 0}</p><p style={{color: currentTheme.colors.textSecondary}}>Losses</p></div>
+                    <div><p className="font-bold text-lg" style={{color: currentTheme.colors.foreground}}>{squad.games_played || 0}</p><p style={{color: currentTheme.colors.mutedForeground}}>Played</p></div>
+                    <div><p className="font-bold text-lg" style={{color: 'hsl(var(--primary-green))'}}>{squad.wins || 0}</p><p style={{color: currentTheme.colors.mutedForeground}}>Wins</p></div>
+                    <div><p className="font-bold text-lg" style={{color: 'hsl(var(--primary-red))'}}>{squad.losses || 0}</p><p style={{color: currentTheme.colors.mutedForeground}}>Losses</p></div>
                   </div>
                 </CardContent>
                 <CardFooter className="flex justify-between p-4 bg-black/20 rounded-b-3xl">
@@ -194,10 +225,10 @@ const Squads = () => {
           ))}
         </div>
       ) : (
-        <div className="text-center py-16 rounded-xl" style={{backgroundColor: currentTheme.colors.cardBg}}>
-          <Users className="mx-auto h-12 w-12" style={{color: currentTheme.colors.textSecondary}} />
-          <h3 className="mt-4 text-lg font-semibold" style={{color: currentTheme.colors.heading}}>No Squads Yet for {gameVersion}</h3>
-          <p className="mt-1 text-sm" style={{color: currentTheme.colors.textSecondary}}>Get started by creating a new squad.</p>
+        <div className="text-center py-16 rounded-xl" style={{backgroundColor: currentTheme.colors.card}}>
+          <Users className="mx-auto h-12 w-12" style={{color: currentTheme.colors.mutedForeground}} />
+          <h3 className="mt-4 text-lg font-semibold" style={{color: currentTheme.colors.foreground}}>No Squads Yet for {gameVersion}</h3>
+          <p className="mt-1 text-sm" style={{color: currentTheme.colors.mutedForeground}}>Get started by creating a new squad.</p>
           <div className="mt-6"><Button onClick={handleAddNewSquad} className="modern-button-primary"><Plus className="h-4 w-4 mr-2" />Create First Squad</Button></div>
         </div>
       )}
