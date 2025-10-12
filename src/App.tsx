@@ -54,16 +54,10 @@ function App() {
   const [isNavExpanded, setIsNavExpanded] = useState(false);
 
   const Layout = ({ children }: { children: React.ReactNode }) => {
-    const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
-    useEffect(() => {
-      const checkMobile = () => setIsMobile(window.innerWidth < 1024);
-      window.addEventListener('resize', checkMobile);
-      return () => window.removeEventListener('resize', checkMobile);
-    }, []);
-
     return (
-      // THE FIX: The theme's background is now applied here.
-      // This div acts as the solid page background that sits on top of the animation.
+      // THE FIX: This container now gets the solid background color.
+      // Because the whole #root has a stacking context, this div sits
+      // on top of the animated background, creating the parallax effect.
       <div className="flex min-h-screen bg-background">
         <Navigation isExpanded={isNavExpanded} setIsExpanded={setIsNavExpanded} />
         <div className={cn(
