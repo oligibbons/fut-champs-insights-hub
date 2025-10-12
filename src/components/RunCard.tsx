@@ -1,38 +1,37 @@
-import { FutChampsWeek } from '@/types/futChampions';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Trash2, BarChart2 } from 'lucide-react';
+import { ArrowRight, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { FutChampionRun } from '@/types/futChampions';
 
 interface RunCardProps {
-  run: FutChampsWeek;
-  onSelectRun: (runId: string) => void;
-  onDeleteRun?: (runId: string) => void; // Optional for completed runs
+  run: FutChampionRun;
 }
 
-const RunCard = ({ run, onSelectRun, onDeleteRun }: RunCardProps) => {
+const RunCard: React.FC<RunCardProps> = ({ run }) => {
+  const wins = run.games.filter(game => game.result === 'win').length;
+  const losses = run.games.filter(game => game.result === 'loss').length;
+  const gamesPlayed = run.games.length;
+  const winRate = gamesPlayed > 0 ? (wins / gamesPlayed) * 100 : 0;
+
+  const getTrendIcon = () => {
+    if (winRate > 50) return <TrendingUp className="h-5 w-5 text-green-500" />;
+    if (winRate < 50) return <TrendingDown className="h-5 w-5 text-red-500" />;
+    return <Minus className="h-5 w-5 text-gray-500" />;
+  };
+
   return (
-    <Card className="flex flex-col justify-between hover:border-primary/50 transition-all">
-      <CardHeader>
-        <CardTitle>{run.custom_name || `Week ${run.week_number}`}</CardTitle>
-        <p className="text-sm text-muted-foreground">{new Date(run.start_date).toLocaleDateString()}</p>
+    <Card className="shimmer-effect glow-effect">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-lg font-semibold">{run.name || `Run ${run.id}`}</CardTitle>
+        {getTrendIcon()}
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex justify-between items-center text-2xl font-bold">
-          <span>{run.total_wins}W - {run.total_losses}L</span>
-          <span className="text-sm font-normal text-muted-foreground">
-            {(((run.total_wins || 0) / ((run.total_wins || 0) + (run.total_losses || 0) || 1)) * 100).toFixed(0)}%
-          </span>
-        </div>
-        <div className="flex gap-2">
-            <Button size="sm" className="w-full" onClick={() => onSelectRun(run.id)}>
-                <BarChart2 className="mr-2 h-4 w-4" /> View Details
-            </Button>
-            {onDeleteRun && (
-                <Button size="sm" variant="outline" onClick={() => onDeleteRun(run.id)}>
-                    <Trash2 className="h-4 w-4" />
-                </Button>
-            )}
-        </div>
+      <CardContent>
+        <div className="text-2xl font-bold">{wins} - {losses}</div>
+        <p className="text-xs text-muted-foreground">{gamesPlayed} Games Played</p>
+        <Button variant="outline" size="sm" className="mt-4">
+          View Details <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
       </CardContent>
     </Card>
   );
