@@ -23,7 +23,7 @@ import { Button } from './components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './components/ui/avatar';
 import { ArrowRight } from 'lucide-react';
 import { cn } from './lib/utils';
-import AnimatedBackground from './components/ui/AnimatedBackground'; // Import the new animated background
+import AnimatedBackground from './components/ui/AnimatedBackground'; // 1. Imported the component
 
 const Header = () => {
   const { user } = useAuth();
@@ -62,9 +62,7 @@ function App() {
     }, []);
 
     return (
-      // Added 'bg-transparent' here to allow the fixed AnimatedBackground to be visible.
-      // This creates the parallax scrolling effect for the content within <main>.
-      <div className="flex min-h-screen bg-transparent">
+      <div className="flex min-h-screen">
         <Navigation isExpanded={isNavExpanded} setIsExpanded={setIsNavExpanded} />
         <div className={cn(
           "flex-1 flex flex-col transition-all duration-300 ease-in-out",
@@ -83,8 +81,8 @@ function App() {
 
   return (
     <ThemeProvider>
-      {/* Replaced the old background with the new animated one */}
-      <AnimatedBackground />
+      {/* 2. Replaced AuroraBackground with the functioning AnimatedBackground */}
+      <AnimatedBackground /> 
       <AuthProvider>
         <GameVersionProvider>
           <DataSyncProvider>
