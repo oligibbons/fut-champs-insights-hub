@@ -71,15 +71,24 @@
 }
 
 @layer base {
+  body {
+    @apply bg-transparent text-foreground;
+  }
   * {
     @apply border-border;
   }
-  body {
-    /* The body is now transparent to allow the fixed background canvas to be visible.
-       The main background color is applied to the content layout in App.tsx instead. */
-    @apply bg-transparent text-foreground;
-  }
 }
+
+/* THIS IS THE FIX: By giving the root div a position and a z-index, 
+  it creates a "stacking context". Any child with a negative z-index 
+  (like our background canvas) will now be anchored to this context, 
+  preventing it from disappearing behind the main <html> element.
+*/
+#root {
+  position: relative;
+  z-index: 0;
+}
+
 
 .modern-button-primary {
     @apply bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all duration-300 transform hover:scale-105;
@@ -88,8 +97,6 @@
 .modern-button-secondary {
     @apply bg-secondary text-secondary-foreground shadow-md hover:bg-secondary/80 transition-all duration-300 transform hover:scale-105;
 }
-
-/* --- REVISED STYLES --- */
 
 .shimmer-effect {
     position: relative;
