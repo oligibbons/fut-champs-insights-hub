@@ -1,30 +1,45 @@
-import { ReactNode } from 'react';
-import { useDataSync } from '@/hooks/useDataSync.tsx'; // Ensure path ends with .tsx
+import React from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { GripVertical } from 'lucide-react';
+import { useMobile } from '@/hooks/use-mobile';
+import { useLongPress } from '@/lib/utils';
 
 interface DashboardSectionProps {
-  settingKey: string;
-  settingsSection?: 'dashboardSettings' | 'currentWeekSettings';
-  children: ReactNode;
+  id: string;
+  title: string;
+  children: React.ReactNode;
 }
 
-const DashboardSection = ({ 
-  settingKey, 
-  settingsSection = 'dashboardSettings', 
-  children 
-}: DashboardSectionProps) => {
-  const { settings } = useDataSync();
-  
-  const sectionSettings = settings[settingsSection as keyof typeof settings] || {};
-  const isEnabled = sectionSettings[settingKey as keyof typeof sectionSettings];
-  
-  if (isEnabled === false) {
-    return null;
-  }
+const DashboardSection: React.FC<DashboardSectionProps> = ({ id, title, children }) => {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
+  const isMobile = useMobile();
+
+  const longPressProps = useLongPress(() => {});
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  const mobileListeners = {
+    ...listeners,
+    ...longPressProps,
+  };
   
   return (
-    <div className="p-6 bg-card/50 backdrop-blur-xl border border-white/10 rounded-2xl shadow-lg">
-      {children}
-    </div>
+    <Card ref={setNodeRef} style={style} className="overflow-hidden relative shimmer-effect glow-effect">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-lg font-semibold">{title}</CardTitle>
+        <div {...attributes} {...(isMobile ? mobileListeners : listeners)} className="cursor-grab p-2">
+          <GripVertical className="h-5 w-5 text-muted-foreground" />
+        </div>
+      </CardHeader>
+      <CardContent>
+        {children}
+      </CardContent>
+    </Card>
   );
 };
 
