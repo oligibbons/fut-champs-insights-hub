@@ -6,64 +6,49 @@
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
-
+    /* ... all your other color variables ... */
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
-
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-
     --primary: 222.2 47.4% 11.2%;
     --primary-foreground: 210 40% 98%;
     --primary-green: 142.1 76.2% 36.3%;
     --primary-red: 346.8 77.2% 49.8%;
-
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
-
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-
     --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
-
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
-
     --radius: 0.5rem;
   }
 
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
-
+    /* ... all your other dark mode color variables ... */
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
-
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-
     --primary: 210 40% 98%;
     --primary-foreground: 222.2 47.4% 11.2%;
     --primary-green: 142.1 76.2% 36.3%;
     --primary-red: 346.8 77.2% 49.8%;
-
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
-
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
-
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
@@ -71,9 +56,9 @@
 }
 
 @layer base {
-  /* THE FIX: Ensure html and body are transparent */
+  /* THE FIX PART 1: Make the entire page transparent by default */
   html, body {
-    background-color: transparent;
+    background: transparent !important;
   }
   body {
     @apply text-foreground;
@@ -81,6 +66,14 @@
   * {
     @apply border-border;
   }
+}
+
+/* THE FIX PART 2: Create a "stacking context" for the app.
+   This makes the #root div an anchor for the z-index of its children,
+   ensuring the animated background sits correctly behind the content.
+*/
+#root {
+  isolation: isolate;
 }
 
 .modern-button-primary {
@@ -91,11 +84,11 @@
     @apply bg-secondary text-secondary-foreground shadow-md hover:bg-secondary/80 transition-all duration-300 transform hover:scale-105;
 }
 
+/* Shimmer and Glow effects remain unchanged */
 .shimmer-effect {
     position: relative;
     overflow: hidden;
 }
-
 .shimmer-effect::before {
     content: '';
     position: absolute;
@@ -103,41 +96,25 @@
     left: -150%;
     width: 50%;
     height: 100%;
-    background: linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0) 0%,
-      rgba(255, 255, 255, 0.07) 50%,
-      rgba(255, 255, 255, 0) 100%
-    );
+    background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.07) 50%, rgba(255,255,255,0) 100%);
     transform: skewX(-25deg);
     transition: left 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     pointer-events: none;
 }
-
 .shimmer-effect:hover::before {
     left: 150%;
 }
-
 .glow-effect {
     transition: box-shadow 0.4s ease-in-out;
 }
-
 .glow-effect:hover {
     box-shadow: 0 0 18px hsl(var(--primary) / 0.25);
 }
 
-
 .animate-fade-in {
     animation: fadeIn 0.5s ease-in-out;
 }
-
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
