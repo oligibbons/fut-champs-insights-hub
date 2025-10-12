@@ -23,7 +23,7 @@ import { Button } from './components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './components/ui/avatar';
 import { ArrowRight } from 'lucide-react';
 import { cn } from './lib/utils';
-import AnimatedBackground from './components/ui/AnimatedBackground'; // 1. Imported the component
+import AnimatedBackground from './components/ui/AnimatedBackground';
 
 const Header = () => {
   const { user } = useAuth();
@@ -64,11 +64,13 @@ function App() {
     return (
       <div className="flex min-h-screen">
         <Navigation isExpanded={isNavExpanded} setIsExpanded={setIsNavExpanded} />
+        {/* With the body transparent, we now apply the main background color here. */}
         <div className={cn(
-          "flex-1 flex flex-col transition-all duration-300 ease-in-out",
+          "flex-1 flex flex-col transition-all duration-300 ease-in-out bg-background",
           isNavExpanded ? "lg:pl-[16rem]" : "lg:pl-[5.5rem]"
         )}>
           <Header />
+          {/* The <main> tag is transparent, showing this div's background, creating the parallax effect */}
           <main className="flex-1 overflow-y-auto p-6 lg:p-8 pt-24">
             <div className="w-full max-w-7xl mx-auto">
               {children}
@@ -81,8 +83,7 @@ function App() {
 
   return (
     <ThemeProvider>
-      {/* 2. Replaced AuroraBackground with the functioning AnimatedBackground */}
-      <AnimatedBackground /> 
+      <AnimatedBackground />
       <AuthProvider>
         <GameVersionProvider>
           <DataSyncProvider>
