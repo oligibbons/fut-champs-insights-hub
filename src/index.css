@@ -74,8 +74,11 @@
   * {
     @apply border-border;
   }
+  /* This is the key change. We now use a gradient to allow for transparency while adding depth. */
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
+    background-color: hsl(var(--background));
+    background-image: radial-gradient(ellipse at bottom, hsl(var(--background)), hsl(var(--background) / 0.9));
   }
 }
 
@@ -87,50 +90,40 @@
     @apply bg-secondary text-secondary-foreground shadow-md hover:bg-secondary/80 transition-all duration-300 transform hover:scale-105;
 }
 
-/* --- REVISED STYLES --- */
-
-/* The .shimmer-effect class itself handles containment of the pseudo-element */
 .shimmer-effect {
     position: relative;
-    overflow: hidden; /* This is crucial to clip the effect to the element's bounds */
+    overflow: hidden;
 }
 
-/* The ::before pseudo-element creates the subtle, angled wipe effect on hover */
 .shimmer-effect::before {
     content: '';
     position: absolute;
     top: 0;
-    left: -150%; /* Start off-screen to the left */
-    width: 50%;   /* A narrower, more subtle shine */
+    left: -150%;
+    width: 50%;
     height: 100%;
-    
-    /* A very subtle white gradient. Reduced opacity significantly */
     background: linear-gradient(
       90deg, 
       rgba(255, 255, 255, 0) 0%, 
       rgba(255, 255, 255, 0.07) 50%, 
       rgba(255, 255, 255, 0) 100%
     );
-    
-    transform: skewX(-25deg); /* Angle the shine for a more dynamic look */
-    transition: left 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94); /* Smooth, elegant transition */
-    pointer-events: none; /* Ensure the pseudo-element doesn't interfere with clicks */
+    transform: skewX(-25deg);
+    transition: left 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    pointer-events: none;
 }
 
 .shimmer-effect:hover::before {
-    left: 150%; /* Move off-screen to the right on hover */
+    left: 150%;
 }
 
-/* The glow effect provides a subtle lift on hover */
 .glow-effect {
     transition: box-shadow 0.4s ease-in-out;
 }
 
 .glow-effect:hover {
-    /* A more subtle shadow using the primary color variable with transparency */
     box-shadow: 0 0 18px hsl(var(--primary) / 0.25);
 }
-
 
 .animate-fade-in {
     animation: fadeIn 0.5s ease-in-out;
