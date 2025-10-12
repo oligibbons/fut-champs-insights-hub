@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import { cn } from '@/lib/utils';
 
 interface StatCardProps {
   title: string;
@@ -11,7 +12,11 @@ interface StatCardProps {
 
 const StatCard = ({ title, value, icon, trend, subtitle, className = '' }: StatCardProps) => {
   return (
-    <div className={`p-4 bg-card/50 backdrop-blur-xl border border-white/10 rounded-2xl shadow-lg transition-all hover:border-white/20 hover:bg-card/60 ${className}`}>
+    <div className={cn(
+      "p-4 bg-card/50 backdrop-blur-xl border border-white/10 rounded-2xl shadow-lg transition-all hover:border-white/20 hover:bg-card/60",
+      "shimmer-effect glow-effect",
+      className
+    )}>
       <div className="flex items-start justify-between">
         <div className="space-y-1">
           <p className="text-sm text-muted-foreground font-medium">{title}</p>
@@ -30,8 +35,8 @@ const StatCard = ({ title, value, icon, trend, subtitle, className = '' }: StatC
       {trend !== undefined && (
         <div className="mt-4 flex items-center">
           <span className={`text-xs font-medium ${
-            trend > 0 ? 'text-green-500' : trend < 0 ? 'text-red-500' : 'text-muted-foreground'
-          }`}>
+              trend > 0 ? 'text-green-500' : trend < 0 ? 'text-red-500' : 'text-muted-foreground'
+            }`}>
             {trend > 0 ? '+' : ''}{trend}%
           </span>
           <span className="text-xs text-muted-foreground/80 ml-1">vs last week</span>
