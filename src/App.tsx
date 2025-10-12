@@ -62,9 +62,10 @@ function App() {
     }, []);
 
     return (
-      <div className="flex min-h-screen">
+      // THE FIX: The theme's background is now applied here.
+      // This div acts as the solid page background that sits on top of the animation.
+      <div className="flex min-h-screen bg-background">
         <Navigation isExpanded={isNavExpanded} setIsExpanded={setIsNavExpanded} />
-        {/* The solid background has been REMOVED from this div to make it transparent */}
         <div className={cn(
           "flex-1 flex flex-col transition-all duration-300 ease-in-out",
           isNavExpanded ? "lg:pl-[16rem]" : "lg:pl-[5.5rem]"
