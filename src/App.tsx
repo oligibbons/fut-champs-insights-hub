@@ -64,13 +64,12 @@ function App() {
     return (
       <div className="flex min-h-screen">
         <Navigation isExpanded={isNavExpanded} setIsExpanded={setIsNavExpanded} />
-        {/* With the body transparent, we now apply the main background color here. */}
+        {/* The solid background has been REMOVED from this div to make it transparent */}
         <div className={cn(
-          "flex-1 flex flex-col transition-all duration-300 ease-in-out bg-background",
+          "flex-1 flex flex-col transition-all duration-300 ease-in-out",
           isNavExpanded ? "lg:pl-[16rem]" : "lg:pl-[5.5rem]"
         )}>
           <Header />
-          {/* The <main> tag is transparent, showing this div's background, creating the parallax effect */}
           <main className="flex-1 overflow-y-auto p-6 lg:p-8 pt-24">
             <div className="w-full max-w-7xl mx-auto">
               {children}
