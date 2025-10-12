@@ -170,6 +170,9 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     root.classList.remove('light', 'dark');
     root.classList.add(theme.mode);
     
+    // THE FIX: We prevent the 'background' color from being applied to the root <html> element
+    root.style.backgroundColor = ''; // Ensure no direct background color is set
+
     Object.entries(theme.colors).forEach(([key, value]) => {
       const cssVarName = `--${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
       const parsedValue = key.endsWith('Rgb') ? value : parseHsl(value);
@@ -203,7 +206,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
 export const useTheme = () => {
   const context = useContext(ThemeContext);
   if (context === undefined) {
-    throw new Error('useTheme must be used within a ThemeProvider');
+    throw new Error('useTheme must be be used within a ThemeProvider');
   }
   return context;
 };
