@@ -28,7 +28,7 @@ import {
 import { useSquadData } from '@/hooks/useSquadData';
 import PlayerPerformanceInput from './PlayerPerformanceInput';
 import { Card, CardContent } from '@/components/ui/card';
-import { Pen, Players, Save, Trophy, X } from 'lucide-react';
+import { Pen, Users, Save, Trophy, X } from 'lucide-react'; // <-- FIX 1: 'Players' changed to 'Users'
 import { useTheme } from '@/hooks/useTheme';
 import { Checkbox } from './ui/checkbox';
 import PenaltyShootoutInput from './PenaltyShootoutInput';
@@ -90,8 +90,6 @@ const GameRecordForm = ({
     game?.overtime_result === 'win_pen' || game?.overtime_result === 'loss_pen',
   );
 
-  // --- THIS IS THE FIX ---
-  // We make defaultValues depend on `activeSquadPlayers` as well as `game`.
   const defaultValues = useMemo(() => {
     const defaultPerformances =
       activeSquadPlayers.length > 0
@@ -116,7 +114,6 @@ const GameRecordForm = ({
       playerPerformances: game?.player_performances ?? defaultPerformances,
     };
   }, [game, activeSquadPlayers]);
-  // --- END OF FIX ---
 
   const form = useForm<GameFormData>({
     resolver: zodResolver(gameFormSchema),
@@ -135,8 +132,6 @@ const GameRecordForm = ({
     name: 'playerPerformances',
   });
 
-  // This effect now correctly resets the form when the defaults change
-  // (i.e., when players load OR when the game prop changes)
   useEffect(() => {
     reset(defaultValues);
     setShowPenalties(
@@ -234,7 +229,7 @@ const GameRecordForm = ({
                   <Trophy className="mr-2 h-4 w-4" /> Game
                 </TabsTrigger>
                 <TabsTrigger value="players">
-                  <Players className="mr-2 h-4 w-4" /> Players
+                  <Users className="mr-2 h-4 w-4" /> Players {/* <-- FIX 2: '<Players>' changed to '<Users>' */}
                 </TabsTrigger>
               </TabsList>
 
