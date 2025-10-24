@@ -9,7 +9,8 @@ import AnalyticsTooltip from '@/components/AnalyticsTooltip';
 import { useState, useEffect, useRef } from 'react';
 
 const AnalyticsDashboard = () => {
-  // --- FIX IS ON THIS LINE ---
+  // --- THIS IS THE FIX ---
+  // It provides a default empty array `[]` so `weeks.filter` doesn't crash
   const { weeks = [], activeAccount } = useAccountData();
   // --- END FIX ---
 
