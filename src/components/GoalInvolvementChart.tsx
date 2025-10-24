@@ -1,160 +1,124 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { useSupabaseData } from '@/hooks/useSupabaseData';
-import { PieChart, Loader2 } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Label } from 'recharts';
+import { useTheme } from '@/hooks/useTheme';
+// --- FIX: Import useAccountData and Skeleton ---
+import { useAccountData } from '@/hooks/useAccountData';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Award } from 'lucide-react'; // Changed icon
 
-interface GoalInvolvement {
-  name: string;
-  goals: number;
-  assists: number;
-  total: number;
-  percentage: number;
-  color: string;
-}
-
-const DonutSegment = ({ percentage, index, totalSegments, color, onHover, player }: { percentage: number, index: number, totalSegments: number, color: string, onHover: (player: GoalInvolvement | null) => void, player: GoalInvolvement }) => {
-  const radius = 80;
-  const circumference = 2 * Math.PI * radius;
-  const strokeWidth = 25;
-
-  const offsetPercentage = useMemo(() => {
-    let total = 0;
-    for (let i = 0; i < index; i++) {
-      total += (goalInvolvements[i]?.percentage || 0);
-    }
-    return total;
-  }, [index]);
-
-  const strokeDasharray = `${(percentage / 100) * circumference} ${circumference}`;
-  const strokeDashoffset = -((offsetPercentage / 100) * circumference);
-
-  return (
-    <circle
-      cx="100"
-      cy="100"
-      r={radius}
-      fill="transparent"
-      stroke={color}
-      strokeWidth={strokeWidth}
-      strokeDasharray={strokeDasharray}
-      strokeDashoffset={strokeDashoffset}
-      transform="rotate(-90 100 100)"
-      className="transition-all duration-300 ease-in-out cursor-pointer hover:opacity-80"
-      onMouseEnter={() => onHover(player)}
-      onMouseLeave={() => onHover(null)}
-    />
-  );
-};
-
-// Main Component
 const GoalInvolvementChart = () => {
-  const { weeklyData, loading } = useSupabaseData();
-  const [hoveredPlayer, setHoveredPlayer] = useState<GoalInvolvement | null>(null);
+    const { currentTheme } = useTheme();
+    // --- FIX: Add data hook and loading state ---
+    const { weeklyData = [], loading } = useAccountData() || {};
 
-  const goalInvolvements = useMemo(() => {
-    const allGames = weeklyData.flatMap(week => week.games);
-    const playerInvolvements = new Map<string, { goals: number; assists: number }>();
-    
-    allGames.forEach(game => {
-      game.playerStats?.forEach(player => {
-        if (player.goals > 0 || player.assists > 0) {
-          const stats = playerInvolvements.get(player.name) || { goals: 0, assists: 0 };
-          stats.goals += player.goals;
-          stats.assists += player.assists;
-          playerInvolvements.set(player.name, stats);
-        }
-      });
-    });
+    const chartData = useMemo(() => {
+        // This logic is safe with guarded weeklyData
+        const playerStats: { [name: string]: { name: string; goals: number; assists: number; games: number } } = {};
 
-    const totalInvolvements = Array.from(playerInvolvements.values()).reduce((sum, { goals, assists }) => sum + goals + assists, 0);
+        weeklyData.forEach(week => {
+            (week.games || []).forEach(game => {
+                (game.playerStats || []).forEach(player => {
+                    if (!playerStats[player.name]) {
+                        playerStats[player.name] = { name: player.name, goals: 0, assists: 0, games: 0 };
+                    }
+                    playerStats[player.name].goals += player.goals || 0;
+                    playerStats[player.name].assists += player.assists || 0;
+                    playerStats[player.name].games += 1;
+                });
+            });
+        });
 
-    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'];
+        return Object.values(playerStats)
+            .filter(player => player.games >= 5) // Minimum 5 games
+            .map(player => ({
+                name: player.name,
+                goals: player.goals,
+                assists: player.assists,
+                involvement: player.goals + player.assists,
+            }))
+            .sort((a, b) => b.involvement - a.involvement) // Sort by total involvement
+            .slice(0, 7); // Show top 7
+            
+    }, [weeklyData]);
 
-    return Array.from(playerInvolvements.entries())
-      .map(([name, { goals, assists }], index) => ({
-        name,
-        goals,
-        assists,
-        total: goals + assists,
-        percentage: totalInvolvements > 0 ? ( (goals + assists) / totalInvolvements) * 100 : 0,
-        color: colors[index % colors.length],
-      }))
-      .sort((a, b) => b.total - a.total);
-  }, [weeklyData]);
+    // --- FIX: Add loading state ---
+    if (loading) {
+        return (
+            <Card 
+                style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}
+                className="h-[400px]" // Approx height
+            >
+                <CardHeader>
+                    <Skeleton className="h-6 w-48" />
+                </CardHeader>
+                <CardContent>
+                    <Skeleton className="h-64 w-full" />
+                </CardContent>
+            </Card>
+        );
+    }
 
-  const totalInvolvements = goalInvolvements.reduce((sum, p) => sum + p.total, 0);
-  const displayPlayer = hoveredPlayer || goalInvolvements[0];
+    if (chartData.length === 0) {
+        return (
+            <Card style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2" style={{ color: currentTheme.colors.text }}>
+                         <Award className="h-5 w-5" style={{ color: currentTheme.colors.primary }} />
+                         Top Goal Contributors
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="text-center py-12" style={{ color: currentTheme.colors.muted }}>
+                    <p>Play more games (min 5 per player) to see top contributors.</p>
+                </CardContent>
+            </Card>
+        );
+    }
 
-  return (
-    <Card className="static-element">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <PieChart className="h-5 w-5 text-primary" />
-          Goal Involvement
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {loading ? (
-          <div className="flex items-center justify-center h-[300px]"><Loader2 className="h-8 w-8 animate-spin" /></div>
-        ) : goalInvolvements.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-            <div className="relative w-[200px] h-[200px] mx-auto">
-              <svg viewBox="0 0 200 200">
-                {goalInvolvements.map((player, index) => (
-                  <DonutSegment
-                    key={player.name}
-                    player={player}
-                    percentage={player.percentage}
-                    index={index}
-                    totalSegments={goalInvolvements.length}
-                    color={player.color}
-                    onHover={setHoveredPlayer}
-                  />
-                ))}
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                 {displayPlayer ? (
-                    <>
-                        <span className="text-xs font-semibold truncate max-w-[80px]">{displayPlayer.name}</span>
-                        <span className="text-3xl font-bold">{displayPlayer.percentage.toFixed(1)}%</span>
-                        <span className="text-xs text-muted-foreground">{displayPlayer.total} G/A</span>
-                    </>
-                 ) : (
-                    <>
-                        <span className="text-3xl font-bold">{totalInvolvements}</span>
-                        <span className="text-xs text-muted-foreground">Total G/A</span>
-                    </>
-                 )}
-              </div>
-            </div>
-            <div className="space-y-2">
-              {goalInvolvements.slice(0, 5).map(player => (
-                <div key={player.name} className="flex items-center justify-between text-sm p-2 rounded-md hover:bg-secondary/50" onMouseEnter={() => setHoveredPlayer(player)} onMouseLeave={() => setHoveredPlayer(null)}>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: player.color }} />
-                    <span className="font-medium">{player.name}</span>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className="text-muted-foreground">{player.goals}G / {player.assists}A</span>
-                    <Badge variant="secondary">{player.percentage.toFixed(1)}%</Badge>
-                  </div>
+    return (
+        <Card style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2" style={{ color: currentTheme.colors.text }}>
+                    <Award className="h-5 w-5" style={{ color: currentTheme.colors.primary }} />
+                    Top Goal Contributors (G+A)
+                </CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="h-72 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke={currentTheme.colors.border} horizontal={false} />
+                            <XAxis type="number" stroke={currentTheme.colors.muted} fontSize={10} />
+                            <YAxis 
+                                type="category" 
+                                dataKey="name" 
+                                stroke={currentTheme.colors.muted} 
+                                fontSize={10} 
+                                width={60} // Give more space for names
+                                tickLine={false}
+                                axisLine={false}
+                            />
+                            <Tooltip 
+                                contentStyle={{
+                                    backgroundColor: currentTheme.colors.surface,
+                                    borderColor: currentTheme.colors.border,
+                                    borderRadius: '0.75rem',
+                                    color: currentTheme.colors.text,
+                                }}
+                                cursor={{ fill: `${currentTheme.colors.primary}1A`}}
+                            />
+                            <Bar dataKey="involvement" name="Goals + Assists" fill={currentTheme.colors.primary} radius={[0, 4, 4, 0]} barSize={20}>
+                                {/* You could add Cells here if you want different colors */}
+                            </Bar>
+                             {/* Optional: Stacked bar for G vs A */}
+                            {/* <Bar dataKey="goals" name="Goals" stackId="a" fill={currentTheme.colors.primary} /> */}
+                            {/* <Bar dataKey="assists" name="Assists" stackId="a" fill={currentTheme.colors.accent} radius={[0, 4, 4, 0]} /> */}
+                        </BarChart>
+                    </ResponsiveContainer>
                 </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="text-center py-12 text-muted-foreground">
-            <PieChart className="h-12 w-12 mx-auto mb-2 opacity-50" />
-            <p>No goal involvement data to display yet.</p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
+            </CardContent>
+        </Card>
+    );
 };
-
-// Need to export goalInvolvements for DonutSegment
-let goalInvolvements: GoalInvolvement[] = [];
 
 export default GoalInvolvementChart;
