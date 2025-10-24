@@ -3,8 +3,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import DashboardOverview from '@/components/DashboardOverview';
 import RecentRuns from '@/components/RecentRuns';
-import TopPerformers from '@/components/TopPerformers';
-import LowestRatedPlayers from '@/components/LowestRatedPlayers';
+// --- FIX: We no longer import these directly ---
+// import TopPerformers from '@/components/TopPerformers';
+// import LowestRatedPlayers from '@/components/LowestRatedPlayers';
 import ClubLegends from '@/components/ClubLegends';
 import { FUTTrackrRecords } from '@/components/FUTTrackrRecords';
 import DashboardSection from '@/components/DashboardSection';
@@ -12,6 +13,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LayoutGrid, Users, Trophy } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+// --- FIX: Import our new component ---
+import PlayerMovers from '@/components/PlayerMovers';
 
 interface DashboardItem {
     id: string;
@@ -22,19 +25,25 @@ interface DashboardItem {
 const componentsMap: Record<string, React.FC> = {
     overview: DashboardOverview,
     recentRuns: RecentRuns,
-    topPerformers: TopPerformers,
-    lowestRated: LowestRatedPlayers,
+    // --- FIX: Add the new component to the map ---
+    playerMovers: PlayerMovers,
     clubLegends: ClubLegends,
     records: FUTTrackrRecords,
+    // --- FIX: Remove the old components from the map ---
+    // topPerformers: TopPerformers, (No longer needed here)
+    // lowestRated: LowestRatedPlayers, (No longer needed here)
 };
 
 const defaultLayout: DashboardItem[] = [
     { id: 'overview', component: componentsMap.overview, order: 1 },
     { id: 'recentRuns', component: componentsMap.recentRuns, order: 2 },
-    { id: 'topPerformers', component: componentsMap.topPerformers, order: 3 },
-    { id: 'lowestRated', component: componentsMap.lowestRated, order: 4 },
-    { id: 'clubLegends', component: componentsMap.clubLegends, order: 5 },
-    { id: 'records', component: componentsMap.records, order: 6 },
+    // --- FIX: Add new component to default layout ---
+    { id: 'playerMovers', component: componentsMap.playerMovers, order: 3 },
+    { id: 'clubLegends', component: componentsMap.clubLegends, order: 4 },
+    { id: 'records', component: componentsMap.records, order: 5 },
+    // --- FIX: Remove old components from default layout ---
+    // { id: 'topPerformers', component: componentsMap.topPerformers, order: 3 },
+    // { id: 'lowestRated', component: componentsMap.lowestRated, order: 4 },
 ];
 
 const Dashboard = () => {
@@ -83,7 +92,8 @@ const Dashboard = () => {
                 // No saved layout, use the default
                 setLayout([...defaultLayout].sort((a, b) => a.order - b.order));
             }
-        } catch (err: any) {
+        } catch (err: any)
+        {
             toast({ title: "Error", description: `Failed to load dashboard layout: ${err.message}`, variant: "destructive" });
             setLayout([...defaultLayout].sort((a, b) => a.order - b.order));
         } finally {
@@ -91,27 +101,31 @@ const Dashboard = () => {
         }
     };
 
-    // Helper function to find and render a specific dashboard section
     const findAndRenderSection = (id: string) => {
         const item = layout.find(item => item.id === id);
         
         if (!item) {
-            // This case handles if a component is removed from the map 
-            // but still exists in a user's saved layout.
             return null; 
+        }
+        
+        // --- This logic now maps 'playerMovers' to the <PlayerMovers /> component ---
+        let title = item.id.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+        
+        // --- FIX: Give the new component a better title ---
+        if (id === 'playerMovers') {
+            title = 'Player Movers';
         }
 
         return (
             <DashboardSection 
               key={item.id} 
-              title={item.id.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+              title={title}
             >
                 <item.component />
             </DashboardSection>
         );
     };
 
-    // Loading skeleton for the new tabbed layout
     if (loading) {
         return (
             <div className="space-y-6">
@@ -126,7 +140,6 @@ const Dashboard = () => {
 
     return (
         <Tabs defaultValue="overview" className="space-y-6">
-            {/* STYLED TAB SWITCHER */}
             <TabsList className="glass-card rounded-2xl shadow-xl border-0 p-2 h-auto">
                 <TabsTrigger value="overview" className="rounded-xl flex-1 flex gap-2 items-center">
                     <LayoutGrid className="h-4 w-4" />
@@ -141,23 +154,18 @@ const Dashboard = () => {
                     Records
                 </TabsTrigger>
             </TabsList>
-
-            {/* TAB CONTENT */}
             
-            {/* Overview Tab */}
             <TabsContent value="overview" className="space-y-6">
                 {findAndRenderSection('overview')}
                 {findAndRenderSection('recentRuns')}
             </TabsContent>
 
-            {/* Player Hub Tab */}
             <TabsContent value="players" className="space-y-6">
-                {findAndRenderSection('topPerformers')}
-                {findAndRenderSection('lowestRated')}
+                {/* --- FIX: This single component now replaces the two old ones --- */}
+                {findAndRenderSection('playerMovers')}
                 {findAndRenderSection('clubLegends')}
             </TabsContent>
 
-            {/* Records Tab */}
             <TabsContent value="records" className="space-y-6">
                 {findAndRenderSection('records')}
             </TabsContent>
