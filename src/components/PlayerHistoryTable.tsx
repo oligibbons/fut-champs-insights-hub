@@ -36,7 +36,9 @@ interface PlayerStats {
 type SortField = 'name' | 'position' | 'totalGames' | 'totalGoals' | 'totalAssists' | 'averageRating' | 'gamesWon' | 'goalsPer90' | 'assistsPer90';
 type SortDirection = 'asc' | 'desc';
 
-const PlayerHistoryTable = ({ weeklyData }: PlayerHistoryTableProps) => {
+// --- FIX IS ON THIS LINE ---
+const PlayerHistoryTable = ({ weeklyData = [] }: PlayerHistoryTableProps) => {
+// --- END FIX ---
   const { currentTheme } = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterPosition, setFilterPosition] = useState<string>('all');
