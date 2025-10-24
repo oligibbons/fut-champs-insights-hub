@@ -20,12 +20,12 @@ import { cn } from './lib/utils';
 import { useTheme } from './hooks/useTheme';
 import { useDataSync } from './hooks/useDataSync';
 import { useAchievementNotifications } from './hooks/useAchievementNotifications';
-import { useMobile } from './hooks/use-mobile'; // <-- IMPORT useMobile
-import { MobileBottomNav } from './components/MobileBottomNav'; // <-- IMPORT new MobileNav
+import { useMobile } from './hooks/use-mobile'; // <-- ADD THIS
+import { MobileBottomNav } from './components/MobileBottomNav'; // <-- ADD THIS
 
 const App = () => {
   const { session } = useAuth();
-  const { currentTheme }_ = useTheme();
+  const { currentTheme } = useTheme();
 
   return (
     <div className="flex min-h-screen w-full" style={{ 
@@ -62,32 +62,33 @@ const App = () => {
 
 const Layout = () => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const { isMobile }_ = useMobile(); // <-- USE the hook
+  const { isMobile } = useMobile(); // <-- ADD THIS
   
   // Data hooks
   useDataSync();
   useAchievementNotifications();
 
+  // This logic is now controlled by !isMobile
   const navWidth = isExpanded ? 'lg:w-64' : 'lg:w-[5.5rem]';
 
   return (
     <div className={cn(
       "flex min-h-screen w-full",
-      !isMobile && `lg:pl-[5.5rem]`, // Default padding
-      isExpanded && !isMobile && `lg:pl-64` // Expanded padding
+      !isMobile && `lg:pl-[5.5rem]`, // <-- MODIFIED: Only add padding on desktop
+      isExpanded && !isMobile && `lg:pl-64` // <-- MODIFIED: Only add padding on desktop
     )}>
       
-      {/* --- NAVIGATION LOGIC --- */}
+      {/* --- MODIFIED: Conditional Navigation --- */}
       {isMobile ? (
         <MobileBottomNav /> 
       ) : (
         <Navigation isExpanded={isExpanded} setIsExpanded={setIsExpanded} />
       )}
-      {/* --- END NAVIGATION LOGIC --- */}
+      {/* --- END MODIFICATION --- */}
       
       <main className={cn(
         "flex-1 flex flex-col overflow-x-hidden",
-        isMobile ? "p-4 pb-24" : "p-6" // <-- Add bottom padding on mobile
+        isMobile ? "p-4 pb-24" : "p-6" // <-- MODIFIED: Add bottom padding on mobile
       )}>
         <Outlet />
       </main>
