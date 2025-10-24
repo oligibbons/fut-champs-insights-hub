@@ -6,7 +6,7 @@ import RecentRuns from '@/components/RecentRuns';
 import TopPerformers from '@/components/TopPerformers';
 import LowestRatedPlayers from '@/components/LowestRatedPlayers';
 import ClubLegends from '@/components/ClubLegends';
-import FUTTrackrRecords from '@/components/FUTTrackrRecords';
+import { FUTTrackrRecords } from '@/components/FUTTrackrRecords';
 import DashboardSection from '@/components/DashboardSection'; // Needs modification or wrapping
 import { useToast } from '@/hooks/use-toast';
 import { useMobile } from '@/hooks/use-mobile'; // <-- Import useMobile
