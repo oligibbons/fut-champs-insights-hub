@@ -1,15 +1,19 @@
 import { useAccountData } from '@/hooks/useAccountData';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import StatCard from './StatCard';
-import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton
+import { Skeleton } from '@/components/ui/skeleton';
 import { Award, TrendingUp, BarChart2, Zap, Trophy, Goal, HeartPulse, ShieldCheck } from 'lucide-react';
 
 const DashboardOverview = () => {
-  // --- FIX 1: Destructure 'loading' from useAccountData ---
-  const { weeklyData, loading } = useAccountData();
-  const stats = useDashboardStats(weeklyData);
+  // --- FIX:
+  // 1. Default 'weeklyData' to '[]' to prevent 'useDashboardStats' from receiving undefined.
+  // 2. Add '|| {}' as a guard in case the hook itself returns undefined before auth context is ready.
+  const { weeklyData = [], loading } = useAccountData() || {};
+  // --- END FIX
+  
+  const stats = useDashboardStats(weeklyData); // This is now safe
 
-  // --- FIX 2: Add a loading state check ---
+  // This loading state is correct
   if (loading) {
     // Display skeletons while loading
     return (
@@ -25,9 +29,8 @@ const DashboardOverview = () => {
       </div>
     );
   }
-  // --- END FIX ---
 
-  // Check if there's any data to display after loading
+  // This check is also correct
   if (!weeklyData || weeklyData.length === 0) {
       return (
           <div className="text-center py-8 text-muted-foreground">
@@ -53,8 +56,7 @@ const DashboardOverview = () => {
         value={stats.averageWins.toFixed(1)}
         icon={<TrendingUp className="text-blue-500" />}
         tooltip="The average number of wins across all your completed FUT Champions runs."
-      />
-
+      This 'forEach' is now safe
       {/* Most Goals in a Run */}
       <StatCard
         title="Most Goals (Run)"
