@@ -8,11 +8,14 @@ import { FUTTrackrRecords } from '@/components/FUTTrackrRecords';
 import DashboardSection from '@/components/DashboardSection';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LayoutGrid, Users } from 'lucide-react';
+// --- FIX: Add 'BarChart3' icon for new tab ---
+import { LayoutGrid, Users, BarChart3 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import PlayerMovers from '@/components/PlayerMovers';
-// --- FIX: Import our detailed player table ---
 import PlayerHistoryTable from '@/components/PlayerHistoryTable';
+// --- FIX: Import our new components ---
+import XGAnalytics from '@/components/XGAnalytics';
+import PlayerConsistencyChart from '@/components/PlayerConsistencyChart';
 
 interface DashboardItem {
     id: string;
@@ -23,21 +26,25 @@ interface DashboardItem {
 const componentsMap: Record<string, React.FC> = {
     overview: DashboardOverview,
     recentRuns: RecentRuns,
+    records: FUTTrackrRecords,
     playerMovers: PlayerMovers,
     clubLegends: ClubLegends,
-    records: FUTTrackrRecords,
-    // --- FIX: Add the table to our component map ---
     playerHistoryTable: PlayerHistoryTable,
+    // --- FIX: Add new components to the map ---
+    xgAnalytics: XGAnalytics,
+    playerConsistency: PlayerConsistencyChart,
 };
 
 const defaultLayout: DashboardItem[] = [
     { id: 'overview', component: componentsMap.overview, order: 1 },
     { id: 'recentRuns', component: componentsMap.recentRuns, order: 2 },
-    { id: 'records', component: componentsMap.records, order: 3 }, // Moved from "players" tab
+    { id: 'records', component: componentsMap.records, order: 3 },
     { id: 'playerMovers', component: componentsMap.playerMovers, order: 4 },
     { id: 'clubLegends', component: componentsMap.clubLegends, order: 5 },
-    // --- FIX: Add the table to our default layout ---
     { id: 'playerHistoryTable', component: componentsMap.playerHistoryTable, order: 6 },
+    // --- FIX: Add new components to default layout ---
+    { id: 'xgAnalytics', component: componentsMap.xgAnalytics, order: 7 },
+    { id: 'playerConsistency', component: componentsMap.playerConsistency, order: 8 },
 ];
 
 const Dashboard = () => {
@@ -50,6 +57,7 @@ const Dashboard = () => {
         fetchLayout();
     }, [user]);
 
+    // This fetchLayout function is now robust and handles adding new components
     const fetchLayout = async () => {
         if (!user) return;
         setLoading(true);
@@ -72,12 +80,14 @@ const Dashboard = () => {
                     })
                     .filter((item): item is DashboardItem => item !== null);
 
+                // Add any new components from defaultLayout that aren't in the saved layout
                 defaultLayout.forEach(defaultItem => {
                     if (!loadedLayout.some(item => item.id === defaultItem.id)) {
                         loadedLayout.push({...defaultItem});
                     }
                 });
 
+                // Filter out any components that no longer exist in componentsMap
                 loadedLayout = loadedLayout.filter(item => componentsMap[item.id]);
                 setLayout(loadedLayout.sort((a, b) => a.order - b.order));
             } else {
@@ -99,6 +109,11 @@ const Dashboard = () => {
             return null; 
         }
         
+        // --- FIX: We can remove titles for these components too, they have them internally ---
+        if (id === 'playerHistoryTable' || id === 'xgAnalytics' || id === 'playerConsistency') {
+            return <item.component key={item.id} />;
+        }
+
         let title = item.id.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
         
         if (id === 'playerMovers') {
@@ -109,11 +124,6 @@ const Dashboard = () => {
         }
         if (id === 'recentRuns') {
             title = 'Recent Runs';
-        }
-        // --- FIX: We can remove the title for the table since it's inside the component ---
-        if (id === 'playerHistoryTable') {
-            // The table component has its own title, so we don't need a DashboardSection
-            return <item.component />;
         }
 
         return (
@@ -129,7 +139,8 @@ const Dashboard = () => {
     if (loading) {
         return (
             <div className="space-y-6">
-                <Skeleton className="h-12 w-60 rounded-2xl" />
+                {/* --- FIX: Skeleton for a 3-tab layout --- */}
+                <Skeleton className="h-12 w-80 rounded-2xl" />
                 <div className="space-y-6">
                     <Skeleton className="h-64 w-full rounded-2xl" />
                     <Skeleton className="h-48 w-full rounded-2xl" />
@@ -140,7 +151,8 @@ const Dashboard = () => {
 
     return (
         <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="glass-card rounded-2xl shadow-xl border-0 p-2 h-auto grid grid-cols-2">
+            {/* --- FIX: Add new "Analytics" tab --- */}
+            <TabsList className="glass-card rounded-2xl shadow-xl border-0 p-2 h-auto grid grid-cols-3">
                 <TabsTrigger value="overview" className="rounded-xl flex-1 flex gap-2 items-center">
                     <LayoutGrid className="h-4 w-4" />
                     Overview
@@ -148,6 +160,10 @@ const Dashboard = () => {
                 <TabsTrigger value="players" className="rounded-xl flex-1 flex gap-2 items-center">
                     <Users className="h-4 w-4" />
                     Player Hub
+                </TabsTrigger>
+                <TabsTrigger value="analytics" className="rounded-xl flex-1 flex gap-2 items-center">
+                    <BarChart3 className="h-4 w-4" />
+                    Analytics
                 </TabsTrigger>
             </TabsList>
             
@@ -157,11 +173,16 @@ const Dashboard = () => {
                 {findAndRenderSection('records')}
             </TabsContent>
 
-            {/* --- FIX: "Player Hub" tab is now fully complete --- */}
             <TabsContent value="players" className="space-y-6">
                 {findAndRenderSection('playerMovers')}
                 {findAndRenderSection('clubLegends')}
                 {findAndRenderSection('playerHistoryTable')}
+            </TabsContent>
+
+            {/* --- FIX: Add new "Analytics" tab content --- */}
+            <TabsContent value="analytics" className="space-y-6">
+                {findAndRenderSection('xgAnalytics')}
+                {findAndRenderSection('playerConsistency')}
             </TabsContent>
 
         </Tabs>
