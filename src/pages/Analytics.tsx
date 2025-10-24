@@ -15,7 +15,9 @@ import { useTheme } from '@/hooks/useTheme';
 
 
 const Analytics = () => {
-  const { weeks, activeAccount } = useAccountData();
+  // --- FIX IS ON THIS LINE ---
+  const { weeks = [], activeAccount } = useAccountData() || {};
+  // --- END FIX ---
   const [aiInsights, setAiInsights] = useState<any[]>([]);
   const completedWeeks = weeks.filter(week => week.isCompleted);
   const currentWeek = weeks.find(week => !week.isCompleted);
