@@ -8,9 +8,11 @@ import { FUTTrackrRecords } from '@/components/FUTTrackrRecords';
 import DashboardSection from '@/components/DashboardSection';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LayoutGrid, Users } from 'lucide-react'; // --- FIX: Removed 'Trophy' icon ---
+import { LayoutGrid, Users } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import PlayerMovers from '@/components/PlayerMovers';
+// --- FIX: Import our detailed player table ---
+import PlayerHistoryTable from '@/components/PlayerHistoryTable';
 
 interface DashboardItem {
     id: string;
@@ -18,22 +20,24 @@ interface DashboardItem {
     order: number;
 }
 
-// --- FIX: The components are all correct ---
 const componentsMap: Record<string, React.FC> = {
     overview: DashboardOverview,
     recentRuns: RecentRuns,
     playerMovers: PlayerMovers,
     clubLegends: ClubLegends,
     records: FUTTrackrRecords,
+    // --- FIX: Add the table to our component map ---
+    playerHistoryTable: PlayerHistoryTable,
 };
 
-// --- FIX: The layout is all correct ---
 const defaultLayout: DashboardItem[] = [
     { id: 'overview', component: componentsMap.overview, order: 1 },
     { id: 'recentRuns', component: componentsMap.recentRuns, order: 2 },
-    { id: 'playerMovers', component: componentsMap.playerMovers, order: 3 },
-    { id: 'clubLegends', component: componentsMap.clubLegends, order: 4 },
-    { id: 'records', component: componentsMap.records, order: 5 },
+    { id: 'records', component: componentsMap.records, order: 3 }, // Moved from "players" tab
+    { id: 'playerMovers', component: componentsMap.playerMovers, order: 4 },
+    { id: 'clubLegends', component: componentsMap.clubLegends, order: 5 },
+    // --- FIX: Add the table to our default layout ---
+    { id: 'playerHistoryTable', component: componentsMap.playerHistoryTable, order: 6 },
 ];
 
 const Dashboard = () => {
@@ -100,12 +104,16 @@ const Dashboard = () => {
         if (id === 'playerMovers') {
             title = 'Player Movers';
         }
-        // --- FIX: Give the "records" component a better title on this page ---
         if (id === 'records') {
             title = 'All-Time Records';
         }
         if (id === 'recentRuns') {
             title = 'Recent Runs';
+        }
+        // --- FIX: We can remove the title for the table since it's inside the component ---
+        if (id === 'playerHistoryTable') {
+            // The table component has its own title, so we don't need a DashboardSection
+            return <item.component />;
         }
 
         return (
@@ -121,7 +129,6 @@ const Dashboard = () => {
     if (loading) {
         return (
             <div className="space-y-6">
-                {/* --- FIX: Skeleton for a 2-tab layout --- */}
                 <Skeleton className="h-12 w-60 rounded-2xl" />
                 <div className="space-y-6">
                     <Skeleton className="h-64 w-full rounded-2xl" />
@@ -133,7 +140,6 @@ const Dashboard = () => {
 
     return (
         <Tabs defaultValue="overview" className="space-y-6">
-            {/* --- FIX: Simplified to two tabs --- */}
             <TabsList className="glass-card rounded-2xl shadow-xl border-0 p-2 h-auto grid grid-cols-2">
                 <TabsTrigger value="overview" className="rounded-xl flex-1 flex gap-2 items-center">
                     <LayoutGrid className="h-4 w-4" />
@@ -145,19 +151,18 @@ const Dashboard = () => {
                 </TabsTrigger>
             </TabsList>
             
-            {/* --- FIX: "Overview" tab now contains the hero, recent runs, AND all records --- */}
             <TabsContent value="overview" className="space-y-6">
                 {findAndRenderSection('overview')}
                 {findAndRenderSection('recentRuns')}
                 {findAndRenderSection('records')}
             </TabsContent>
 
+            {/* --- FIX: "Player Hub" tab is now fully complete --- */}
             <TabsContent value="players" className="space-y-6">
                 {findAndRenderSection('playerMovers')}
                 {findAndRenderSection('clubLegends')}
+                {findAndRenderSection('playerHistoryTable')}
             </TabsContent>
-
-            {/* --- FIX: The "Records" tab is no longer needed --- */}
 
         </Tabs>
     );
