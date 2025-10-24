@@ -32,13 +32,17 @@ const ClubLegends = () => {
   const [filter, setFilter] = useState<string>('all');
 
   useEffect(() => {
+    // FIX 1: Add a guard clause to ensure weeklyData exists
+    if (!weeklyData) return;
+
     // Calculate legends from weekly data
     const allGames = weeklyData.flatMap(week => week.games);
     const playerStats = new Map<string, any>();
     
     // Collect all player performances
     allGames.forEach(game => {
-      game.playerStats.forEach(player => {
+      // FIX 2: Use optional chaining in case game.playerStats is undefined
+      game.playerStats?.forEach(player => {
         const key = `${player.name}-${player.position}`;
         
         if (!playerStats.has(key)) {
@@ -389,18 +393,4 @@ const ClubLegends = () => {
               <Badge className="bg-fifa-red/20 text-fifa-red">Attackers: 50+ goals</Badge>
               <Badge className="bg-blue-500/20 text-blue-500">Playmakers: 50+ assists</Badge>
               <Badge className="bg-fifa-green/20 text-fifa-green">Defenders: 20+ clean sheets</Badge>
-              <Badge className="bg-fifa-purple/20 text-fifa-purple">Goalkeepers: 20+ clean sheets</Badge>
-              <Badge className="bg-yellow-500/20 text-yellow-500">Talismans: 70%+ win rate (50+ games)</Badge>
-              <Badge className="bg-orange-500/20 text-orange-500">Clutch Players: 15+ clutch contributions</Badge>
-              <Badge className="bg-red-700/20 text-red-700">Enforcers: 20+ yellow or 5+ red cards</Badge>
-              <Badge className="bg-gray-500/20 text-gray-500">Iron Men: 5000+ minutes played</Badge>
-              <Badge className="bg-fifa-gold/20 text-fifa-gold">Veterans: 100+ games</Badge>
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-};
-
-export default ClubLegends;
+              <Badge className="bg-fifa-purple/20 text-
