@@ -56,7 +56,10 @@ const DashboardOverview = () => {
         value={stats.averageWins.toFixed(1)}
         icon={<TrendingUp className="text-blue-500" />}
         tooltip="The average number of wins across all your completed FUT Champions runs."
-      This 'forEach' is now safe
+      />
+
+      {/* --- THIS IS WHERE THE ERROR WAS. THE INVALID TEXT IS NOW REMOVED. --- */}
+
       {/* Most Goals in a Run */}
       <StatCard
         title="Most Goals (Run)"
