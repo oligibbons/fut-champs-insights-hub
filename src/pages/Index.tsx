@@ -1,195 +1,188 @@
-import { useState, useEffect, useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAuth } from "@/contexts/AuthContext";
-import { useSupabaseData } from "@/hooks/useSupabaseData";
-import { Skeleton } from "@/components/ui/skeleton";
-import CPSGauge from "@/components/CPSGauge";
-import PrimaryInsightCard from "@/components/PrimaryInsightCard";
-import DashboardOverview from "@/components/DashboardOverview";
-import TopPerformers from "@/components/TopPerformers";
-import WeeklyOverview from "@/components/WeeklyOverview";
-import { generateEnhancedAIInsights, Insight } from "@/utils/aiInsights";
-import { BarChart2, Users, Trophy, GaugeCircle, TrendingUp, TrendingDown } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
-import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { FUTTrackrRecords } from "@/components/FUTTrackrRecords";
-import { Playstyle } from "@/components/Playstyle";
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
+import DashboardOverview from '@/components/DashboardOverview';
+import RecentRuns from '@/components/RecentRuns';
+import TopPerformers from '@/components/TopPerformers';
+import LowestRatedPlayers from '@/components/LowestRatedPlayers';
+import ClubLegends from '@/components/ClubLegends';
+import FUTTrackrRecords from '@/components/FUTTrackrRecords';
+import DashboardSection from '@/components/DashboardSection';
+import { useToast } from '@/hooks/use-toast';
+import { useMobile } from '@/hooks/use-mobile'; // <-- Import useMobile
 
-const SortableItem = ({ id, children }: { id: string; children: React.ReactNode }) => {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
+// Define the structure for dashboard layout items
+interface DashboardItem {
+  id: string;
+  component: React.FC; // Component type
+  order: number;
+  // Add any other props needed by DashboardSection if necessary
+}
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-
-  return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="touch-none">
-      {children}
-    </div>
-  );
+// Define your dashboard components
+const componentsMap: Record<string, React.FC> = {
+  overview: DashboardOverview,
+  recentRuns: RecentRuns,
+  topPerformers: TopPerformers,
+  lowestRated: LowestRatedPlayers,
+  clubLegends: ClubLegends,
+  records: FUTTrackrRecords,
+  // Add other components here as needed
 };
 
-const Index = () => {
+const defaultLayout: DashboardItem[] = [
+  { id: 'overview', component: componentsMap.overview, order: 1 },
+  { id: 'recentRuns', component: componentsMap.recentRuns, order: 2 },
+  { id: 'topPerformers', component: componentsMap.topPerformers, order: 3 },
+  { id: 'lowestRated', component: componentsMap.lowestRated, order: 4 },
+  { id: 'clubLegends', component: componentsMap.clubLegends, order: 5 },
+  { id: 'records', component: componentsMap.records, order: 6 },
+];
+
+const Dashboard = () => {
   const { user } = useAuth();
-  const { weeklyData, loading } = useSupabaseData();
-  const [topInsight, setTopInsight] = useState<Insight | null>(null);
-  const [insightsLoading, setInsightsLoading] = useState(true);
-  
-  // MODIFICATION: Added "playstyle" to the list and moved it to the top.
-  const [components, setComponents] = useState([
-    "playstyle",
-    "stats",
-    "records",
-    "insights",
-    "overview",
-    "weekly",
-  ]);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
-  function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
-
-    if (over && active.id !== over.id) {
-      setComponents((items) => {
-        const oldIndex = items.indexOf(active.id as string);
-        const newIndex = items.indexOf(over.id as string);
-        return arrayMove(items, oldIndex, newIndex);
-      });
-    }
-  }
-
-  const stats = useMemo(() => {
-    const allGames = weeklyData.flatMap(w => w.games);
-    const totalWins = weeklyData.reduce((acc, week) => acc + week.totalWins, 0);
-    const totalGames = allGames.length;
-    const winRate = totalGames > 0 ? (totalWins / totalGames) * 100 : 0;
-    const currentWeek = weeklyData.find(week => !week.isCompleted);
-    const currentStreak = currentWeek?.currentStreak || 0;
-    return { allGames, totalWins, totalGames, winRate, currentStreak };
-  }, [weeklyData]);
+  const { toast } = useToast();
+  const isMobile = useMobile(); // <-- Use the hook
+  const [layout, setLayout] = useState<DashboardItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchInsights = async () => {
-      if (!loading && weeklyData && weeklyData.length > 0) {
-        setInsightsLoading(true);
-        try {
-          const allInsights = await generateEnhancedAIInsights(weeklyData);
-          const priorityOrder: Record<string, number> = { high: 3, medium: 2, low: 1 };
-          const sortedInsights = [...allInsights].sort((a, b) => (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0));
-          setTopInsight(sortedInsights[0] || null);
-        } catch (error) {
-          console.error("Failed to generate primary insight:", error);
-          setTopInsight(null);
-        } finally {
-          setInsightsLoading(false);
-        }
-      } else if (!loading) {
-        setInsightsLoading(false);
-      }
-    };
-    fetchInsights();
-  }, [weeklyData, loading]);
+    fetchLayout();
+  }, [user]);
 
-  const StatCard = ({ title, value, icon: Icon, color, className }: { title: string; value: string | number; icon: React.ElementType; color: string; className?: string }) => (
-    <div className={cn("glass-card p-6 flex flex-col justify-between group animate-fade-in-down", className)}>
-      <div className="flex justify-between items-start">
-        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-        <Icon className={cn("h-5 w-5 text-muted-foreground transition-transform group-hover:scale-110", color)} />
-      </div>
-      <div>
-        {loading ? (
-          <Skeleton className="h-10 w-3/4 mt-2 bg-white/10" />
-        ) : (
-          <p className="text-4xl font-bold text-foreground">{value}</p>
-        )}
-      </div>
-    </div>
-  );
-  
-  // MODIFICATION: Added "playstyle" to the component map.
-  const componentMap: { [key: string]: React.ReactNode } = {
-    playstyle: <Playstyle />,
-    stats: (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            <StatCard title="Overall Wins" value={stats.totalWins} icon={Trophy} color="text-yellow-400" />
-            <StatCard title="Win Rate" value={`${stats.winRate.toFixed(0)}%`} icon={BarChart2} color="text-blue-400" />
-            <StatCard title="Total Games" value={stats.totalGames} icon={Users} color="text-purple-400" />
-            <StatCard
-                title="Current Streak"
-                value={stats.currentStreak > 0 ? `W${stats.currentStreak}` : `L${Math.abs(stats.currentStreak)}`}
-                icon={stats.currentStreak >= 0 ? TrendingUp : TrendingDown}
-                color={stats.currentStreak >= 0 ? "text-green-400" : "text-red-400"}
-            />
-        </div>
-    ),
-    insights: (
-        <div className="grid gap-6 lg:grid-cols-3">
-            <div className="lg:col-span-2">
-                {loading || insightsLoading ? (
-                    <Skeleton className="h-full min-h-[200px] w-full rounded-2xl bg-white/10" />
-                ) : (
-                    <PrimaryInsightCard insight={topInsight} />
-                )}
-            </div>
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center text-lg">
-                        <GaugeCircle className="h-5 w-5 mr-2 text-primary" />
-                        Champs Player Score
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="flex items-center justify-center p-6">
-                    {loading ? <Skeleton className="h-[150px] w-[150px] rounded-full bg-white/10" /> : <CPSGauge games={stats.allGames} size={150}/>}
-                </CardContent>
-            </Card>
-        </div>
-    ),
-    overview: (
-        <div className="grid gap-6 lg:grid-cols-3">
-            <div className="lg:col-span-2">
-                <DashboardOverview games={stats.allGames} />
-            </div>
-            <div>
-                <TopPerformers />
-            </div>
-        </div>
-    ),
-    records: <FUTTrackrRecords />,
-    weekly: <WeeklyOverview />,
+  const fetchLayout = async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('user_settings')
+        .select('dashboard_layout')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error; // Ignore 'No rows found'
+
+      if (data?.dashboard_layout) {
+        // Map saved IDs/order to the full DashboardItem structure
+        const savedLayout = data.dashboard_layout as { id: string; order: number }[];
+        const loadedLayout = savedLayout
+          .map(item => {
+            const component = componentsMap[item.id];
+            if (!component) return null; // Handle case where component might not exist anymore
+            return { ...item, component };
+          })
+          .filter((item): item is DashboardItem => item !== null) // Filter out nulls
+          .sort((a, b) => a.order - b.order); // Ensure sorted by order
+        
+        // Add any missing default components
+        defaultLayout.forEach(defaultItem => {
+            if (!loadedLayout.some(loadedItem => loadedItem.id === defaultItem.id)) {
+                // Find appropriate order (append or insert based on default order)
+                loadedLayout.push({...defaultItem}); 
+            }
+        });
+        
+        // Ensure final sort
+        setLayout(loadedLayout.sort((a, b) => a.order - b.order));
+          
+      } else {
+        // No layout saved, use default and sort it
+        setLayout([...defaultLayout].sort((a, b) => a.order - b.order));
+      }
+    } catch (err: any) {
+      toast({ title: "Error", description: `Failed to load dashboard layout: ${err.message}`, variant: "destructive" });
+      setLayout([...defaultLayout].sort((a, b) => a.order - b.order)); // Fallback to default on error
+    } finally {
+      setLoading(false);
+    }
   };
 
+  const saveLayout = async (newLayout: DashboardItem[]) => {
+    if (!user) return;
+    // Only save id and order
+    const layoutToSave = newLayout.map(({ id, order }) => ({ id, order }));
+    try {
+      const { error } = await supabase
+        .from('user_settings')
+        .upsert({ user_id: user.id, dashboard_layout: layoutToSave }, { onConflict: 'user_id' });
+
+      if (error) throw error;
+      toast({ title: "Success", description: "Dashboard layout saved." });
+    } catch (err: any) {
+      toast({ title: "Error", description: `Failed to save dashboard layout: ${err.message}`, variant: "destructive" });
+    }
+  };
+
+  const onDragEnd = (result: DropResult) => {
+    const { destination, source } = result;
+
+    if (!destination || (destination.droppableId === source.droppableId && destination.index === source.index)) {
+      return;
+    }
+
+    const reorderedLayout = Array.from(layout);
+    const [movedItem] = reorderedLayout.splice(source.index, 1);
+    reorderedLayout.splice(destination.index, 0, movedItem);
+
+    // Update order property based on new index
+    const updatedLayout = reorderedLayout.map((item, index) => ({
+      ...item,
+      order: index + 1,
+    }));
+
+    setLayout(updatedLayout);
+    saveLayout(updatedLayout);
+  };
+
+  if (loading) {
+    return <div>Loading dashboard...</div>; // Or a skeleton loader
+  }
+
   return (
-    <div className="space-y-8">
-      <div className="page-header">
-        <h1>Welcome back, {user?.user_metadata?.username || 'Player'}!</h1>
-        <p>This is your command center. Track your performance, gain insights, and conquer the weekend league.</p>
-      </div>
-
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext items={components} strategy={verticalListSortingStrategy}>
-            <div className="space-y-8">
-                {components.map(id => (
-                    <SortableItem key={id} id={id}>
-                        {componentMap[id]}
-                    </SortableItem>
+    <div className="space-y-6">
+      {/* --- Conditionally Render DragDropContext --- */}
+      {!isMobile ? (
+        <DragDropContext onDragEnd={onDragEnd}>
+          <Droppable droppableId="dashboardSections">
+            {(provided) => (
+              <div
+                {...provided.droppableProps}
+                ref={provided.innerRef}
+                className="space-y-6"
+              >
+                {layout.map((item, index) => (
+                  <Draggable key={item.id} draggableId={item.id} index={index}>
+                    {(provided) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                      >
+                        <DashboardSection title={item.id.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} dragHandleProps={provided.dragHandleProps}>
+                          <item.component />
+                        </DashboardSection>
+                      </div>
+                    )}
+                  </Draggable>
                 ))}
-            </div>
-        </SortableContext>
-      </DndContext>
-
-      {/* MODIFICATION: Removed the old Playstyle component from the bottom. */}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+        </DragDropContext>
+      ) : (
+        // --- Render without Drag-and-Drop on Mobile ---
+        <div className="space-y-6">
+          {layout.map((item) => (
+             <DashboardSection key={item.id} title={item.id.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}>
+                <item.component />
+             </DashboardSection>
+          ))}
+        </div>
+      )}
+      {/* --- End Conditional Rendering --- */}
     </div>
   );
 };
 
-export default Index;
+export default Dashboard;
