@@ -4,17 +4,42 @@ import { WeeklyPerformance, GameResult, PlayerPerformance } from '@/types/futCha
 // --- FIX 1: Add default empty array to the argument ---
 export function useDashboardStats(weeklyData: WeeklyPerformance[] = []) {
 
-  // --- FIX 2: Add '|| []' to safely handle if weeklyData is still undefined ---
+  // --- NEW FIX: Early return if weeklyData is not yet available ---
+  if (!weeklyData || weeklyData.length === 0) {
+    return useMemo(() => ({
+      bestRecord: 0,
+      averageWins: 0,
+      mostGoalsInRun: 0,
+      longestWinStreak: 0,
+      totalGoals: 0,
+      averageGoalsPerGame: 0,
+      totalWins: 0,
+      xgVsGoalsRatio: 0,
+      overallGoalDifference: 0,
+      averagePlayerRating: 0,
+      averageShotAccuracy: 0,
+      averagePossession: 0,
+      averageDribbleSuccess: 0, // Placeholder
+      averagePassAccuracy: 0,
+      averagePassesPerGame: 0,
+      totalCleanSheets: 0,
+      mvp: "N/A",
+      disciplineIndex: "N/A"
+    }), []); // Return default empty stats object wrapped in useMemo
+  }
+  // --- END NEW FIX ---
+
+  // --- FIX 2: Keep '|| []' for safety, though early return should prevent need ---
   const allGames = useMemo(() => (weeklyData || []).flatMap(w => w.games || []), [weeklyData]);
   
-  // --- FIX 3: Add '|| []' to safely handle if allGames is still undefined ---
+  // --- FIX 3: Keep '|| []' for safety ---
   const allPlayerPerformances = useMemo(() => (allGames || []).flatMap(g => g.playerStats || []), [allGames]);
 
   const stats = useMemo(() => {
-    // Ensure data exists before calculating
-    const safeWeeklyData = weeklyData || [];
-    const safeAllGames = allGames || [];
-    const safeAllPlayerPerformances = allPlayerPerformances || [];
+    // These should now be safe because of the early return
+    const safeWeeklyData = weeklyData;
+    const safeAllGames = allGames;
+    const safeAllPlayerPerformances = allPlayerPerformances;
 
     // Main Row
     const bestRecord = Math.max(...safeWeeklyData.map(w => w.totalWins), 0);
@@ -30,29 +55,35 @@ export function useDashboardStats(weeklyData: WeeklyPerformance[] = []) {
     const xgVsGoalsRatio = totalGoals > 0 ? totalExpectedGoals / totalGoals : 0;
     const totalConceded = safeWeeklyData.reduce((acc, week) => acc + week.totalConceded, 0);
     const overallGoalDifference = totalGoals - totalConceded;
-    const averagePlayerRating = safeAllPlayerPerformances.length > 0 ? safeAllPlayerPerformances.reduce((acc, p) => acc + p.rating, 0) / safeAllPlayerPerformances.length : 0;
+    // Add check for safeAllPlayerPerformances length before reducing
+    const averagePlayerRating = safeAllPlayerPerformances.length > 0 ? safeAllPlayerPerformances.reduce((acc, p) => acc + (p?.rating || 0), 0) / safeAllPlayerPerformances.length : 0;
+
 
     // Tertiary Row
-    const averageShotAccuracy = safeAllGames.length > 0 ? safeAllGames.reduce((acc, g) => acc + (g.teamStats?.shotsOnTarget && g.teamStats.shots ? g.teamStats.shotsOnTarget / g.teamStats.shots * 100 : 0), 0) / safeAllGames.length : 0;
-    const averagePossession = safeAllGames.length > 0 ? safeAllGames.reduce((acc, g) => acc + (g.teamStats?.possession || 0), 0) / safeAllGames.length : 0;
+    // Add check for safeAllGames length before reducing
+    const averageShotAccuracy = safeAllGames.length > 0 ? safeAllGames.reduce((acc, g) => acc + (g?.teamStats?.shotsOnTarget && g?.teamStats?.shots ? g.teamStats.shotsOnTarget / g.teamStats.shots * 100 : 0), 0) / safeAllGames.length : 0;
+    const averagePossession = safeAllGames.length > 0 ? safeAllGames.reduce((acc, g) => acc + (g?.teamStats?.possession || 0), 0) / safeAllGames.length : 0;
     const averageDribbleSuccess = 75; // Placeholder
-    const averagePassAccuracy = safeAllGames.length > 0 ? safeAllGames.reduce((acc, g) => acc + (g.teamStats?.passAccuracy || 0), 0) / safeAllGames.length : 0;
-    const averagePassesPerGame = safeAllGames.length > 0 ? safeAllGames.reduce((acc, g) => acc + (g.teamStats?.passes || 0), 0) / safeAllGames.length : 0;
-    const totalCleanSheets = safeAllGames.filter(g => g.scoreLine.endsWith('-0')).length;
+    const averagePassAccuracy = safeAllGames.length > 0 ? safeAllGames.reduce((acc, g) => acc + (g?.teamStats?.passAccuracy || 0), 0) / safeAllGames.length : 0;
+    const averagePassesPerGame = safeAllGames.length > 0 ? safeAllGames.reduce((acc, g) => acc + (g?.teamStats?.passes || 0), 0) / safeAllGames.length : 0;
+    // Add nullish check for g?.scoreLine
+    const totalCleanSheets = safeAllGames.filter(g => g?.scoreLine?.endsWith('-0')).length;
+
 
     const mvp = (() => {
         const playerStats: { [name: string]: { totalRating: number; games: number; goals: number; assists: number } } = {};
         
         // --- FIX 4: Use the 'safe' array for forEach ---
         safeAllPlayerPerformances.forEach(p => {
-            if (p.minutesPlayed > 0) {
+          // Add nullish checks for p and properties
+            if (p?.minutesPlayed > 0 && p?.name && typeof p?.rating === 'number') {
                 if (!playerStats[p.name]) {
                     playerStats[p.name] = { totalRating: 0, games: 0, goals: 0, assists: 0 };
                 }
                 playerStats[p.name].totalRating += p.rating;
                 playerStats[p.name].games += 1;
-                playerStats[p.name].goals += p.goals;
-                playerStats[p.name].assists += p.assists;
+                playerStats[p.name].goals += p.goals || 0; // Add default 0
+                playerStats[p.name].assists += p.assists || 0; // Add default 0
             }
         });
 
@@ -70,7 +101,7 @@ export function useDashboardStats(weeklyData: WeeklyPerformance[] = []) {
                 const goalInvolvementB = b.goals + b.assists;
                 return goalInvolvementB - goalInvolvementA;
             });
-            return allPlayers[0][0];
+            return allPlayers[0][0]; // Check if allPlayers[0] exists
         }
 
         qualifiedPlayers.sort(([, a], [, b]) => {
@@ -84,13 +115,15 @@ export function useDashboardStats(weeklyData: WeeklyPerformance[] = []) {
             return goalInvolvementB - goalInvolvementA;
         });
 
-        return qualifiedPlayers[0][0];
+        return qualifiedPlayers[0]?.[0] || "Not enough data"; // Add check if qualifiedPlayers[0] exists
     })();
 
     const disciplineIndex = (() => {
-        const totalFouls = safeAllGames.reduce((acc, g) => acc + (g.teamStats?.fouls || 0), 0);
-        const totalYellowCards = safeAllGames.reduce((acc, g) => acc + (g.teamStats?.yellowCards || 0), 0);
-        const totalRedCards = safeAllGames.reduce((acc, g) => acc + (g.teamStats?.redCards || 0), 0);
+        // Add checks for safeAllGames length before reducing
+        const totalFouls = safeAllGames.length > 0 ? safeAllGames.reduce((acc, g) => acc + (g?.teamStats?.fouls || 0), 0) : 0;
+        const totalYellowCards = safeAllGames.length > 0 ? safeAllGames.reduce((acc, g) => acc + (g?.teamStats?.yellowCards || 0), 0) : 0;
+        const totalRedCards = safeAllGames.length > 0 ? safeAllGames.reduce((acc, g) => acc + (g?.teamStats?.redCards || 0), 0) : 0;
+
         const gamesCount = safeAllGames.length;
         if (gamesCount === 0) return "N/A";
 
