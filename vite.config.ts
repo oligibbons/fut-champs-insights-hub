@@ -16,10 +16,7 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  optimizeDeps: {
-    include: ['react-beautiful-dnd'],
-    needsInterop: ['react-beautiful-dnd'] // <-- ADD THIS LINE
-  },
+  // Removed optimizeDeps section
   build: {
     minify: 'terser',
     rollupOptions: {
