@@ -1,10 +1,9 @@
-import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { Home, Users, TrendingUp, Settings, Menu, X, Trophy, History, LogOut, Award, Shield, BarChart3, Brain } from 'lucide-react';
+import { Home, Users, TrendingUp, Settings, Trophy, History, LogOut, Award, Shield, BarChart3, Brain } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import logo from '/fut-trackr-logo.jpg'; // <-- ADD THIS IMPORT
+import logo from '/fut-trackr-logo.jpg';
 
 interface NavigationProps {
   isExpanded: boolean;
@@ -12,16 +11,7 @@ interface NavigationProps {
 }
 
 const Navigation = ({ isExpanded, setIsExpanded }: NavigationProps) => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { signOut, user, isAdmin } = useAuth();
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
   
   const navigationItems = [
     { name: 'Dashboard', path: '/', icon: Home },
@@ -43,46 +33,40 @@ const Navigation = ({ isExpanded, setIsExpanded }: NavigationProps) => {
   const navWidth = isExpanded ? '16rem' : '5.5rem';
 
   return (
-    <>
-      <div className="lg:hidden fixed top-4 left-4 z-50">
-        <Button variant="outline" size="icon" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="bg-background/50 backdrop-blur-md">
-          {isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-        </Button>
-      </div>
-
-      <nav 
-        className={cn(`fixed left-0 top-0 h-full border-r z-40 transform transition-all duration-300 ease-in-out flex flex-col bg-black/30 backdrop-blur-xl border-white/10`,
-          isMobile ? (isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full') : 'translate-x-0'
-        )}
-        style={{ width: isMobile ? '280px' : navWidth }}
-        onMouseEnter={() => !isMobile && setIsExpanded(true)}
-        onMouseLeave={() => !isMobile && setIsExpanded(false)}
-      >
-        <div className="flex flex-col h-full p-4">
-          <div className="flex items-center gap-2 h-16 flex-shrink-0 px-2 mb-4">
-            <img src={logo} alt="FUTTrackr Logo" className="w-8 h-8 object-contain flex-shrink-0" /> {/* <-- CHANGE THIS SRC */}
-            <div className={`transition-all duration-200 overflow-hidden ${!isExpanded && !isMobile ? 'lg:w-0 lg:opacity-0' : 'lg:w-auto lg:opacity-100'}`}>
-              <h1 className="text-xl font-bold whitespace-nowrap">FUTTrackr</h1>
-            </div>
-          </div>
-
-          <div className="flex-1 space-y-2 overflow-y-auto">
-            {navigationItems.map((item) => <NavItem key={item.path} item={item} isExpanded={isExpanded || isMobile} />)}
-            {isAdmin && <NavItem item={{ name: 'Admin', path: '/admin', icon: Shield }} isExpanded={isExpanded || isMobile} />}
-          </div>
-
-          <div className="mt-auto pt-4 border-t border-white/10 space-y-2">
-             {bottomNavItems.map((item) => <NavItem key={item.path} item={item} isExpanded={isExpanded || isMobile} />)}
-            <Button onClick={() => signOut()} variant="ghost" className="w-full flex items-center gap-3 rounded-lg transition-all duration-300 justify-start px-4 py-3 text-muted-foreground hover:bg-destructive/20 hover:text-red-400">
-              <LogOut className="h-5 w-5 flex-shrink-0" />
-              <span className={`font-medium transition-opacity duration-200 whitespace-nowrap ${!isExpanded && !isMobile ? 'lg:opacity-0 lg:hidden' : 'lg:opacity-100'}`}>
-                Sign Out
-              </span>
-            </Button>
+    // This <nav> is now the root element, no more mobile hamburger
+    <nav 
+      className={cn(
+        `fixed left-0 top-0 h-full border-r z-40 transform transition-all duration-300 ease-in-out flex-col bg-black/30 backdrop-blur-xl border-white/10`,
+        'hidden lg:flex' // Hide on mobile, flex on large screens
+      )}
+      style={{ width: navWidth }}
+      onMouseEnter={() => setIsExpanded(true)}
+      onMouseLeave={() => setIsExpanded(false)}
+    >
+      <div className="flex flex-col h-full p-4">
+        <div className="flex items-center gap-2 h-16 flex-shrink-0 px-2 mb-4">
+          <img src={logo} alt="FUTTrackr Logo" className="w-8 h-8 object-contain flex-shrink-0" />
+          <div className={cn('transition-all duration-200 overflow-hidden', !isExpanded ? 'lg:w-0 lg:opacity-0' : 'lg:w-auto lg:opacity-100')}>
+            <h1 className="text-xl font-bold whitespace-nowrap">FUTTrackr</h1>
           </div>
         </div>
-      </nav>
-    </>
+
+        <div className="flex-1 space-y-2 overflow-y-auto">
+          {navigationItems.map((item) => <NavItem key={item.path} item={item} isExpanded={isExpanded} />)}
+          {isAdmin && <NavItem item={{ name: 'Admin', path: '/admin', icon: Shield }} isExpanded={isExpanded} />}
+        </div>
+
+        <div className="mt-auto pt-4 border-t border-white/10 space-y-2">
+            {bottomNavItems.map((item) => <NavItem key={item.path} item={item} isExpanded={isExpanded} />)}
+          <Button onClick={() => signOut()} variant="ghost" className="w-full flex items-center gap-3 rounded-lg transition-all duration-300 justify-start px-4 py-3 text-muted-foreground hover:bg-destructive/20 hover:text-red-400">
+            <LogOut className="h-5 w-5 flex-shrink-0" />
+            <span className={cn('font-medium transition-opacity duration-200 whitespace-nowrap', !isExpanded ? 'lg:opacity-0 lg:hidden' : 'lg:opacity-100')}>
+              Sign Out
+            </span>
+          </Button>
+        </div>
+      </div>
+    </nav>
   );
 };
 
