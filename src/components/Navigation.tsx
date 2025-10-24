@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { Home, Users, TrendingUp, Settings, Menu, X, Trophy, History, LogOut, Award, Shield, BarChart3, Brain } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import logo from '/fut-trackr-logo.jpg'; // <-- ADD THIS IMPORT
 
 interface NavigationProps {
   isExpanded: boolean;
@@ -59,7 +60,7 @@ const Navigation = ({ isExpanded, setIsExpanded }: NavigationProps) => {
       >
         <div className="flex flex-col h-full p-4">
           <div className="flex items-center gap-2 h-16 flex-shrink-0 px-2 mb-4">
-            <img src="/fut-trackr-logo.jpg" alt="FUTTrackr Logo" className="w-8 h-8 object-contain flex-shrink-0" />
+            <img src={logo} alt="FUTTrackr Logo" className="w-8 h-8 object-contain flex-shrink-0" /> {/* <-- CHANGE THIS SRC */}
             <div className={`transition-all duration-200 overflow-hidden ${!isExpanded && !isMobile ? 'lg:w-0 lg:opacity-0' : 'lg:w-auto lg:opacity-100'}`}>
               <h1 className="text-xl font-bold whitespace-nowrap">FUTTrackr</h1>
             </div>
