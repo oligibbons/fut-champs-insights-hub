@@ -1,46 +1,108 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { GameResult } from "@/types/futChampions";
-import PerformanceRadar from "./PerformanceRadar";
-import MatchTagAnalysis from "./MatchTagAnalysis";
-import PositionalHeatMap from "./PositionalHeatMap";
-import GoalInvolvementChart from "./GoalInvolvementChart"; // Import the new component
-import { BarChart, LayoutGrid, Map, PieChart } from "lucide-react";
+import { useAccountData } from '@/hooks/useAccountData';
+import { useDashboardStats } from '@/hooks/useDashboardStats';
+import StatCard from './StatCard';
+import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton
+import { Award, TrendingUp, BarChart2, Zap, Trophy, Goal, HeartPulse, ShieldCheck } from 'lucide-react';
 
-interface DashboardOverviewProps {
-  games: GameResult[];
-}
+const DashboardOverview = () => {
+  // --- FIX 1: Destructure 'loading' from useAccountData ---
+  const { weeklyData, loading } = useAccountData();
+  const stats = useDashboardStats(weeklyData);
 
-const DashboardOverview = ({ games }: DashboardOverviewProps) => {
+  // --- FIX 2: Add a loading state check ---
+  if (loading) {
+    // Display skeletons while loading
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Skeleton className="h-24 rounded-lg" />
+        <Skeleton className="h-24 rounded-lg" />
+        <Skeleton className="h-24 rounded-lg" />
+        <Skeleton className="h-24 rounded-lg" />
+        <Skeleton className="h-24 rounded-lg" />
+        <Skeleton className="h-24 rounded-lg" />
+        <Skeleton className="h-24 rounded-lg" />
+        <Skeleton className="h-24 rounded-lg" />
+      </div>
+    );
+  }
+  // --- END FIX ---
+
+  // Check if there's any data to display after loading
+  if (!weeklyData || weeklyData.length === 0) {
+      return (
+          <div className="text-center py-8 text-muted-foreground">
+              No data available yet. Complete a week to see your stats!
+          </div>
+      );
+  }
+
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Performance Overview</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Tabs defaultValue="radar" className="w-full">
-          <TabsList className="grid w-full grid-cols-4"> {/* Updated to 4 columns */}
-            <TabsTrigger value="radar"><LayoutGrid className="h-4 w-4 mr-2" />Radar</TabsTrigger>
-            <TabsTrigger value="heatmap"><Map className="h-4 w-4 mr-2" />Heatmap</TabsTrigger>
-            <TabsTrigger value="tags"><BarChart className="h-4 w-4 mr-2" />Match Tags</TabsTrigger>
-            <TabsTrigger value="goals"><PieChart className="h-4 w-4 mr-2" />Goals</TabsTrigger> {/* New Tab */}
-          </TabsList>
-          
-          <TabsContent value="radar" className="mt-4">
-            <PerformanceRadar games={games} />
-          </TabsContent>
-          <TabsContent value="heatmap" className="mt-4">
-            <PositionalHeatMap games={games} />
-          </TabsContent>
-          <TabsContent value="tags" className="mt-4">
-            <MatchTagAnalysis games={games} />
-          </TabsContent>
-          <TabsContent value="goals" className="mt-4"> {/* New Tab Content */}
-            <GoalInvolvementChart />
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* Best FUT Champs Record */}
+      <StatCard
+        title="Best Record"
+        value={`${stats.bestRecord} Wins`}
+        icon={<Trophy className="text-yellow-500" />}
+        tooltip="Your highest number of wins achieved in a single FUT Champions run."
+      />
+
+      {/* Average Wins Per Run */}
+      <StatCard
+        title="Average Wins"
+        value={stats.averageWins.toFixed(1)}
+        icon={<TrendingUp className="text-blue-500" />}
+        tooltip="The average number of wins across all your completed FUT Champions runs."
+      />
+
+      {/* Most Goals in a Run */}
+      <StatCard
+        title="Most Goals (Run)"
+        value={stats.mostGoalsInRun.toString()}
+        icon={<Goal className="text-green-500" />}
+        tooltip="The highest number of goals scored in a single FUT Champions run."
+      />
+
+      {/* Longest Win Streak */}
+      <StatCard
+        title="Longest Win Streak"
+        value={stats.longestWinStreak.toString()}
+        icon={<Zap className="text-orange-500" />}
+        tooltip="The highest consecutive number of wins you've achieved across all runs."
+      />
+
+      {/* Overall Goal Difference */}
+      <StatCard
+        title="Goal Difference"
+        value={stats.overallGoalDifference.toString()}
+        icon={<BarChart2 className="text-purple-500" />}
+        tooltip="Total goals scored minus total goals conceded across all recorded games."
+      />
+
+      {/* Average Player Rating */}
+      <StatCard
+        title="Avg Player Rating"
+        value={stats.averagePlayerRating.toFixed(2)}
+        icon={<Award className="text-red-500" />}
+        tooltip="The average match rating of all players across all recorded games."
+      />
+
+       {/* Club MVP */}
+      <StatCard
+        title="Club MVP"
+        value={stats.mvp} // Assumes mvp is a string (player name or "N/A")
+        icon={<HeartPulse className="text-pink-500" />} // Example icon
+        tooltip="Player with the highest average rating (min. 10 games), prioritizing goal involvements as tie-breaker."
+      />
+
+      {/* Discipline Index */}
+      <StatCard
+        title="Discipline Index"
+        value={stats.disciplineIndex} // Assumes disciplineIndex is a string like "A+", "B", etc.
+        icon={<ShieldCheck className="text-teal-500" />} // Example icon
+        tooltip="Overall team discipline rating based on fouls and cards per game (A+ is best)."
+      />
+    </div>
   );
 };
 
