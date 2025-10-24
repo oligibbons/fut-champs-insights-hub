@@ -1,210 +1,369 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useGameVersion } from '@/contexts/GameVersionContext';
-import { Button } from '@/components/ui/button';
-import { PlusCircle, Loader2, FlagOff, ArrowLeft } from 'lucide-react';
-import GameCard from '@/components/GameCard';
-import WeekProgress from '@/components/WeekProgress';
-import { Game, FutChampsWeek } from '@/types/futChampions';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Game, PlayerPerformanceInsert } from '@/types/futChampions';
 import GameRecordForm from '@/components/GameRecordForm';
-import { useToast } from '@/hooks/use-toast';
-import { Squad } from '@/types/squads';
-import WeekCompletionPopup from '@/components/WeekCompletionPopup';
-import CurrentRunStats from '@/components/CurrentRunStats';
-import TopPerformers from '@/components/TopPerformers';
-import RunSelector from '@/components/RunSelector';
 import GameListItem from '@/components/GameListItem';
-import DeleteDialog from '@/components/DeleteDialog';
+import RunNamingModal from '@/components/RunNamingModal';
+import WeekProgress from '@/components/WeekProgress';
+import CurrentRunStats from '@/components/CurrentRunStats';
+import { useToast } from '@/hooks/use-toast';
+import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
+import { Button } from '@/components/ui/button';
+import { PlusCircle, Edit } from 'lucide-react';
+import { useTheme } from '@/hooks/useTheme';
+import { useMobile } from '@/hooks/use-mobile'; // <-- Import useMobile
 
 const CurrentRun = () => {
-    const { user } = useAuth();
-    const { toast } = useToast();
-    const { gameVersion } = useGameVersion();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const { currentTheme } = useTheme();
+  const isMobile = useMobile(); // <-- Use the hook
+  const [games, setGames] = useState<Game[]>([]);
+  const [currentRun, setCurrentRun] = useState<{ id: string; name: string | null } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [editingGame, setEditingGame] = useState<Game | null>(null);
+  const [isNamingModalOpen, setIsNamingModalOpen] = useState(false);
 
-    const [allRuns, setAllRuns] = useState<FutChampsWeek[]>([]);
-    const [selectedRun, setSelectedRun] = useState<FutChampsWeek | null>(null);
-    const [games, setGames] = useState<Game[]>([]);
-    const [squads, setSquads] = useState<Squad[]>([]);
-    const [loading, setLoading] = useState(true);
-    
-    // Modal States
-    const [isFormOpen, setIsFormOpen] = useState(false);
-    const [gameToEdit, setGameToEdit] = useState<Game | null>(null);
-    const [itemToDelete, setItemToDelete] = useState<{ type: 'run' | 'game', id: string } | null>(null);
-    const [showCompletionPopup, setShowCompletionPopup] = useState(false);
-    const [justCompletedWeek, setJustCompletedWeek] = useState<FutChampsWeek | null>(null);
+  useEffect(() => {
+    fetchCurrentRunAndGames();
+  }, [user]);
 
-    const fetchData = useCallback(async () => {
-        if (!user) return;
-        setLoading(true);
-        try {
-            const { data: runsData } = await supabase.from('weekly_performances').select('*').eq('user_id', user.id).eq('game_version', gameVersion).order('start_date', { ascending: false });
-            setAllRuns(runsData || []);
+  const fetchCurrentRunAndGames = async () => {
+    if (!user) return;
+    setLoading(true);
+    setError(null);
 
-            const { data: squadsData } = await supabase.from('squads').select('*, squad_players(*, players(*))').eq('user_id', user.id).eq('game_version', gameVersion);
-            setSquads(squadsData || []);
+    try {
+      // Find the most recent run for the user
+      const { data: runData, error: runError } = await supabase
+        .from('runs')
+        .select('id, name')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
 
-        } catch (error: any) {
-            toast({ title: "Error", description: "Failed to fetch initial data.", variant: "destructive" });
-        } finally {
-            setLoading(false);
-        }
-    }, [user, gameVersion, toast]);
+      if (runError && runError.code !== 'PGRST116') { // PGRST116: No rows found is okay
+        throw runError;
+      }
+      
+      if (runData) {
+        setCurrentRun(runData);
+        // Fetch games associated with this run
+        const { data: gamesData, error: gamesError } = await supabase
+          .from('games')
+          .select('*, player_performances(*)')
+          .eq('run_id', runData.id)
+          .order('game_number', { ascending: true });
 
-    useEffect(() => {
-        fetchData();
-    }, [fetchData]);
+        if (gamesError) throw gamesError;
+        setGames(gamesData || []);
 
-    const fetchGamesForRun = async (runId: string) => {
-        setLoading(true);
-        const { data: gamesData, error } = await supabase.from('game_results').select('*, player_performances(*), team_statistics(*)').eq('week_id', runId).order('game_number', { ascending: true });
-        if (error) {
-            toast({ title: "Error", description: "Failed to fetch games for this run.", variant: "destructive" });
-        } else {
-            setGames(gamesData || []);
-        }
-        setLoading(false);
-    };
-    
-    const handleSelectRun = (runId: string) => {
-        const run = allRuns && allRuns.find(r => r.id === runId);
-        if (run) {
-            setSelectedRun(run);
-            fetchGamesForRun(runId);
-        }
-    };
+      } else {
+        // No runs found, create a new one? Or prompt user? For now, just set empty state.
+        setCurrentRun(null);
+        setGames([]);
+      }
+    } catch (err: any) {
+      setError('Failed to fetch run data: ' + err.message);
+      toast({ title: "Error", description: 'Failed to fetch run data: ' + err.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const handleStartNewRun = async () => {
-        if (!user) return;
-        const { data, error } = await supabase.from('weekly_performances').insert({ user_id: user.id, game_version: gameVersion, week_number: allRuns.length + 1, start_date: new Date().toISOString() }).select().single();
-        if (error) {
-            toast({ title: "Error", description: "Could not start new run.", variant: "destructive" });
-        } else if (data) {
-            toast({ title: "Success", description: "New run started!" });
-            await fetchData();
-            handleSelectRun(data.id);
-        }
-    };
+  const startNewRun = async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('runs')
+        .insert({ user_id: user.id })
+        .select('id, name')
+        .single();
+      
+      if (error) throw error;
+      
+      setCurrentRun(data);
+      setGames([]);
+      setShowForm(true); // Show form to add the first game
+      toast({ title: "Success", description: "New FUT Champions run started!" });
 
-    const handleEndRun = async () => {
-        if (!selectedRun) return;
-        const { data: completedWeek, error } = await supabase.from('weekly_performances').update({ is_completed: true, end_date: new Date().toISOString() }).eq('id', selectedRun.id).select().single();
-        if (error) {
-            toast({ title: "Error", description: "Failed to end run.", variant: "destructive" });
-        } else {
-            setJustCompletedWeek(completedWeek);
-            setShowCompletionPopup(true);
-            await fetchData();
-            setSelectedRun(null);
-        }
-    };
-    
-    const handleDelete = async () => {
-        if (!itemToDelete) return;
-        const { type, id } = itemToDelete;
+    } catch (err: any) {
+      setError('Failed to start new run: ' + err.message);
+      toast({ title: "Error", description: 'Failed to start new run: ' + err.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        if (type === 'run') {
-            await supabase.from('weekly_performances').delete().eq('id', id);
-            toast({ title: "Success", description: "Run deleted successfully." });
-            await fetchData();
-            setSelectedRun(null);
-        } else if (type === 'game') {
-            await supabase.from('game_results').delete().eq('id', id);
-            toast({ title: "Success", description: "Game deleted successfully." });
-            if (selectedRun) fetchGamesForRun(selectedRun.id);
-        }
-        setItemToDelete(null);
-    };
-    
-    const handleSaveGame = async () => {
-        setIsFormOpen(false);
-        setGameToEdit(null);
-        if (selectedRun) {
-            await fetchData();
-            await fetchGamesForRun(selectedRun.id);
-            const updatedRun = allRuns.find(r => r.id === selectedRun.id);
-            if (updatedRun && games.length + 1 >= 15 && !updatedRun.is_completed) {
-                toast({ title: "Run Auto-Completed", description: "You've reached 15 games." });
-                handleEndRun();
-            }
-        }
-    };
+  const handleGameSubmit = async (
+    gameData: Omit<Game, 'id' | 'created_at' | 'run_id'>, 
+    playerPerformances: PlayerPerformanceInsert[]
+  ) => {
+    if (!user || !currentRun) return;
 
-    const handleOpenForm = (game: Game | null = null) => {
-        setGameToEdit(game);
-        setIsFormOpen(true);
+    setLoading(true);
+    try {
+      let savedGame: Game | null = null;
+      if (editingGame) {
+        // Update existing game
+        const { data, error } = await supabase
+          .from('games')
+          .update({ ...gameData })
+          .eq('id', editingGame.id)
+          .select('*')
+          .single();
+        if (error) throw error;
+        savedGame = data;
+
+        // Delete existing performances and insert new ones
+        await supabase.from('player_performances').delete().eq('game_id', editingGame.id);
+
+      } else {
+        // Insert new game
+        const { data, error } = await supabase
+          .from('games')
+          .insert({ ...gameData, run_id: currentRun.id })
+          .select('*')
+          .single();
+        if (error) throw error;
+        savedGame = data;
+      }
+
+      if (savedGame) {
+          // Insert player performances
+          const performancesToInsert = playerPerformances.map(p => ({
+              ...p,
+              game_id: savedGame!.id,
+              run_id: currentRun.id, // Add run_id here
+              user_id: user.id
+          }));
+          const { error: perfError } = await supabase
+              .from('player_performances')
+              .insert(performancesToInsert);
+          if (perfError) throw perfError;
+
+          // Add game_id to performances locally for immediate display
+          const savedPerformances = performancesToInsert.map(p => ({ ...p, id: 'temp-id-' + Math.random() })); // Assign temporary IDs if needed
+          savedGame.player_performances = savedPerformances;
+
+      }
+
+
+      toast({ title: "Success", description: `Game ${editingGame ? 'updated' : 'recorded'} successfully!` });
+      setShowForm(false);
+      setEditingGame(null);
+      fetchCurrentRunAndGames(); // Re-fetch to update the list
+
+    } catch (err: any) {
+      setError(`Failed to save game: ${err.message}`);
+      toast({ title: "Error", description: `Failed to save game: ${err.message}`, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+   const handleDeleteGame = async (gameId: string) => {
+    setLoading(true);
+    try {
+      // First delete related player performances
+      const { error: perfError } = await supabase
+        .from('player_performances')
+        .delete()
+        .eq('game_id', gameId);
+      
+      if (perfError) throw perfError;
+
+      // Then delete the game itself
+      const { error: gameError } = await supabase
+        .from('games')
+        .delete()
+        .eq('id', gameId);
+
+      if (gameError) throw gameError;
+
+      toast({ title: "Success", description: "Game deleted successfully." });
+      setGames(prevGames => prevGames.filter(g => g.id !== gameId)); // Update local state
+      
+    } catch (err: any) {
+       setError(`Failed to delete game: ${err.message}`);
+       toast({ title: "Error", description: `Failed to delete game: ${err.message}`, variant: "destructive" });
+    } finally {
+       setLoading(false);
+    }
+  };
+
+
+  const handleEditGame = (game: Game) => {
+    setEditingGame(game);
+    setShowForm(true);
+  };
+
+  const handleCancelForm = () => {
+    setShowForm(false);
+    setEditingGame(null);
+  };
+
+  const onDragEnd = async (result: DropResult) => {
+    const { destination, source, draggableId } = result;
+
+    // Ignore if dropped outside the list or in the same position
+    if (!destination || (destination.droppableId === source.droppableId && destination.index === source.index)) {
+      return;
     }
 
-    if (loading && !selectedRun) {
-        return <div className="flex justify-center items-center h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+    const reorderedGames = Array.from(games);
+    const [movedGame] = reorderedGames.splice(source.index, 1);
+    reorderedGames.splice(destination.index, 0, movedGame);
+
+    // Update local state immediately for better UX
+    setGames(reorderedGames); 
+
+    // Update game_number based on new order and save to DB
+    const updates = reorderedGames.map((game, index) => ({
+      id: game.id,
+      game_number: index + 1,
+    }));
+
+    try {
+      const { error: updateError } = await supabase.from('games').upsert(updates);
+      if (updateError) throw updateError;
+      toast({ title: "Success", description: "Game order updated." });
+      // Optionally re-fetch to confirm, but local update should be sufficient
+      // fetchCurrentRunAndGames(); 
+    } catch (err: any) {
+      setError(`Failed to update game order: ${err.message}`);
+      toast({ title: "Error", description: `Failed to update game order: ${err.message}`, variant: "destructive" });
+      // Revert local state if DB update fails
+      setGames(games); 
     }
+  };
 
-    if (!selectedRun) {
-        return <RunSelector runs={allRuns} onSelectRun={handleSelectRun} onStartNewRun={handleStartNewRun} />;
+  const handleNameUpdate = async (newName: string) => {
+    if (!currentRun) return;
+    try {
+        const { error } = await supabase
+            .from('runs')
+            .update({ name: newName })
+            .eq('id', currentRun.id);
+        if (error) throw error;
+        setCurrentRun(prev => prev ? { ...prev, name: newName } : null);
+        toast({ title: "Success", description: "Run name updated." });
+        setIsNamingModalOpen(false);
+    } catch (err: any) {
+        toast({ title: "Error", description: `Failed to update run name: ${err.message}`, variant: "destructive" });
     }
+  };
 
-    const wins = games.filter(g => g.result === 'win').length;
-    const losses = games.filter(g => g.result === 'loss').length;
-    const nextGameNumber = games.length + 1;
 
-    return (
-        <div className="space-y-6">
-            <Button variant="ghost" onClick={() => setSelectedRun(null)}><ArrowLeft className="mr-2 h-4 w-4" /> Back to All Runs</Button>
+  if (loading && !currentRun) { // Show initial loading state only if no run is loaded yet
+    return <div className="text-center p-10">Loading your run data...</div>;
+  }
 
-            <WeekProgress wins={wins} losses={losses} gamesPlayed={games.length} target={15} />
+  if (error) {
+    return <div className="text-center p-10 text-destructive">{error}</div>;
+  }
 
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-                <h1 className="text-3xl font-bold">{selectedRun.custom_name || `Week ${selectedRun.week_number}`}</h1>
-                {!selectedRun.is_completed && (
-                    <div className="flex gap-2">
-                        <Button onClick={() => handleOpenForm()} disabled={games.length >= 15}><PlusCircle className="mr-2 h-4 w-4" /> Record Game</Button>
-                        <Button variant="outline" onClick={handleEndRun}><FlagOff className="mr-2 h-4 w-4" /> End Run</Button>
-                    </div>
-                )}
+  return (
+    <div className="space-y-6">
+      {!currentRun ? (
+        <div className="text-center p-10 space-y-4">
+            <h2 className="text-2xl font-semibold">No Active Run</h2>
+            <p>Ready to start tracking your FUT Champions progress?</p>
+            <Button onClick={startNewRun} disabled={loading} style={{ backgroundColor: currentTheme.colors.primary, color: currentTheme.colors.primaryText}}>
+                Start New Run
+            </Button>
+        </div>
+      ) : (
+        <>
+            <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center gap-2">
+                    <h1 className="text-3xl font-bold">{currentRun.name || "Current FUT Champions Run"}</h1>
+                     <Button variant="ghost" size="icon" onClick={() => setIsNamingModalOpen(true)}>
+                        <Edit className="h-4 w-4" />
+                     </Button>
+                </div>
+                 {!showForm && (
+                     <Button onClick={() => setShowForm(true)} disabled={loading} style={{ backgroundColor: currentTheme.colors.primary, color: currentTheme.colors.primaryText}}>
+                         <PlusCircle className="mr-2 h-4 w-4" /> Add Game
+                     </Button>
+                 )}
             </div>
 
-            <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-                <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
-                    <DialogHeader>
-                        <DialogTitle>{gameToEdit ? 'Edit Game' : 'Record a Game'}</DialogTitle>
-                        <DialogDescription>
-                            {gameToEdit ? `Update details for game #${gameToEdit.game_number}` : `Enter details for game #${nextGameNumber}`}
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="flex-1 min-h-0">
-                        <GameRecordForm existingGame={gameToEdit} squads={squads} weekId={selectedRun.id} nextGameNumber={nextGameNumber} onSave={handleSaveGame} onCancel={() => setIsFormOpen(false)} />
-                    </div>
-                </DialogContent>
-            </Dialog>
+            <RunNamingModal
+                isOpen={isNamingModalOpen}
+                onClose={() => setIsNamingModalOpen(false)}
+                currentName={currentRun.name || ''}
+                onSave={handleNameUpdate}
+            />
 
-            <DeleteDialog isOpen={!!itemToDelete} onClose={() => setItemToDelete(null)} onConfirm={handleDelete} itemName={itemToDelete?.type || ''} />
-            <WeekCompletionPopup isOpen={showCompletionPopup} onClose={() => setShowCompletionPopup(false)} week={justCompletedWeek} />
+            {showForm && (
+                <GameRecordForm
+                    onSubmit={handleGameSubmit}
+                    isLoading={loading}
+                    game={editingGame ?? undefined}
+                    runId={currentRun.id}
+                    onCancel={handleCancelForm}
+                />
+            )}
 
-            <Tabs defaultValue="overview" className="w-full">
-              <div className="w-full overflow-x-auto pb-2">
-                <TabsList className="grid w-full grid-cols-4 min-w-[400px]">
-                  <TabsTrigger value="overview">Overview</TabsTrigger>
-                  <TabsTrigger value="gamelist">Game List</TabsTrigger>
-                  <TabsTrigger value="stats">Run Stats</TabsTrigger>
-                  <TabsTrigger value="performers">Top Performers</TabsTrigger>
-                </TabsList>
-              </div>
-              <TabsContent value="overview" className="mt-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {games.map(game => (<GameCard key={game.id} game={game} onEdit={handleOpenForm} onDelete={(id) => setItemToDelete({type: 'game', id})} />))}
-                </div>
-              </TabsContent>
-               <TabsContent value="gamelist" className="mt-4 space-y-2">
-                    {games.map(game => (<GameListItem key={game.id} game={game} onEdit={handleOpenForm} onDelete={(id) => setItemToDelete({type: 'game', id})} />))}
-               </TabsContent>
-               <TabsContent value="stats" className="mt-4"><CurrentRunStats week={selectedRun} games={games} /></TabsContent>
-              <TabsContent value="performers" className="mt-4"><TopPerformers games={games} /></TabsContent>
-            </Tabs>
-        </div>
-    );
+          <CurrentRunStats games={games} />
+          <WeekProgress games={games} />
+
+          {/* --- Conditionally Render DragDropContext --- */}
+          {!isMobile ? (
+            <DragDropContext onDragEnd={onDragEnd}>
+              <Droppable droppableId="gamesList">
+                {(provided) => (
+                  <div 
+                    {...provided.droppableProps} 
+                    ref={provided.innerRef} 
+                    className="space-y-4"
+                  >
+                    {games.map((game, index) => (
+                      <Draggable key={game.id} draggableId={game.id} index={index}>
+                        {(provided) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps} // The drag handle
+                          >
+                            <GameListItem 
+                              game={game} 
+                              onEdit={handleEditGame} 
+                              onDelete={handleDeleteGame} 
+                            />
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </DragDropContext>
+          ) : (
+            // --- Render without Drag-and-Drop on Mobile ---
+            <div className="space-y-4">
+              {games.map((game) => (
+                 <GameListItem 
+                    key={game.id} // Use game.id as key here too
+                    game={game} 
+                    onEdit={handleEditGame} 
+                    onDelete={handleDeleteGame} 
+                  />
+              ))}
+            </div>
+          )}
+          {/* --- End Conditional Rendering --- */}
+        </>
+      )}
+    </div>
+  );
 };
 
 export default CurrentRun;
