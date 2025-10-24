@@ -8,17 +8,17 @@ import RunNamingModal from '@/components/RunNamingModal';
 import WeekProgress from '@/components/WeekProgress';
 import CurrentRunStats from '@/components/CurrentRunStats';
 import { useToast } from '@/hooks/use-toast';
-import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
+// Removed react-beautiful-dnd imports
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Edit } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
-import { useMobile } from '@/hooks/use-mobile'; // <-- Import useMobile
+// Removed useMobile import as it's no longer needed for this page
 
 const CurrentRun = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { currentTheme } = useTheme();
-  const isMobile = useMobile(); // <-- Use the hook
+  // Removed isMobile state
   const [games, setGames] = useState<Game[]>([]);
   const [currentRun, setCurrentRun] = useState<{ id: string; name: string | null } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -37,7 +37,6 @@ const CurrentRun = () => {
     setError(null);
 
     try {
-      // Find the most recent run for the user
       const { data: runData, error: runError } = await supabase
         .from('runs')
         .select('id, name')
@@ -46,24 +45,22 @@ const CurrentRun = () => {
         .limit(1)
         .single();
 
-      if (runError && runError.code !== 'PGRST116') { // PGRST116: No rows found is okay
+      if (runError && runError.code !== 'PGRST116') {
         throw runError;
       }
       
       if (runData) {
         setCurrentRun(runData);
-        // Fetch games associated with this run
         const { data: gamesData, error: gamesError } = await supabase
           .from('games')
           .select('*, player_performances(*)')
           .eq('run_id', runData.id)
-          .order('game_number', { ascending: true });
+          .order('game_number', { ascending: true }); // Keep ordering by game_number
 
         if (gamesError) throw gamesError;
         setGames(gamesData || []);
 
       } else {
-        // No runs found, create a new one? Or prompt user? For now, just set empty state.
         setCurrentRun(null);
         setGames([]);
       }
@@ -89,7 +86,7 @@ const CurrentRun = () => {
       
       setCurrentRun(data);
       setGames([]);
-      setShowForm(true); // Show form to add the first game
+      setShowForm(true); 
       toast({ title: "Success", description: "New FUT Champions run started!" });
 
     } catch (err: any) {
@@ -119,15 +116,15 @@ const CurrentRun = () => {
           .single();
         if (error) throw error;
         savedGame = data;
-
-        // Delete existing performances and insert new ones
         await supabase.from('player_performances').delete().eq('game_id', editingGame.id);
-
       } else {
-        // Insert new game
+        // Insert new game - Ensure game_number is set correctly if needed
+        const nextGameNumber = games.length > 0 ? Math.max(...games.map(g => g.game_number)) + 1 : 1;
+        const dataToInsert = { ...gameData, run_id: currentRun.id, game_number: gameData.game_number || nextGameNumber };
+
         const { data, error } = await supabase
           .from('games')
-          .insert({ ...gameData, run_id: currentRun.id })
+          .insert(dataToInsert)
           .select('*')
           .single();
         if (error) throw error;
@@ -135,29 +132,22 @@ const CurrentRun = () => {
       }
 
       if (savedGame) {
-          // Insert player performances
           const performancesToInsert = playerPerformances.map(p => ({
               ...p,
               game_id: savedGame!.id,
-              run_id: currentRun.id, // Add run_id here
+              run_id: currentRun.id, 
               user_id: user.id
           }));
           const { error: perfError } = await supabase
               .from('player_performances')
               .insert(performancesToInsert);
           if (perfError) throw perfError;
-
-          // Add game_id to performances locally for immediate display
-          const savedPerformances = performancesToInsert.map(p => ({ ...p, id: 'temp-id-' + Math.random() })); // Assign temporary IDs if needed
-          savedGame.player_performances = savedPerformances;
-
       }
-
 
       toast({ title: "Success", description: `Game ${editingGame ? 'updated' : 'recorded'} successfully!` });
       setShowForm(false);
       setEditingGame(null);
-      fetchCurrentRunAndGames(); // Re-fetch to update the list
+      fetchCurrentRunAndGames(); 
 
     } catch (err: any) {
       setError(`Failed to save game: ${err.message}`);
@@ -170,24 +160,21 @@ const CurrentRun = () => {
    const handleDeleteGame = async (gameId: string) => {
     setLoading(true);
     try {
-      // First delete related player performances
       const { error: perfError } = await supabase
         .from('player_performances')
         .delete()
         .eq('game_id', gameId);
-      
       if (perfError) throw perfError;
 
-      // Then delete the game itself
       const { error: gameError } = await supabase
         .from('games')
         .delete()
         .eq('id', gameId);
-
       if (gameError) throw gameError;
 
       toast({ title: "Success", description: "Game deleted successfully." });
-      setGames(prevGames => prevGames.filter(g => g.id !== gameId)); // Update local state
+      // Re-fetch to update game numbers correctly if deleting middle games, or update locally if always deleting last
+      fetchCurrentRunAndGames(); 
       
     } catch (err: any) {
        setError(`Failed to delete game: ${err.message}`);
@@ -208,40 +195,7 @@ const CurrentRun = () => {
     setEditingGame(null);
   };
 
-  const onDragEnd = async (result: DropResult) => {
-    const { destination, source, draggableId } = result;
-
-    // Ignore if dropped outside the list or in the same position
-    if (!destination || (destination.droppableId === source.droppableId && destination.index === source.index)) {
-      return;
-    }
-
-    const reorderedGames = Array.from(games);
-    const [movedGame] = reorderedGames.splice(source.index, 1);
-    reorderedGames.splice(destination.index, 0, movedGame);
-
-    // Update local state immediately for better UX
-    setGames(reorderedGames); 
-
-    // Update game_number based on new order and save to DB
-    const updates = reorderedGames.map((game, index) => ({
-      id: game.id,
-      game_number: index + 1,
-    }));
-
-    try {
-      const { error: updateError } = await supabase.from('games').upsert(updates);
-      if (updateError) throw updateError;
-      toast({ title: "Success", description: "Game order updated." });
-      // Optionally re-fetch to confirm, but local update should be sufficient
-      // fetchCurrentRunAndGames(); 
-    } catch (err: any) {
-      setError(`Failed to update game order: ${err.message}`);
-      toast({ title: "Error", description: `Failed to update game order: ${err.message}`, variant: "destructive" });
-      // Revert local state if DB update fails
-      setGames(games); 
-    }
-  };
+  // Removed onDragEnd function
 
   const handleNameUpdate = async (newName: string) => {
     if (!currentRun) return;
@@ -260,7 +214,7 @@ const CurrentRun = () => {
   };
 
 
-  if (loading && !currentRun) { // Show initial loading state only if no run is loaded yet
+  if (loading && !currentRun) { 
     return <div className="text-center p-10">Loading your run data...</div>;
   }
 
@@ -314,52 +268,18 @@ const CurrentRun = () => {
           <CurrentRunStats games={games} />
           <WeekProgress games={games} />
 
-          {/* --- Conditionally Render DragDropContext --- */}
-          {!isMobile ? (
-            <DragDropContext onDragEnd={onDragEnd}>
-              <Droppable droppableId="gamesList">
-                {(provided) => (
-                  <div 
-                    {...provided.droppableProps} 
-                    ref={provided.innerRef} 
-                    className="space-y-4"
-                  >
-                    {games.map((game, index) => (
-                      <Draggable key={game.id} draggableId={game.id} index={index}>
-                        {(provided) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps} // The drag handle
-                          >
-                            <GameListItem 
-                              game={game} 
-                              onEdit={handleEditGame} 
-                              onDelete={handleDeleteGame} 
-                            />
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            </DragDropContext>
-          ) : (
-            // --- Render without Drag-and-Drop on Mobile ---
-            <div className="space-y-4">
-              {games.map((game) => (
-                 <GameListItem 
-                    key={game.id} // Use game.id as key here too
-                    game={game} 
-                    onEdit={handleEditGame} 
-                    onDelete={handleDeleteGame} 
-                  />
-              ))}
-            </div>
-          )}
-          {/* --- End Conditional Rendering --- */}
+          {/* Simplified Rendering - No Drag and Drop */}
+          <div className="space-y-4">
+            {games.map((game) => (
+              <GameListItem 
+                  key={game.id} 
+                  game={game} 
+                  onEdit={handleEditGame} 
+                  onDelete={handleDeleteGame} 
+                />
+            ))}
+          </div>
+          {/* End Simplified Rendering */}
         </>
       )}
     </div>
