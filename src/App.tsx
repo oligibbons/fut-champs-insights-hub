@@ -24,13 +24,13 @@ import { Avatar, AvatarFallback, AvatarImage } from './components/ui/avatar';
 import { ArrowRight } from 'lucide-react';
 import { cn } from './lib/utils';
 import AnimatedBackground from './components/ui/AnimatedBackground';
-import { useMobile } from './hooks/use-mobile'; // <-- ADD THIS
-import { MobileBottomNav } from './components/MobileBottomNav'; // <-- ADD THIS
+import { useMobile } from './hooks/use-mobile'; // <-- Keep this import
+import { MobileBottomNav } from './components/MobileBottomNav'; // <-- Keep this import
 
 const Header = () => {
   const { user } = useAuth();
   const location = useLocation();
-  const { isMobile } = useMobile(); // <-- THIS LINE IS NOW FIXED
+  const isMobile = useMobile(); // <-- FIX #1: Correctly assign boolean
 
   if (!user || location.pathname === '/auth') {
     return null;
@@ -59,19 +59,19 @@ const Header = () => {
 
 function App() {
   const [isNavExpanded, setIsNavExpanded] = useState(false);
-  const { isMobile } = useMobile(); // <-- ADD THIS
+  const isMobile = useMobile(); // <-- FIX #2: Correctly assign boolean
 
   const Layout = ({ children }: { children: React.ReactNode }) => {
     return (
       <div className="flex min-h-screen bg-background">
 
-        {/* --- MODIFIED: Conditional Navigation --- */}
+        {/* --- Conditional Navigation --- */}
         {isMobile ? (
           <MobileBottomNav />
         ) : (
           <Navigation isExpanded={isNavExpanded} setIsExpanded={setIsNavExpanded} />
         )}
-        {/* --- END MODIFICATION --- */}
+        {/* --- END Conditional Navigation --- */}
 
         <div className={cn(
           "flex-1 flex flex-col transition-all duration-300 ease-in-out",
