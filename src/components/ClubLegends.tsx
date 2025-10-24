@@ -307,7 +307,7 @@ const ClubLegends = () => {
                           <div className="club-legend-card-stat-label">Assists</div>
                         </div>
                         <div className="club-legend-card-stat">
-                          <div className="club-legend-card-stat-value">{legend.assistsPer90.toFixed(2)}</div>
+                          <div className="club-legend-card-stat-value">{legend.assistsPer9impo0.toFixed(2)}</div>
                           <div className="club-legend-card-stat-label">A/90</div>
                         </div>
                       </>
@@ -393,7 +393,6 @@ const ClubLegends = () => {
               <Badge className="bg-fifa-red/20 text-fifa-red">Attackers: 50+ goals</Badge>
               <Badge className="bg-blue-500/20 text-blue-500">Playmakers: 50+ assists</Badge>
               <Badge className="bg-fifa-green/20 text-fifa-green">Defenders: 20+ clean sheets</Badge>
-              {/* This is the start of the code that was missing */}
               <Badge className="bg-fifa-purple/20 text-fifa-purple">Goalkeepers: 20+ clean sheets</Badge>
               <Badge className="bg-yellow-500/20 text-yellow-500">Talismans: 70%+ win rate (50+ games)</Badge>
               <Badge className="bg-orange-500/20 text-orange-500">Clutch Players: 15+ clutch contributions</Badge>
