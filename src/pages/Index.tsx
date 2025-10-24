@@ -118,16 +118,19 @@ const Dashboard = () => {
         if (!user) return;
         setLoading(true);
         try {
+            // --- FIX 1: Corrected query to select 'value' where 'key' is 'dashboard_layout' ---
             const { data, error } = await supabase
                 .from('user_settings')
-                .select('dashboard_layout')
+                .select('value') // Select the 'value' column
                 .eq('user_id', user.id)
+                .eq('key', 'dashboard_layout') // Filter by the key
                 .single();
 
             if (error && error.code !== 'PGRST116') throw error;
 
-            if (data?.dashboard_layout) {
-                 const savedLayout = data.dashboard_layout as { id: string; order: number }[];
+            // --- FIX 2: Check for 'data.value' instead of 'data.dashboard_layout' ---
+            if (data?.value) {
+                 const savedLayout = data.value as { id: string; order: number }[]; // Get layout from 'value'
                 let loadedLayout = savedLayout
                     .map(item => {
                         const component = componentsMap[item.id];
@@ -158,9 +161,16 @@ const Dashboard = () => {
         if (!user) return;
         const layoutToSave = newLayout.map(({ id, order }) => ({ id, order }));
         try {
+            // --- FIX 3: Corrected upsert to use 'key' and 'value' columns ---
             const { error } = await supabase
                 .from('user_settings')
-                .upsert({ user_id: user.id, dashboard_layout: layoutToSave }, { onConflict: 'user_id' });
+                .upsert({ 
+                    user_id: user.id, 
+                    key: 'dashboard_layout', // Set the key
+                    value: layoutToSave        // Set the value
+                }, { 
+                    onConflict: 'user_id, key' // Upsert based on this combination (requires a unique constraint in Supabase)
+                });
 
             if (error) throw error;
             toast({ title: "Success", description: "Dashboard layout saved." });
