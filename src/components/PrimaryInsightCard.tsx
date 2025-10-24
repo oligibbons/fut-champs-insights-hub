@@ -1,86 +1,117 @@
-import { Insight } from '@/utils/aiInsights';
-import { Button } from '@/components/ui/button';
-import { Lightbulb, TrendingUp, AlertTriangle, CheckCircle, ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { cn } from '@/lib/utils';
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+// --- FIX: Use useAccountData ---
+import { useAccountData } from '@/hooks/useAccountData';
+// --- FIX: Import Skeleton ---
+import { Skeleton } from '@/components/ui/skeleton';
+import { generateEnhancedAIInsights } from '@/utils/enhancedAiInsights'; // Assuming this generates insights
+import { Lightbulb, Brain, TrendingUp, TrendingDown, Target } from 'lucide-react';
+import { useTheme } from '@/hooks/useTheme';
 
-interface PrimaryInsightCardProps {
-  insight: Insight | null;
-}
+const PrimaryInsightCard = () => {
+    // --- FIX: Use useAccountData and loading state ---
+    const { weeklyData = [], currentWeek, loading } = useAccountData() || {};
+    const { currentTheme } = useTheme();
+    const [primaryInsight, setPrimaryInsight] = useState<any | null>(null);
 
-const PrimaryInsightCard = ({ insight }: PrimaryInsightCardProps) => {
-  // Renders a placeholder state if no insights are available yet.
-  if (!insight) {
-    return (
-      <div className={cn(
-        "p-6 bg-card/60 backdrop-blur-xl border-2 border-primary/30 rounded-2xl shadow-2xl",
-        "shimmer-effect glow-effect"
-      )}>
-        <div className="flex items-center gap-2 mb-4">
-          <Lightbulb className="h-5 w-5 text-primary" />
-          <h2 className="text-lg font-semibold">Your Primary Insight</h2>
-        </div>
-        <p className="text-muted-foreground mb-4">
-          Play at least 5 games and generate an analysis on the AI Insights page to see your top priority focus here.
-        </p>
-        <Button asChild className="w-full" variant="outline">
-          <Link to="/ai-insights">
-            Go to AI Insights
-            <ArrowRight className="h-4 w-4 ml-2" />
-          </Link>
-        </Button>
-      </div>
-    );
-  }
+    const completedWeeks = weeklyData.filter(week => week.isCompleted);
 
-  const getInsightIcon = (category: string) => {
-    switch (category) {
-      case 'strength': return <CheckCircle className="h-8 w-8 text-green-500" />;
-      case 'weakness': return <AlertTriangle className="h-8 w-8 text-red-500" />;
-      case 'opportunity': return <TrendingUp className="h-8 w-8 text-blue-500" />;
-      default: return <Lightbulb className="h-8 w-8 text-yellow-500" />;
+    useEffect(() => {
+        // Only run if data is loaded and there are completed weeks
+        if (!loading && completedWeeks.length > 0) {
+            const insights = generateEnhancedAIInsights(completedWeeks, currentWeek);
+            // Find the insight with the highest priority or a specific type
+            const topInsight = insights.sort((a, b) => {
+                const priorityOrder = { high: 3, medium: 2, low: 1 };
+                return (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0);
+            })[0]; // Get the highest priority insight
+            setPrimaryInsight(topInsight || null);
+        } else if (!loading) {
+            setPrimaryInsight(null); // Clear insight if no data
+        }
+    }, [completedWeeks, currentWeek, loading]); // Add loading dependency
+
+    const getInsightIcon = (category?: string) => {
+        switch (category) {
+            case 'strength': return <TrendingUp className="h-5 w-5 text-green-500" />;
+            case 'weakness': return <TrendingDown className="h-5 w-5 text-red-500" />;
+            case 'opportunity': return <Target className="h-5 w-5 text-blue-500" />;
+            default: return <Brain className="h-5 w-5 text-purple-500" />;
+        }
+    };
+
+    // --- FIX: Add loading state ---
+    if (loading) {
+        return (
+            <Card 
+                className="border-0 shadow-lg"
+                style={{ backgroundColor: currentTheme.colors.surface, borderColor: currentTheme.colors.border }}
+            >
+                <CardHeader>
+                    <Skeleton className="h-6 w-3/5" />
+                </CardHeader>
+                <CardContent>
+                    <Skeleton className="h-5 w-4/5 mb-2" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-3/4 mt-1" />
+                    <div className="flex justify-between items-center mt-4">
+                        <Skeleton className="h-5 w-20 rounded-full" />
+                        <Skeleton className="h-4 w-24" />
+                    </div>
+                </CardContent>
+            </Card>
+        );
     }
-  };
 
-  return (
-    <div className={cn(
-      "p-6 bg-card/60 backdrop-blur-xl border-2 border-primary/30 rounded-2xl shadow-2xl",
-      "shimmer-effect glow-effect"
-    )}>
-      <div className="flex items-center justify-between mb-4">
-        <span className="flex items-center gap-2 font-semibold">
-          <Lightbulb className="h-5 w-5 text-primary" />
-          Your Top Priority Insight
-        </span>
-        <span className={`text-sm font-semibold capitalize px-2 py-1 rounded-md ${
-            insight.category === 'strength' ? 'text-green-400 bg-green-500/10' :
-            insight.category === 'weakness' ? 'text-red-400 bg-red-500/10' :
-            'text-blue-400 bg-blue-500/10'
-          }`}>
-          {insight.category}
-        </span>
-      </div>
-      <div className="flex items-start gap-4">
-        <div className="mt-1">
-          {getInsightIcon(insight.category)}
-        </div>
-        <div>
-          <h3 className="text-xl font-bold mb-1">{insight.title}</h3>
-          <p className="text-muted-foreground">
-            {insight.description}
-          </p>
-        </div>
-      </div>
-      <div className="mt-4">
-        <Button asChild className="w-full">
-          <Link to="/ai-insights">
-            View Full Analysis & Generate New Insights
-            <ArrowRight className="h-4 w-4 ml-2" />
-          </Link>
-        </Button>
-      </div>
-    </div>
-  );
+    if (!primaryInsight) {
+        return (
+            <Card 
+                className="border-0 shadow-lg flex flex-col items-center justify-center text-center p-6 min-h-[150px]" // Added min height
+                style={{ backgroundColor: currentTheme.colors.surface, borderColor: currentTheme.colors.border }}
+            >
+                <Lightbulb className="h-8 w-8 mb-2" style={{ color: currentTheme.colors.muted }} />
+                <p className="text-sm font-medium" style={{ color: currentTheme.colors.text }}>AI Insights Loading</p>
+                <p className="text-xs" style={{ color: currentTheme.colors.muted }}>Complete more weeks for personalized tips.</p>
+            </Card>
+        );
+    }
+
+    return (
+        <Card 
+            className="border-0 shadow-lg"
+            style={{ backgroundColor: currentTheme.colors.surface, borderColor: currentTheme.colors.border }}
+        >
+            <CardHeader>
+                <CardTitle className="text-lg font-semibold flex items-center gap-2" style={{ color: currentTheme.colors.text }}>
+                    {getInsightIcon(primaryInsight.category)}
+                    Primary AI Insight
+                </CardTitle>
+            </CardHeader>
+            <CardContent>
+                <h4 className="font-medium mb-1" style={{ color: currentTheme.colors.text }}>{primaryInsight.title}</h4>
+                <p className="text-sm mb-3" style={{ color: currentTheme.colors.muted }}>{primaryInsight.description}</p>
+                {primaryInsight.actionableAdvice && (
+                    <div className="p-2 rounded bg-white/5 mb-3 text-sm" style={{ color: currentTheme.colors.text }}>
+                        <strong style={{ color: currentTheme.colors.primary }}>Advice:</strong> {primaryInsight.actionableAdvice}
+                    </div>
+                )}
+                 <div className="flex items-center justify-between mt-2">
+                      <Badge 
+                        variant="outline"
+                        className={`text-xs border-0 capitalize ${
+                            primaryInsight.priority === 'low' ? 'bg-green-500/20 text-green-400' :
+                            primaryInsight.priority === 'medium' ? 'bg-yellow-500/20 text-yellow-400' :
+                            'bg-red-500/20 text-red-400'
+                        }`}
+                      >
+                        {primaryInsight.priority} Priority
+                      </Badge>
+                      <span className="text-xs" style={{ color: currentTheme.colors.muted }}>{primaryInsight.confidence}% confidence</span>
+                 </div>
+            </CardContent>
+        </Card>
+    );
 };
 
 export default PrimaryInsightCard;
