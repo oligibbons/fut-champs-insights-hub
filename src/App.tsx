@@ -64,7 +64,7 @@ function App() {
   const Layout = ({ children }: { children: React.ReactNode }) => {
     return (
       <div className="flex min-h-screen bg-background">
-        
+
         {/* --- MODIFIED: Conditional Navigation --- */}
         {isMobile ? (
           <MobileBottomNav />
