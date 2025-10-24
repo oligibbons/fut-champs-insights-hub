@@ -1,42 +1,38 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { GripVertical } from 'lucide-react';
-import { useMobile } from '@/hooks/use-mobile';
-import { useLongPress } from '@/lib/utils';
+import { useTheme } from '@/hooks/useTheme';
+import { GripVertical } from 'lucide-react'; // Import a drag handle icon
 
 interface DashboardSectionProps {
-  id: string;
   title: string;
   children: React.ReactNode;
+  dragHandleProps?: React.HTMLAttributes<HTMLDivElement>; // Accept drag handle props
 }
 
-const DashboardSection: React.FC<DashboardSectionProps> = ({ id, title, children }) => {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
-  const isMobile = useMobile();
+const DashboardSection: React.FC<DashboardSectionProps> = ({ title, children, dragHandleProps }) => {
+  const { currentTheme } = useTheme();
 
-  const longPressProps = useLongPress(() => {});
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-
-  const mobileListeners = {
-    ...listeners,
-    ...longPressProps,
-  };
-  
   return (
-    <Card ref={setNodeRef} style={style} className="overflow-hidden relative shimmer-effect glow-effect">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+    <Card
+      className="border-0 shadow-lg overflow-hidden" // Added overflow-hidden for potential child issues
+      style={{
+        backgroundColor: currentTheme.colors.cardBg,
+        borderColor: currentTheme.colors.border,
+      }}
+    >
+      <CardHeader
+        className="flex flex-row items-center justify-between space-y-0 p-4"
+        style={{ borderBottom: `1px solid ${currentTheme.colors.border}` }}
+      >
         <CardTitle className="text-lg font-semibold">{title}</CardTitle>
-        <div {...attributes} {...(isMobile ? mobileListeners : listeners)} className="cursor-grab p-2">
-          <GripVertical className="h-5 w-5 text-muted-foreground" />
-        </div>
+        {/* Apply dragHandleProps to this div if they exist */}
+        {dragHandleProps && (
+           <div {...dragHandleProps} className="cursor-grab text-muted-foreground hover:text-foreground p-1">
+              <GripVertical size={18} />
+           </div>
+        )}
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4">
         {children}
       </CardContent>
     </Card>
