@@ -19,13 +19,13 @@ export const AuthPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp }_ = useAuth();
+  const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error }_ = await signIn(email, password);
+    const { error } = await signIn(email, password); // <-- This line is fixed
     if (error) {
       toast.error(error.message);
     } else {
@@ -38,7 +38,7 @@ export const AuthPage = () => {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error }_ = await signUp(email, password);
+    const { error } = await signUp(email, password); // <-- This line is fixed
     if (error) {
       toast.error(error.message);
     } else {
