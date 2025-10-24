@@ -79,7 +79,7 @@ const Auth = () => {
           </div>
           <CardTitle className="text-2xl font-bold text-white mb-2">
             {isSignUp ? 'Create Account' : 'Welcome Back'}
-          </Detect>
+          </CardTitle>
           <p style={{ color: currentTheme.colors.muted }}>
             {isSignUp ? 'Join the Champions community' : 'Sign in to continue your journey'}
           </p>
