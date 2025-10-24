@@ -142,7 +142,8 @@ export const FUTTrackrRecords = () => {
             label="Total Clean Sheets"
             value={stats.totalCleanSheets}
           />
-        </Example>
+        </CarouselItem>
+        {/* --- FIX: This was </Example> --- */}
       </CarouselContent>
       {/* Only show carousel arrows on desktop */}
       <CarouselPrevious className="hidden md:flex" />
