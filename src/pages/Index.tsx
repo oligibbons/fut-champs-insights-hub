@@ -9,7 +9,9 @@ import ClubLegends from '@/components/ClubLegends';
 import { FUTTrackrRecords } from '@/components/FUTTrackrRecords';
 import DashboardSection from '@/components/DashboardSection';
 import { useToast } from '@/hooks/use-toast';
-// --- FIX: Removed all dnd-kit, useSortable, and use-mobile imports ---
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { LayoutGrid, Users, Trophy } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface DashboardItem {
     id: string;
@@ -35,15 +37,11 @@ const defaultLayout: DashboardItem[] = [
     { id: 'records', component: componentsMap.records, order: 6 },
 ];
 
-// --- FIX: Removed SortableDashboardSection wrapper ---
-
 const Dashboard = () => {
     const { user } = useAuth();
     const { toast } = useToast();
     const [layout, setLayout] = useState<DashboardItem[]>([]);
     const [loading, setLoading] = useState(true);
-
-    // --- FIX: Removed sensor setup and useMobile hook ---
 
     useEffect(() => {
         fetchLayout();
@@ -53,18 +51,15 @@ const Dashboard = () => {
         if (!user) return;
         setLoading(true);
         try {
-            // --- FIX 1: Use .limit(1) instead of .single() to prevent 406 error ---
             const { data, error } = await supabase
                 .from('user_settings')
                 .select('value')
                 .eq('user_id', user.id)
                 .eq('key', 'dashboard_layout')
-                .limit(1); // Get an array of 0 or 1 items
+                .limit(1); 
 
-            // --- FIX 2: Simplified error check ---
             if (error) throw error;
 
-            // --- FIX 3: Check if data array exists and has an item ---
             if (data && data.length > 0 && data[0].value) {
                  const savedLayout = data[0].value as { id: string; order: number }[];
                 let loadedLayout = savedLayout
@@ -74,15 +69,18 @@ const Dashboard = () => {
                     })
                     .filter((item): item is DashboardItem => item !== null);
 
+                // Add any new components from defaultLayout that aren't in the saved layout
                 defaultLayout.forEach(defaultItem => {
                     if (!loadedLayout.some(item => item.id === defaultItem.id)) {
                         loadedLayout.push({...defaultItem});
                     }
                 });
 
+                // Filter out any components that no longer exist in componentsMap
                 loadedLayout = loadedLayout.filter(item => componentsMap[item.id]);
                 setLayout(loadedLayout.sort((a, b) => a.order - b.order));
             } else {
+                // No saved layout, use the default
                 setLayout([...defaultLayout].sort((a, b) => a.order - b.order));
             }
         } catch (err: any) {
@@ -93,26 +91,78 @@ const Dashboard = () => {
         }
     };
 
-    // --- FIX: Removed saveLayout and handleDragEnd functions ---
+    // Helper function to find and render a specific dashboard section
+    const findAndRenderSection = (id: string) => {
+        const item = layout.find(item => item.id === id);
+        
+        if (!item) {
+            // This case handles if a component is removed from the map 
+            // but still exists in a user's saved layout.
+            return null; 
+        }
 
+        return (
+            <DashboardSection 
+              key={item.id} 
+              title={item.id.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+            >
+                <item.component />
+            </DashboardSection>
+        );
+    };
+
+    // Loading skeleton for the new tabbed layout
     if (loading) {
-        return <div>Loading dashboard...</div>;
+        return (
+            <div className="space-y-6">
+                <Skeleton className="h-12 w-80 rounded-2xl" />
+                <div className="space-y-6">
+                    <Skeleton className="h-64 w-full rounded-2xl" />
+                    <Skeleton className="h-48 w-full rounded-2xl" />
+                </div>
+            </div>
+        );
     }
 
     return (
-        // --- FIX: Removed DndContext and SortableContext wrappers ---
-        <div className="space-y-6">
-            {layout.map((item) => (
-               // --- FIX: Render DashboardSection directly, without sortable wrapper ---
-               <DashboardSection 
-                 key={item.id} 
-                 title={item.id.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                 // dragHandleProps is removed, so the handle won't show
-               >
-                   <item.component />
-               </DashboardSection>
-            ))}
-        </div>
+        <Tabs defaultValue="overview" className="space-y-6">
+            {/* STYLED TAB SWITCHER */}
+            <TabsList className="glass-card rounded-2xl shadow-xl border-0 p-2 h-auto">
+                <TabsTrigger value="overview" className="rounded-xl flex-1 flex gap-2 items-center">
+                    <LayoutGrid className="h-4 w-4" />
+                    Overview
+                </TabsTrigger>
+                <TabsTrigger value="players" className="rounded-xl flex-1 flex gap-2 items-center">
+                    <Users className="h-4 w-4" />
+                    Player Hub
+                </TabsTrigger>
+                <TabsTrigger value="records" className="rounded-xl flex-1 flex gap-2 items-center">
+                    <Trophy className="h-4 w-4" />
+                    Records
+                </TabsTrigger>
+            </TabsList>
+
+            {/* TAB CONTENT */}
+            
+            {/* Overview Tab */}
+            <TabsContent value="overview" className="space-y-6">
+                {findAndRenderSection('overview')}
+                {findAndRenderSection('recentRuns')}
+            </TabsContent>
+
+            {/* Player Hub Tab */}
+            <TabsContent value="players" className="space-y-6">
+                {findAndRenderSection('topPerformers')}
+                {findAndRenderSection('lowestRated')}
+                {findAndRenderSection('clubLegends')}
+            </TabsContent>
+
+            {/* Records Tab */}
+            <TabsContent value="records" className="space-y-6">
+                {findAndRenderSection('records')}
+            </TabsContent>
+
+        </Tabs>
     );
 };
 
