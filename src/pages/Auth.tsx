@@ -1,176 +1,162 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
-import { useTheme } from '@/hooks/useTheme';
-import { Mail, Lock, User, LogIn, UserPlus } from 'lucide-react';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AnimatedBackground } from "@/components/ui/AnimatedBackground";
 
-const Auth = () => {
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [username, setUsername] = useState('');
+export const AuthPage = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  
-  const { signUp, signIn } = useAuth();
+  const { signIn, signUp }_ = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const { currentTheme } = useTheme();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
-    try {
-      if (isSignUp) {
-        if (!username.trim()) {
-          toast({
-            title: "Error",
-            description: "Username is required",
-            variant: "destructive"
-          });
-          return;
-        }
-        const { error } = await signUp(email, password, username);
-        if (error) throw error;
-        
-        toast({
-          title: "Success!",
-          description: "Account created successfully. You can now sign in."
-        });
-        setIsSignUp(false);
-      } else {
-        const { error } = await signIn(email, password);
-        if (error) throw error;
-        
-        toast({
-          title: "Welcome back!",
-          description: "Successfully signed in."
-        });
-        navigate('/');
-      }
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "An error occurred",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
+    const { error }_ = await signIn(email, password);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Signed in successfully!");
+      navigate("/");
     }
+    setLoading(false);
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const { error }_ = await signUp(email, password);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Account created! Please check your email for verification.");
+      // Consider navigating to a "please verify" page or back to login
+    }
+    setLoading(false);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6" 
-         style={{ background: currentTheme.colors.background }}>
-      <Card className="w-full max-w-md rounded-3xl shadow-depth-lg border-0"
-            style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}>
-        <CardHeader className="text-center pb-6">
-          <div className="w-16 h-16 rounded-3xl flex items-center justify-center mx-auto mb-4"
-               style={{ backgroundColor: currentTheme.colors.primary + '20' }}>
-            <img 
-              src="/lovable-uploads/6b6465f4-e466-4f3b-9761-8a829fbe395c.png" 
-              alt="FUTALYST Logo" 
-              className="w-10 h-10 object-contain"
+    <div className="w-full lg:grid lg:min-h-[100vh] lg:grid-cols-2 xl:min-h-[100vh]">
+      <div className="flex items-center justify-center py-12">
+        <div className="mx-auto grid w-[350px] gap-6">
+          <div className="grid gap-2 text-center">
+            <img
+              src="/fut-trackr-logo.jpg"
+              alt="FUTTrackr Logo"
+              className="mx-auto h-16 w-16"
             />
+            <h1 className="text-3xl font-bold">FUTTrackr</h1>
+            <p className="text-balance text-muted-foreground">
+              Track your FUT Champions performance
+            </p>
           </div>
-          <CardTitle className="text-2xl font-bold text-white mb-2">
-            {isSignUp ? 'Create Account' : 'Welcome Back'}
-          </CardTitle>
-          <p style={{ color: currentTheme.colors.muted }}>
-            {isSignUp ? 'Join the Champions community' : 'Sign in to continue your journey'}
-          </p>
-        </CardHeader>
-        
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {isSignUp && (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm\" style={{ color: currentTheme.colors.text }}>
-                  <User className="h-4 w-4" />
-                  Username
-                </div>
-                <Input
-                  type="text"
-                  placeholder="Choose a username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  required={isSignUp}
-                  className="rounded-2xl border-0"
-                  style={{ backgroundColor: currentTheme.colors.surface, color: currentTheme.colors.text }}
-                />
-              </div>
-            )}
-            
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm" style={{ color: currentTheme.colors.text }}>
-                <Mail className="h-4 w-4" />
-                Email
-              </div>
-              <Input
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="rounded-2xl border-0"
-                style={{ backgroundColor: currentTheme.colors.surface, color: currentTheme.colors.text }}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm" style={{ color: currentTheme.colors.text }}>
-                <Lock className="h-4 w-4" />
-                Password
-              </div>
-              <Input
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="rounded-2xl border-0"
-                style={{ backgroundColor: currentTheme.colors.surface, color: currentTheme.colors.text }}
-              />
-            </div>
-            
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full text-lg py-6 rounded-2xl font-semibold transition-all duration-300 hover:scale-105"
-              style={{ backgroundColor: currentTheme.colors.primary, color: '#ffffff' }}
-            >
-              {loading ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  {isSignUp ? 'Creating Account...' : 'Signing In...'}
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  {isSignUp ? <UserPlus className="h-5 w-5" /> : <LogIn className="h-5 w-5" />}
-                  {isSignUp ? 'Create Account' : 'Sign In'}
-                </div>
-              )}
-            </Button>
-          </form>
-          
-          <div className="mt-6 text-center">
-            <button
-              type="button"
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-sm hover:underline transition-colors"
-              style={{ color: currentTheme.colors.primary }}
-            >
-              {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
-            </button>
-          </div>
-        </CardContent>
-      </Card>
+          <Tabs defaultValue="login" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="login">Login</TabsTrigger>
+              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            </TabsList>
+            <TabsContent value="login">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-2xl">Login</CardTitle>
+                  <CardDescription>
+                    Enter your email below to login to your account
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleSignIn}>
+                    <div className="grid gap-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="email">Email</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="m@example.com"
+                          required
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <div className="flex items-center">
+                          <Label htmlFor="password">Password</Label>
+                        </div>
+                        <Input
+                          id="password"
+                          type="password"
+                          required
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                        />
+                      </div>
+                      <Button type="submit" className="w-full" disabled={loading}>
+                        {loading ? "Loading..." : "Login"}
+                      </Button>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            <TabsContent value="signup">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-2xl">Sign Up</CardTitle>
+                  <CardDescription>
+                    Enter your details to create a new account
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleSignUp}>
+                    <div className="grid gap-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="email-signup">Email</Label>
+                        <Input
+                          id="email-signup"
+                          type="email"
+                          placeholder="m@example.com"
+                          required
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="password-signup">Password</Label>
+                        <Input
+                          id="password-signup"
+                          type="password"
+                          required
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          minLength={6}
+                        />
+                      </div>
+                      <Button type="submit" className="w-full" disabled={loading}>
+                        {loading ? "Creating..." : "Create account"}
+                      </Button>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
+      <div className="hidden bg-muted lg:block">
+        <AnimatedBackground />
+      </div>
     </div>
   );
 };
-
-export default Auth;
