@@ -6,7 +6,8 @@ interface RecentRunsProps {
   runs: FutChampsWeek[];
 }
 
-// FIX: Added ' = []' to default 'runs' to an empty array if it's undefined
+// FIX: Added ' = []' to default 'runs' to an empty array
+// This prevents 'runs.length' from crashing if 'runs' is undefined.
 const RecentRuns = ({ runs = [] }: RecentRunsProps) => {
   if (runs.length === 0) {
     return (
