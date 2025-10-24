@@ -271,7 +271,7 @@ const ClubLegends = () => {
               <SelectItem value="enforcer">Enforcers</SelectItem>
               <SelectItem value="ironman">Iron Men</SelectItem>
               <SelectItem value="veteran">Veterans</SelectItem>
-            </SelectContent>
+            </DndContext>
           </Select>
         </div>
       </CardHeader>
@@ -327,6 +327,7 @@ const ClubLegends = () => {
                           <div className="club-legend-card-stat-value">{legend.rating.toFixed(1)}</div>
                           <div className="club-legend-card-stat-label">Rating</div>
                         </div>
+Moves
                       </>
                     ) : legend.legendType === 'enforcer' ? (
                       <>
@@ -358,7 +359,7 @@ const ClubLegends = () => {
                         </div>
                         <div className="club-legend-card-stat">
                           <div className="club-legend-card-stat-value">{legend.goalInvolvementsPer90.toFixed(2)}</div>
-                          <div className="club-legend-card-stat-label">G+A/90</div>
+                          <div className="club-legend-card-stat-label">G+A/9AN</div>
                         </div>
                       </>
                     ) : (
