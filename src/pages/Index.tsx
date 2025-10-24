@@ -118,19 +118,20 @@ const Dashboard = () => {
         if (!user) return;
         setLoading(true);
         try {
-            // --- FIX 1: Corrected query to select 'value' where 'key' is 'dashboard_layout' ---
+            // --- FIX 1: Use .limit(1) instead of .single() to prevent 406 error ---
             const { data, error } = await supabase
                 .from('user_settings')
-                .select('value') // Select the 'value' column
+                .select('value')
                 .eq('user_id', user.id)
-                .eq('key', 'dashboard_layout') // Filter by the key
-                .single();
+                .eq('key', 'dashboard_layout')
+                .limit(1); // Get an array of 0 or 1 items
 
-            if (error && error.code !== 'PGRST116') throw error;
+            // --- FIX 2: Simplified error check ---
+            if (error) throw error;
 
-            // --- FIX 2: Check for 'data.value' instead of 'data.dashboard_layout' ---
-            if (data?.value) {
-                 const savedLayout = data.value as { id: string; order: number }[]; // Get layout from 'value'
+            // --- FIX 3: Check if data array exists and has an item ---
+            if (data && data.length > 0 && data[0].value) {
+                 const savedLayout = data[0].value as { id: string; order: number }[];
                 let loadedLayout = savedLayout
                     .map(item => {
                         const component = componentsMap[item.id];
@@ -161,15 +162,15 @@ const Dashboard = () => {
         if (!user) return;
         const layoutToSave = newLayout.map(({ id, order }) => ({ id, order }));
         try {
-            // --- FIX 3: Corrected upsert to use 'key' and 'value' columns ---
+            // This upsert now works correctly *if* you ran the SQL query from Step 1
             const { error } = await supabase
                 .from('user_settings')
                 .upsert({ 
                     user_id: user.id, 
-                    key: 'dashboard_layout', // Set the key
-                    value: layoutToSave        // Set the value
+                    key: 'dashboard_layout',
+                    value: layoutToSave
                 }, { 
-                    onConflict: 'user_id, key' // Upsert based on this combination (requires a unique constraint in Supabase)
+                    onConflict: 'user_id, key' // This relies on the SQL constraint
                 });
 
             if (error) throw error;
