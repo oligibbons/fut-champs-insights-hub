@@ -1,20 +1,29 @@
-
 import { useMemo } from 'react';
 import Navigation from '@/components/Navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useDataSync } from '@/hooks/useDataSync';
+// --- FIX: Assuming useDataSync is the hook you use, but useAccountData is more likely.
+// I'll use useAccountData to be consistent with your other dashboard components.
+import { useAccountData } from '@/hooks/useAccountData';
 import { Trophy, Target, TrendingUp, Star, Users, Award, Clock, BarChart3 } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
+import { Skeleton } from '@/components/ui/skeleton'; // --- FIX: Import Skeleton
 
 const Players = () => {
   const { currentTheme } = useTheme();
-  const { weeklyData } = useDataSync();
+  // --- FIX:
+  // 1. Use useAccountData for consistency.
+  // 2. Destructure 'loading' to prevent rendering on undefined data.
+  // 3. Add '|| {}' as a guard in case the hook itself isn't ready.
+  // 4. Default 'weeklyData' to '[]' to prevent crashes on 'forEach'.
+  const { weeklyData = [], loading } = useAccountData() || {};
+  // --- END FIX
 
   const playerStats = useMemo(() => {
     // Extract all players from all games across all weeks
     const allPlayers = new Map();
     
+    // This 'forEach' is now safe because weeklyData defaults to []
     weeklyData.forEach(week => {
       week.games.forEach(game => {
         if (game.playerStats && game.playerStats.length > 0) {
@@ -75,6 +84,45 @@ const Players = () => {
       bestWinRate: playerStats.slice().sort((a, b) => b.winRate - a.winRate)[0]
     };
   }, [playerStats]);
+
+  // --- FIX: Add a loading state to prevent layout shift and errors ---
+  if (loading) {
+    return (
+      <div className="min-h-screen">
+        <Navigation />
+        <main className="lg:ml-64 p-4 lg:p-6">
+          <div className="max-w-7xl mx-auto space-y-6 lg:space-y-8">
+            {/* Header Skeleton */}
+            <div className="page-header">
+              <Skeleton className="h-10 w-3/5 mb-2" />
+              <Skeleton className="h-6 w-4/5" />
+            </div>
+
+            {/* Top Stats Skeleton */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+              <Skeleton className="h-32 rounded-xl" />
+              <Skeleton className="h-32 rounded-xl" />
+              <Skeleton className="h-32 rounded-xl" />
+              <Skeleton className="h-32 rounded-xl" />
+            </div>
+
+            {/* Player List Skeleton */}
+            <Card className="glass-card">
+              <CardHeader>
+                <Skeleton className="h-6 w-40" />
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Skeleton className="h-40 rounded-xl" />
+                <Skeleton className="h-40 rounded-xl" />
+                <Skeleton className="h-40 rounded-xl" />
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+      </div>
+    );
+  }
+  // --- END FIX ---
 
   return (
     <div className="min-h-screen">
