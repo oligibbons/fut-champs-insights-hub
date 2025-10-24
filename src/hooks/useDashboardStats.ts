@@ -1,7 +1,11 @@
 import { useMemo } from 'react';
 import { WeeklyPerformance, GameResult, PlayerPerformance } from '@/types/futChampions';
 
-export function useDashboardStats(weeklyData: WeeklyPerformance[]) {
+// --- FIX IS ON THIS LINE ---
+// Added '= []' to provide a default value and prevent crashes
+export function useDashboardStats(weeklyData: WeeklyPerformance[] = []) {
+// --- END FIX ---
+
   const allGames = useMemo(() => weeklyData.flatMap(w => w.games), [weeklyData]);
   const allPlayerPerformances = useMemo(() => allGames.flatMap(g => g.playerStats), [allGames]);
 
