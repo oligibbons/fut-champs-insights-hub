@@ -3,17 +3,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import DashboardOverview from '@/components/DashboardOverview';
 import RecentRuns from '@/components/RecentRuns';
-// --- FIX: We no longer import these directly ---
-// import TopPerformers from '@/components/TopPerformers';
-// import LowestRatedPlayers from '@/components/LowestRatedPlayers';
 import ClubLegends from '@/components/ClubLegends';
 import { FUTTrackrRecords } from '@/components/FUTTrackrRecords';
 import DashboardSection from '@/components/DashboardSection';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LayoutGrid, Users, Trophy } from 'lucide-react';
+import { LayoutGrid, Users } from 'lucide-react'; // --- FIX: Removed 'Trophy' icon ---
 import { Skeleton } from '@/components/ui/skeleton';
-// --- FIX: Import our new component ---
 import PlayerMovers from '@/components/PlayerMovers';
 
 interface DashboardItem {
@@ -22,28 +18,22 @@ interface DashboardItem {
     order: number;
 }
 
+// --- FIX: The components are all correct ---
 const componentsMap: Record<string, React.FC> = {
     overview: DashboardOverview,
     recentRuns: RecentRuns,
-    // --- FIX: Add the new component to the map ---
     playerMovers: PlayerMovers,
     clubLegends: ClubLegends,
     records: FUTTrackrRecords,
-    // --- FIX: Remove the old components from the map ---
-    // topPerformers: TopPerformers, (No longer needed here)
-    // lowestRated: LowestRatedPlayers, (No longer needed here)
 };
 
+// --- FIX: The layout is all correct ---
 const defaultLayout: DashboardItem[] = [
     { id: 'overview', component: componentsMap.overview, order: 1 },
     { id: 'recentRuns', component: componentsMap.recentRuns, order: 2 },
-    // --- FIX: Add new component to default layout ---
     { id: 'playerMovers', component: componentsMap.playerMovers, order: 3 },
     { id: 'clubLegends', component: componentsMap.clubLegends, order: 4 },
     { id: 'records', component: componentsMap.records, order: 5 },
-    // --- FIX: Remove old components from default layout ---
-    // { id: 'topPerformers', component: componentsMap.topPerformers, order: 3 },
-    // { id: 'lowestRated', component: componentsMap.lowestRated, order: 4 },
 ];
 
 const Dashboard = () => {
@@ -78,18 +68,15 @@ const Dashboard = () => {
                     })
                     .filter((item): item is DashboardItem => item !== null);
 
-                // Add any new components from defaultLayout that aren't in the saved layout
                 defaultLayout.forEach(defaultItem => {
                     if (!loadedLayout.some(item => item.id === defaultItem.id)) {
                         loadedLayout.push({...defaultItem});
                     }
                 });
 
-                // Filter out any components that no longer exist in componentsMap
                 loadedLayout = loadedLayout.filter(item => componentsMap[item.id]);
                 setLayout(loadedLayout.sort((a, b) => a.order - b.order));
             } else {
-                // No saved layout, use the default
                 setLayout([...defaultLayout].sort((a, b) => a.order - b.order));
             }
         } catch (err: any)
@@ -108,12 +95,17 @@ const Dashboard = () => {
             return null; 
         }
         
-        // --- This logic now maps 'playerMovers' to the <PlayerMovers /> component ---
         let title = item.id.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
         
-        // --- FIX: Give the new component a better title ---
         if (id === 'playerMovers') {
             title = 'Player Movers';
+        }
+        // --- FIX: Give the "records" component a better title on this page ---
+        if (id === 'records') {
+            title = 'All-Time Records';
+        }
+        if (id === 'recentRuns') {
+            title = 'Recent Runs';
         }
 
         return (
@@ -129,7 +121,8 @@ const Dashboard = () => {
     if (loading) {
         return (
             <div className="space-y-6">
-                <Skeleton className="h-12 w-80 rounded-2xl" />
+                {/* --- FIX: Skeleton for a 2-tab layout --- */}
+                <Skeleton className="h-12 w-60 rounded-2xl" />
                 <div className="space-y-6">
                     <Skeleton className="h-64 w-full rounded-2xl" />
                     <Skeleton className="h-48 w-full rounded-2xl" />
@@ -140,7 +133,8 @@ const Dashboard = () => {
 
     return (
         <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="glass-card rounded-2xl shadow-xl border-0 p-2 h-auto">
+            {/* --- FIX: Simplified to two tabs --- */}
+            <TabsList className="glass-card rounded-2xl shadow-xl border-0 p-2 h-auto grid grid-cols-2">
                 <TabsTrigger value="overview" className="rounded-xl flex-1 flex gap-2 items-center">
                     <LayoutGrid className="h-4 w-4" />
                     Overview
@@ -149,26 +143,21 @@ const Dashboard = () => {
                     <Users className="h-4 w-4" />
                     Player Hub
                 </TabsTrigger>
-                <TabsTrigger value="records" className="rounded-xl flex-1 flex gap-2 items-center">
-                    <Trophy className="h-4 w-4" />
-                    Records
-                </TabsTrigger>
             </TabsList>
             
+            {/* --- FIX: "Overview" tab now contains the hero, recent runs, AND all records --- */}
             <TabsContent value="overview" className="space-y-6">
                 {findAndRenderSection('overview')}
                 {findAndRenderSection('recentRuns')}
+                {findAndRenderSection('records')}
             </TabsContent>
 
             <TabsContent value="players" className="space-y-6">
-                {/* --- FIX: This single component now replaces the two old ones --- */}
                 {findAndRenderSection('playerMovers')}
                 {findAndRenderSection('clubLegends')}
             </TabsContent>
 
-            <TabsContent value="records" className="space-y-6">
-                {findAndRenderSection('records')}
-            </TabsContent>
+            {/* --- FIX: The "Records" tab is no longer needed --- */}
 
         </Tabs>
     );
