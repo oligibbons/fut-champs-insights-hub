@@ -32,8 +32,11 @@ const ClubLegends = () => {
   const [filter, setFilter] = useState<string>('all');
 
   useEffect(() => {
-    // FIX 1: Add a guard clause to ensure weeklyData exists
-    if (!weeklyData) return;
+    // FIX 1: Add a "guard clause" to stop this hook from running
+    // if weeklyData is undefined or empty. This prevents the .flatMap crash.
+    if (!weeklyData || weeklyData.length === 0) {
+      return;
+    }
 
     // Calculate legends from weekly data
     const allGames = weeklyData.flatMap(week => week.games);
@@ -41,7 +44,10 @@ const ClubLegends = () => {
     
     // Collect all player performances
     allGames.forEach(game => {
-      // FIX 2: Use optional chaining in case game.playerStats is undefined
+      
+      // FIX 2: Add optional chaining (the '?') before .forEach.
+      // This will only run the forEach loop if game.playerStats is
+      // not undefined or null. This prevents the .forEach crash.
       game.playerStats?.forEach(player => {
         const key = `${player.name}-${player.position}`;
         
@@ -307,7 +313,7 @@ const ClubLegends = () => {
                           <div className="club-legend-card-stat-label">Assists</div>
                         </div>
                         <div className="club-legend-card-stat">
-                          <div className="club-legend-card-stat-value">{legend.assistsPer9impo0.toFixed(2)}</div>
+                          <div className="club-legend-card-stat-value">{legend.assistsPer90.toFixed(2)}</div>
                           <div className="club-legend-card-stat-label">A/90</div>
                         </div>
                       </>
