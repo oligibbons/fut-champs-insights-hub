@@ -6,7 +6,8 @@ interface RecentRunsProps {
   runs: FutChampsWeek[];
 }
 
-const RecentRuns = ({ runs }: RecentRunsProps) => {
+// FIX: Added ' = []' to default 'runs' to an empty array if it's undefined
+const RecentRuns = ({ runs = [] }: RecentRunsProps) => {
   if (runs.length === 0) {
     return (
       <Card className="text-center">
