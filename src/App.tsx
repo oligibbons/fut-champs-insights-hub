@@ -30,7 +30,7 @@ import { MobileBottomNav } from './components/MobileBottomNav'; // <-- ADD THIS
 const Header = () => {
   const { user } = useAuth();
   const location = useLocation();
-  const { isMobile }_ = useMobile(); // <-- ADD THIS
+  const { isMobile } = useMobile(); // <-- THIS LINE IS NOW FIXED
 
   if (!user || location.pathname === '/auth') {
     return null;
