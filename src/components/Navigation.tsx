@@ -24,7 +24,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import { Menu, LogOut, LayoutDashboard } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -56,7 +56,7 @@ export function Navigation() {
   const { activeAccount } = useAccountData();
 
   const handleSignOut = async () => {
-    const { error }_ = await signOut();
+    const { error } = await signOut(); // <-- This line is fixed
     if (!error) {
       toast.success("Signed out successfully");
       navigate("/auth");
