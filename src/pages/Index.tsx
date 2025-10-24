@@ -7,30 +7,9 @@ import TopPerformers from '@/components/TopPerformers';
 import LowestRatedPlayers from '@/components/LowestRatedPlayers';
 import ClubLegends from '@/components/ClubLegends';
 import { FUTTrackrRecords } from '@/components/FUTTrackrRecords';
-import DashboardSection from '@/components/DashboardSection'; // Needs modification or wrapping
+import DashboardSection from '@/components/DashboardSection';
 import { useToast } from '@/hooks/use-toast';
-import { useMobile } from '@/hooks/use-mobile'; // <-- Import useMobile
-
-// Import dnd-kit components
-import {
-    DndContext,
-    closestCenter,
-    KeyboardSensor,
-    PointerSensor,
-    TouchSensor, // Import TouchSensor
-    useSensor,
-    useSensors,
-    DragEndEvent,
-} from '@dnd-kit/core';
-import {
-    arrayMove,
-    SortableContext,
-    sortableKeyboardCoordinates,
-    verticalListSortingStrategy,
-    useSortable, // Import useSortable
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { GripVertical } from 'lucide-react'; // Example drag handle icon
+// --- FIX: Removed all dnd-kit, useSortable, and use-mobile imports ---
 
 interface DashboardItem {
     id: string;
@@ -56,59 +35,15 @@ const defaultLayout: DashboardItem[] = [
     { id: 'records', component: componentsMap.records, order: 6 },
 ];
 
-// Wrapper for DashboardSection to make it sortable
-const SortableDashboardSection = ({ item }: { item: DashboardItem }) => {
-    const isMobile = useMobile();
-    const {
-        attributes,
-        listeners,
-        setNodeRef,
-        transform,
-        transition,
-        isDragging
-    } = useSortable({ id: item.id });
-
-    const style = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging ? 0.7 : 1,
-        zIndex: isDragging ? 10 : undefined, // Ensure dragging item is on top
-    };
-
-    // Conditionally apply listeners only if not mobile
-    const dragHandleListeners = isMobile ? undefined : listeners;
-
-    return (
-        <div ref={setNodeRef} style={style} {...attributes} /* Apply attributes here */ >
-            <DashboardSection
-                title={item.id.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                // Pass listeners to the specific drag handle element inside DashboardSection
-                dragHandleProps={dragHandleListeners}
-            >
-                <item.component />
-            </DashboardSection>
-        </div>
-    );
-};
-
+// --- FIX: Removed SortableDashboardSection wrapper ---
 
 const Dashboard = () => {
     const { user } = useAuth();
     const { toast } = useToast();
-    const isMobile = useMobile(); // Use hook here
     const [layout, setLayout] = useState<DashboardItem[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // Setup sensors - conditionally include TouchSensor
-    const sensors = useSensors(
-        useSensor(PointerSensor),
-        useSensor(KeyboardSensor, {
-            coordinateGetter: sortableKeyboardCoordinates,
-        }),
-        // Only include TouchSensor if NOT on mobile
-        ...(isMobile ? [] : [useSensor(TouchSensor)])
-    );
-
+    // --- FIX: Removed sensor setup and useMobile hook ---
 
     useEffect(() => {
         fetchLayout();
@@ -158,74 +93,25 @@ const Dashboard = () => {
         }
     };
 
-    const saveLayout = async (newLayout: DashboardItem[]) => {
-        if (!user) return;
-        const layoutToSave = newLayout.map(({ id, order }) => ({ id, order }));
-        try {
-            // This upsert now works correctly *if* you ran the SQL query from Step 1
-            const { error } = await supabase
-                .from('user_settings')
-                .upsert({ 
-                    user_id: user.id, 
-                    key: 'dashboard_layout',
-                    value: layoutToSave
-                }, { 
-                    onConflict: 'user_id, key' // This relies on the SQL constraint
-                });
-
-            if (error) throw error;
-            toast({ title: "Success", description: "Dashboard layout saved." });
-        } catch (err: any) {
-            toast({ title: "Error", description: `Failed to save dashboard layout: ${err.message}`, variant: "destructive" });
-        }
-    };
-
-    // Reintroduce handleDragEnd
-    const handleDragEnd = (event: DragEndEvent) => {
-        const { active, over } = event;
-
-        if (over && active.id !== over.id) {
-            setLayout((items) => {
-                const oldIndex = items.findIndex((item) => item.id === active.id);
-                const newIndex = items.findIndex((item) => item.id === over.id);
-                const reorderedItems = arrayMove(items, oldIndex, newIndex);
-
-                // Update order property based on new index
-                 const updatedLayout = reorderedItems.map((item, index) => ({
-                    ...item,
-                    order: index + 1,
-                 }));
-
-                saveLayout(updatedLayout); // Save the new layout
-                return updatedLayout; // Update state
-            });
-        }
-    };
-
+    // --- FIX: Removed saveLayout and handleDragEnd functions ---
 
     if (loading) {
         return <div>Loading dashboard...</div>;
     }
 
     return (
+        // --- FIX: Removed DndContext and SortableContext wrappers ---
         <div className="space-y-6">
-             {/* dnd-kit Context */}
-            <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
-            >
-                <SortableContext
-                    items={layout.map(item => item.id)} // Use item IDs
-                    strategy={verticalListSortingStrategy}
-                >
-                    <div className="space-y-6">
-                        {layout.map((item) => (
-                           <SortableDashboardSection key={item.id} item={item} />
-                        ))}
-                    </div>
-                </SortableContext>
-            </DndContext>
+            {layout.map((item) => (
+               // --- FIX: Render DashboardSection directly, without sortable wrapper ---
+               <DashboardSection 
+                 key={item.id} 
+                 title={item.id.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                 // dragHandleProps is removed, so the handle won't show
+               >
+                   <item.component />
+               </DashboardSection>
+            ))}
         </div>
     );
 };
