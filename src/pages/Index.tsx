@@ -8,14 +8,16 @@ import { FUTTrackrRecords } from '@/components/FUTTrackrRecords';
 import DashboardSection from '@/components/DashboardSection';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-// --- FIX: Add 'BarChart3' icon for new tab ---
 import { LayoutGrid, Users, BarChart3 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import PlayerMovers from '@/components/PlayerMovers';
 import PlayerHistoryTable from '@/components/PlayerHistoryTable';
-// --- FIX: Import our new components ---
 import XGAnalytics from '@/components/XGAnalytics';
 import PlayerConsistencyChart from '@/components/PlayerConsistencyChart';
+// --- FIX: Import the new Analytics components ---
+import PerformanceRadar from '@/components/PerformanceRadar';
+import MatchTagAnalysis from '@/components/MatchTagAnalysis';
+import FormationTracker from '@/components/FormationTracker';
 
 interface DashboardItem {
     id: string;
@@ -30,21 +32,30 @@ const componentsMap: Record<string, React.FC> = {
     playerMovers: PlayerMovers,
     clubLegends: ClubLegends,
     playerHistoryTable: PlayerHistoryTable,
-    // --- FIX: Add new components to the map ---
     xgAnalytics: XGAnalytics,
     playerConsistency: PlayerConsistencyChart,
+    // --- FIX: Add new components to map ---
+    performanceRadar: PerformanceRadar,
+    matchTagAnalysis: MatchTagAnalysis,
+    formationTracker: FormationTracker,
 };
 
 const defaultLayout: DashboardItem[] = [
+    // Overview Tab
     { id: 'overview', component: componentsMap.overview, order: 1 },
     { id: 'recentRuns', component: componentsMap.recentRuns, order: 2 },
-    { id: 'records', component: componentsMap.records, order: 3 },
+    { id: 'records', component: componentsMap.records, order: 3 }, 
+    // Player Hub Tab
     { id: 'playerMovers', component: componentsMap.playerMovers, order: 4 },
     { id: 'clubLegends', component: componentsMap.clubLegends, order: 5 },
     { id: 'playerHistoryTable', component: componentsMap.playerHistoryTable, order: 6 },
-    // --- FIX: Add new components to default layout ---
+    // Analytics Tab
     { id: 'xgAnalytics', component: componentsMap.xgAnalytics, order: 7 },
     { id: 'playerConsistency', component: componentsMap.playerConsistency, order: 8 },
+    // --- FIX: Add new components to default layout ---
+    { id: 'performanceRadar', component: componentsMap.performanceRadar, order: 9 },
+    { id: 'matchTagAnalysis', component: componentsMap.matchTagAnalysis, order: 10 },
+    { id: 'formationTracker', component: componentsMap.formationTracker, order: 11 },
 ];
 
 const Dashboard = () => {
@@ -57,7 +68,7 @@ const Dashboard = () => {
         fetchLayout();
     }, [user]);
 
-    // This fetchLayout function is now robust and handles adding new components
+    // fetchLayout remains the same, it correctly handles new components
     const fetchLayout = async () => {
         if (!user) return;
         setLoading(true);
@@ -80,14 +91,12 @@ const Dashboard = () => {
                     })
                     .filter((item): item is DashboardItem => item !== null);
 
-                // Add any new components from defaultLayout that aren't in the saved layout
                 defaultLayout.forEach(defaultItem => {
                     if (!loadedLayout.some(item => item.id === defaultItem.id)) {
                         loadedLayout.push({...defaultItem});
                     }
                 });
 
-                // Filter out any components that no longer exist in componentsMap
                 loadedLayout = loadedLayout.filter(item => componentsMap[item.id]);
                 setLayout(loadedLayout.sort((a, b) => a.order - b.order));
             } else {
@@ -104,46 +113,50 @@ const Dashboard = () => {
 
     const findAndRenderSection = (id: string) => {
         const item = layout.find(item => item.id === id);
+        if (!item) return null; 
         
-        if (!item) {
-            return null; 
-        }
-        
-        // --- FIX: We can remove titles for these components too, they have them internally ---
-        if (id === 'playerHistoryTable' || id === 'xgAnalytics' || id === 'playerConsistency') {
+        // --- FIX: Components that have internal titles don't need DashboardSection wrapper ---
+        const selfTitledComponents = [
+            'playerHistoryTable', 'xgAnalytics', 'playerConsistency',
+            'performanceRadar', 'matchTagAnalysis', 'formationTracker' 
+        ];
+        if (selfTitledComponents.includes(id)) {
             return <item.component key={item.id} />;
         }
 
-        let title = item.id.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-        
-        if (id === 'playerMovers') {
-            title = 'Player Movers';
-        }
-        if (id === 'records') {
-            title = 'All-Time Records';
-        }
-        if (id === 'recentRuns') {
-            title = 'Recent Runs';
+        // --- FIX: Adjust titles for existing wrapped components ---
+        let title = '';
+         switch (id) {
+            case 'playerMovers': title = 'Player Movers'; break;
+            case 'records': title = 'All-Time Records'; break;
+            case 'recentRuns': title = 'Recent Runs'; break;
+            case 'overview': title = 'Key Metrics & Trends'; break; // Updated title
+            case 'clubLegends': title = 'Club Legends'; break; // Keep title for this carousel
+            default: title = item.id.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
         }
 
-        return (
-            <DashboardSection 
-              key={item.id} 
-              title={title}
-            >
-                <item.component />
-            </DashboardSection>
-        );
+        // Only wrap in DashboardSection if a title is set
+        if (title) {
+            return (
+                <DashboardSection key={item.id} title={title}>
+                    <item.component />
+                </DashboardSection>
+            );
+        } else {
+             // Should not happen with current logic, but safe fallback
+             return <item.component key={item.id}/>
+        }
     };
+
 
     if (loading) {
         return (
             <div className="space-y-6">
-                {/* --- FIX: Skeleton for a 3-tab layout --- */}
                 <Skeleton className="h-12 w-80 rounded-2xl" />
                 <div className="space-y-6">
                     <Skeleton className="h-64 w-full rounded-2xl" />
                     <Skeleton className="h-48 w-full rounded-2xl" />
+                    <Skeleton className="h-96 w-full rounded-2xl" /> 
                 </div>
             </div>
         );
@@ -151,7 +164,6 @@ const Dashboard = () => {
 
     return (
         <Tabs defaultValue="overview" className="space-y-6">
-            {/* --- FIX: Add new "Analytics" tab --- */}
             <TabsList className="glass-card rounded-2xl shadow-xl border-0 p-2 h-auto grid grid-cols-3">
                 <TabsTrigger value="overview" className="rounded-xl flex-1 flex gap-2 items-center">
                     <LayoutGrid className="h-4 w-4" />
@@ -179,8 +191,11 @@ const Dashboard = () => {
                 {findAndRenderSection('playerHistoryTable')}
             </TabsContent>
 
-            {/* --- FIX: Add new "Analytics" tab content --- */}
+            {/* --- FIX: Render all analytics components in the Analytics tab --- */}
             <TabsContent value="analytics" className="space-y-6">
+                {findAndRenderSection('performanceRadar')}
+                {findAndRenderSection('matchTagAnalysis')}
+                {findAndRenderSection('formationTracker')}
                 {findAndRenderSection('xgAnalytics')}
                 {findAndRenderSection('playerConsistency')}
             </TabsContent>
