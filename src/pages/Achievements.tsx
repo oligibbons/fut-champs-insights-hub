@@ -7,6 +7,7 @@ import { Award, CheckCircle, Lock, Loader2 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useGameVersion } from '@/contexts/GameVersionContext';
+import { useTheme } from '@/hooks/useTheme'; // Import useTheme
 
 // Define interfaces for our data structures
 interface AchievementDefinition {
@@ -42,6 +43,7 @@ const RarityBadge = ({ rarity }: { rarity: string }) => {
 const AchievementsPage = () => {
   const { user } = useAuth();
   const { gameVersion } = useGameVersion();
+  const { currentTheme } = useTheme(); // Get theme
   const [definitions, setDefinitions] = useState<AchievementDefinition[]>([]);
   const [userAchievements, setUserAchievements] = useState<Map<string, UserAchievement>>(new Map());
   const [loading, setLoading] = useState(true);
@@ -103,7 +105,7 @@ const AchievementsPage = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin" style={{ color: currentTheme.colors.primary }} />
       </div>
     );
   }
@@ -111,23 +113,30 @@ const AchievementsPage = () => {
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-            <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-                <Award className="h-8 w-8 text-primary"/>
+        <div className="flex items-center gap-4">
+            <div className="p-3 rounded-2xl" style={{ backgroundColor: `${currentTheme.colors.primary}20` }}>
+              <Award className="h-8 w-8" style={{ color: currentTheme.colors.primary }} />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-white">
                 Achievements
-            </h1>
-            <p className="text-muted-foreground">Track your progress and unlock rewards.</p>
+              </h1>
+              <p className="text-gray-400 mt-1">Track your progress and unlock rewards.</p>
+            </div>
         </div>
         <div className="flex items-center gap-2">
           <Tabs value={filter} onValueChange={setFilter}>
-            <TabsList>
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="in-progress">In Progress</TabsTrigger>
-              <TabsTrigger value="unlocked">Unlocked</TabsTrigger>
+            <TabsList className="glass-card rounded-2xl shadow-xl border-0 p-2">
+              <TabsTrigger value="all" className="rounded-xl">All</TabsTrigger>
+              <TabsTrigger value="in-progress" className="rounded-xl">In Progress</TabsTrigger>
+              <TabsTrigger value="unlocked" className="rounded-xl">Unlocked</TabsTrigger>
             </TabsList>
           </Tabs>
           <Select value={sort} onValueChange={setSort}>
-            <SelectTrigger className="w-[150px]">
+            <SelectTrigger 
+              className="w-[150px] glass-card rounded-xl shadow-xl border-0"
+              style={{ backgroundColor: currentTheme.colors.surface, borderColor: currentTheme.colors.border }}
+            >
               <SelectValue placeholder="Sort by..." />
             </SelectTrigger>
             <SelectContent>
@@ -140,31 +149,34 @@ const AchievementsPage = () => {
       </div>
 
       {Object.keys(groupedAchievements).length === 0 ? (
-        <div className="text-center py-16">
-            <h3 className="text-xl font-semibold">No Achievements Found</h3>
-            <p className="text-muted-foreground">Try a different filter or check back later.</p>
-        </div>
+        <Card className="glass-card rounded-2xl shadow-2xl border-0">
+            <CardContent className="text-center py-16">
+                <Award className="h-16 w-16 mx-auto mb-4 text-gray-400 opacity-50" />
+                <h3 className="text-xl font-semibold text-white">No Achievements Found</h3>
+                <p className="text-gray-400">Try a different filter or check back later.</p>
+            </CardContent>
+        </Card>
       ) : (
         Object.entries(groupedAchievements).map(([category, achievements]) => (
             <div key={category} className="space-y-4">
-                <h2 className="text-xl font-semibold capitalize tracking-tight">{category}</h2>
+                <h2 className="text-xl font-semibold capitalize tracking-tight text-white">{category}</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {achievements.map(def => {
                     const { current, target, percent, unlocked } = def.progressInfo;
                     return (
-                    <div key={def.id} className={`p-4 rounded-lg border flex gap-4 transition-colors ${unlocked ? 'bg-green-950/50 border-green-700/30' : 'bg-card'}`}>
+                    <Card key={def.id} className={`metric-card p-4 flex gap-4 ${unlocked ? 'border-green-700/30' : ''}`}>
                         <div className="flex-shrink-0 mt-1">
-                        {unlocked ? <CheckCircle className="h-6 w-6 text-green-500" /> : <Lock className="h-6 w-6 text-muted-foreground" />}
+                        {unlocked ? <CheckCircle className="h-6 w-6 text-green-500" /> : <Lock className="h-6 w-6 text-gray-400" />}
                         </div>
                         <div className="flex-1">
                         <div className="flex justify-between items-start mb-1">
-                            <h3 className={`font-semibold ${unlocked ? 'text-foreground' : 'text-muted-foreground'}`}>{def.title}</h3>
+                            <h3 className={`font-semibold text-white ${unlocked ? '' : 'opacity-70'}`}>{def.title}</h3>
                             <RarityBadge rarity={def.rarity} />
                         </div>
-                        <p className="text-sm text-muted-foreground/80 mb-3">{def.description}</p>
+                        <p className="text-sm text-gray-400/80 mb-3">{def.description}</p>
                         {!unlocked && (
                             <div>
-                            <div className="flex justify-between text-xs mb-1 text-muted-foreground">
+                            <div className="flex justify-between text-xs mb-1 text-gray-400">
                                 <span>Progress</span>
                                 <span>{current.toLocaleString()} / {target.toLocaleString()}</span>
                             </div>
@@ -172,7 +184,7 @@ const AchievementsPage = () => {
                             </div>
                         )}
                         </div>
-                    </div>
+                    </Card>
                     );
                 })}
                 </div>
