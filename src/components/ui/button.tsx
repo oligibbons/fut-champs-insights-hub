@@ -9,9 +9,15 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
+        // --- MODIFIED: Bolder primary, destructive, and new success variant ---
         default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        primary:
+          "bg-fifa-blue text-white font-semibold shadow-lg hover:bg-fifa-blue/90",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+          "bg-fifa-red text-destructive-foreground font-semibold shadow-sm hover:bg-fifa-red/90",
+        success:
+          "bg-fifa-green text-white font-semibold shadow-sm hover:bg-fifa-green/90",
+        // --- END MODIFIED ---
         outline:
           "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
         secondary:
@@ -44,7 +50,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const Comp = asChild ? Slot : "button"
     return (
       <Comp
-        className={cn(buttonVariants({ variant, size, className }), "shimmer-effect glow-effect")}
+        className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
         {...props}
       />
