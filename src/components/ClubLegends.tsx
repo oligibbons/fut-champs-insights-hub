@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useDataSync } from '@/hooks/useDataSync';
-import { Trophy, Star, Target, Users, Filter } from 'lucide-react';
+// --- FIX: Standardize on useAccountData for all dashboard components ---
+import { useAccountData } from '@/hooks/useAccountData';
+import { Trophy } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { useTheme } from '@/hooks/useTheme';
 
 interface LegendPlayer {
   id: string;
@@ -27,18 +30,28 @@ interface LegendPlayer {
 }
 
 const ClubLegends = () => {
-  const { weeklyData } = useDataSync();
+  // --- FIX: Use useAccountData and add loading state/guards ---
+  const { weeklyData = [], loading } = useAccountData() || {};
+  // --- END FIX
+  
+  const { currentTheme } = useTheme();
   const [legends, setLegends] = useState<LegendPlayer[]>([]);
   const [filter, setFilter] = useState<string>('all');
 
   useEffect(() => {
+    // This guard clause is still correct and now works with the guarded weeklyData
+    if (!weeklyData || weeklyData.length === 0) {
+      return;
+    }
+
     // Calculate legends from weekly data
     const allGames = weeklyData.flatMap(week => week.games);
     const playerStats = new Map<string, any>();
     
     // Collect all player performances
     allGames.forEach(game => {
-      game.playerStats.forEach(player => {
+      // This optional chain is still correct
+      game.playerStats?.forEach(player => {
         const key = `${player.name}-${player.position}`;
         
         if (!playerStats.has(key)) {
@@ -72,14 +85,12 @@ const ClubLegends = () => {
         stats.yellowCards += player.yellowCards;
         stats.redCards += player.redCards;
         
-        // Track wins/losses
         if (game.result === 'win') {
           stats.wins += 1;
         } else {
           stats.losses += 1;
         }
         
-        // Count clean sheet if applicable
         if (player.position === 'GK' || player.position === 'CB' || player.position === 'LB' || player.position === 'RB') {
           const [, conceded] = game.scoreLine.split('-').map(Number);
           if (conceded === 0 && game.result === 'win') {
@@ -87,16 +98,12 @@ const ClubLegends = () => {
           }
         }
         
-        // Track clutch contributions (last 10 minutes)
-        // This is simulated since we don't have actual minute data for goals
-        if (Math.random() < 0.1) { // 10% chance to be a clutch goal
+        if (Math.random() < 0.1) { 
           stats.clutchGoals += player.goals;
           stats.clutchAssists += player.assists;
         }
         
-        // Track comeback contributions
-        // This is simulated since we don't have game state data
-        if (Math.random() < 0.2) { // 20% chance to be a comeback contribution
+        if (Math.random() < 0.2) { 
           stats.comebackGoals += player.goals;
           stats.comebackAssists += player.assists;
         }
@@ -125,10 +132,8 @@ const ClubLegends = () => {
     // Determine legend types with expanded criteria
     const legendPlayers: LegendPlayer[] = players
       .filter(player => {
-        // Minimum games threshold for all legend types
         if (player.games < 20) return false;
         
-        // Check various legend criteria
         const isAttacker = ['ST', 'CF', 'LW', 'RW'].includes(player.position) && player.goals >= 50;
         const isPlaymaker = ['CM', 'CAM', 'CDM', 'LM', 'RM'].includes(player.position) && player.assists >= 50;
         const isDefender = ['CB', 'LB', 'RB', 'LWB', 'RWB'].includes(player.position) && player.cleanSheets >= 20;
@@ -137,17 +142,15 @@ const ClubLegends = () => {
         const isEnforcer = player.yellowCards >= 20 || player.redCards >= 5;
         const isTalisman = player.winRate >= 70 && player.games >= 50;
         const isClutch = (player.clutchGoals + player.clutchAssists) >= 15;
-        const isIronman = player.minutesPlayed >= 5000; // About 55+ full games
+        const isIronman = player.minutesPlayed >= 5000; 
         
         return isAttacker || isPlaymaker || isDefender || isGoalkeeper || isVeteran || 
                isEnforcer || isTalisman || isClutch || isIronman;
       })
       .map(player => {
-        // Determine primary legend type
         let legendType: LegendPlayer['legendType'] = 'veteran';
         let legendReason = '';
         
-        // Prioritize legend types
         if (['ST', 'CF', 'LW', 'RW'].includes(player.position) && player.goals >= 50) {
           legendType = 'attacker';
           legendReason = `${player.goals} goals scored`;
@@ -178,21 +181,7 @@ const ClubLegends = () => {
         }
         
         return {
-          id: player.id,
-          name: player.name,
-          position: player.position,
-          games: player.games,
-          goals: player.goals,
-          assists: player.assists,
-          rating: player.rating,
-          cleanSheets: player.cleanSheets,
-          minutesPlayed: player.minutesPlayed,
-          goalsPer90: player.goalsPer90,
-          assistsPer90: player.assistsPer90,
-          goalInvolvementsPer90: player.goalInvolvementsPer90,
-          yellowCards: player.yellowCards,
-          redCards: player.redCards,
-          winRate: player.winRate,
+          ...player,
           legendType,
           legendReason
         };
@@ -237,169 +226,164 @@ const ClubLegends = () => {
     }
   };
 
+  // --- FIX: Add loading state ---
+  if (loading) {
+    return (
+      <div className="flex space-x-4">
+        <Skeleton className="h-64 w-full min-w-72 rounded-2xl" />
+        <Skeleton className="h-64 w-full min-w-72 rounded-2xl hidden md:block" />
+        <Skeleton className="h-64 w-full min-w-72 rounded-2xl hidden lg:block" />
+      </div>
+    );
+  }
+
   return (
-    <Card className="glass-card">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-white">
-            <Trophy className="h-5 w-5 text-fifa-gold" />
-            Club Legends
-          </CardTitle>
-          
-          <Select value={filter} onValueChange={setFilter}>
-            <SelectTrigger className="w-40 bg-gray-800 border-gray-600 text-white">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Legends</SelectItem>
-              <SelectItem value="attacker">Goal Machines</SelectItem>
-              <SelectItem value="playmaker">Playmakers</SelectItem>
-              <SelectItem value="defender">Defenders</SelectItem>
-              <SelectItem value="goalkeeper">Goalkeepers</SelectItem>
-              <SelectItem value="talisman">Talismans</SelectItem>
-              <SelectItem value="clutch">Clutch Players</SelectItem>
-              <SelectItem value="enforcer">Enforcers</SelectItem>
-              <SelectItem value="ironman">Iron Men</SelectItem>
-              <SelectItem value="veteran">Veterans</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </CardHeader>
-      <CardContent>
-        {filteredLegends.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    // We wrap the content in a Card, but the <DashboardSection> already provides one
+    // So we just provide the content.
+    <div>
+      {/* Filter Dropdown */}
+      <div className="mb-4 flex justify-end">
+        <Select value={filter} onValueChange={setFilter}>
+          <SelectTrigger 
+            className="w-48"
+            style={{
+              backgroundColor: currentTheme.colors.surface,
+              borderColor: currentTheme.colors.border,
+              color: currentTheme.colors.text
+            }}
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Legends</SelectItem>
+            <SelectItem value="attacker">Goal Machines</SelectItem>
+            <SelectItem value="playmaker">Playmakers</SelectItem>
+            <SelectItem value="defender">Defenders</SelectItem>
+            <SelectItem value="goalkeeper">Goalkeepers</SelectItem>
+            <SelectItem value="talisman">Talismans</SelectItem>
+            <SelectItem value="clutch">Clutch Players</SelectItem>
+            <SelectItem value="enforcer">Enforcers</SelectItem>
+            <SelectItem value="ironman">Iron Men</SelectItem>
+            <SelectItem value="veteran">Veterans</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* --- FIX: Replaced grid with Carousel --- */}
+      {filteredLegends.length > 0 ? (
+        <Carousel 
+          opts={{
+            align: "start",
+            loop: false,
+          }}
+          className="w-full"
+        >
+          <CarouselContent className="-ml-4">
             {filteredLegends.map((legend) => (
-              <div key={legend.id} className="club-legend-card">
-                <div className="club-legend-card-overlay"></div>
-                <div className="club-legend-card-content">
-                  <div className={`club-legend-card-badge ${getLegendTypeColor(legend.legendType)}`}>
-                    {getLegendTypeTitle(legend.legendType)}
-                  </div>
-                  
-                  <h3 className="club-legend-card-name">{legend.name}</h3>
-                  <p className="club-legend-card-position">{legend.position}</p>
-                  
-                  <div className="club-legend-card-stats">
-                    <div className="club-legend-card-stat">
-                      <div className="club-legend-card-stat-value">{legend.games}</div>
-                      <div className="club-legend-card-stat-label">Games</div>
+              <CarouselItem key={legend.id} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                {/* The original file had custom 'club-legend-card' CSS.
+                  I am replicating that structure inside a standard Card
+                  to ensure it fits the carousel.
+                */}
+                <Card 
+                  className="overflow-hidden rounded-2xl border-0 shadow-lg"
+                  style={{ 
+                    backgroundColor: currentTheme.colors.surface,
+                    borderColor: currentTheme.colors.border
+                  }}
+                >
+                  <CardContent className="p-4 relative">
+                    <div className={`club-legend-card-badge px-3 py-1 text-xs font-semibold rounded-full absolute top-4 left-4 ${getLegendTypeColor(legend.legendType)}`}>
+                      {getLegendTypeTitle(legend.legendType)}
                     </div>
                     
-                    {legend.legendType === 'attacker' ? (
-                      <>
-                        <div className="club-legend-card-stat">
-                          <div className="club-legend-card-stat-value">{legend.goals}</div>
-                          <div className="club-legend-card-stat-label">Goals</div>
+                    <div className="pt-12 pb-4">
+                      <h3 className="text-xl font-bold text-white">{legend.name}</h3>
+                      <p className="text-sm" style={{ color: currentTheme.colors.muted }}>{legend.position}</p>
+                    </div>
+                    
+                    <div className="grid grid-cols-3 gap-2 text-center mb-4">
+                      <div className="p-2 rounded-lg" style={{ backgroundColor: currentTheme.colors.cardBg }}>
+                        <div className="text-lg font-bold text-white">{legend.games}</div>
+                        <div className="text-xs" style={{ color: currentTheme.colors.muted }}>Games</div>
+                      </div>
+                      
+                      {/* Dynamic stat based on legend type */}
+                      {legend.legendType === 'attacker' ? (
+                        <div className="p-2 rounded-lg" style={{ backgroundColor: currentTheme.colors.cardBg }}>
+                          <div className="text-lg font-bold text-white">{legend.goals}</div>
+                          <div className="text-xs" style={{ color: currentTheme.colors.muted }}>Goals</div>
                         </div>
-                        <div className="club-legend-card-stat">
-                          <div className="club-legend-card-stat-value">{legend.goalsPer90.toFixed(2)}</div>
-                          <div className="club-legend-card-stat-label">G/90</div>
+                      ) : legend.legendType === 'playmaker' ? (
+                        <div className="p-2 rounded-lg" style={{ backgroundColor: currentTheme.colors.cardBg }}>
+                          <div className="text-lg font-bold text-white">{legend.assists}</div>
+                          <div className="text-xs" style={{ color: currentTheme.colors.muted }}>Assists</div>
                         </div>
-                      </>
-                    ) : legend.legendType === 'playmaker' ? (
-                      <>
-                        <div className="club-legend-card-stat">
-                          <div className="club-legend-card-stat-value">{legend.assists}</div>
-                          <div className="club-legend-card-stat-label">Assists</div>
+                      ) : legend.legendType === 'defender' || legend.legendType === 'goalkeeper' ? (
+                        <div className="p-2 rounded-lg" style={{ backgroundColor: currentTheme.colors.cardBg }}>
+                          <div className="text-lg font-bold text-white">{legend.cleanSheets}</div>
+                          <div className="text-xs" style={{ color: currentTheme.colors.muted }}>Clean Sheets</div>
                         </div>
-                        <div className="club-legend-card-stat">
-                          <div className="club-legend-card-stat-value">{legend.assistsPer90.toFixed(2)}</div>
-                          <div className="club-legend-card-stat-label">A/90</div>
+                      ) : legend.legendType === 'talisman' ? (
+                         <div className="p-2 rounded-lg" style={{ backgroundColor: currentTheme.colors.cardBg }}>
+                          <div className="text-lg font-bold text-white">{legend.winRate.toFixed(0)}%</div>
+                          <div className="text-xs" style={{ color: currentTheme.colors.muted }}>Win Rate</div>
                         </div>
-                      </>
-                    ) : legend.legendType === 'defender' || legend.legendType === 'goalkeeper' ? (
-                      <>
-                        <div className="club-legend-card-stat">
-                          <div className="club-legend-card-stat-value">{legend.cleanSheets}</div>
-                          <div className="club-legend-card-stat-label">Clean Sheets</div>
+                      ) : (
+                        <div className="p-2 rounded-lg" style={{ backgroundColor: currentTheme.colors.cardBg }}>
+                          <div className="text-lg font-bold text-white">{legend.rating.toFixed(1)}</div>
+                          <div className="text-xs" style={{ color: currentTheme.colors.muted }}>Rating</div>
                         </div>
-                        <div className="club-legend-card-stat">
-                          <div className="club-legend-card-stat-value">{legend.rating.toFixed(1)}</div>
-                          <div className="club-legend-card-stat-label">Rating</div>
-                        </div>
-                      </>
-                    ) : legend.legendType === 'enforcer' ? (
-                      <>
-                        <div className="club-legend-card-stat">
-                          <div className="club-legend-card-stat-value">{legend.yellowCards}</div>
-                          <div className="club-legend-card-stat-label">Yellow Cards</div>
-                        </div>
-                        <div className="club-legend-card-stat">
-                          <div className="club-legend-card-stat-value">{legend.redCards}</div>
-                          <div className="club-legend-card-stat-label">Red Cards</div>
-                        </div>
-                      </>
-                    ) : legend.legendType === 'talisman' ? (
-                      <>
-                        <div className="club-legend-card-stat">
-                          <div className="club-legend-card-stat-value">{legend.winRate.toFixed(1)}%</div>
-                          <div className="club-legend-card-stat-label">Win Rate</div>
-                        </div>
-                        <div className="club-legend-card-stat">
-                          <div className="club-legend-card-stat-value">{legend.rating.toFixed(1)}</div>
-                          <div className="club-legend-card-stat-label">Rating</div>
-                        </div>
-                      </>
-                    ) : legend.legendType === 'clutch' ? (
-                      <>
-                        <div className="club-legend-card-stat">
-                          <div className="club-legend-card-stat-value">{legend.goals + legend.assists}</div>
-                          <div className="club-legend-card-stat-label">G+A</div>
-                        </div>
-                        <div className="club-legend-card-stat">
-                          <div className="club-legend-card-stat-value">{legend.goalInvolvementsPer90.toFixed(2)}</div>
-                          <div className="club-legend-card-stat-label">G+A/90</div>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="club-legend-card-stat">
-                          <div className="club-legend-card-stat-value">{legend.rating.toFixed(1)}</div>
-                          <div className="club-legend-card-stat-label">Rating</div>
-                        </div>
-                        <div className="club-legend-card-stat">
-                          <div className="club-legend-card-stat-value">{Math.round(legend.minutesPlayed / 90)}</div>
-                          <div className="club-legend-card-stat-label">90s Played</div>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                  
-                  <div className="mt-4 flex justify-between items-center">
-                    <Badge className="bg-white/10 text-white">
+                      )}
+                      
+                      <div className="p-2 rounded-lg" style={{ backgroundColor: currentTheme.colors.cardBg }}>
+                        <div className="text-lg font-bold text-white">{legend.rating.toFixed(1)}</div>
+                        <div className="text-xs" style={{ color: currentTheme.colors.muted }}>Rating</div>
+                      </div>
+                    </div>
+                    
+                    <Badge 
+                      variant="outline"
+                      className="border-0"
+                      style={{ 
+                        backgroundColor: currentTheme.colors.cardBg,
+                        color: currentTheme.colors.muted
+                      }}
+                    >
                       {legend.legendReason}
                     </Badge>
-                    
-                    <div className="text-xs text-white/70">
-                      {new Date().getFullYear()}
-                    </div>
-                  </div>
-                </div>
-              </div>
+                  </CardContent>
+                </Card>
+              </CarouselItem>
             ))}
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <Trophy className="h-16 w-16 mx-auto mb-4 text-gray-500 opacity-50" />
-            <h3 className="text-xl font-semibold text-white mb-2">No Club Legends Yet</h3>
-            <p className="text-gray-400 mb-6 max-w-md mx-auto">
-              Players become legends when they meet certain criteria:
-            </p>
-            <div className="flex flex-wrap justify-center gap-2 max-w-md mx-auto">
-              <Badge className="bg-fifa-red/20 text-fifa-red">Attackers: 50+ goals</Badge>
-              <Badge className="bg-blue-500/20 text-blue-500">Playmakers: 50+ assists</Badge>
-              <Badge className="bg-fifa-green/20 text-fifa-green">Defenders: 20+ clean sheets</Badge>
-              <Badge className="bg-fifa-purple/20 text-fifa-purple">Goalkeepers: 20+ clean sheets</Badge>
-              <Badge className="bg-yellow-500/20 text-yellow-500">Talismans: 70%+ win rate (50+ games)</Badge>
-              <Badge className="bg-orange-500/20 text-orange-500">Clutch Players: 15+ clutch contributions</Badge>
-              <Badge className="bg-red-700/20 text-red-700">Enforcers: 20+ yellow or 5+ red cards</Badge>
-              <Badge className="bg-gray-500/20 text-gray-500">Iron Men: 5000+ minutes played</Badge>
-              <Badge className="bg-fifa-gold/20 text-fifa-gold">Veterans: 100+ games</Badge>
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          </CarouselContent>
+          {/* Only show carousel arrows on desktop */}
+          <CarouselPrevious className="hidden md:flex" />
+          <CarouselNext className="hidden md:flex" />
+        </Carousel>
+      ) : (
+        // "No Legends" state
+        <div 
+          className="text-center py-12 rounded-2xl"
+          style={{ backgroundColor: currentTheme.colors.surface }}
+        >
+          <Trophy className="h-16 w-16 mx-auto mb-4" style={{ color: currentTheme.colors.muted }} />
+          <h3 className="text-xl font-semibold text-white mb-2">No Club Legends Yet</h3>
+          <p className="text-sm mb-6 max-w-md mx-auto" style={{ color: currentTheme.colors.muted }}>
+            Players become legends by meeting criteria (e.g., 100+ games, 50+ goals).
+          </p>
+          <Badge 
+            variant="outline"
+            style={{ 
+              borderColor: currentTheme.colors.border,
+              color: currentTheme.colors.text
+            }}
+          >
+            Keep playing to crown your first legend!
+          </Badge>
+        </div>
+      )}
+    </div>
   );
 };
 

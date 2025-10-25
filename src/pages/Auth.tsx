@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/hooks/useTheme';
 import { Mail, Lock, User, LogIn, UserPlus } from 'lucide-react';
+import logo from '/fut-trackr-logo.jpg'; // <-- ADD THIS IMPORT
 
 const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -72,10 +73,10 @@ const Auth = () => {
           <div className="w-16 h-16 rounded-3xl flex items-center justify-center mx-auto mb-4"
                style={{ backgroundColor: currentTheme.colors.primary + '20' }}>
             <img 
-              src="/lovable-uploads/6b6465f4-e466-4f3b-9761-8a829fbe395c.png" 
-              alt="FUTALYST Logo" 
+              src={logo} 
+              alt="FUTTrackr Logo" 
               className="w-10 h-10 object-contain"
-            />
+            /> {/* <-- CHANGE THIS SRC */}
           </div>
           <CardTitle className="text-2xl font-bold text-white mb-2">
             {isSignUp ? 'Create Account' : 'Welcome Back'}

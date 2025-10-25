@@ -1,103 +1,166 @@
-import { useSupabaseData } from "@/hooks/useSupabaseData";
-import { useDashboardStats } from "@/hooks/useDashboardStats";
-import { RecordCard } from "./RecordCard";
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
-import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy } from "@dnd-kit/sortable";
-import { useState } from "react";
+import { useDashboardStats } from '@/hooks/useDashboardStats';
+import { useAccountData } from '@/hooks/useAccountData';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Award, TrendingUp, BarChart2, Zap, Trophy, Goal, HeartPulse, ShieldCheck, Flame, ShieldOff, Star, Repeat } from 'lucide-react';
+import { useTheme } from '@/hooks/useTheme';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { Card, CardContent } from '@/components/ui/card';
 
-export function FUTTrackrRecords() {
-  const { weeklyData } = useSupabaseData();
-  const stats = useDashboardStats(weeklyData);
-
-  const initialItems = {
-    main: ["bestRecord", "averageWins", "mostGoalsInRun", "longestWinStreak"],
-    secondary: ["totalGoals", "averageGoalsPerGame", "totalWins", "xgVsGoalsRatio", "overallGoalDifference", "averagePlayerRating"],
-    tertiary: ["averageShotAccuracy", "averagePossession", "averageDribbleSuccess", "averagePassAccuracy", "averagePassesPerGame", "totalCleanSheets", "mvp", "disciplineIndex"],
-  };
-
-  const [items, setItems] = useState(initialItems);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
-  const cardData: { [key: string]: { title: string; value: string | number; tooltip: string; trend: "up" | "down" | "neutral" } } = {
-    bestRecord: { title: "Best Record", value: `${stats.bestRecord} Wins`, tooltip: "Highest wins achieved in a single run.", trend: "up" },
-    averageWins: { title: "Average Wins", value: stats.averageWins.toFixed(1), tooltip: "Average number of wins per run.", trend: "neutral" },
-    mostGoalsInRun: { title: "Most Goals in Run", value: stats.mostGoalsInRun, tooltip: "Most goals scored in a single run.", trend: "down" },
-    longestWinStreak: { title: "Longest Win Streak", value: stats.longestWinStreak, tooltip: "Most consecutive wins without a loss.", trend: "up" },
-    totalGoals: { title: "Total Goals", value: stats.totalGoals, tooltip: "Total goals scored across all runs.", trend: "up" },
-    averageGoalsPerGame: { title: "Avg Goals / Game", value: stats.averageGoalsPerGame.toFixed(2), tooltip: "Average goals scored per game.", trend: "up" },
-    totalWins: { title: "Total Wins", value: stats.totalWins, tooltip: "Total wins across all runs.", trend: "neutral" },
-    xgVsGoalsRatio: { title: "xG vs Goals", value: `${stats.xgVsGoalsRatio.toFixed(2)}`, tooltip: "Ratio of expected goals to actual goals.", trend: "down" },
-    overallGoalDifference: { title: "Goal Difference", value: stats.overallGoalDifference, tooltip: "Overall goal difference.", trend: "up" },
-    averagePlayerRating: { title: "Avg Player Rating", value: stats.averagePlayerRating.toFixed(2), tooltip: "Average performance rating of all players with 1 or more minutes in a match.", trend: "up" },
-    averageShotAccuracy: { title: "Shot Accuracy", value: `${stats.averageShotAccuracy.toFixed(1)}%`, tooltip: "Average shot accuracy.", trend: "up" },
-    averagePossession: { title: "Possession", value: `${stats.averagePossession.toFixed(1)}%`, tooltip: "Average possession.", trend: "down" },
-    averageDribbleSuccess: { title: "Dribble Success", value: `${stats.averageDribbleSuccess}%`, tooltip: "Average dribble success rate (placeholder data).", trend: "up" },
-    averagePassAccuracy: { title: "Pass Accuracy", value: `${stats.averagePassAccuracy.toFixed(1)}%`, tooltip: "Average pass accuracy.", trend: "neutral" },
-    averagePassesPerGame: { title: "Passes / Game", value: stats.averagePassesPerGame.toFixed(0), tooltip: "Average passes per game.", trend: "up" },
-    totalCleanSheets: { title: "Clean Sheets", value: stats.totalCleanSheets, tooltip: "Total games with no goals conceded.", trend: "up" },
-    mvp: { title: "MVP", value: stats.mvp, tooltip: "Most valuable player based on performance.", trend: "neutral" },
-    disciplineIndex: { title: "Discipline Index", value: stats.disciplineIndex, tooltip: "Disciplinary record rating.", trend: "up" },
-  };
-
-  function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
-
-    if (over && active.id !== over.id) {
-      const activeContainer = Object.keys(items).find(key => items[key as keyof typeof items].includes(active.id as string));
-      const overContainer = Object.keys(items).find(key => items[key as keyof typeof items].includes(over.id as string));
-
-      if (activeContainer && overContainer) {
-        setItems((prev) => {
-          const newItems = { ...prev };
-          const activeItems = newItems[activeContainer as keyof typeof items];
-          const overItems = newItems[overContainer as keyof typeof items];
-          const oldIndex = activeItems.indexOf(active.id as string);
-          const newIndex = overItems.indexOf(over.id as string);
-
-          if (activeContainer === overContainer) {
-            newItems[activeContainer as keyof typeof items] = arrayMove(activeItems, oldIndex, newIndex);
-          } else {
-            const [movedItem] = activeItems.splice(oldIndex, 1);
-            overItems.splice(newIndex, 0, movedItem);
-          }
-
-          return newItems;
-        });
-      }
-    }
-  }
-
+// --- VISUAL FIX: Updated RecordItem Styling ---
+const RecordItem = ({ icon, label, value }: { icon: React.ReactNode, label: string, value: string | number }) => {
+  const { currentTheme } = useTheme();
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <div className="space-y-4">
-        <SortableContext items={items.main} strategy={rectSortingStrategy}>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {items.main.map(id => (
-              <RecordCard key={id} id={id} {...cardData[id]} />
-            ))}
-          </div>
-        </SortableContext>
-        <SortableContext items={items.secondary} strategy={rectSortingStrategy}>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {items.secondary.map(id => (
-              <RecordCard key={id} id={id} {...cardData[id]} />
-            ))}
-          </div>
-        </SortableContext>
-        <SortableContext items={items.tertiary} strategy={rectSortingStrategy}>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
-            {items.tertiary.map(id => (
-              <RecordCard key={id} id={id} {...cardData[id]} />
-            ))}
-          </div>
-        </SortableContext>
-      </div>
-    </DndContext>
+    <Card
+      className="border-0 shadow-lg overflow-hidden rounded-xl glass-card-content" // Use new class
+      style={{
+        backgroundColor: `${currentTheme.colors.cardBg}E6`, // Example: 90% opacity
+        borderColor: currentTheme.colors.border,
+        // backdropFilter: 'blur(8px)',
+      }}
+    >
+      <CardContent className="p-4 flex items-center space-x-3">
+        <div
+          className="p-3 rounded-lg"
+          style={{ backgroundColor: currentTheme.colors.surface }} // Icon background
+        >
+          {icon}
+        </div>
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wider" // Uppercase title
+             style={{ color: currentTheme.colors.muted }}>
+            {label}
+          </p>
+          <p className="text-2xl font-bold tracking-tight" // Larger, bolder value
+             style={{ color: currentTheme.colors.text }}>
+            {value}
+          </p>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
+// --- END VISUAL FIX ---
+
+export const FUTTrackrRecords = () => {
+  const { weeklyData = [], loading } = useAccountData() || {};
+  const stats = useDashboardStats(weeklyData);
+  const { currentTheme } = useTheme();
+
+  if (loading) {
+    // Skeletons remain the same
+     return (
+      <div className="flex space-x-4 overflow-x-auto pb-4"> {/* Added overflow for safety */}
+        <Skeleton className="h-24 w-full min-w-64 rounded-xl flex-shrink-0" />
+        <Skeleton className="h-24 w-full min-w-64 rounded-xl flex-shrink-0" />
+        <Skeleton className="h-24 w-full min-w-64 rounded-xl flex-shrink-0" />
+      </div>
+    );
+  }
+
+  if (weeklyData.length === 0) {
+      // No data state remains the same
+     return (
+        <div
+          className="text-center py-12 rounded-2xl"
+          style={{ backgroundColor: currentTheme.colors.surface }}
+        >
+          <Trophy className="h-16 w-16 mx-auto mb-4" style={{ color: currentTheme.colors.muted }} />
+          <h3 className="text-xl font-semibold text-white mb-2">No Records Yet</h3>
+          <p className="text-sm" style={{ color: currentTheme.colors.muted }}>
+            Complete your first week to start tracking records.
+          </p>
+        </div>
+    );
+  }
+
+  // Carousel structure remains the same, but uses the updated RecordItem
+  return (
+    <Carousel
+      opts={{
+        align: "start",
+        loop: false,
+        dragFree: true, // Allow free scrolling like mobile apps
+      }}
+      className="w-full"
+    >
+      <CarouselContent className="-ml-4">
+        <CarouselItem className="pl-4 basis-auto md:basis-1/2 lg:basis-1/3"> {/* Use basis-auto for natural sizing */}
+          <RecordItem
+            icon={<Trophy className="h-5 w-5 text-yellow-500" />}
+            label="Best Record"
+            value={`${stats.bestRecord} Wins`}
+          />
+        </CarouselItem>
+        <CarouselItem className="pl-4 basis-auto md:basis-1/2 lg:basis-1/3">
+          <RecordItem
+            icon={<TrendingUp className="h-5 w-5 text-blue-500" />}
+            label="Average Wins"
+            value={stats.averageWins.toFixed(1)}
+          />
+        </CarouselItem>
+        <CarouselItem className="pl-4 basis-auto md:basis-1/2 lg:basis-1/3">
+          <RecordItem
+            icon={<Flame className="h-5 w-5 text-orange-500" />}
+            label="Longest Win Streak"
+            value={stats.longestWinStreak}
+          />
+        </CarouselItem>
+        <CarouselItem className="pl-4 basis-auto md:basis-1/2 lg:basis-1/3">
+          <RecordItem
+            icon={<Goal className="h-5 w-5 text-green-500" />}
+            label="Most Goals (Run)"
+            value={stats.mostGoalsInRun}
+          />
+        </CarouselItem>
+        <CarouselItem className="pl-4 basis-auto md:basis-1/2 lg:basis-1/3">
+          <RecordItem
+            icon={<BarChart2 className="h-5 w-5 text-purple-500" />}
+            label="Goal Difference"
+            value={stats.overallGoalDifference > 0 ? `+${stats.overallGoalDifference}` : stats.overallGoalDifference}
+          />
+        </CarouselItem>
+        <CarouselItem className="pl-4 basis-auto md:basis-1/2 lg:basis-1/3">
+          <RecordItem
+            icon={<Star className="h-5 w-5 text-pink-500" />}
+            label="Club MVP"
+            value={stats.mvp}
+          />
+        </CarouselItem>
+        <CarouselItem className="pl-4 basis-auto md:basis-1/2 lg:basis-1/3">
+          <RecordItem
+            icon={<Award className="h-5 w-5 text-red-500" />}
+            label="Avg Player Rating"
+            value={stats.averagePlayerRating.toFixed(2)}
+          />
+        </CarouselItem>
+        <CarouselItem className="pl-4 basis-auto md:basis-1/2 lg:basis-1/3">
+          <RecordItem
+            icon={<ShieldCheck className="h-5 w-5 text-teal-500" />}
+            label="Discipline"
+            value={stats.disciplineIndex}
+          />
+        </CarouselItem>
+        <CarouselItem className="pl-4 basis-auto md:basis-1/2 lg:basis-1/3">
+          <RecordItem
+            icon={<Repeat className="h-5 w-5 text-gray-500" />}
+            label="Avg Possession"
+            value={`${stats.averagePossession.toFixed(0)}%`}
+          />
+        </CarouselItem>
+        <CarouselItem className="pl-4 basis-auto md:basis-1/2 lg:basis-1/3">
+          <RecordItem
+            icon={<ShieldOff className="h-5 w-5 text-green-600" />}
+            label="Total Clean Sheets"
+            value={stats.totalCleanSheets}
+          />
+        </CarouselItem>
+      </CarouselContent>
+      {/* Conditionally hide arrows if not needed or on mobile? For now, keep as desktop only */}
+      <CarouselPrevious className="hidden md:flex" />
+      <CarouselNext className="hidden md:flex" />
+    </Carousel>
+  );
+};
+
+// Default export might be needed if FUTTrackrRecords is the main export
+// export default FUTTrackrRecords;

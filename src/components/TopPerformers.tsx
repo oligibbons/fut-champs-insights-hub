@@ -1,100 +1,135 @@
+import { useAccountData } from '@/hooks/useAccountData';
+import { WeeklyPerformance, PlayerPerformance } from '@/types/futChampions';
 import { useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Game } from '@/types/futChampions';
-import { Trophy, Users } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Star, TrendingUp, TrendingDown } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { useTheme } from '@/hooks/useTheme';
 
-const TopPerformers = ({ games }: { games: Game[] }) => {
-  const playerStats = useMemo(() => {
-    // 1. A robust check to ensure 'games' is a valid, non-empty array.
-    if (!Array.isArray(games) || games.length === 0) {
-      return [];
-    }
+const TopPerformers = () => {
+  // --- FIX: Add guards for undefined hook and data ---
+  const { weeklyData = [], loading } = useAccountData() || {};
+  // --- END FIX
+  const { currentTheme } = useTheme();
 
-    const playerMap = new Map();
-    
-    // 2. Iterate through each game safely.
-    for (const game of games) {
-      // 3. Critically, check if 'player_performances' exists and is an array on each game object.
-      if (Array.isArray(game.player_performances)) {
-        for (const player of game.player_performances) {
-          // Ensure the player object and its name are valid before processing.
-          if (!player || !player.player_name) continue;
+  const topPlayers = useMemo(() => {
+    // This guard is still good, but now weeklyData is guaranteed to be an array
+    if (weeklyData.length === 0) return [];
 
-          const existing = playerMap.get(player.player_name) || {
-            name: player.player_name,
-            position: player.position,
-            gamesPlayed: 0,
-            goals: 0,
-            assists: 0,
-            totalRating: 0,
-          };
-          
-          existing.gamesPlayed += 1;
-          existing.goals += player.goals || 0;
-          existing.assists += player.assists || 0;
-          existing.totalRating += player.rating || 0;
-          
-          playerMap.set(player.player_name, existing);
-        }
+    const allPlayerStats = weeklyData.flatMap(week =>
+      (week.games || []).flatMap(game => game.playerStats || [])
+    );
+
+    const playerMap = new Map<string, { name: string, position: string, totalRating: number, games: number, goals: number, assists: number }>();
+
+    allPlayerStats.forEach(player => {
+      if (!player || player.minutesPlayed === 0) return; // Skip if no player data or no minutes
+
+      const key = `${player.name}-${player.position}`;
+      if (!playerMap.has(key)) {
+        playerMap.set(key, {
+          name: player.name,
+          position: player.position,
+          totalRating: 0,
+          games: 0,
+          goals: 0,
+          assists: 0,
+        });
       }
-    }
-    
-    // 4. Calculate final stats and sort the players.
-    return Array.from(playerMap.values())
-      .map(player => ({
-        ...player,
-        averageRating: player.gamesPlayed > 0 ? (player.totalRating / player.gamesPlayed) : 0,
-        goalInvolvements: player.goals + player.assists,
-      }))
-      .sort((a, b) => b.goalInvolvements - a.goalInvolvements || b.averageRating - a.averageRating);
-  }, [games]);
 
-  if (playerStats.length === 0) {
+      const stats = playerMap.get(key)!;
+      stats.totalRating += player.rating;
+      stats.games += 1;
+      stats.goals += player.goals;
+      stats.assists += player.assists;
+    });
+
+    return Array.from(playerMap.values())
+      .filter(p => p.games >= 5) // Only show players with 5+ games
+      .map(p => ({
+        ...p,
+        averageRating: p.totalRating / p.games,
+        goalInvolvements: p.goals + p.assists
+      }))
+      .sort((a, b) => b.averageRating - a.averageRating) // Sort by rating
+      .slice(0, 3); // Get top 3
+  }, [weeklyData]);
+
+  // --- FIX: This loading check is now safe ---
+  if (loading) {
     return (
-        <Card>
-            <CardContent className="text-center py-12">
-                <Users className="h-12 w-12 mx-auto mb-3 text-gray-500" />
-                <p className="text-muted-foreground">No player stats recorded for this run yet.</p>
-            </CardContent>
-        </Card>
+      <div className="space-y-3">
+        <Skeleton className="h-14 w-full rounded-lg" />
+        <Skeleton className="h-14 w-full rounded-lg" />
+        <Skeleton className="h-14 w-full rounded-lg" />
+      </div>
+    );
+  }
+
+  if (topPlayers.length === 0) {
+    return (
+      <div className="text-center py-4 text-sm" style={{ color: currentTheme.colors.muted }}>
+        Play at least 5 games with a player to see them here.
+      </div>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center">
-          <Trophy className="h-5 w-5 mr-2 text-primary" />
-          Top Performers This Run
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          {playerStats.slice(0, 5).map((player, index) => (
-            <div key={`${player.name}-${index}`} className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
-              <div className="flex items-center gap-3">
-                <Badge variant="outline">#{index + 1}</Badge>
-                <div>
-                  <p className="font-semibold text-white">{player.name}</p>
-                  <p className="text-xs text-muted-foreground">{player.position} • {player.gamesPlayed} games</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="text-right">
-                    <p className="font-bold">{player.averageRating.toFixed(1)}</p>
-                    <p className="text-xs text-muted-foreground">Rating</p>
-                </div>
-                <div className="text-right">
-                    <p className="font-bold">{player.goalInvolvements}</p>
-                    <p className="text-xs text-muted-foreground">G+A</p>
-                </div>
+    <div className="space-y-3">
+      {topPlayers.map((player, index) => (
+        <Card 
+          key={index} 
+          className="p-3 bg-transparent border-0 shadow-none"
+          style={{ 
+            backgroundColor: currentTheme.colors.surface,
+            borderColor: currentTheme.colors.border
+          }}
+        >
+          <div className="flex items-center justify-between space-x-3">
+            <div className="flex items-center space-x-3">
+              <span 
+                className="flex items-center justify-center h-8 w-8 rounded-full font-bold"
+                style={{ 
+                  backgroundColor: currentTheme.colors.cardBg, 
+                  color: currentTheme.colors.text 
+                }}
+              >
+                {index + 1}
+              </span>
+              <div>
+                <p className="font-semibold" style={{ color: currentTheme.colors.text }}>{player.name}</p>
+                <p className="text-xs" style={{ color: currentTheme.colors.muted }}>{player.position} • {player.games} Games</p>
               </div>
             </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+            <div className="flex items-center space-x-2">
+              <Badge 
+                variant="outline" 
+                className="text-xs border-0"
+                style={{
+                  backgroundColor: currentTheme.colors.accent,
+                  color: currentTheme.colors.accentText
+                }}
+              >
+                <Star className="h-3 w-3 mr-1" />
+                {player.averageRating.toFixed(1)}
+              </Badge>
+              <Badge 
+                variant="outline" 
+                className="text-xs hidden sm:flex"
+                style={{
+                  backgroundColor: currentTheme.colors.cardBg,
+                  color: currentTheme.colors.text,
+                  borderColor: currentTheme.colors.border
+                }}
+              >
+                {player.goalInvolvements} G+A
+              </Badge>
+            </div>
+          </div>
+        </Card>
+      ))}
+    </div>
   );
 };
 

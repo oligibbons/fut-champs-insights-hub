@@ -1,176 +1,254 @@
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { useCallback, memo, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { PlayerPerformance } from '@/types/futChampions';
-import { Trash2, Minus, Plus } from 'lucide-react';
+import { Minus, Plus, Star, Goal, Footprints, Clock, Square, SquareCheck, ShieldAlert } from 'lucide-react';
+import { PlayerPerformance } from '@/types/futChampions'; // Use the main type
+import { cn } from '@/lib/utils';
+
+// Type specifically for the data structure used within this form component
+type PlayerStatFormData = {
+  id: string; // player_id (UUID)
+  name: string;
+  position: string;
+  isSub: boolean; 
+  minutes_played: number | string; // Allow string for intermediate input state
+  goals: number | string;
+  assists: number | string;
+  rating: number | string;
+  yellow_cards: number | string;
+  red_cards: number | string;
+  own_goals: number | string;
+};
 
 interface PlayerStatsFormProps {
-  players: PlayerPerformance[];
-  onStatsChange: (players: PlayerPerformance[]) => void;
+  players: PlayerStatFormData[];
+  onStatsChange: (players: PlayerStatFormData[]) => void;
   gameDuration: number;
 }
 
-const PlayerStatsForm = ({ players, onStatsChange, gameDuration }: PlayerStatsFormProps) => {
+// --- Define the logical sort order for positions ---
+const positionOrder: { [key: string]: number } = {
+  'GK': 1,
+  'CB': 2,
+  'LB': 3,
+  'RB': 4,
+  'CDM': 5,
+  'CM': 6,
+  'LM': 7,
+  'RM': 8,
+  'CAM': 9,
+  'LW': 10,
+  'RW': 11,
+  'ST': 12,
+};
 
-  const updatePlayer = (index: number, field: keyof PlayerPerformance, value: any) => {
-    const newPlayers = [...players];
-    newPlayers[index] = { ...newPlayers[index], [field]: value };
-    onStatsChange(newPlayers);
-  };
+// Reusable Input Component for Player Stats
+const PlayerStatInput = memo(({
+  playerId, field, value, onChange, onAdjust, label, Icon, min, max, step, inputWidth = 'w-14', showButtons = true
+}: {
+  playerId: string;
+  field: keyof PlayerStatFormData;
+  value: number | string;
+  onChange: (playerId: string, field: keyof PlayerStatFormData, value: string) => void;
+  onAdjust: (playerId: string, field: keyof PlayerStatFormData, delta: number, step: number, min: number, max: number) => void;
+  label: string;
+  Icon: React.ElementType;
+  min: number;
+  max: number;
+  step: number;
+  inputWidth?: string;
+  showButtons?: boolean;
+}) => {
+    // Determine disabled state based on parsed numeric value
+    const numValue = step < 1 ? parseFloat(String(value)) : parseInt(String(value), 10);
+    const safeNumValue = isNaN(numValue) ? min : numValue; // Default to min if NaN
+    const isMin = safeNumValue <= min;
+    const isMax = safeNumValue >= max;
 
-  const removePlayer = (index: number) => {
-    const newPlayers = players.filter((_, i) => i !== index);
-    onStatsChange(newPlayers);
-  };
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        let val = e.target.value;
+        const numRegex = step < 1 ? /^\d*\.?\d*$/ : /^\d*$/;
+        if (numRegex.test(val)) {
+            onChange(playerId, field, val); // Pass valid string or empty string
+        }
+    };
 
-  const handleInputChange = (index: number, field: keyof PlayerPerformance, value: string) => {
-    if (field === 'name' || field === 'position') {
-      updatePlayer(index, field, value);
-      return;
-    }
-    
-    // For numeric fields, allow temporarily empty string for user input
-    if (value === '') {
-      updatePlayer(index, field, '');
-      return;
-    }
+    const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+        let valStr = e.target.value;
+        let valNum = step < 1 ? parseFloat(valStr) : parseInt(valStr, 10);
 
-    const num = field === 'rating' ? parseFloat(value) : parseInt(value, 10);
-    if (!isNaN(num)) {
-      updatePlayer(index, field, num);
-    }
-  };
-  
-  const handleBlur = (index: number, field: keyof PlayerPerformance) => {
-      const player = players[index];
-      const value = player[field];
-      if(value === '' || value === null || (typeof value === 'number' && isNaN(value))) {
-          updatePlayer(index, field, 0);
-      }
-  }
+        if (valStr === '' || isNaN(valNum)) { valNum = min; } // Default to min if empty/invalid
+        valNum = Math.max(min, Math.min(max, valNum)); // Clamp
 
-  const adjustValue = (index: number, field: keyof PlayerPerformance, delta: number) => {
-    const currentValue = players[index][field];
-    const numValue = (typeof currentValue === 'number' && !isNaN(currentValue)) ? currentValue : 0;
-    let newValue = numValue + delta;
-    
-    if (field === 'rating') {
-      newValue = Math.max(0, Math.min(10, newValue));
-      newValue = Math.round(newValue * 10) / 10; // Round to one decimal place
-    } else if (field === 'minutesPlayed') {
-      newValue = Math.max(0, Math.min(gameDuration, newValue));
-    } else {
-      newValue = Math.max(0, newValue);
-    }
-    
-    updatePlayer(index, field, newValue);
-  };
+        const finalValue = step < 1 ? parseFloat(valNum.toFixed(1)) : Math.round(valNum);
+        onChange(playerId, field, String(finalValue)); // Update with validated number as string
+    };
 
-  return (
-    <div className="space-y-4">
-      {players.map((player, index) => (
-        <Card key={player.id || index} className="p-4 bg-white/5 border-white/10 space-y-4">
-          {/* Player Header: Name, Position, Remove Button */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex-grow grid grid-cols-2 gap-4">
-               <div className="space-y-1">
-                <Label className="text-white text-xs">Player Name</Label>
+    return (
+        <div className="flex flex-col items-center space-y-1">
+            <Label htmlFor={`${playerId}-${field}`} className="text-xs font-medium text-muted-foreground flex items-center">
+                <Icon className="h-3 w-3 mr-1" />
+                {label}
+            </Label>
+            <div className="flex items-center gap-1">
+                {showButtons && (
+                     <Button type="button" variant="outline" size="icon"
+                        // --- FIX: Use theme-aware colors ---
+                        className="w-6 h-6 p-0 shrink-0 border-border/50 bg-accent/50 hover:bg-accent"
+                        onClick={() => onAdjust(playerId, field, -1, step, min, max)} disabled={isMin} aria-label={`Decrease ${label}`}>
+                        <Minus className="h-3 w-3" />
+                     </Button>
+                 )}
                 <Input
-                    value={player.name}
-                    onChange={(e) => updatePlayer(index, 'name', e.target.value)}
-                    placeholder="Enter player name"
-                    className="modern-input"
-                    readOnly={player.position !== 'SUB'} // Only allow editing name for manual subs
+                    id={`${playerId}-${field}`}
+                    type="text"
+                    inputMode={step < 1 ? "decimal" : "numeric"}
+                    value={value} // Directly use the string value
+                    onChange={handleInputChange}
+                    onBlur={handleBlur}
+                    // --- FIX: Use theme-aware colors ---
+                    className={cn("h-7 text-xs font-semibold text-center px-1 text-foreground bg-input/50 border-border/50 focus:border-primary focus:ring-primary", inputWidth)}
+                    placeholder={String(min)}
+                    aria-label={label}
                 />
-               </div>
-               <div className="space-y-1">
-                <Label className="text-white text-xs">Position</Label>
-                 <Input
-                    value={player.position}
-                    onChange={(e) => updatePlayer(index, 'position', e.target.value)}
-                    placeholder="e.g. SUB"
-                    className="modern-input"
-                    readOnly={player.position !== 'SUB'}
-                />
-               </div>
+                 {showButtons && (
+                    <Button type="button" variant="outline" size="icon"
+                        // --- FIX: Use theme-aware colors ---
+                        className="w-6 h-6 p-0 shrink-0 border-border/50 bg-accent/50 hover:bg-accent"
+                        onClick={() => onAdjust(playerId, field, 1, step, min, max)} disabled={isMax} aria-label={`Increase ${label}`}>
+                         <Plus className="h-3 w-3" />
+                    </Button>
+                )}
             </div>
-            <Button
-                type="button" variant="ghost" size="sm"
-                onClick={() => removePlayer(index)}
-                className="text-red-500 hover:text-red-400 hover:bg-red-500/10 self-end sm:self-center"
-            >
-                <Trash2 className="h-4 w-4" />
-            </Button>
+        </div>
+    );
+});
+PlayerStatInput.displayName = 'PlayerStatInput';
+
+
+// --- MAIN COMPONENT ---
+const PlayerStatsForm: React.FC<PlayerStatsFormProps> = ({ players = [], onStatsChange, gameDuration }) => {
+
+  // Handle direct input change (string value)
+  const handleInputChange = useCallback((playerId: string, field: keyof PlayerStatFormData, value: string) => {
+    onStatsChange(
+      players.map(p => p.id === playerId ? { ...p, [field]: value } : p)
+    );
+  }, [players, onStatsChange]);
+
+  // Handle adjustments via buttons (+/-)
+  const handleAdjustValue = useCallback((playerId: string, field: keyof PlayerStatFormData, delta: number, step: number, min: number, max: number) => {
+    const player = players.find(p => p.id === playerId);
+    if (!player) return;
+
+    const currentValue = player[field];
+    let currentNum = step < 1 ? parseFloat(String(currentValue)) : parseInt(String(currentValue), 10);
+    if (isNaN(currentNum)) { currentNum = min; } // Default if current is invalid
+
+    let newValue = currentNum + (delta * step);
+
+    // Precision for floats
+    if (step < 1) {
+      const precision = String(step).includes('.') ? String(step).split('.')[1].length : 1;
+      newValue = parseFloat(newValue.toFixed(precision));
+    } else {
+      newValue = Math.round(newValue);
+    }
+
+    newValue = Math.max(min, Math.min(max, newValue)); // Clamp
+
+    onStatsChange(
+      players.map(p => p.id === playerId ? { ...p, [field]: newValue } : p) // Store as number after adjustment
+    );
+  }, [players, onStatsChange]);
+
+  // Set all players' minutes to game duration
+  const setAllMinutes = useCallback(() => {
+    onStatsChange(
+      // Only set for starters, not subs
+      players.map(p => p.isSub ? p : { ...p, minutes_played: gameDuration })
+    );
+  }, [players, onStatsChange, gameDuration]);
+
+  // --- Sort players based on starter/sub status, then position ---
+  const sortedPlayers = useMemo(() => {
+    const getOrder = (position: string) => positionOrder[position.toUpperCase()] || 99; // 99 for unknowns
+    return [...players].sort((a, b) => {
+      // 1. Sort by isSub (subs last)
+      if (a.isSub && !b.isSub) return 1;
+      if (!a.isSub && b.isSub) return -1;
+
+      // 2. If both are starters or both are subs, sort by position
+      return getOrder(a.position) - getOrder(b.position);
+    });
+  }, [players]);
+
+  // --- RENDER ---
+  return (
+    <div className="space-y-3">
+        {/* --- FIX: Rely on variant="outline" to apply theme colors --- */}
+       <Button type="button" variant="outline" size="sm" onClick={setAllMinutes} className="text-xs">
+          Set Starters' Minutes to {gameDuration}
+      </Button>
+
+      <div className="space-y-4">
+        {/* --- Map over sortedPlayers --- */}
+        {sortedPlayers.map((player) => (
+           // --- FIX: Use theme-aware glass styling (bg-background, border-border) ---
+           <div key={player.id} className="p-3 bg-background/70 rounded-lg border border-border/50 shadow-sm backdrop-blur-sm">
+            {/* Player Info Row */}
+            <div className="flex justify-between items-center mb-3">
+               {/* --- Use theme-aware text color --- */}
+              <span className="text-sm font-medium text-foreground truncate pr-2">{player.name || 'Unnamed Player'}</span>
+              
+              {/* --- FIX: Use theme-aware secondary colors for the badge --- */}
+              <span className="text-xs uppercase text-secondary-foreground bg-secondary px-2 py-0.5 rounded font-semibold">
+                {player.position || 'N/A'}
+              </span>
+            </div>
+
+             {/* Stats Grid - Responsive Columns */}
+             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-x-2 gap-y-3">
+                 <PlayerStatInput
+                    playerId={player.id} field="minutes_played" value={player.minutes_played}
+                    onChange={handleInputChange} onAdjust={handleAdjustValue} label="Min" Icon={Clock}
+                    min={0} max={gameDuration > 90 ? 120 : 90} step={5} inputWidth="w-12"
+                 />
+                 <PlayerStatInput
+                    playerId={player.id} field="rating" value={player.rating}
+                    onChange={handleInputChange} onAdjust={handleAdjustValue} label="Rat" Icon={Star}
+                    min={0} max={10} step={0.1} inputWidth="w-12"
+                 />
+                <PlayerStatInput
+                    playerId={player.id} field="goals" value={player.goals}
+                    onChange={handleInputChange} onAdjust={handleAdjustValue} label="Gls" Icon={Goal}
+                    min={0} max={20} step={1} inputWidth="w-12"
+                 />
+                <PlayerStatInput
+                    playerId={player.id} field="assists" value={player.assists}
+                    onChange={handleInputChange} onAdjust={handleAdjustValue} label="Ast" Icon={Footprints}
+                    min={0} max={20} step={1} inputWidth="w-12"
+                 />
+                 <PlayerStatInput
+                    playerId={player.id} field="yellow_cards" value={player.yellow_cards}
+                    onChange={handleInputChange} onAdjust={handleAdjustValue} label="YC" Icon={Square}
+                    min={0} max={2} step={1} inputWidth="w-12"
+                 />
+                 <PlayerStatInput
+                    playerId={player.id} field="red_cards" value={player.red_cards}
+                    onChange={handleInputChange} onAdjust={handleAdjustValue} label="RC" Icon={SquareCheck}
+                    min={0} max={1} step={1} inputWidth="w-12"
+                 />
+                 <PlayerStatInput
+                    playerId={player.id} field="own_goals" value={player.own_goals}
+                    onChange={handleInputChange} onAdjust={handleAdjustValue} label="OG" Icon={ShieldAlert}
+                    min={0} max={5} step={1} inputWidth="w-12"
+                 />
+             </div>
           </div>
-
-          {/* Player Stats Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {/* Minutes Played */}
-            <div className="space-y-1">
-              <Label className="text-white text-xs font-medium">Minutes</Label>
-              <div className="flex items-center gap-1">
-                <Button type="button" variant="outline" size="icon" onClick={() => adjustValue(index, 'minutesPlayed', -5)} className="h-8 w-8 modern-button-secondary">-</Button>
-                <Input type="number" value={player.minutesPlayed} onChange={(e) => handleInputChange(index, 'minutesPlayed', e.target.value)} onBlur={() => handleBlur(index, 'minutesPlayed')} className="modern-input text-center w-full" />
-                <Button type="button" variant="outline" size="icon" onClick={() => adjustValue(index, 'minutesPlayed', 5)} className="h-8 w-8 modern-button-secondary">+</Button>
-              </div>
-            </div>
-
-            {/* Rating */}
-            <div className="space-y-1">
-              <Label className="text-white text-xs font-medium">Rating</Label>
-              <div className="flex items-center gap-1">
-                <Button type="button" variant="outline" size="icon" onClick={() => adjustValue(index, 'rating', -0.1)} className="h-8 w-8 modern-button-secondary">-</Button>
-                <Input type="number" step="0.1" value={player.rating} onChange={(e) => handleInputChange(index, 'rating', e.target.value)} onBlur={() => handleBlur(index, 'rating')} className="modern-input text-center w-full" />
-                <Button type="button" variant="outline" size="icon" onClick={() => adjustValue(index, 'rating', 0.1)} className="h-8 w-8 modern-button-secondary">+</Button>
-              </div>
-            </div>
-
-            {/* Goals */}
-            <div className="space-y-1">
-              <Label className="text-white text-xs font-medium">Goals</Label>
-              <div className="flex items-center gap-1">
-                <Button type="button" variant="outline" size="icon" onClick={() => adjustValue(index, 'goals', -1)} className="h-8 w-8 modern-button-secondary">-</Button>
-                <Input type="number" value={player.goals} onChange={(e) => handleInputChange(index, 'goals', e.target.value)} onBlur={() => handleBlur(index, 'goals')} className="modern-input text-center w-full" />
-                <Button type="button" variant="outline" size="icon" onClick={() => adjustValue(index, 'goals', 1)} className="h-8 w-8 modern-button-secondary">+</Button>
-              </div>
-            </div>
-
-            {/* Assists */}
-            <div className="space-y-1">
-              <Label className="text-white text-xs font-medium">Assists</Label>
-              <div className="flex items-center gap-1">
-                <Button type="button" variant="outline" size="icon" onClick={() => adjustValue(index, 'assists', -1)} className="h-8 w-8 modern-button-secondary">-</Button>
-                <Input type="number" value={player.assists} onChange={(e) => handleInputChange(index, 'assists', e.target.value)} onBlur={() => handleBlur(index, 'assists')} className="modern-input text-center w-full" />
-                <Button type="button" variant="outline" size="icon" onClick={() => adjustValue(index, 'assists', 1)} className="h-8 w-8 modern-button-secondary">+</Button>
-              </div>
-            </div>
-
-             {/* Yellow Cards (Optional, based on your type) */}
-            {player.yellowCards !== undefined && (
-                <div className="space-y-1">
-                    <Label className="text-white text-xs font-medium">Yellows</Label>
-                    <div className="flex items-center gap-1">
-                        <Button type="button" variant="outline" size="icon" onClick={() => adjustValue(index, 'yellowCards', -1)} className="h-8 w-8 modern-button-secondary">-</Button>
-                        <Input type="number" value={player.yellowCards} onChange={(e) => handleInputChange(index, 'yellowCards', e.target.value)} onBlur={() => handleBlur(index, 'yellowCards')} className="modern-input text-center w-full" />
-                        <Button type="button" variant="outline" size="icon" onClick={() => adjustValue(index, 'yellowCards', 1)} className="h-8 w-8 modern-button-secondary">+</Button>
-                    </div>
-                </div>
-            )}
-             {/* Red Cards (Optional) */}
-            {player.redCards !== undefined && (
-                <div className="space-y-1">
-                    <Label className="text-white text-xs font-medium">Reds</Label>
-                    <div className="flex items-center gap-1">
-                        <Button type="button" variant="outline" size="icon" onClick={() => adjustValue(index, 'redCards', -1)} className="h-8 w-8 modern-button-secondary">-</Button>
-                        <Input type="number" value={player.redCards} onChange={(e) => handleInputChange(index, 'redCards', e.target.value)} onBlur={() => handleBlur(index, 'redCards')} className="modern-input text-center w-full" />
-                        <Button type="button" variant="outline" size="icon" onClick={() => adjustValue(index, 'redCards', 1)} className="h-8 w-8 modern-button-secondary">+</Button>
-                    </div>
-                </div>
-            )}
-          </div>
-        </Card>
-      ))}
+        ))}
+      </div>
     </div>
   );
 };

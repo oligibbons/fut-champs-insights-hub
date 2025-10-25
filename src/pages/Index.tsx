@@ -1,192 +1,203 @@
-import { useState, useEffect, useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAuth } from "@/contexts/AuthContext";
-import { useSupabaseData } from "@/hooks/useSupabaseData";
-import { Skeleton } from "@/components/ui/skeleton";
-import CPSGauge from "@/components/CPSGauge";
-import PrimaryInsightCard from "@/components/PrimaryInsightCard";
-import DashboardOverview from "@/components/DashboardOverview";
-import TopPerformers from "@/components/TopPerformers";
-import WeeklyOverview from "@/components/WeeklyOverview";
-import { generateEnhancedAIInsights, Insight } from "@/utils/aiInsights";
-import { BarChart2, Users, Trophy, GaugeCircle, TrendingUp, TrendingDown } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
-import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { FUTTrackrRecords } from "@/components/FUTTrackrRecords";
-import { Playstyle } from "@/components/Playstyle";
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import DashboardOverview from '@/components/DashboardOverview';
+import RecentRuns from '@/components/RecentRuns';
+import ClubLegends from '@/components/ClubLegends';
+import { FUTTrackrRecords } from '@/components/FUTTrackrRecords';
+import DashboardSection from '@/components/DashboardSection';
+import { useToast } from '@/hooks/use-toast';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { LayoutGrid, Users, BarChart3 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import PlayerMovers from '@/components/PlayerMovers';
+import PlayerHistoryTable from '@/components/PlayerHistoryTable';
+import XGAnalytics from '@/components/XGAnalytics';
+import PlayerConsistencyChart from '@/components/PlayerConsistencyChart';
+import PerformanceRadar from '@/components/PerformanceRadar';
+import MatchTagAnalysis from '@/components/MatchTagAnalysis';
+import FormationTracker from '@/components/FormationTracker';
+import PrimaryInsightCard from '@/components/PrimaryInsightCard';
+import GoalInvolvementChart from '@/components/GoalInvolvementChart';
+import CPSGauge from '@/components/CPSGauge';
+import PositionalHeatMap from '@/components/PositionalHeatMap';
+import logo from '/fut-trackr-logo.jpg';
+import { useTheme } from '@/hooks/useTheme';
+import RunChunkAnalysis from '@/components/RunChunkAnalysis';
+// --- Import hook for fetching data if needed ---
+// import { useAllRunsData } from '@/hooks/useAllRunsData'; // Example
 
-const SortableItem = ({ id, children }: { id: string; children: React.ReactNode }) => {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
+interface DashboardItem {
+    id: string;
+    component: React.FC<any>;
+    order: number;
+}
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-
-  return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="touch-none">
-      {children}
-    </div>
-  );
+const componentsMap: Record<string, React.FC<any>> = {
+    overview: DashboardOverview,
+    recentRuns: RecentRuns,
+    records: FUTTrackrRecords,
+    playerMovers: PlayerMovers,
+    clubLegends: ClubLegends,
+    playerHistoryTable: PlayerHistoryTable,
+    xgAnalytics: XGAnalytics,
+    playerConsistency: PlayerConsistencyChart,
+    performanceRadar: PerformanceRadar,
+    matchTagAnalysis: MatchTagAnalysis,
+    formationTracker: FormationTracker,
+    primaryInsight: PrimaryInsightCard,
+    goalInvolvement: GoalInvolvementChart,
+    cpsGauge: CPSGauge,
+    positionalHeatMap: PositionalHeatMap,
+    runChunkAnalysis: RunChunkAnalysis,
 };
 
-const Index = () => {
-  const { user } = useAuth();
-  const { weeklyData, loading } = useSupabaseData();
-  const [topInsight, setTopInsight] = useState<Insight | null>(null);
-  const [insightsLoading, setInsightsLoading] = useState(true);
-  const [components, setComponents] = useState([
-    "stats",
-    "insights",
-    "overview",
-    "records",
-    "weekly",
-  ]);
+const defaultLayout: DashboardItem[] = [
+    // Define order based on tabs
+    // Overview Tab
+    { id: 'overview', component: componentsMap.overview, order: 1 },
+    { id: 'primaryInsight', component: componentsMap.primaryInsight, order: 2 },
+    { id: 'recentRuns', component: componentsMap.recentRuns, order: 3 },
+    { id: 'records', component: componentsMap.records, order: 4 },
+    // Player Hub Tab
+    { id: 'playerMovers', component: componentsMap.playerMovers, order: 5 },
+    { id: 'goalInvolvement', component: componentsMap.goalInvolvement, order: 6 },
+    { id: 'clubLegends', component: componentsMap.clubLegends, order: 7 },
+    { id: 'playerHistoryTable', component: componentsMap.playerHistoryTable, order: 8 },
+    // Analytics Tab
+    { id: 'performanceRadar', component: componentsMap.performanceRadar, order: 9 },
+    { id: 'runChunkAnalysis', component: componentsMap.runChunkAnalysis, order: 9.5 },
+    { id: 'matchTagAnalysis', component: componentsMap.matchTagAnalysis, order: 10 },
+    { id: 'formationTracker', component: componentsMap.formationTracker, order: 11 },
+    { id: 'cpsGauge', component: componentsMap.cpsGauge, order: 12 },
+    { id: 'xgAnalytics', component: componentsMap.xgAnalytics, order: 13 },
+    { id: 'playerConsistency', component: componentsMap.playerConsistency, order: 14 },
+    { id: 'positionalHeatMap', component: componentsMap.positionalHeatMap, order: 15 },
+];
 
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
+const initialLayout = [...defaultLayout]
+    .filter(item => componentsMap[item.id])
+    .sort((a, b) => a.order - b.order);
 
-  function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
+const Dashboard = () => {
+    const { user } = useAuth();
+    const { toast } = useToast();
+    const { currentTheme } = useTheme();
 
-    if (over && active.id !== over.id) {
-      setComponents((items) => {
-        const oldIndex = items.indexOf(active.id as string);
-        const newIndex = items.indexOf(over.id as string);
-        return arrayMove(items, oldIndex, newIndex);
-      });
-    }
-  }
+    const [layout, setLayout] = useState<DashboardItem[]>(initialLayout);
+    const [loadingLayout, setLoadingLayout] = useState(true);
 
-  const stats = useMemo(() => {
-    const allGames = weeklyData.flatMap(w => w.games);
-    const totalWins = weeklyData.reduce((acc, week) => acc + week.totalWins, 0);
-    const totalGames = allGames.length;
-    const winRate = totalGames > 0 ? (totalWins / totalGames) * 100 : 0;
-    const currentWeek = weeklyData.find(week => !week.isCompleted);
-    const currentStreak = currentWeek?.currentStreak || 0;
-    return { allGames, totalWins, totalGames, winRate, currentStreak };
-  }, [weeklyData]);
+    // Placeholder data while hook is not used:
+    const runs: any[] = []; // Replace with actual data fetching
+    const runsLoading = false; // Replace with actual loading state
+    const runsError = null; // Replace with actual error state
 
-  useEffect(() => {
-    const fetchInsights = async () => {
-      if (!loading && weeklyData && weeklyData.length > 0) {
-        setInsightsLoading(true);
-        try {
-          const allInsights = await generateEnhancedAIInsights(weeklyData);
-          const priorityOrder: Record<string, number> = { high: 3, medium: 2, low: 1 };
-          const sortedInsights = [...allInsights].sort((a, b) => (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0));
-          setTopInsight(sortedInsights[0] || null);
-        } catch (error) {
-          console.error("Failed to generate primary insight:", error);
-          setTopInsight(null);
-        } finally {
-          setInsightsLoading(false);
-        }
-      } else if (!loading) {
-        setInsightsLoading(false);
-      }
+    useEffect(() => {
+        fetchLayout();
+    }, [user]);
+
+    const fetchLayout = async () => {
+        // ... (fetchLayout function remains the same) ...
+        if (!user) { setLoadingLayout(false); setLayout(initialLayout); return; }
+        setLoadingLayout(true);
+        try { /* ... Supabase fetch ... */
+            const { data, error } = await supabase.from('user_settings').select('value').eq('user_id', user.id).eq('key', 'dashboard_layout').limit(1);
+            if (error) throw error;
+            if (data && data.length > 0 && data[0].value) {
+                 const savedLayout = data[0].value as { id: string; order: number }[];
+                 let loadedLayout = savedLayout.map(item => { const component = componentsMap[item.id]; return component ? { ...item, component } : null; }).filter((item): item is DashboardItem => item !== null);
+                 defaultLayout.forEach(defaultItem => { if (!loadedLayout.some(item => item.id === defaultItem.id)) { if (componentsMap[defaultItem.id]) { loadedLayout.push({...defaultItem}); } } });
+                 loadedLayout = loadedLayout.filter(item => componentsMap[item.id]);
+                 setLayout(loadedLayout.sort((a, b) => a.order - b.order));
+            } else { setLayout(initialLayout); }
+        } catch (err: any) { toast({ title: "Error", description: `Failed to load dashboard layout: ${err.message}`, variant: "destructive" }); setLayout(initialLayout);
+        } finally { setLoadingLayout(false); }
     };
-    fetchInsights();
-  }, [weeklyData, loading]);
 
-  const StatCard = ({ title, value, icon: Icon, color, className }: { title: string; value: string | number; icon: React.ElementType; color: string; className?: string }) => (
-    <div className={cn("glass-card p-6 flex flex-col justify-between group animate-fade-in-down", className)}>
-      <div className="flex justify-between items-start">
-        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-        <Icon className={cn("h-5 w-5 text-muted-foreground transition-transform group-hover:scale-110", color)} />
-      </div>
-      <div>
-        {loading ? (
-          <Skeleton className="h-10 w-3/4 mt-2 bg-white/10" />
-        ) : (
-          <p className="text-4xl font-bold text-foreground">{value}</p>
-        )}
-      </div>
-    </div>
-  );
-  
-  const componentMap: { [key: string]: React.ReactNode } = {
-    stats: (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            <StatCard title="Overall Wins" value={stats.totalWins} icon={Trophy} color="text-yellow-400" />
-            <StatCard title="Win Rate" value={`${stats.winRate.toFixed(0)}%`} icon={BarChart2} color="text-blue-400" />
-            <StatCard title="Total Games" value={stats.totalGames} icon={Users} color="text-purple-400" />
-            <StatCard
-                title="Current Streak"
-                value={stats.currentStreak > 0 ? `W${stats.currentStreak}` : `L${Math.abs(stats.currentStreak)}`}
-                icon={stats.currentStreak >= 0 ? TrendingUp : TrendingDown}
-                color={stats.currentStreak >= 0 ? "text-green-400" : "text-red-400"}
-            />
+
+    const findAndRenderSection = (id: string, props?: Record<string, any>) => {
+        // ... (findAndRenderSection function remains the same) ...
+        const item = layout.find(item => item.id === id); if (!item) return null;
+        const Component = item.component;
+        const selfContainedComponents = [ 'playerHistoryTable', 'xgAnalytics', 'playerConsistency', 'performanceRadar', 'matchTagAnalysis', 'formationTracker', 'primaryInsight', 'goalInvolvement', 'cpsGauge', 'positionalHeatMap', 'overview', 'runChunkAnalysis' ];
+        const commonProps = { allRuns: runs, latestRun: runs?.[0] || null, ...(props || {}) };
+        if (selfContainedComponents.includes(id)) { return <Component key={item.id} {...commonProps} />; }
+        let title = ''; switch (id) { case 'playerMovers': title = 'Player Movers'; break; case 'records': title = 'All-Time Records'; break; case 'recentRuns': title = 'Recent Runs'; break; case 'clubLegends': title = 'Club Legends'; break; default: title = item.id.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()); }
+        return ( <DashboardSection key={item.id} title={title}> <Component {...commonProps} /> </DashboardSection> );
+    };
+
+    if (loadingLayout) {
+       return ( /* ... Skeleton ... */
+         <div className="space-y-8"> <div className="flex items-center gap-4"> <Skeleton className="h-12 w-12 rounded-lg" /> <div> <Skeleton className="h-8 w-48 mb-1" /> <Skeleton className="h-4 w-64" /> </div> </div> <Skeleton className="h-12 w-full rounded-2xl" /> <div className="space-y-6"> <Skeleton className="h-64 w-full rounded-lg" /> <Skeleton className="h-48 w-full rounded-lg" /> <Skeleton className="h-48 w-full rounded-lg" /> </div> </div>
+       );
+    }
+
+    return (
+        <div className="space-y-8">
+             {/* --- Logo and Title Section --- */}
+             <div className="flex items-center gap-4">
+                 <img src={logo} alt="FUT Trackr Logo" className="h-12 w-12 rounded-lg object-cover shadow-md" />
+                 <div>
+                     <h1 className="text-3xl font-bold text-white tracking-tight">Dashboard</h1>
+                     <p style={{ color: currentTheme.colors.muted }}>Your FUT Champions command center.</p>
+                 </div>
+             </div>
+
+            <Tabs defaultValue="overview" className="space-y-6">
+                <TabsList className="glass-card rounded-2xl shadow-xl border-0 p-2 h-auto grid grid-cols-3">
+                     <TabsTrigger value="overview" className="tabs-trigger-style rounded-xl flex-1 flex gap-2 items-center justify-center">
+                         <LayoutGrid className="h-4 w-4" /> Overview
+                     </TabsTrigger>
+                     <TabsTrigger value="players" className="tabs-trigger-style rounded-xl flex-1 flex gap-2 items-center justify-center">
+                         <Users className="h-4 w-4" /> Player Hub
+                     </TabsTrigger>
+                     <TabsTrigger value="analytics" className="tabs-trigger-style rounded-xl flex-1 flex gap-2 items-center justify-center">
+                         <BarChart3 className="h-4 w-4" /> Analytics
+                     </TabsTrigger>
+                </TabsList>
+
+                {/* --- FIX: Added forceMount back --- */}
+
+                <TabsContent value="overview" className="space-y-6 mt-4" forceMount>
+                     {findAndRenderSection('overview')}
+                     {findAndRenderSection('primaryInsight')}
+                     {findAndRenderSection('recentRuns')}
+                     {findAndRenderSection('records')}
+                </TabsContent>
+
+                <TabsContent value="players" className="space-y-6 mt-4" forceMount>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {findAndRenderSection('playerMovers')}
+                        {findAndRenderSection('goalInvolvement')}
+                    </div>
+                    <div className="grid grid-cols-1 gap-6">
+                        {findAndRenderSection('clubLegends')}
+                    </div>
+                     <div className="grid grid-cols-1 gap-6">
+                        {findAndRenderSection('playerHistoryTable')}
+                    </div>
+                </TabsContent>
+
+                <TabsContent value="analytics" className="space-y-6 mt-4" forceMount>
+                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                         {findAndRenderSection('performanceRadar')}
+                         {findAndRenderSection('runChunkAnalysis')}
+                     </div>
+                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                         {findAndRenderSection('matchTagAnalysis')}
+                         {findAndRenderSection('formationTracker')}
+                         {findAndRenderSection('cpsGauge')}
+                     </div>
+                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                         {findAndRenderSection('xgAnalytics')}
+                         {findAndRenderSection('playerConsistency')}
+                     </div>
+                     {findAndRenderSection('positionalHeatMap')}
+                 </TabsContent>
+
+            </Tabs>
         </div>
-    ),
-    insights: (
-        <div className="grid gap-6 lg:grid-cols-3">
-            <div className="lg:col-span-2">
-                {loading || insightsLoading ? (
-                    <Skeleton className="h-full min-h-[200px] w-full rounded-2xl bg-white/10" />
-                ) : (
-                    <PrimaryInsightCard insight={topInsight} />
-                )}
-            </div>
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center text-lg">
-                        <GaugeCircle className="h-5 w-5 mr-2 text-primary" />
-                        Champs Player Score
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="flex items-center justify-center p-6">
-                    {loading ? <Skeleton className="h-[150px] w-[150px] rounded-full bg-white/10" /> : <CPSGauge games={stats.allGames} size={150}/>}
-                </CardContent>
-            </Card>
-        </div>
-    ),
-    overview: (
-        <div className="grid gap-6 lg:grid-cols-3">
-            <div className="lg:col-span-2">
-                <DashboardOverview games={stats.allGames} />
-            </div>
-            <div>
-                <TopPerformers />
-            </div>
-        </div>
-    ),
-    records: <FUTTrackrRecords />,
-    weekly: <WeeklyOverview />,
-  };
-
-  return (
-    <div className="space-y-8">
-      <div className="page-header">
-        <h1>Welcome back, {user?.user_metadata?.username || 'Player'}!</h1>
-        <p>This is your command center. Track your performance, gain insights, and conquer the weekend league.</p>
-      </div>
-
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext items={components} strategy={verticalListSortingStrategy}>
-            <div className="space-y-8">
-                {components.map(id => (
-                    <SortableItem key={id} id={id}>
-                        {componentMap[id]}
-                    </SortableItem>
-                ))}
-            </div>
-        </SortableContext>
-      </DndContext>
-
-      <div className="mt-8">
-        <Playstyle />
-      </div>
-    </div>
-  );
+    );
 };
 
-export default Index;
+export default Dashboard;

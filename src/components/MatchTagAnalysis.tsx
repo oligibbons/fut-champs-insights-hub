@@ -2,13 +2,15 @@ import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
-import { useDataSync } from '@/hooks/useDataSync';
+// --- FIX: Use useAccountData ---
+import { useAccountData } from '@/hooks/useAccountData';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-// FIX: Added 'Loader2' to the import list from lucide-react to resolve the ReferenceError.
 import { Tag, TrendingUp, TrendingDown, Info, Loader2 } from 'lucide-react';
-import { GameResult } from '@/types/futChampions';
+// --- FIX: Import Skeleton ---
+import { Skeleton } from '@/components/ui/skeleton';
+import { useTheme } from '@/hooks/useTheme';
 
-// A single, unified source of truth for all tag information.
+// tagDetails remains the same
 const tagDetails = {
     'Dominant Win': { category: 'Game Outcome', color: 'hsl(var(--primary))' },
     'Deserved Loss': { category: 'Game Outcome', color: 'hsl(var(--destructive))' },
@@ -49,6 +51,7 @@ const tagDetails = {
     'I Rubber Banded': { category: 'Special', color: 'hsl(0, 0%, 50%)' },
 };
 
+
 interface TagStats {
   tag: string;
   count: number;
@@ -60,32 +63,33 @@ interface TagStats {
 }
 
 const MatchTagAnalysis = () => {
-  const { weeklyData } = useDataSync();
-  const [isLoading, setIsLoading] = useState(true);
+  // --- FIX: Use useAccountData and loading state ---
+  const { weeklyData = [], loading } = useAccountData() || {};
+  const { currentTheme } = useTheme();
 
-  const allGames = useMemo(() => weeklyData.flatMap(week => week.games), [weeklyData]);
+  const allGames = useMemo(() => weeklyData.flatMap(week => week.games || []), [weeklyData]);
 
   const tagStats = useMemo(() => {
     const tagMap = new Map<string, { count: number; winCount: number; lossCount: number }>();
     
     allGames.forEach(game => {
-      if (game.tags && game.tags.length > 0) {
-        game.tags.forEach(tag => {
-          if (!tagMap.has(tag)) {
-            tagMap.set(tag, { count: 0, winCount: 0, lossCount: 0 });
-          }
-          const stats = tagMap.get(tag)!;
-          stats.count += 1;
-          if (game.result === 'win') stats.winCount += 1;
-          else if (game.result === 'loss') stats.lossCount += 1;
-          tagMap.set(tag, stats);
-        });
-      }
+      // Use optional chaining for safety
+      game.tags?.forEach(tag => {
+        if (!tagMap.has(tag)) {
+          tagMap.set(tag, { count: 0, winCount: 0, lossCount: 0 });
+        }
+        const stats = tagMap.get(tag)!;
+        stats.count += 1;
+        if (game.result === 'win') stats.winCount += 1;
+        else if (game.result === 'loss') stats.lossCount += 1;
+        tagMap.set(tag, stats);
+      });
     });
     
     return Array.from(tagMap.entries()).map(([tag, stats]) => {
-      const details = tagDetails[tag as keyof typeof tagDetails] || { category: 'Other', color: '#6b7280' };
-      const winRate = stats.count > 0 ? (stats.winCount / (stats.winCount + stats.lossCount)) * 100 : 0;
+      const details = tagDetails[tag as keyof typeof tagDetails] || { category: 'Other', color: currentTheme.colors.muted }; // Use theme color
+      const validGames = stats.winCount + stats.lossCount; // Only count wins/losses for winrate
+      const winRate = validGames > 0 ? (stats.winCount / validGames) * 100 : 0;
       return {
         tag,
         ...stats,
@@ -94,7 +98,7 @@ const MatchTagAnalysis = () => {
         category: details.category,
       };
     }).sort((a, b) => b.count - a.count);
-  }, [allGames]);
+  }, [allGames, currentTheme]);
 
   const categorizedStats = useMemo(() => {
     return tagStats.reduce((acc, stat) => {
@@ -106,16 +110,18 @@ const MatchTagAnalysis = () => {
 
   const chartData = useMemo(() => tagStats.slice(0, 10), [tagStats]);
 
-  useEffect(() => {
-    setIsLoading(false);
-  }, [weeklyData]);
-
-  if (isLoading) {
+  // --- FIX: Use loading state ---
+  if (loading) {
     return (
-      <Card>
-        <CardHeader><CardTitle>Match Tag Analysis</CardTitle></CardHeader>
-        <CardContent className="flex justify-center items-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <Card 
+        style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}
+        className="min-h-[500px]" // Approx height
+      >
+        <CardHeader>
+          <Skeleton className="h-6 w-48" />
+        </CardHeader>
+        <CardContent className="flex justify-center items-center h-full">
+          <Loader2 className="h-8 w-8 animate-spin" style={{ color: currentTheme.colors.primary }} />
         </CardContent>
       </Card>
     );
@@ -123,15 +129,15 @@ const MatchTagAnalysis = () => {
 
   if (tagStats.length === 0) {
     return (
-      <Card>
+      <Card style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Tag className="h-5 w-5" />
+          <CardTitle className="flex items-center gap-2" style={{ color: currentTheme.colors.text }}>
+            <Tag className="h-5 w-5" style={{ color: currentTheme.colors.primary }}/>
             Match Tag Analysis
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">No tags have been used yet. Play some games and add tags to see your analysis here.</p>
+          <p style={{ color: currentTheme.colors.muted }}>No tags used yet. Add tags to games to see analysis.</p>
         </CardContent>
       </Card>
     );
@@ -140,33 +146,43 @@ const MatchTagAnalysis = () => {
   const defaultOpenCategories = Object.keys(categorizedStats);
 
   return (
-    <Card>
+    <Card style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Tag className="h-5 w-5 text-primary" />
+        <CardTitle className="flex items-center gap-2" style={{ color: currentTheme.colors.text }}>
+          <Tag className="h-5 w-5" style={{ color: currentTheme.colors.primary }} />
           Match Tag Analysis
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Bar Chart Section */}
         <div>
-          <h3 className="text-lg font-semibold mb-2">Most Frequent Tags</h3>
+          <h3 className="text-lg font-semibold mb-2" style={{ color: currentTheme.colors.text }}>Most Frequent Tags</h3>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} margin={{ top: 5, right: 20, left: -10, bottom: 60 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="tag" stroke="hsl(var(--muted-foreground))" angle={-45} textAnchor="end" interval={0} />
-                <YAxis stroke="hsl(var(--muted-foreground))" />
+                <CartesianGrid strokeDasharray="3 3" stroke={currentTheme.colors.border} />
+                <XAxis 
+                    dataKey="tag" 
+                    stroke={currentTheme.colors.muted} 
+                    angle={-45} 
+                    textAnchor="end" 
+                    interval={0} 
+                    height={70} // Increased height for angled labels
+                    tick={{ fontSize: 10 }} // Smaller font size
+                 />
+                <YAxis stroke={currentTheme.colors.muted} tick={{ fontSize: 10 }} />
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: 'hsl(var(--card))', 
-                    borderColor: 'hsl(var(--border))' 
+                    backgroundColor: currentTheme.colors.surface, 
+                    borderColor: currentTheme.colors.border,
+                    borderRadius: '0.75rem',
+                    color: currentTheme.colors.text,
                   }}
-                  cursor={{ fill: 'hsl(var(--primary), 0.1)' }}
+                  cursor={{ fill: `${currentTheme.colors.primary}1A` }} // Use theme color with opacity
                 />
                 <Bar dataKey="count" name="Games" radius={[4, 4, 0, 0]}>
                   {chartData.map((entry) => (
-                    <Cell key={`cell-${entry.tag}`} fill={entry.color} />
+                    <Cell key={`cell-${entry.tag}`} fill={entry.color || currentTheme.colors.primary} /> // Use tag color or primary
                   ))}
                 </Bar>
               </BarChart>
@@ -176,18 +192,23 @@ const MatchTagAnalysis = () => {
         
         {/* Detailed Breakdown Section */}
         <div>
-           <h3 className="text-lg font-semibold mb-2 mt-6">Detailed Win Rate Analysis</h3>
+           <h3 className="text-lg font-semibold mb-2 mt-6" style={{ color: currentTheme.colors.text }}>Detailed Win Rate Analysis</h3>
             <Accordion type="multiple" defaultValue={defaultOpenCategories} className="w-full">
               {Object.entries(categorizedStats).map(([category, stats]) => (
-                <AccordionItem value={category} key={category}>
-                  <AccordionTrigger className="text-xl font-semibold">{category}</AccordionTrigger>
+                <AccordionItem value={category} key={category} style={{ borderColor: currentTheme.colors.border }}>
+                  <AccordionTrigger className="text-md font-semibold hover:no-underline" style={{ color: currentTheme.colors.text }}>{category}</AccordionTrigger>
                   <AccordionContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
                       {stats.map((tag) => (
-                        <div key={tag.tag} className="p-4 rounded-lg border" style={{ backgroundColor: `${tag.color}1A`, borderColor: `${tag.color}4D` }}>
+                        <div 
+                          key={tag.tag} 
+                          className="p-4 rounded-lg border" 
+                          style={{ backgroundColor: `${tag.color}1A`, borderColor: `${tag.color}4D` }} // Opacity added to color
+                        >
                           <div className="flex items-center justify-between mb-2">
-                            <Badge style={{ backgroundColor: tag.color, color: 'hsl(var(--background))' }}>{tag.tag}</Badge>
-                            <span className="text-sm text-muted-foreground">{tag.count} games</span>
+                             {/* Ensure badge text contrasts with its background */}
+                            <Badge style={{ backgroundColor: tag.color, color: '#FFFFFF' }}>{tag.tag}</Badge>
+                            <span className="text-sm" style={{ color: currentTheme.colors.muted }}>{tag.count} games</span>
                           </div>
                           <div className="flex justify-between items-center">
                               <div className="text-sm flex gap-2">
@@ -201,8 +222,14 @@ const MatchTagAnalysis = () => {
                                   </span>
                               </div>
                           </div>
-                          <div className="w-full bg-foreground/10 rounded-full h-2 mt-2">
-                            <div className="h-2 rounded-full" style={{ width: `${tag.winRate}%`, backgroundColor: tag.winRate >= 50 ? 'hsl(140, 70%, 45%)' : 'hsl(0, 80%, 60%)' }}/>
+                          <div className="w-full rounded-full h-2 mt-2" style={{ backgroundColor: currentTheme.colors.surface }}>
+                            <div 
+                                className="h-2 rounded-full" 
+                                style={{ 
+                                    width: `${tag.winRate}%`, 
+                                    backgroundColor: tag.winRate >= 50 ? 'hsl(140, 70%, 45%)' : 'hsl(0, 80%, 60%)' 
+                                }}
+                            />
                           </div>
                         </div>
                       ))}
@@ -214,17 +241,20 @@ const MatchTagAnalysis = () => {
         </div>
         
         {/* Insights Section */}
-         <div className="p-4 bg-secondary/50 rounded-lg">
-           <h3 className="font-semibold mb-2 flex items-center gap-2"><Info className="h-5 w-5 text-primary" /> Insights</h3>
-           <div className="space-y-1 text-sm text-muted-foreground">
+         <div 
+            className="p-4 rounded-lg" 
+            style={{ backgroundColor: currentTheme.colors.surface }}
+         >
+           <h3 className="font-semibold mb-2 flex items-center gap-2" style={{ color: currentTheme.colors.text }}><Info className="h-5 w-5" style={{ color: currentTheme.colors.primary }} /> Insights</h3>
+           <div className="space-y-1 text-sm" style={{ color: currentTheme.colors.muted }}>
              {tagStats.length > 0 && (
                <>
-                 <p>Your most common match circumstance is <span className="font-bold text-foreground">{tagStats[0].tag}</span> ({tagStats[0].count} games).</p>
-                 {tagStats.filter(t => t.count >= 3).sort((a, b) => b.winRate - a.winRate)[0] && (
-                   <p>You perform best in games tagged as <span className="font-bold text-green-500">{tagStats.filter(t => t.count >= 3).sort((a, b) => b.winRate - a.winRate)[0].tag}</span> ({tagStats.filter(t => t.count >= 3).sort((a, b) => b.winRate - a.winRate)[0].winRate.toFixed(0)}% win rate).</p>
+                 <p>Most common: <span className="font-bold" style={{ color: currentTheme.colors.text }}>{tagStats[0].tag}</span> ({tagStats[0].count} games).</p>
+                 {tagStats.filter(t => (t.winCount + t.lossCount) >= 3).sort((a, b) => b.winRate - a.winRate)[0] && (
+                   <p>Best performance: <span className="font-bold text-green-500">{tagStats.filter(t => (t.winCount + t.lossCount) >= 3).sort((a, b) => b.winRate - a.winRate)[0].tag}</span> ({tagStats.filter(t => (t.winCount + t.lossCount) >= 3).sort((a, b) => b.winRate - a.winRate)[0].winRate.toFixed(0)}% WR).</p>
                  )}
-                 {tagStats.filter(t => t.count >= 3).sort((a, b) => a.winRate - b.winRate)[0] && (
-                   <p>You struggle most in games tagged as <span className="font-bold text-red-500">{tagStats.filter(t => t.count >= 3).sort((a, b) => a.winRate - b.winRate)[0].tag}</span> ({tagStats.filter(t => t.count >= 3).sort((a, b) => a.winRate - b.winRate)[0].winRate.toFixed(0)}% win rate).</p>
+                 {tagStats.filter(t => (t.winCount + t.lossCount) >= 3).sort((a, b) => a.winRate - b.winRate)[0] && (
+                   <p>Toughest games: <span className="font-bold text-red-500">{tagStats.filter(t => (t.winCount + t.lossCount) >= 3).sort((a, b) => a.winRate - b.winRate)[0].tag}</span> ({tagStats.filter(t => (t.winCount + t.lossCount) >= 3).sort((a, b) => a.winRate - b.winRate)[0].winRate.toFixed(0)}% WR).</p>
                  )}
                </>
              )}

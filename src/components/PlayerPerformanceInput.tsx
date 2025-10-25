@@ -12,7 +12,9 @@ interface PlayerPerformanceInputProps {
   onChange: (players: PlayerPerformance[]) => void;
 }
 
-const PlayerPerformanceInput = ({ players, onChange }: PlayerPerformanceInputProps) => {
+// FIX: Added ' = []' to the players prop to provide a default value.
+// This prevents the 'undefined.length' error if the prop is not provided.
+const PlayerPerformanceInput = ({ players = [], onChange }: PlayerPerformanceInputProps) => {
   const addPlayer = () => {
     const newPlayer: PlayerPerformance = {
       id: `player-${Date.now()}`,

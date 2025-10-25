@@ -16,6 +16,7 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // Removed optimizeDeps section
   build: {
     minify: 'terser',
     rollupOptions: {

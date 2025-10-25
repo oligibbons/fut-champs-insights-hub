@@ -32,7 +32,10 @@ export function RecordCard({ id, title, value, tooltip, trend }: RecordCardProps
       style={style}
       {...attributes}
       {...listeners}
-      className="bg-card/50 backdrop-blur-xl border border-white/10 rounded-2xl shadow-lg p-4 flex flex-col justify-between touch-none"
+      className={cn(
+        "bg-card/50 backdrop-blur-xl border border-white/10 rounded-2xl shadow-lg p-4 flex flex-col justify-between touch-none",
+        "shimmer-effect glow-effect"
+      )}
     >
       <div className="flex justify-between items-start">
         <h4 className="text-sm font-medium text-muted-foreground">{title}</h4>

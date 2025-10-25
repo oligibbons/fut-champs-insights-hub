@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Route, Routes, Link, useLocation } from 'react-router-dom';
+// --- FIX: Import Outlet ---
+import { Route, Routes, Link, useLocation, Outlet } from 'react-router-dom';
 import Index from './pages/Index';
 import CurrentRun from './pages/CurrentRun';
 import History from './pages/History';
@@ -21,20 +22,27 @@ import Admin from './pages/Admin';
 import Squads from './pages/Squads';
 import { Button } from './components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './components/ui/avatar';
-import { ArrowRight, BarChart2 } from 'lucide-react';
-
-const AuroraBackground = () => <div className="aurora-background"></div>;
+import { ArrowRight } from 'lucide-react';
+import { cn } from './lib/utils';
+import AnimatedBackground from './components/ui/AnimatedBackground';
+import { useMobile } from './hooks/use-mobile'; 
+import { MobileBottomNav } from './components/MobileBottomNav'; 
 
 const Header = () => {
   const { user } = useAuth();
   const location = useLocation();
+  const isMobile = useMobile(); 
 
   if (!user || location.pathname === '/auth') {
     return null;
   }
 
   return (
-    <header className="fixed top-0 right-0 h-20 flex items-center justify-end px-8 z-30">
+    // Only apply w-full on mobile, let desktop be auto
+    <header className={cn(
+      "fixed top-0 right-0 h-20 flex items-center justify-end px-4 sm:px-8 z-30",
+      isMobile ? "w-full" : "w-auto"
+    )}>
       <div className="flex items-center gap-4">
         <Button asChild>
           <Link to="/current-run">
@@ -50,41 +58,74 @@ const Header = () => {
   );
 };
 
-function App() {
+// --- FIX: Moved Layout component outside of App ---
+// This component now defines its own state and renders an <Outlet />
+// for the child routes (the pages).
+const MainLayout = () => {
   const [isNavExpanded, setIsNavExpanded] = useState(false);
+  const isMobile = useMobile();
 
-  const Layout = ({ children }: { children: React.ReactNode }) => (
-    <div className="flex min-h-screen">
-      <Navigation isExpanded={isNavExpanded} setIsExpanded={setIsNavExpanded} />
-      <div className="flex-1 flex flex-col transition-all duration-300 ease-in-out" style={{ paddingLeft: isNavExpanded ? '16rem' : '5.5rem' }}>
+  return (
+    <div className="flex min-h-screen bg-background">
+
+      {/* --- Conditional Navigation --- */}
+      {isMobile ? (
+        <MobileBottomNav />
+      ) : (
+        <Navigation isExpanded={isNavExpanded} setIsExpanded={setIsNavExpanded} />
+      )}
+      {/* --- END Conditional Navigation --- */}
+
+      <div className={cn(
+        "flex-1 flex flex-col transition-all duration-300 ease-in-out",
+        // Only apply padding on desktop
+        !isMobile && (isNavExpanded ? "lg:pl-[16rem]" : "lg:pl-[5.5rem]")
+      )}>
         <Header />
-        <main className="flex-1 overflow-y-auto p-6 lg:p-8 pt-24">
+        <main className={cn(
+          "flex-1 overflow-y-auto p-6 lg:p-8 pt-24",
+          isMobile && "pb-24" // Add bottom padding on mobile for the nav dock
+        )}>
           <div className="w-full max-w-7xl mx-auto">
-            {children}
+            {/* Child routes (Index, CurrentRun, etc.) will render here */}
+            <Outlet />
           </div>
         </main>
       </div>
     </div>
   );
+};
 
+
+function App() {
+  // --- FIX: Removed state from App, as it's now managed by MainLayout ---
+  
   return (
     <ThemeProvider>
-      <AuroraBackground />
+      <AnimatedBackground />
       <AuthProvider>
         <GameVersionProvider>
           <DataSyncProvider>
             <Routes>
               <Route path="/auth" element={<Auth />} />
-              <Route path="/" element={<ProtectedRoute><Layout><Index /></Layout></ProtectedRoute>} />
-              <Route path="/current-run" element={<ProtectedRoute><Layout><CurrentRun /></Layout></ProtectedRoute>} />
-              <Route path="/history" element={<ProtectedRoute><Layout><History /></Layout></ProtectedRoute>} />
-              <Route path="/analytics" element={<ProtectedRoute><Layout><Analytics /></Layout></ProtectedRoute>} />
-              <Route path="/players" element={<ProtectedRoute><Layout><Players /></Layout></ProtectedRoute>} />
-              <Route path="/squads" element={<ProtectedRoute><Layout><Squads /></Layout></ProtectedRoute>} />
-              <Route path="/ai-insights" element={<ProtectedRoute><Layout><AIInsights /></Layout></ProtectedRoute>} />
-              <Route path="/achievements" element={<ProtectedRoute><Layout><Achievements /></Layout></ProtectedRoute>} />
-              <Route path="/settings" element={<ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>} />
-              <Route path="/admin" element={<ProtectedRoute><Layout><Admin /></Layout></ProtectedRoute>} />
+              
+              {/* --- FIX: Use a Layout Route --- */}
+              {/* All protected routes are now children of the MainLayout route. */}
+              {/* This ensures the layout persists across page navigation. */}
+              <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
+                <Route path="/" element={<Index />} />
+                <Route path="/current-run" element={<CurrentRun />} />
+                <Route path="/history" element={<History />} />
+                <Route path="/analytics" element={<Analytics />} />
+                <Route path="/players" element={<Players />} />
+                <Route path="/squads" element={<Squads />} />
+                <Route path="/ai-insights" element={<AIInsights />} />
+                <Route path="/achievements" element={<Achievements />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/admin" element={<Admin />} />
+              </Route>
+              {/* --- END FIX --- */}
+              
               <Route path="*" element={<NotFound />} />
             </Routes>
             <Toaster />

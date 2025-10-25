@@ -1,30 +1,43 @@
-import { ReactNode } from 'react';
-import { useDataSync } from '@/hooks/useDataSync.tsx'; // Ensure path ends with .tsx
+import React from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { useTheme } from '@/hooks/useTheme';
 
 interface DashboardSectionProps {
-  settingKey: string;
-  settingsSection?: 'dashboardSettings' | 'currentWeekSettings';
-  children: ReactNode;
+  title: string;
+  children: React.ReactNode;
 }
 
-const DashboardSection = ({ 
-  settingKey, 
-  settingsSection = 'dashboardSettings', 
-  children 
-}: DashboardSectionProps) => {
-  const { settings } = useDataSync();
-  
-  const sectionSettings = settings[settingsSection as keyof typeof settings] || {};
-  const isEnabled = sectionSettings[settingKey as keyof typeof sectionSettings];
-  
-  if (isEnabled === false) {
-    return null;
-  }
-  
+const DashboardSection: React.FC<DashboardSectionProps> = ({ title, children }) => {
+  const { currentTheme } = useTheme();
+
   return (
-    <div className="p-6 bg-card/50 backdrop-blur-xl border border-white/10 rounded-2xl shadow-lg">
-      {children}
-    </div>
+    <Card
+      // --- MODIFIED: Added border-4, removed border-0, and set themed borderColor in style ---
+      className="shadow-xl overflow-hidden rounded-2xl glass-card border-4"
+      style={{
+        backgroundColor: currentTheme.colors.surface,
+        borderColor: 'hsl(var(--primary) / 0.2)', // Use primary theme color with 20% opacity
+      }}
+      // --- END MODIFIED ---
+    >
+      <CardHeader
+        className="flex flex-row items-center justify-between space-y-0 p-4"
+        // --- MODIFIED: Thicker borderBottom ---
+        style={{ borderBottom: `2px solid ${currentTheme.colors.border}` }}
+        // --- END MODIFIED ---
+      >
+        <CardTitle
+          // --- VISUAL FIX: Larger, bolder title ---
+          className="text-xl font-semibold tracking-tight" // Increased size and tracking
+          style={{ color: currentTheme.colors.text }}
+        >
+          {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-4">
+        {children}
+      </CardContent>
+    </Card>
   );
 };
 

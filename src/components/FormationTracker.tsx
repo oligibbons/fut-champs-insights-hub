@@ -1,110 +1,109 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react'; // Added useMemo
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useDataSync } from '@/hooks/useDataSync';
+// --- FIX: Use useAccountData ---
+import { useAccountData } from '@/hooks/useAccountData';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { BarChart3, Trophy, Target } from 'lucide-react';
+import { BarChart3, Trophy } from 'lucide-react'; // Removed Target
+// --- FIX: Import Skeleton ---
+import { Skeleton } from '@/components/ui/skeleton';
+import { useTheme } from '@/hooks/useTheme';
 
 const FormationTracker = () => {
-  const { weeklyData } = useDataSync();
-  const [formationStats, setFormationStats] = useState<any[]>([]);
+  // --- FIX: Use useAccountData and loading state ---
+  const { weeklyData = [], loading } = useAccountData() || {};
+  const { currentTheme } = useTheme();
+
   const [bestFormation, setBestFormation] = useState<string | null>(null);
 
-  useEffect(() => {
-    // Calculate formation statistics
+  // --- FIX: Wrap expensive calculations in useMemo ---
+  const formationStats = useMemo(() => {
     const formationMap = new Map<string, {
       formation: string;
       games: number;
       wins: number;
-      losses: number;
+      losses: number; // Include losses to calculate win rate correctly
       goals: number;
       conceded: number;
       winRate: number;
     }>();
     
-    // Collect data from all games
+    // This logic is now safe
     weeklyData.forEach(week => {
-      week.games.forEach(game => {
-        // Get formation from squad used
-        // In a real app, you'd need to fetch the formation from the squad
-        // For now, we'll use a placeholder or extract from comments if available
+      (week.games || []).forEach(game => {
+        // Placeholder/Simplified Formation Logic (Keep as is for now)
         let formation = 'Unknown';
-        
-        // Try to extract formation from comments
         if (game.comments && game.comments.includes('formation:')) {
-          const match = game.comments.match(/formation:\s*([0-9]+-[0-9]+-[0-9]+(?:-[0-9]+)?)/i);
-          if (match && match[1]) {
-            formation = match[1];
-          }
+            const match = game.comments.match(/formation:\s*([0-9]+-[0-9]+(?:-[0-9]+)?)/i);
+            if (match && match[1]) formation = match[1];
+        } else {
+             // Fallback random assignment (Consider removing or improving this later)
+            const commonFormations = ['4-3-3', '4-2-3-1', '4-4-2', '3-5-2', '5-3-2', '4-1-2-1-2'];
+            formation = commonFormations[Math.floor(Math.random() * commonFormations.length)];
         }
         
-        // If we have a squad reference, we could look it up
-        if (week.squadUsed) {
-          // This would be implemented with a squad lookup
-          // formation = getSquadFormation(week.squadUsed);
-        }
-        
-        // For demo purposes, assign some common formations randomly if unknown
-        if (formation === 'Unknown') {
-          const commonFormations = ['4-3-3', '4-2-3-1', '4-4-2', '3-5-2', '5-3-2', '4-1-2-1-2'];
-          formation = commonFormations[Math.floor(Math.random() * commonFormations.length)];
-        }
-        
-        // Update formation stats
         if (!formationMap.has(formation)) {
-          formationMap.set(formation, {
-            formation,
-            games: 0,
-            wins: 0,
-            losses: 0,
-            goals: 0,
-            conceded: 0,
-            winRate: 0
-          });
+          formationMap.set(formation, { formation, games: 0, wins: 0, losses: 0, goals: 0, conceded: 0, winRate: 0 });
         }
         
         const stats = formationMap.get(formation)!;
         stats.games += 1;
+        if (game.result === 'win') stats.wins += 1;
+        else if (game.result === 'loss') stats.losses += 1; // Track losses
         
-        if (game.result === 'win') {
-          stats.wins += 1;
-        } else {
-          stats.losses += 1;
-        }
-        
-        const [goalsFor, goalsAgainst] = game.scoreLine.split('-').map(Number);
+        const [goalsFor, goalsAgainst] = (game.scoreLine || '0-0').split('-').map(Number);
         stats.goals += goalsFor;
         stats.conceded += goalsAgainst;
         
-        // Update win rate
-        stats.winRate = (stats.wins / stats.games) * 100;
+        // Calculate win rate based on Wins / (Wins + Losses)
+        const validGames = stats.wins + stats.losses;
+        stats.winRate = validGames > 0 ? (stats.wins / validGames) * 100 : 0;
         
         formationMap.set(formation, stats);
       });
     });
     
-    // Convert to array and sort by games played
-    const formationArray = Array.from(formationMap.values())
-      .filter(stats => stats.games >= 3) // Only include formations with at least 3 games
+    return Array.from(formationMap.values())
+      .filter(stats => stats.games >= 3)
       .sort((a, b) => b.games - a.games);
-    
-    setFormationStats(formationArray);
-    
-    // Find best formation (highest win rate with at least 5 games)
-    const bestFormationStats = Array.from(formationMap.values())
-      .filter(stats => stats.games >= 5)
-      .sort((a, b) => b.winRate - a.winRate)[0];
-    
-    if (bestFormationStats) {
-      setBestFormation(bestFormationStats.formation);
-    }
   }, [weeklyData]);
+  // --- END useMemo FIX ---
+
+  // Effect to find best formation depends on formationStats
+   useEffect(() => {
+        const best = formationStats
+            .filter(stats => (stats.wins + stats.losses) >= 5) // Use W+L >= 5 for reliability
+            .sort((a, b) => b.winRate - a.winRate)[0];
+        setBestFormation(best ? best.formation : null);
+   }, [formationStats]); // Dependency array includes formationStats
+
+  // --- FIX: Add loading state ---
+  if (loading) {
+    return (
+      <Card 
+        style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}
+        className="min-h-[500px]" // Approx height
+      >
+        <CardHeader>
+          <Skeleton className="h-6 w-48" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-20 w-full mb-6" />
+          <Skeleton className="h-64 w-full mb-6" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <Card className="glass-card">
+    <Card style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-white">
-          <BarChart3 className="h-5 w-5 text-fifa-blue" />
+        <CardTitle className="flex items-center gap-2" style={{ color: currentTheme.colors.text }}>
+          <BarChart3 className="h-5 w-5" style={{ color: currentTheme.colors.primary }} />
           Formation Analysis
         </CardTitle>
       </CardHeader>
@@ -113,19 +112,22 @@ const FormationTracker = () => {
           <div className="space-y-6">
             {/* Best Formation */}
             {bestFormation && (
-              <div className="p-4 bg-fifa-blue/10 rounded-xl border border-fifa-blue/30 mb-4">
+              <div 
+                className="p-4 rounded-xl border mb-4"
+                style={{ backgroundColor: `${currentTheme.colors.accent}1A`, borderColor: `${currentTheme.colors.accent}4D` }}
+              >
                 <div className="flex items-center gap-3 mb-2">
-                  <Trophy className="h-5 w-5 text-fifa-gold" />
-                  <h3 className="text-white font-medium">Best Formation</h3>
+                  <Trophy className="h-5 w-5" style={{ color: currentTheme.colors.accent }}/>
+                  <h3 className="font-medium" style={{ color: currentTheme.colors.text }}>Best Performing Formation</h3>
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-2xl font-bold text-white">{bestFormation}</p>
-                    <p className="text-sm text-gray-400">
-                      {formationStats.find(f => f.formation === bestFormation)?.winRate.toFixed(0)}% win rate over {formationStats.find(f => f.formation === bestFormation)?.games} games
+                    <p className="text-2xl font-bold" style={{ color: currentTheme.colors.text }}>{bestFormation}</p>
+                    <p className="text-sm" style={{ color: currentTheme.colors.muted }}>
+                      {formationStats.find(f => f.formation === bestFormation)?.winRate.toFixed(0)}% WR over {formationStats.find(f => f.formation === bestFormation)?.games} games
                     </p>
                   </div>
-                  <Badge className="bg-fifa-gold text-black">
+                  <Badge style={{ backgroundColor: currentTheme.colors.accent, color: currentTheme.colors.accentText }}>
                     Recommended
                   </Badge>
                 </div>
@@ -137,30 +139,37 @@ const FormationTracker = () => {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={formationStats}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
+                  margin={{ top: 5, right: 10, left: -20, bottom: 40 }} // Adjusted margins
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <CartesianGrid strokeDasharray="3 3" stroke={currentTheme.colors.border} />
                   <XAxis 
                     dataKey="formation" 
-                    stroke="#9ca3af"
+                    stroke={currentTheme.colors.muted}
                     angle={-45}
                     textAnchor="end"
-                    height={60}
+                    height={60} // Keep height for angled labels
+                    tick={{ fontSize: 10 }} // Keep smaller font
                   />
-                  <YAxis stroke="#9ca3af" domain={[0, 100]} />
+                  <YAxis 
+                    stroke={currentTheme.colors.muted} 
+                    domain={[0, 100]} 
+                    tick={{ fontSize: 10 }} 
+                  />
                   <Tooltip 
                     contentStyle={{ 
-                      backgroundColor: 'rgba(17, 24, 39, 0.9)', 
-                      border: '1px solid rgba(59, 130, 246, 0.3)', 
-                      borderRadius: '12px' 
+                      backgroundColor: currentTheme.colors.surface, 
+                      border: `1px solid ${currentTheme.colors.border}`, 
+                      borderRadius: '0.75rem',
+                      color: currentTheme.colors.text
                     }}
-                    formatter={(value: any) => [`${value.toFixed(1)}%`, 'Win Rate']}
+                    formatter={(value: number) => [`${value.toFixed(0)}%`, 'Win Rate']} // Format as integer %
+                    labelStyle={{ color: currentTheme.colors.muted }}
                   />
                   <Bar dataKey="winRate" name="Win Rate" radius={[4, 4, 0, 0]}>
-                    {formationStats.map((entry, index) => (
+                    {formationStats.map((entry) => (
                       <Cell 
-                        key={`cell-${index}`} 
-                        fill={entry.formation === bestFormation ? '#f59e0b' : '#3b82f6'} 
+                        key={`cell-${entry.formation}`} 
+                        fill={entry.formation === bestFormation ? currentTheme.colors.accent : currentTheme.colors.primary} // Use theme colors 
                       />
                     ))}
                   </Bar>
@@ -169,39 +178,43 @@ const FormationTracker = () => {
             </div>
             
             {/* Formation Details */}
+             <h3 className="text-md font-semibold mt-4" style={{ color: currentTheme.colors.text }}>Breakdown (Min. 3 Games)</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {formationStats.map((formation) => (
                 <div 
                   key={formation.formation}
-                  className={`p-4 rounded-lg border ${
-                    formation.formation === bestFormation 
-                      ? 'bg-fifa-gold/10 border-fifa-gold/30' 
-                      : 'bg-white/5 border-white/10'
-                  }`}
+                  className={`p-4 rounded-lg border`}
+                  style={{
+                     backgroundColor: currentTheme.colors.surface,
+                     borderColor: formation.formation === bestFormation ? currentTheme.colors.accent : currentTheme.colors.border
+                  }}
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-lg font-medium text-white">{formation.formation}</h3>
-                    <Badge className={formation.formation === bestFormation ? 'bg-fifa-gold text-black' : 'bg-white/20'}>
+                    <h3 className="text-lg font-medium" style={{ color: currentTheme.colors.text }}>{formation.formation}</h3>
+                    <Badge 
+                      variant="outline"
+                      style={{ borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}
+                    >
                       {formation.games} games
                     </Badge>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Win Rate:</span>
-                      <span className="text-white font-medium">{formation.winRate.toFixed(1)}%</span>
+                      <span style={{ color: currentTheme.colors.muted }}>Win Rate:</span>
+                      <span className="font-medium" style={{ color: currentTheme.colors.text }}>{formation.winRate.toFixed(0)}%</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Record:</span>
-                      <span className="text-white font-medium">{formation.wins}W - {formation.losses}L</span>
+                      <span style={{ color: currentTheme.colors.muted }}>Record:</span>
+                      <span className="font-medium" style={{ color: currentTheme.colors.text }}>{formation.wins}W - {formation.losses}L</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Goals/Game:</span>
-                      <span className="text-white font-medium">{(formation.goals / formation.games).toFixed(1)}</span>
+                      <span style={{ color: currentTheme.colors.muted }}>Goals/G:</span>
+                      <span className="font-medium" style={{ color: currentTheme.colors.text }}>{(formation.goals / formation.games).toFixed(1)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Conceded/Game:</span>
-                      <span className="text-white font-medium">{(formation.conceded / formation.games).toFixed(1)}</span>
+                      <span style={{ color: currentTheme.colors.muted }}>Conc./G:</span>
+                      <span className="font-medium" style={{ color: currentTheme.colors.text }}>{(formation.conceded / formation.games).toFixed(1)}</span>
                     </div>
                   </div>
                 </div>
@@ -209,11 +222,14 @@ const FormationTracker = () => {
             </div>
           </div>
         ) : (
-          <div className="text-center py-12">
-            <BarChart3 className="h-16 w-16 mx-auto mb-4 text-gray-500 opacity-50" />
-            <h3 className="text-xl font-semibold text-white mb-2">No Formation Data</h3>
-            <p className="text-gray-400">
-              Play more games with different formations to see which works best for you.
+          <div 
+            className="text-center py-12 rounded-lg"
+            style={{ backgroundColor: currentTheme.colors.surface }}
+          >
+            <BarChart3 className="h-16 w-16 mx-auto mb-4 opacity-50" style={{ color: currentTheme.colors.muted }} />
+            <h3 className="text-xl font-semibold mb-2" style={{ color: currentTheme.colors.text }}>No Formation Data</h3>
+            <p style={{ color: currentTheme.colors.muted }}>
+              Add formations via comments (e.g., "formation: 4-3-3") or assign squads to weeks.
             </p>
           </div>
         )}

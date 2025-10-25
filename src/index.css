@@ -2,61 +2,330 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 4.9% 83.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
-    --radius: 0.75rem;
-  }
+:root {
+  /* --- MODIFIED: Saturated Dark Theme (Blue-based) --- */
+  --background: 225 30% 12%; /* Dark, saturated blue */
+  --foreground: 0 0% 98%;
+  --card: 225 30% 15%; /* A slightly lighter blue for cards */
+  --card-foreground: 0 0% 98%;
+  --popover: 225 30% 13%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 210 100% 75%; /* Brighter FIFA Blue */
+  --primary-foreground: 210 40% 98%;
+  --secondary: 130 80% 65%; /* Brighter FIFA Green */
+  --secondary-foreground: 0 0% 98%;
+  --muted: 220 35% 22%; /* Muted, but still blue */
+  --muted-foreground: 240 5% 64.9%;
+  --accent: 270 85% 80%; /* Brighter FIFA Purple */
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 220 35% 25%; /* More noticeable blue border */
+  --input: 220 35% 25%;
+  --ring: 210 100% 75%; /* Brighter FIFA Blue */
+  --radius: 0.75rem;
 
+  /* --- MODIFIED: Brighter FIFA Colors --- */
+  --fifa-blue: 210 100% 75%;
+  --fifa-green: 130 80% 65%;
+  --fifa-red: 0 90% 75%;
+  --fifa-purple: 270 85% 80%;
+  --fifa-gold: 48 90% 65%;
+
+  /* --- MODIFIED: RGB versions for new blue theme --- */
+  --background-rgb: 21, 26, 40; /* from hsl(225, 30%, 12%) */
+  --card-rgb: 27, 33, 51; /* from hsl(225, 30%, 15%) */
+  --surface-rgb: 37, 46, 74; /* from hsl(220, 35%, 22%) */
+  --border-rgb: 41, 51, 89; /* from hsl(220, 35%, 25%) */
+
+  /* Additional Theme Colors (Updated) */
+  --success: 130 80% 65%; /* Mapped to new fifa-green */
+  --warning: 48 90% 65%; /* Mapped to new fifa-gold */
+  --danger: 0 90% 75%; /* Mapped to new fifa-red */
+  --info: 210 100% 75%; /* Mapped to new fifa-blue */
+  --success-foreground: 0 0% 98%;
+  --warning-foreground: 240 10% 3.9%; /* Dark text for gold/yellow */
+  --danger-foreground: 0 0% 98%;
+  --info-foreground: 0 0% 98%;
+  --accent-text: 0 0% 98%; /* Text color for accent backgrounds */
+}
+
+.dark {
+  /* --- MODIFIED: Saturated Dark Theme (Blue-based) --- */
+  --background: 225 30% 12%; /* Dark, saturated blue */
+  --foreground: 0 0% 98%;
+  --card: 225 30% 15%; /* A slightly lighter blue for cards */
+  --card-foreground: 0 0% 98%;
+  --popover: 225 30% 13%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 210 100% 75%; /* Brighter FIFA Blue */
+  --primary-foreground: 210 40% 98%;
+  --secondary: 130 80% 65%; /* Brighter FIFA Green */
+  --secondary-foreground: 0 0% 98%;
+  --muted: 220 35% 22%; /* Muted, but still blue */
+  --muted-foreground: 240 5% 64.9%;
+  --accent: 270 85% 80%; /* Brighter FIFA Purple */
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 70% 55%; /* Adjusted destructive */
+  --destructive-foreground: 0 0% 98%;
+  --border: 220 35% 25%; /* More noticeable blue border */
+  --input: 220 35% 25%;
+  --ring: 210 100% 75%; /* Brighter FIFA Blue */
+
+  /* --- MODIFIED: Brighter FIFA Colors --- */
+  --fifa-blue: 210 100% 75%;
+  --fifa-green: 130 80% 65%;
+  --fifa-red: 0 90% 75%;
+  --fifa-purple: 270 85% 80%;
+  --fifa-gold: 48 90% 65%;
+
+  /* --- MODIFIED: RGB versions for new blue theme --- */
+  --background-rgb: 21, 26, 40; /* from hsl(225, 30%, 12%) */
+  --card-rgb: 27, 33, 51; /* from hsl(225, 30%, 15%) */
+  --surface-rgb: 37, 46, 74; /* from hsl(220, 35%, 22%) */
+  --border-rgb: 41, 51, 89; /* from hsl(220, 35%, 25%) */
+
+  /* Additional Theme Colors (Updated) */
+  --success: 130 80% 65%;
+  --warning: 48 90% 65%;
+  --danger: 0 90% 75%;
+  --info: 210 100% 75%;
+  --success-foreground: 0 0% 98%;
+  --warning-foreground: 240 10% 3.9%;
+  --danger-foreground: 0 0% 98%;
+  --info-foreground: 0 0% 98%;
+  --accent-text: 0 0% 98%;
+}
+
+
+@layer base {
+  * {
+    @apply border-border;
+  }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: 'Poppins', sans-serif; /* Example font */
+    min-height: 100vh;
+    overflow-x: hidden; /* Prevent horizontal scroll */
+  }
+
+  main {
+    padding-top: 1rem; /* Adjust as needed */
+    padding-bottom: 5rem; /* Space for bottom nav on mobile */
+  }
+
+  @media (min-width: 1024px) { /* lg breakpoint */
+    main {
+      padding-bottom: 1.5rem; /* Reset padding for desktop */
+    }
   }
 }
 
-@layer components {
-  .aurora-background {
-    @apply fixed inset-0 -z-20 h-full w-full overflow-hidden;
-  }
-  .aurora-background::before {
-    content: "";
-    @apply absolute -top-1/2 left-1/2 h-[200%] w-[200%] -translate-x-1/2 -translate-y-1/2 animate-aurora;
-    background: radial-gradient(circle at center, hsla(var(--primary), 0.1) 0%, transparent 30%),
-                radial-gradient(circle at 20% 80%, hsla(260, 100%, 70%, 0.15) 0%, transparent 35%),
-                radial-gradient(circle at 80% 30%, hsla(180, 100%, 50%, 0.15) 0%, transparent 35%);
-  }
-  
-  .glass-card {
-    @apply bg-black/30 backdrop-blur-lg border border-white/10 rounded-2xl shadow-2xl;
-  }
+/* --- VISUAL FIX: Styles for Layering & Contrast --- */
 
-  .page-header {
-    @apply mb-8 animate-fade-in-down;
-  }
+/* Base Section Card (More transparent, more blur) */
+.glass-card {
+  background-color: rgba(var(--surface-rgb), 0.7); /* Use surface, moderately transparent */
+  backdrop-filter: blur(16px); /* More blur */
+  border: 1px solid rgba(var(--border-rgb), 0.1);
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.25); /* Stronger shadow */
+  border-radius: theme('borderRadius.2xl'); /* Keep larger rounding */
+}
+
+/* Content Card (Less transparent, less blur, pops more) */
+.glass-card-content {
+  background-color: rgba(var(--card-rgb), 0.95); /* Use card, almost solid */
+  backdrop-filter: blur(6px); /* Less blur for clarity */
+  border: 1px solid rgba(var(--border-rgb), 0.2); /* Slightly stronger border */
+  box-shadow: theme('boxShadow.lg');
+  border-radius: theme('borderRadius.xl'); /* Keep smaller rounding */
+}
+/* --- END VISUAL FIX --- */
+
+
+/* Gradient Text */
+.gradient-text {
+  background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+
+/* Styling for TabsTrigger */
+[data-state="active"].tabs-trigger-style {
+  background-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+  box-shadow: 0 4px 14px 0 rgba(0, 118, 255, 0.39);
+}
+
+[data-state="inactive"].tabs-trigger-style {
+  color: hsl(var(--muted-foreground));
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(var(--surface-rgb), 0.5); /* Slightly transparent track */
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary));
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.8);
+}
+
+
+/* Responsive Design Adjustments */
+@media (max-width: 768px) {
   .page-header h1 {
-    @apply text-4xl font-extrabold tracking-tighter;
+    font-size: 1.875rem; /* text-3xl */
   }
   .page-header p {
-    @apply text-lg text-muted-foreground mt-1;
+    font-size: 1rem; /* text-base */
   }
+  /* Reduce padding inside cards on mobile */
+  .card-content-mobile-condensed {
+    padding: 0.75rem; /* p-3 */
+  }
+  .card-header-mobile-condensed {
+    padding: 0.75rem; /* p-3 */
+  }
+}
+
+/* Add custom styles for Club Legend Card if needed */
+.club-legend-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: theme('borderRadius.xl');
+  background-color: rgba(var(--surface-rgb), 0.8); /* Use surface with opacity */
+  border: 1px solid rgba(var(--border-rgb), 0.15);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.club-legend-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.club-legend-card-content {
+  position: relative;
+  z-index: 2;
+  padding: 1rem; /* p-4 */
+}
+
+.club-legend-card-badge {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  padding: 0.25rem 0.75rem; /* py-1 px-3 */
+  font-size: 0.75rem; /* text-xs */
+  font-weight: 600; /* font-semibold */
+  border-radius: theme('borderRadius.full');
+}
+
+.club-legend-card-name {
+  font-size: 1.25rem; /* text-xl */
+  font-weight: 700; /* font-bold */
+  color: theme('colors.white'); /* Explicitly white for legend name */
+  margin-top: 2.5rem; /* Space below badge */
+  margin-bottom: 0.25rem;
+}
+
+.club-legend-card-position {
+  font-size: 0.875rem; /* text-sm */
+  color: rgba(var(--foreground-rgb), 0.7); /* Muted foreground */
+  margin-bottom: 1rem;
+}
+
+.club-legend-card-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem; /* gap-2 */
+  text-align: center;
+}
+
+.club-legend-card-stat {
+  background-color: rgba(var(--card-rgb), 0.7); /* Slightly transparent card background */
+  padding: 0.5rem; /* p-2 */
+  border-radius: theme('borderRadius.lg');
+}
+
+.club-legend-card-stat-value {
+  font-size: 1.125rem; /* text-lg */
+  font-weight: 700; /* font-bold */
+  color: theme('colors.white'); /* Explicitly white */
+}
+
+.club-legend-card-stat-label {
+  font-size: 0.75rem; /* text-xs */
+  color: rgba(var(--foreground-rgb), 0.6); /* More muted */
+}
+
+
+/* Metric Card Style - for the small top cards on Players page */
+.metric-card {
+  background-color: rgba(var(--surface-rgb), 0.8);
+  border: 1px solid rgba(var(--border-rgb), 0.15);
+  border-radius: theme('borderRadius.xl');
+  box-shadow: theme('boxShadow.lg');
+  backdrop-filter: blur(8px);
+}
+
+.metric-card .card-header {
+  padding-bottom: 0.5rem; /* pb-2 */
+}
+.metric-card .card-title {
+  font-size: 0.875rem; /* text-sm */
+  font-weight: 500; /* font-medium */
+}
+.metric-card .card-content p:first-child { /* Player name */
+  font-size: 1.125rem; /* text-lg */
+  color: theme('colors.white'); /* Ensure player name is bright */
+}
+.metric-card .card-content p:nth-child(2) { /* Stat value */
+  font-size: 1.5rem; /* text-2xl */
+  /* Color is usually set dynamically via className (e.g., text-fifa-gold) */
+}
+.metric-card .card-content p:last-child { /* Subtext */
+  font-size: 0.75rem; /* text-xs */
+  color: rgba(var(--foreground-rgb), 0.6);
+}
+
+/* Custom Scrollbar for Webkit Browsers */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px; /* Width of the scrollbar */
+  height: 6px; /* Height for horizontal scrollbar */
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05); /* Track color */
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2); /* Thumb color */
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.05); /* Optional: border */
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.4); /* Thumb color on hover */
+}
+
+/* Custom Scrollbar for Firefox */
+.custom-scrollbar {
+  scrollbar-width: thin; /* "auto" or "thin" */
+  scrollbar-color: rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05); /* thumb track */
+}
+
+/* Ensure inactive TabsContent with forceMount is hidden */
+[role="tabpanel"][data-state="inactive"] {
+  display: none !important;
 }

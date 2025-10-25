@@ -11,7 +11,14 @@ interface WeekProgressProps {
 
 const WeekProgress = ({ currentWeek }: WeekProgressProps) => {
   const [gameVersion] = useLocalStorage('gameVersion', 'FC26');
-  const rewardRanks = getRewardRanks(gameVersion);
+  
+  // ---
+  // --- !! FIX IS HERE !! ---
+  // ---
+  // We must default to an empty array in case getRewardRanks returns
+  // undefined (e.g., if gameVersion from localStorage is old/invalid).
+  // ---
+  const rewardRanks = getRewardRanks(gameVersion) || [];
 
   // The total number of games in a weekend is 15 for both versions.
   const TOTAL_GAMES = 15;
@@ -34,11 +41,18 @@ const WeekProgress = ({ currentWeek }: WeekProgressProps) => {
   }
 
   const { totalWins, games } = currentWeek;
-  const gamesPlayed = games.length;
+  
+  // Safely get gamesPlayed (from previous fix)
+  const gamesPlayed = games?.length ?? 0;
+  
   const progressPercentage = (gamesPlayed / TOTAL_GAMES) * 100;
 
-  const nextReward = rewardRanks.find(rank => rank.wins > totalWins);
-  const currentRank = rewardRanks.slice().reverse().find(rank => totalWins >= rank.wins);
+  // Use totalWins (which is safely 0 if not present) for rank calculation
+  const safeTotalWins = totalWins ?? 0;
+
+  // These .find() calls are now safe because rewardRanks is guaranteed to be an array.
+  const nextReward = rewardRanks.find(rank => rank.wins > safeTotalWins);
+  const currentRank = rewardRanks.slice().reverse().find(rank => safeTotalWins >= rank.wins);
 
   return (
     <Card className="glass-card">
@@ -64,7 +78,7 @@ const WeekProgress = ({ currentWeek }: WeekProgressProps) => {
               <Trophy className="h-6 w-6 text-fifa-gold" />
               {currentRank ? currentRank.rank : 'Unranked'}
             </p>
-            <p className="text-sm text-gray-400">({totalWins} wins)</p>
+            <p className="text-sm text-gray-400">({safeTotalWins} wins)</p>
           </div>
 
           {nextReward && gamesPlayed < TOTAL_GAMES && (
@@ -75,7 +89,7 @@ const WeekProgress = ({ currentWeek }: WeekProgressProps) => {
               </p>
               <p className="text-xl font-bold text-white">{nextReward.rank}</p>
               <p className="text-sm text-fifa-green">
-                {nextReward.wins - totalWins} more win(s) needed
+                {nextReward.wins - safeTotalWins} more win(s) needed
               </p>
             </div>
           )}
@@ -91,13 +105,14 @@ const WeekProgress = ({ currentWeek }: WeekProgressProps) => {
               {/* Progress Line */}
               <div 
                 className="absolute top-1/2 left-0 h-1 bg-fifa-gold transition-all duration-500 -translate-y-1/2"
-                style={{ width: `${(totalWins / MAX_WINS) * 100}%` }}
+                style={{ width: `${(safeTotalWins / MAX_WINS) * 100}%` }}
               ></div>
               
               <TooltipProvider>
                 {Array.from({ length: MAX_WINS + 1 }, (_, i) => i).map((winCount) => {
+                  // This .find() is also safe now
                   const rankAtWin = rewardRanks.find(r => r.wins === winCount);
-                  const isAchieved = totalWins >= winCount;
+                  const isAchieved = safeTotalWins >= winCount;
                   
                   return (
                     <div 
@@ -136,4 +151,3 @@ const WeekProgress = ({ currentWeek }: WeekProgressProps) => {
 };
 
 export default WeekProgress;
-

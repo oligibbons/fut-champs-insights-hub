@@ -9,7 +9,11 @@ import AnalyticsTooltip from '@/components/AnalyticsTooltip';
 import { useState, useEffect, useRef } from 'react';
 
 const AnalyticsDashboard = () => {
-  const { weeks, activeAccount } = useAccountData();
+  // --- FIX IS ON THIS LINE ---
+  // Added '|| {}' to prevent crash if useAccountData() returns undefined
+  const { weeks = [], activeAccount } = useAccountData() || {};
+  // --- END FIX ---
+
   const [aiInsights, setAiInsights] = useState<any[]>([]);
   const [enhancedInsights, setEnhancedInsights] = useState<any[]>([]);
   const completedWeeks = weeks.filter(week => week.isCompleted);

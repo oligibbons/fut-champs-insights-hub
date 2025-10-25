@@ -82,24 +82,28 @@ const AIInsights = () => {
 
 
   return (
-    <div className="space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
-            <Wand2 className="h-8 w-8 text-primary" />
-            AI-Powered Insights
-          </h1>
-          <p className="text-muted-foreground">Get personalized feedback on your performance based on your logged data.</p>
+    <div className="space-y-6">
+        <div className="flex items-center gap-4">
+            <div className="p-3 rounded-2xl" style={{ backgroundColor: `${currentTheme.colors.primary}20` }}>
+              <Wand2 className="h-8 w-8" style={{ color: currentTheme.colors.primary }} />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-white">
+                AI-Powered Insights
+              </h1>
+              <p className="text-gray-400 mt-1">Get personalized feedback on your performance based on your logged data.</p>
+            </div>
         </div>
 
-      <Card>
+      <Card className="glass-card rounded-2xl shadow-2xl border-0">
         <CardHeader>
           <CardTitle>Generate New Analysis</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="p-4 bg-secondary/50 rounded-lg">
-            <h4 className="font-semibold mb-2">Data Summary</h4>
-            <div className="text-sm text-muted-foreground space-y-1">
-                <p>Analyzing <span className="font-bold text-foreground">{allGames.length}</span> total games.</p>
+          <div className="p-4 bg-white/5 rounded-lg">
+            <h4 className="font-semibold mb-2 text-white">Data Summary</h4>
+            <div className="text-sm text-gray-400 space-y-1">
+                <p>Analyzing <span className="font-bold text-white">{allGames.length}</span> total games.</p>
                 <div className="flex flex-wrap gap-2 items-center">
                     <p>Most used tags:</p>
                     {mostUsedTags.length > 0 ? mostUsedTags.map(([tag, count]) => (
@@ -108,7 +112,11 @@ const AIInsights = () => {
                 </div>
             </div>
           </div>
-          <Button onClick={handleGenerateInsights} disabled={isGenerating || dataLoading || allGames.length < 5}>
+          <Button 
+            onClick={handleGenerateInsights} 
+            disabled={isGenerating || dataLoading || allGames.length < 5}
+            style={{ backgroundColor: currentTheme.colors.primary, color: currentTheme.colors.primaryText }}
+          >
             {isGenerating ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
@@ -116,19 +124,19 @@ const AIInsights = () => {
             )}
             {isGenerating ? 'Analyzing...' : (allGames.length < 5 ? `Log ${5 - allGames.length} more games` : 'Generate Insights')}
           </Button>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-gray-400">
               Analysis is more accurate with more data. A minimum of 5 games is required.
             </p>
         </CardContent>
       </Card>
 
       {error && (
-        <Card className="border-destructive/50">
+        <Card className="glass-card rounded-2xl border border-destructive/50">
           <CardContent className="p-4 flex items-center gap-4">
               <AlertTriangle className="h-8 w-8 text-destructive" />
               <div>
                 <h4 className="font-semibold text-destructive">Analysis Failed</h4>
-                <p className="text-sm text-muted-foreground">{error}</p>
+                <p className="text-sm text-gray-400">{error}</p>
               </div>
           </CardContent>
         </Card>
@@ -138,35 +146,35 @@ const AIInsights = () => {
           <>
             {/* Insights Overview */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card>
+              <Card className="metric-card">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
-                    <Brain className="h-8 w-8 text-primary" />
+                    <Brain className="h-8 w-8" style={{ color: currentTheme.colors.primary }} />
                     <div>
-                      <p className="text-2xl font-bold">{insights.length}</p>
-                      <p className="text-sm text-muted-foreground">Total Insights</p>
+                      <p className="text-2xl font-bold text-white">{insights.length}</p>
+                      <p className="text-sm text-gray-400">Total Insights</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-              <Card>
+              <Card className="metric-card">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
                     <CheckCircle className="h-8 w-8 text-green-500" />
                     <div>
-                      <p className="text-2xl font-bold">{insights.filter(i => i.category === 'strength').length}</p>
-                      <p className="text-sm text-muted-foreground">Strengths</p>
+                      <p className="text-2xl font-bold text-white">{insights.filter(i => i.category === 'strength').length}</p>
+                      <p className="text-sm text-gray-400">Strengths</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-              <Card>
+              <Card className="metric-card">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
                     <AlertTriangle className="h-8 w-8 text-red-500" />
                     <div>
-                      <p className="text-2xl font-bold">{insights.filter(i => i.category === 'weakness').length}</p>
-                      <p className="text-sm text-muted-foreground">Areas to Improve</p>
+                      <p className="text-2xl font-bold text-white">{insights.filter(i => i.category === 'weakness').length}</p>
+                      <p className="text-sm text-gray-400">Areas to Improve</p>
                     </div>
                   </div>
                 </CardContent>
@@ -174,28 +182,28 @@ const AIInsights = () => {
             </div>
 
             {/* Insights List */}
-            <Card>
+            <Card className="glass-card rounded-2xl shadow-2xl border-0">
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
+                  <CardTitle className="flex items-center gap-2 text-white">
                     <Brain className="h-5 w-5" />
                     Performance Analysis
                   </CardTitle>
-                  {lastGenerated && <div className="text-sm text-muted-foreground">Last updated: {lastGenerated.toLocaleTimeString()}</div>}
+                  {lastGenerated && <div className="text-sm text-gray-400">Last updated: {lastGenerated.toLocaleTimeString()}</div>}
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 {prioritizedInsights.map((insight) => {
                   const IconComponent = getInsightIcon(insight.category);
                   return (
-                    <div key={insight.id} className="p-6 bg-secondary/50 rounded-xl hover:bg-secondary/80 transition-colors border border-border">
+                    <div key={insight.id} className="p-6 bg-white/5 rounded-xl hover:bg-white/10 transition-colors border border-white/10">
                       <div className="flex items-start gap-4">
-                        <div className={`p-3 rounded-full bg-foreground/10`}>
+                        <div className={`p-3 rounded-full bg-black/20`}>
                           <IconComponent className={`h-6 w-6 ${getInsightTypeColor(insight.category)}`} />
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
-                            <h3 className="font-bold text-lg text-foreground">{insight.title}</h3>
+                            <h3 className="font-bold text-lg text-white">{insight.title}</h3>
                             <Badge variant="outline" className={`text-xs ${
                               insight.priority === 'high' ? 'border-red-500/50 text-red-500' :
                               insight.priority === 'medium' ? 'border-yellow-500/50 text-yellow-500' :
@@ -204,7 +212,7 @@ const AIInsights = () => {
                               {insight.priority} priority
                             </Badge>
                           </div>
-                          <p className="text-muted-foreground leading-relaxed">{insight.description}</p>
+                          <p className="text-gray-400 leading-relaxed">{insight.description}</p>
                         </div>
                       </div>
                     </div>
@@ -216,11 +224,11 @@ const AIInsights = () => {
       )}
 
       {!isGenerating && insights.length === 0 && !error && allGames.length > 0 && (
-         <Card>
+         <Card className="glass-card rounded-2xl shadow-2xl border-0">
            <CardContent className="text-center py-12">
-            <Brain className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
-            <h3 className="text-xl font-medium mb-2">Ready for Analysis</h3>
-            <p className="text-muted-foreground mb-6">
+            <Brain className="h-16 w-16 mx-auto mb-4 text-gray-400/50" />
+            <h3 className="text-xl font-medium text-white mb-2">Ready for Analysis</h3>
+            <p className="text-gray-400 mb-6">
                Click the "Generate Insights" button to get your personalized performance breakdown.
              </p>
            </CardContent>
@@ -228,18 +236,18 @@ const AIInsights = () => {
       )}
       
       {dataLoading && (
-        <div className="flex justify-center items-.center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="ml-4 text-muted-foreground">Loading your data...</p>
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin" style={{ color: currentTheme.colors.primary }} />
+          <p className="ml-4 text-gray-400">Loading your data...</p>
         </div>
       )}
 
       {!dataLoading && allGames.length === 0 && (
-        <Card>
+        <Card className="glass-card rounded-2xl shadow-2xl border-0">
           <CardContent className="text-center py-12">
-            <Brain className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
-            <h3 className="text-xl font-medium mb-2">No Data Available</h3>
-            <p className="text-muted-foreground">
+            <Brain className="h-16 w-16 mx-auto mb-4 text-gray-400/50" />
+            <h3 className="text-xl font-medium text-white mb-2">No Data Available</h3>
+            <p className="text-gray-400">
               Start recording your FUT Champions games to get personalized AI insights.
             </p>
           </CardContent>
