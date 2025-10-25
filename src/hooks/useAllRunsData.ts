@@ -14,27 +14,31 @@ export type WeeklyPerformanceWithGames = WeeklyPerformance & {
 export const useAllRunsData = () => {
   const { user } = useAuth();
   const { gameVersion } = useGameVersion();
-  // Initialize state with []
+  // Initialize state with [] - CRITICAL
   const [runs, setRuns] = useState<WeeklyPerformanceWithGames[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
+    // If no user, ensure state is clean and stop
     if (!user) {
       setLoading(false);
       setRuns([]); // Ensure runs is empty if no user
+      setError(null);
       return;
     }
+
+    let isMounted = true; // Flag to prevent state updates on unmounted component
 
     const fetchAllRuns = async () => {
       setLoading(true);
       setError(null);
       setRuns([]); // Reset runs before fetching
+
       try {
         const { data, error: fetchError } = await supabase
           .from('weekly_performances')
-          // Fetch games relation, aliased correctly
-          .select('*, games:game_results(*)') 
+          .select('*, games:game_results(*)') // Fetch games relation
           .eq('user_id', user.id)
           .eq('game_version', gameVersion)
           .order('week_number', { ascending: false });
@@ -43,38 +47,47 @@ export const useAllRunsData = () => {
           throw fetchError;
         }
 
-        // Process data: ensure 'games' is always an array and sort them
-        const processedData = (data || [])
-          .map(run => {
-              // Ensure games is an array, default to [] if null/undefined
-              const gamesArray = Array.isArray(run.games) ? run.games : [];
-              // Sort games within each run
-              gamesArray.sort((a, b) => a.game_number - b.game_number);
-              // Return run with guaranteed games array
-              return { ...run, games: gamesArray };
-          })
-          // Filter out any runs where something went wrong (though map should handle it)
-          .filter((run): run is WeeklyPerformanceWithGames => Array.isArray(run.games));
+        // Process data ONLY if component is still mounted
+        if (isMounted) {
+          const processedData = (data || []) // Ensure data is an array
+            .map(run => {
+                // Ensure games is an array, default to [] if null/undefined or not array
+                const gamesArray = Array.isArray(run.games) ? run.games : [];
+                // Sort games within each run safely
+                gamesArray.sort((a, b) => (a?.game_number ?? 0) - (b?.game_number ?? 0));
+                return { ...run, games: gamesArray };
+            })
+            // Final filter for type safety
+            .filter((run): run is WeeklyPerformanceWithGames => Array.isArray(run.games));
 
-        setRuns(processedData);
+          setRuns(processedData);
+        }
 
       } catch (err: any) {
-        console.error('Error fetching all runs:', err);
-        setError(err);
-        setRuns([]); // Ensure runs is empty on error
-        toast({
-          title: 'Error loading run history',
-          description: err.message,
-          variant: 'destructive',
-        });
+         if (isMounted) {
+            console.error('Error fetching all runs:', err);
+            setError(err);
+            setRuns([]); // Ensure runs is empty on error
+            toast({
+              title: 'Error loading run history',
+              description: err.message,
+              variant: 'destructive',
+            });
+         }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchAllRuns();
-  // Removed toast from dependencies as it can cause re-renders
-  }, [user, gameVersion]); 
+
+    // Cleanup function to set isMounted to false when component unmounts
+    return () => {
+      isMounted = false;
+    };
+  }, [user, gameVersion]); // Removed toast from dependencies
 
   return { runs, loading, error };
 };
