@@ -72,7 +72,7 @@ export const processRunForChunks = (run: WeeklyPerformance | null | undefined): 
 const getBestChunk = (
   currentBest: RunChunkStats | null,
   newRunStats: RunChunkStats | null, // Receive processed stats
-  chunkKey: 'beginning' | 'middle' | end'
+  chunkKey: 'beginning' | 'middle' | 'end' // <-- FIX: Added missing quote
 ): RunChunkStats | null => {
   // --- Safety Check: Ensure newRunStats and its chunk exist and have games ---
   if (!newRunStats || !newRunStats[chunkKey] || newRunStats[chunkKey].gameCount === 0) {
