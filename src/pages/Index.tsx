@@ -8,7 +8,7 @@ import { FUTTrackrRecords } from '@/components/FUTTrackrRecords';
 import DashboardSection from '@/components/DashboardSection';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LayoutGrid, Users, BarChart3 } from 'lucide-react';
+import { LayoutGrid, Users, BarChart3, Share } from 'lucide-react'; // Added Share icon
 import { Skeleton } from '@/components/ui/skeleton';
 import PlayerMovers from '@/components/PlayerMovers';
 import PlayerHistoryTable from '@/components/PlayerHistoryTable';
@@ -21,15 +21,17 @@ import PrimaryInsightCard from '@/components/PrimaryInsightCard';
 import GoalInvolvementChart from '@/components/GoalInvolvementChart';
 import CPSGauge from '@/components/CPSGauge';
 import PositionalHeatMap from '@/components/PositionalHeatMap';
-import logo from '/fut-trackr-logo.jpg';
-import { useTheme } from '@/hooks/useTheme';
+import logo from '/fut-trackr-logo.jpg'; //
+import { useTheme } from '@/hooks/useTheme'; //
 import RunChunkAnalysis from '@/components/RunChunkAnalysis';
-// --- Import hook for fetching data if needed ---
-// import { useAllRunsData } from '@/hooks/useAllRunsData'; // Example
+import { useAllRunsData } from '@/hooks/useAllRunsData'; // --- Use your data hook ---
+import ShareableCardGenerator from '@/components/ShareableCardGenerator'; // --- Import the generator ---
+import { Button } from '@/components/ui/button'; // --- Import Button ---
+import { WeeklyPerformance } from '@/types/futChampions'; // Type for runs data
 
 interface DashboardItem {
     id: string;
-    component: React.FC<any>;
+    component: React.FC<any>; // Allow components to accept props
     order: number;
 }
 
@@ -75,6 +77,7 @@ const defaultLayout: DashboardItem[] = [
     { id: 'positionalHeatMap', component: componentsMap.positionalHeatMap, order: 15 },
 ];
 
+// Filter the default layout *once*
 const initialLayout = [...defaultLayout]
     .filter(item => componentsMap[item.id])
     .sort((a, b) => a.order - b.order);
@@ -86,21 +89,20 @@ const Dashboard = () => {
 
     const [layout, setLayout] = useState<DashboardItem[]>(initialLayout);
     const [loadingLayout, setLoadingLayout] = useState(true);
+    const [showOverallShareModal, setShowOverallShareModal] = useState(false); // --- State for overall share modal ---
 
-    // Placeholder data while hook is not used:
-    const runs: any[] = []; // Replace with actual data fetching
-    const runsLoading = false; // Replace with actual loading state
-    const runsError = null; // Replace with actual error state
+    // --- Fetch all runs data using your hook ---
+    const { runs, loading: runsLoading, error: runsError } = useAllRunsData();
 
     useEffect(() => {
         fetchLayout();
     }, [user]);
 
+    // fetchLayout function (remains exactly as in your provided file)
     const fetchLayout = async () => {
-        // ... (fetchLayout function remains the same) ...
         if (!user) { setLoadingLayout(false); setLayout(initialLayout); return; }
         setLoadingLayout(true);
-        try { /* ... Supabase fetch ... */
+        try {
             const { data, error } = await supabase.from('user_settings').select('value').eq('user_id', user.id).eq('key', 'dashboard_layout').limit(1);
             if (error) throw error;
             if (data && data.length > 0 && data[0].value) {
@@ -114,89 +116,141 @@ const Dashboard = () => {
         } finally { setLoadingLayout(false); }
     };
 
+    // findAndRenderSection function (modified to pass down fetched data)
+    const findAndRenderSection = (id: string, specificProps?: Record<string, any>) => {
+        const item = layout.find(item => item.id === id);
+        if (!item) return null;
 
-    const findAndRenderSection = (id: string, props?: Record<string, any>) => {
-        // ... (findAndRenderSection function remains the same) ...
-        const item = layout.find(item => item.id === id); if (!item) return null;
         const Component = item.component;
-        const selfContainedComponents = [ 'playerHistoryTable', 'xgAnalytics', 'playerConsistency', 'performanceRadar', 'matchTagAnalysis', 'formationTracker', 'primaryInsight', 'goalInvolvement', 'cpsGauge', 'positionalHeatMap', 'overview', 'runChunkAnalysis' ];
-        const commonProps = { allRuns: runs, latestRun: runs?.[0] || null, ...(props || {}) };
-        if (selfContainedComponents.includes(id)) { return <Component key={item.id} {...commonProps} />; }
-        let title = ''; switch (id) { case 'playerMovers': title = 'Player Movers'; break; case 'records': title = 'All-Time Records'; break; case 'recentRuns': title = 'Recent Runs'; break; case 'clubLegends': title = 'Club Legends'; break; default: title = item.id.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()); }
-        return ( <DashboardSection key={item.id} title={title}> <Component {...commonProps} /> </DashboardSection> );
+
+        // --- Define props to pass down ---
+        // Adjust these based on what each component actually needs
+        const commonProps = {
+            allRuns: runs || [], // Pass the fetched runs data
+            latestRun: runs?.[0] || null, // Pass the latest run (assuming sorted)
+            // Add other data if needed by components
+            ...(specificProps || {}) // Allow overriding or adding specific props
+        };
+
+        const selfContainedComponents = [
+            'playerHistoryTable', 'xgAnalytics', 'playerConsistency',
+            'performanceRadar', 'matchTagAnalysis', 'formationTracker',
+            'primaryInsight', 'goalInvolvement', 'cpsGauge', 'positionalHeatMap',
+            'overview', 'runChunkAnalysis'
+        ];
+
+        if (selfContainedComponents.includes(id)) {
+             // Pass props directly
+             return <Component key={item.id} {...commonProps} />;
+        }
+
+        let title = '';
+         switch (id) {
+             case 'playerMovers': title = 'Player Movers'; break;
+             case 'records': title = 'All-Time Records'; break;
+             case 'recentRuns': title = 'Recent Runs'; break;
+             case 'clubLegends': title = 'Club Legends'; break;
+             default: title = item.id.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+         }
+
+         // Render wrapped components, passing props
+         return (
+             <DashboardSection key={item.id} title={title}>
+                 <Component {...commonProps} />
+             </DashboardSection>
+         );
     };
 
-    if (loadingLayout) {
+    // --- Loading States ---
+    if (loadingLayout || runsLoading) { // Check both layout and data loading
        return ( /* ... Skeleton ... */
          <div className="space-y-8"> <div className="flex items-center gap-4"> <Skeleton className="h-12 w-12 rounded-lg" /> <div> <Skeleton className="h-8 w-48 mb-1" /> <Skeleton className="h-4 w-64" /> </div> </div> <Skeleton className="h-12 w-full rounded-2xl" /> <div className="space-y-6"> <Skeleton className="h-64 w-full rounded-lg" /> <Skeleton className="h-48 w-full rounded-lg" /> <Skeleton className="h-48 w-full rounded-lg" /> </div> </div>
        );
     }
 
+    // --- Error State for Runs ---
+    if (runsError) {
+        // You might want a more user-friendly error display
+        return <div className="text-red-500 p-4">Error loading dashboard data: {runsError.message}</div>;
+    }
+
+    // --- ACTUAL DASHBOARD RENDER ---
     return (
-        <div className="space-y-8">
-             {/* --- Logo and Title Section --- */}
-             <div className="flex items-center gap-4">
-                 <img src={logo} alt="FUT Trackr Logo" className="h-12 w-12 rounded-lg object-cover shadow-md" />
-                 <div>
-                     <h1 className="text-3xl font-bold text-white tracking-tight">Dashboard</h1>
-                     <p style={{ color: currentTheme.colors.muted }}>Your FUT Champions command center.</p>
+        // --- Use Fragment to allow modal rendering alongside main content ---
+        <>
+            <div className="space-y-8">
+                 {/* --- Logo, Title, and Share Button --- */}
+                 <div className="flex items-center justify-between gap-4"> {/* Use justify-between */}
+                     <div className="flex items-center gap-4">
+                         <img src={logo} alt="FUT Trackr Logo" className="h-12 w-12 rounded-lg object-cover shadow-md" />
+                         <div>
+                             <h1 className="text-3xl font-bold text-white tracking-tight">Dashboard</h1>
+                             <p style={{ color: currentTheme.colors.muted }}>Your FUT Champions command center.</p>
+                         </div>
+                     </div>
+                     {/* --- Add Overall Share Button --- */}
+                     <Button onClick={() => setShowOverallShareModal(true)} variant="outline" size="sm">
+                        <Share className="h-4 w-4 mr-2" /> Share Profile Card
+                     </Button>
                  </div>
-             </div>
 
-            <Tabs defaultValue="overview" className="space-y-6">
-                <TabsList className="glass-card rounded-2xl shadow-xl border-0 p-2 h-auto grid grid-cols-3">
-                     <TabsTrigger value="overview" className="tabs-trigger-style rounded-xl flex-1 flex gap-2 items-center justify-center">
-                         <LayoutGrid className="h-4 w-4" /> Overview
-                     </TabsTrigger>
-                     <TabsTrigger value="players" className="tabs-trigger-style rounded-xl flex-1 flex gap-2 items-center justify-center">
-                         <Users className="h-4 w-4" /> Player Hub
-                     </TabsTrigger>
-                     <TabsTrigger value="analytics" className="tabs-trigger-style rounded-xl flex-1 flex gap-2 items-center justify-center">
-                         <BarChart3 className="h-4 w-4" /> Analytics
-                     </TabsTrigger>
-                </TabsList>
+                <Tabs defaultValue="overview" className="space-y-6">
+                    <TabsList className="glass-card rounded-2xl shadow-xl border-0 p-2 h-auto grid grid-cols-3">
+                         {/* ... TabsTriggers remain the same ... */}
+                         <TabsTrigger value="overview" className="tabs-trigger-style rounded-xl flex-1 flex gap-2 items-center justify-center"> <LayoutGrid className="h-4 w-4" /> Overview </TabsTrigger>
+                         <TabsTrigger value="players" className="tabs-trigger-style rounded-xl flex-1 flex gap-2 items-center justify-center"> <Users className="h-4 w-4" /> Player Hub </TabsTrigger>
+                         <TabsTrigger value="analytics" className="tabs-trigger-style rounded-xl flex-1 flex gap-2 items-center justify-center"> <BarChart3 className="h-4 w-4" /> Analytics </TabsTrigger>
+                    </TabsList>
 
-                {/* --- FIX: Added forceMount back --- */}
+                    {/* --- Tabs Content with forceMount, rendering components via findAndRenderSection --- */}
+                    <TabsContent value="overview" className="space-y-6 mt-4" forceMount>
+                         {/* findAndRenderSection now passes data implicitly */}
+                         {findAndRenderSection('overview')}
+                         {findAndRenderSection('primaryInsight')}
+                         {findAndRenderSection('recentRuns')}
+                         {findAndRenderSection('records')}
+                    </TabsContent>
 
-                <TabsContent value="overview" className="space-y-6 mt-4" forceMount>
-                     {findAndRenderSection('overview')}
-                     {findAndRenderSection('primaryInsight')}
-                     {findAndRenderSection('recentRuns')}
-                     {findAndRenderSection('records')}
-                </TabsContent>
+                    <TabsContent value="players" className="space-y-6 mt-4" forceMount>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {findAndRenderSection('playerMovers')}
+                            {findAndRenderSection('goalInvolvement')}
+                        </div>
+                        <div className="grid grid-cols-1 gap-6">
+                            {findAndRenderSection('clubLegends')}
+                        </div>
+                         <div className="grid grid-cols-1 gap-6">
+                            {findAndRenderSection('playerHistoryTable')}
+                        </div>
+                    </TabsContent>
 
-                <TabsContent value="players" className="space-y-6 mt-4" forceMount>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {findAndRenderSection('playerMovers')}
-                        {findAndRenderSection('goalInvolvement')}
-                    </div>
-                    <div className="grid grid-cols-1 gap-6">
-                        {findAndRenderSection('clubLegends')}
-                    </div>
-                     <div className="grid grid-cols-1 gap-6">
-                        {findAndRenderSection('playerHistoryTable')}
-                    </div>
-                </TabsContent>
+                    <TabsContent value="analytics" className="space-y-6 mt-4" forceMount>
+                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                             {findAndRenderSection('performanceRadar')}
+                             {findAndRenderSection('runChunkAnalysis')}
+                         </div>
+                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                             {findAndRenderSection('matchTagAnalysis')}
+                             {findAndRenderSection('formationTracker')}
+                             {findAndRenderSection('cpsGauge')}
+                         </div>
+                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                             {findAndRenderSection('xgAnalytics')}
+                             {findAndRenderSection('playerConsistency')}
+                         </div>
+                         {findAndRenderSection('positionalHeatMap')}
+                     </TabsContent>
 
-                <TabsContent value="analytics" className="space-y-6 mt-4" forceMount>
-                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                         {findAndRenderSection('performanceRadar')}
-                         {findAndRenderSection('runChunkAnalysis')}
-                     </div>
-                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                         {findAndRenderSection('matchTagAnalysis')}
-                         {findAndRenderSection('formationTracker')}
-                         {findAndRenderSection('cpsGauge')}
-                     </div>
-                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                         {findAndRenderSection('xgAnalytics')}
-                         {findAndRenderSection('playerConsistency')}
-                     </div>
-                     {findAndRenderSection('positionalHeatMap')}
-                 </TabsContent>
+                </Tabs>
+            </div>
 
-            </Tabs>
-        </div>
+            {/* --- Render the Overall Shareable Card Generator Modal --- */}
+             <ShareableCardGenerator
+                isOpen={showOverallShareModal}
+                onClose={() => setShowOverallShareModal(false)}
+                allRunsData={runs} // Pass all runs data fetched by the hook
+             />
+        </>
     );
 };
 
