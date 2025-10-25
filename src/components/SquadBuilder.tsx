@@ -16,6 +16,7 @@ import { Badge } from './ui/badge';
 import { useGameVersion } from '@/contexts/GameVersionContext';
 import { useTheme } from '@/hooks/useTheme'; // Corrected import path
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Label } from '@/components/ui/label'; // <-- **FIX: Added missing Label import**
 
 // --- Integrated BenchPlayerSlot ---
 interface BenchPlayerSlotProps {
