@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogClose } from '@/components/ui/dialog'; // Ensure DialogClose is imported if needed
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area'; // <-- FIX 1: Added missing import
 import { useTheme } from '@/hooks/useTheme';
 // ** Use reconciled types **
 import { Game, WeeklyPerformance, PlayerPerformance } from '@/types/futChampions';
@@ -126,7 +127,7 @@ const GameCompletionModal = ({ isOpen, onClose, game, weekData }: GameCompletion
         style={{ backgroundColor: currentTheme.colors.cardBg }}
       >
         {/* Celebration Overlay */}
-        {showCelebration && isWin && ( /* ... celebration elements ... */ )}
+        {showCelebration && isWin && null /* <-- FIX 2: Replaced empty () with null */ }
 
         {/* Header */}
          <div className={`p-6 sm:p-8 text-center relative overflow-hidden shrink-0 ${ /* ... header bg gradient ... */ }`}>
