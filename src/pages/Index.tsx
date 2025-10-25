@@ -4,8 +4,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import DashboardOverview from '@/components/DashboardOverview';
 import RecentRuns from '@/components/RecentRuns';
 import ClubLegends from '@/components/ClubLegends';
-// --- FIX: Import FUTTrackrRecords correctly (it's likely not a named export based on file name) ---
-import FUTTrackrRecords from '@/components/FUTTrackrRecords';
+// --- FIX: Import FUTTrackrRecords as a NAMED export ---
+import { FUTTrackrRecords } from '@/components/FUTTrackrRecords';
 import DashboardSection from '@/components/DashboardSection';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
