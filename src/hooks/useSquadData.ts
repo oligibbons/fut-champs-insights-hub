@@ -37,7 +37,9 @@ export const useSquadData = () => {
       const [squadsRes, playersRes, squadPlayersRes, cardTypesRes] = await Promise.all([
         supabase.from('squads').select('*').eq('user_id', user.id).eq('game_version', gameVersion),
         supabase.from('players').select('*').eq('user_id', user.id).eq('game_version', gameVersion),
-        supabase.from('squad_players').select('squad_id, player_id, position, slot_id').eq('user_id', user.id), // Fetch links matching user_id for efficiency if policy allows, otherwise fetch all and filter later if needed
+        supabase.from('squad_players').select('id, squad_id, player_id, position, slot_id').in('squad_id', 
+            (await supabase.from('squads').select('id').eq('user_id', user.id).eq('game_version', gameVersion)).data?.map(s => s.id) || []
+        ), // Fetch links matching user's squads
         supabase.from('card_types').select('*').eq('user_id', user.id).eq('game_version', gameVersion)
       ]);
 
@@ -124,7 +126,7 @@ export const useSquadData = () => {
              player_id: p.player_id, // Should be just player_id from SquadBuilder save format
              position: p.position,
              slot_id: p.slot_id,
-             user_id: user.id // Add user_id to squad_players link table
+             // user_id: user.id // <-- **FIX: Removed this line**
             }));
         const { error: spError } = await supabase.from('squad_players').insert(playersToInsert);
          if (spError) throw spError; // Throw if linking players fails
@@ -157,7 +159,7 @@ export const useSquadData = () => {
             player_id: p.player_id,
             position: p.position,
             slot_id: p.slot_id,
-            user_id: user.id // Add user_id
+            // user_id: user.id // <-- **FIX: Removed this line**
            }));
         const { error: insertError } = await supabase.from('squad_players').insert(playersToInsert);
          if (insertError) throw insertError; // Stop if insertion fails
@@ -220,7 +222,7 @@ export const useSquadData = () => {
                     player_id: p.player_id,
                     position: p.position,
                     slot_id: p.slot_id,
-                    user_id: user.id
+                    // user_id: user.id // <-- **FIX: Removed this line**
                 }));
                  const { error: insertError } = await supabase.from('squad_players').insert(playersToInsert);
                  if (insertError) {
