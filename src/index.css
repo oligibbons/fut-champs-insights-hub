@@ -3,9 +3,10 @@
 @tailwind utilities;
 
 :root {
+  /* Theme variables remain the same */
   --background: 240 10% 3.9%;
   --foreground: 0 0% 98%;
-  --card: 240 10% 3.9%;
+  --card: 240 10% 3.9%; /* Base dark card color */
   --card-foreground: 0 0% 98%;
   --popover: 240 10% 3.9%;
   --popover-foreground: 0 0% 98%;
@@ -33,9 +34,20 @@
 
   /* Define RGB versions for opacity */
   --background-rgb: 10, 10, 10;
-  --card-rgb: 10, 10, 10;
-  --surface-rgb: 20, 20, 25; /* A slightly lighter dark surface */
-  --border-rgb: 38, 38, 42; /* Slightly more visible border */
+  --card-rgb: 15, 15, 18; /* Slightly lighter base card color for better contrast */
+  --surface-rgb: 25, 25, 30; /* Darker, slightly distinct surface */
+  --border-rgb: 45, 45, 50; /* More visible border */
+
+  /* Additional Theme Colors */
+  --success: 140 70% 45%;
+  --warning: 45 90% 55%;
+  --danger: 0 80% 60%;
+  --info: 210 90% 60%;
+  --success-foreground: 0 0% 98%;
+  --warning-foreground: 240 10% 3.9%; /* Dark text for gold/yellow */
+  --danger-foreground: 0 0% 98%;
+  --info-foreground: 0 0% 98%;
+  --accent-text: 0 0% 98%; /* Text color for accent backgrounds */
 }
 
 .dark {
@@ -69,9 +81,20 @@
 
   /* RGB versions remain same */
   --background-rgb: 10, 10, 10;
-  --card-rgb: 10, 10, 10;
-  --surface-rgb: 20, 20, 25;
-  --border-rgb: 38, 38, 42;
+  --card-rgb: 15, 15, 18;
+  --surface-rgb: 25, 25, 30;
+  --border-rgb: 45, 45, 50;
+
+  /* Additional Theme Colors */
+  --success: 140 70% 45%;
+  --warning: 45 90% 55%;
+  --danger: 0 80% 60%;
+  --info: 210 90% 60%;
+  --success-foreground: 0 0% 98%;
+  --warning-foreground: 240 10% 3.9%;
+  --danger-foreground: 0 0% 98%;
+  --info-foreground: 0 0% 98%;
+  --accent-text: 0 0% 98%;
 }
 
 
@@ -99,23 +122,26 @@
   }
 }
 
-/* Glassmorphism Card Style */
+/* --- VISUAL FIX: Styles for Layering & Contrast --- */
+
+/* Base Section Card (More transparent, more blur) */
 .glass-card {
-  background-color: rgba(var(--surface-rgb), 0.7); /* Use surface color */
-  backdrop-filter: blur(12px);
+  background-color: rgba(var(--surface-rgb), 0.7); /* Use surface, moderately transparent */
+  backdrop-filter: blur(16px); /* More blur */
   border: 1px solid rgba(var(--border-rgb), 0.1);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
-  border-radius: theme('borderRadius.2xl'); /* Larger rounding */
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.25); /* Stronger shadow */
+  border-radius: theme('borderRadius.2xl'); /* Keep larger rounding */
 }
 
-/* Content card style for contrast */
+/* Content Card (Less transparent, less blur, pops more) */
 .glass-card-content {
-  background-color: rgba(var(--card-rgb), 0.9); /* More opaque card background */
-  border-radius: theme('borderRadius.xl');
+  background-color: rgba(var(--card-rgb), 0.95); /* Use card, almost solid */
+  backdrop-filter: blur(6px); /* Less blur for clarity */
+  border: 1px solid rgba(var(--border-rgb), 0.2); /* Slightly stronger border */
   box-shadow: theme('boxShadow.lg');
-  border: 1px solid rgba(var(--border-rgb), 0.2);
-  /* backdrop-filter: blur(8px); /* Optional: Less blur or remove */
+  border-radius: theme('borderRadius.xl'); /* Keep smaller rounding */
 }
+/* --- END VISUAL FIX --- */
 
 
 /* Gradient Text */
@@ -207,7 +233,7 @@
 .club-legend-card-name {
   font-size: 1.25rem; /* text-xl */
   font-weight: 700; /* font-bold */
-  color: theme('colors.white');
+  color: theme('colors.white'); /* Explicitly white for legend name */
   margin-top: 2.5rem; /* Space below badge */
   margin-bottom: 0.25rem;
 }
@@ -234,7 +260,7 @@
 .club-legend-card-stat-value {
   font-size: 1.125rem; /* text-lg */
   font-weight: 700; /* font-bold */
-  color: theme('colors.white');
+  color: theme('colors.white'); /* Explicitly white */
 }
 
 .club-legend-card-stat-label {
@@ -261,9 +287,11 @@
 }
 .metric-card .card-content p:first-child { /* Player name */
     font-size: 1.125rem; /* text-lg */
+    color: theme('colors.white'); /* Ensure player name is bright */
 }
 .metric-card .card-content p:nth-child(2) { /* Stat value */
     font-size: 1.5rem; /* text-2xl */
+    /* Color is usually set dynamically via className (e.g., text-fifa-gold) */
 }
 .metric-card .card-content p:last-child { /* Subtext */
     font-size: 0.75rem; /* text-xs */
