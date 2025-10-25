@@ -10,7 +10,7 @@ import { WeeklyPerformance } from '@/types/futChampions';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/hooks/useTheme';
 
-// Define structure for options
+// Define structure for options (Updated to remove Server/Stress and refine groups)
 export interface CardOptions {
   // General
   showRecord: boolean;
@@ -19,8 +19,6 @@ export interface CardOptions {
   showGoalsConceded: boolean;
   showGoalDifference: boolean;
   showGamesPlayed: boolean;
-  showAvgServerQuality: boolean;
-  showAvgStressLevel: boolean;
 
   // Team Stats
   showAvgPossession: boolean;
@@ -38,20 +36,20 @@ export interface CardOptions {
   showAveragePlayerRating: boolean;
   showHighestScorer: boolean;
   showHighestAssister: boolean;
-  showCleanSheets: boolean; // Overall only
-  showClubLegends: boolean; // Overall only
+  showCleanSheets: boolean;
+  showClubLegends: boolean;
 
   // Streaks & Records
   showWinStreak: boolean;
-  showLossStreak: boolean; // Overall only
-  showBestRecord: boolean; // Overall only
-  showWorstRecord: boolean; // Overall only
+  showLossStreak: boolean;
+  showBestRecord: boolean;
+  showWorstRecord: boolean;
 
   // Analysis
-  showCPS: boolean; // Run only
+  showCPS: boolean;
   showRageQuits: boolean;
   showFormationsUsed: boolean;
-  showFavouriteFormation: boolean; // Overall only
+  showFavouriteFormation: boolean;
   showMatchTagAnalysis: boolean;
 
   // Overall Profile Only
@@ -59,9 +57,12 @@ export interface CardOptions {
   showAverageWins: boolean;
   showTotalPlayersUsed: boolean;
   showTotalFormationsUsed: boolean;
+  
+  // Branding (Non-functional, always true but used to pass user data)
+  // We'll pass the username as a necessary prop, not an option
 }
 
-// Define available metrics for the customizer
+// Define available metrics for the customizer (Removed Server/Stress)
 export interface MetricDefinition {
   id: keyof CardOptions;
   label: string;
@@ -78,8 +79,6 @@ export const availableMetrics: MetricDefinition[] = [
   { id: 'showGoalsConceded', label: 'Goals Conceded', group: 'General' },
   { id: 'showGoalDifference', label: 'Goal Difference', group: 'General' },
   { id: 'showGamesPlayed', label: 'Games Played', group: 'General' },
-  { id: 'showAvgServerQuality', label: 'Avg. Server Quality', group: 'General' },
-  { id: 'showAvgStressLevel', label: 'Avg. Stress Level', group: 'General' },
 
   // Team Stats
   { id: 'showAvgPossession', label: 'Avg. Possession %', group: 'Team Stats' },
@@ -120,16 +119,14 @@ export const availableMetrics: MetricDefinition[] = [
   { id: 'showTotalFormationsUsed', label: 'Total Unique Formations Used', group: 'Overall Profile', overallOnly: true },
 ];
 
-// Define initial state based on availableMetrics (setting defaults)
 const getDefaultOptions = (): CardOptions => {
   const defaultState: Partial<CardOptions> = {};
   availableMetrics.forEach(metric => {
-    // Sensible defaults (adjust as needed)
     let isOnByDefault = true;
     if (metric.group === 'Team Stats' && !['showPassAccuracy', 'showShotAccuracy'].includes(metric.id)) isOnByDefault = false;
     if (metric.group === 'Analysis' || metric.group === 'Streaks & Records') isOnByDefault = false;
-    if (metric.overallOnly || metric.runOnly) isOnByDefault = false; // Start specific ones off
-    if (['showRecord', 'showWinRate', 'showGoalsScored', 'showGoalsConceded', 'showHighestScorer', 'showHighestAssister'].includes(metric.id)) isOnByDefault = true; // Key stats on
+    if (metric.overallOnly || metric.runOnly) isOnByDefault = false;
+    if (['showRecord', 'showWinRate', 'showGoalsScored', 'showGoalsConceded', 'showHighestScorer', 'showHighestAssister'].includes(metric.id)) isOnByDefault = true;
 
     defaultState[metric.id] = isOnByDefault;
   });
@@ -141,6 +138,8 @@ interface ShareableCardGeneratorProps {
   allRunsData?: WeeklyPerformance[] | null;
   isOpen: boolean;
   onClose: () => void;
+  // --- New prop for user ID/screen name ---
+  userScreenName: string; 
 }
 
 const ShareableCardGenerator: React.FC<ShareableCardGeneratorProps> = ({
@@ -148,6 +147,7 @@ const ShareableCardGenerator: React.FC<ShareableCardGeneratorProps> = ({
   allRunsData,
   isOpen,
   onClose,
+  userScreenName, // Destructure new prop
 }) => {
   const cardPreviewRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -158,19 +158,17 @@ const ShareableCardGenerator: React.FC<ShareableCardGeneratorProps> = ({
 
   const cardType = useMemo(() => (runData ? 'run' : 'overall'), [runData]);
 
-  // Reset options when modal opens or card type changes
   useEffect(() => {
     if (isOpen) {
       const defaults = getDefaultOptions();
-      // Adjust defaults based on card type if needed
       setOptions(defaults);
-      setImageDataUrl(null); // Clear image on open
+      setImageDataUrl(null);
     }
   }, [isOpen, cardType]);
 
   const handleOptionsChange = useCallback((optionKey: keyof CardOptions, value: boolean) => {
     setOptions((prev) => ({ ...prev, [optionKey]: value }));
-    setImageDataUrl(null); // Clear preview when options change
+    setImageDataUrl(null);
   }, []);
 
   const generateImage = useCallback(async () => {
@@ -184,7 +182,8 @@ const ShareableCardGenerator: React.FC<ShareableCardGeneratorProps> = ({
       const dataUrl = await toJpeg(cardPreviewRef.current, {
         quality: 0.95,
         backgroundColor: cssBgColor || (currentTheme.name === 'dark' ? '#151a28' : '#ffffff'),
-        pixelRatio: 2,
+        pixelRatio: 2, // High resolution
+        // Note: For complex components (like charts), you might need to enforce a small delay here.
       });
       setImageDataUrl(dataUrl);
       toast({ title: "Preview Generated!" });
@@ -236,7 +235,7 @@ const ShareableCardGenerator: React.FC<ShareableCardGeneratorProps> = ({
             </DialogHeader>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6 mt-2 flex-1 overflow-hidden">
 
-                {/* --- Column 1: Customizer --- */}
+                {/* --- Column 1: Customizer (Filter is handled inside CardCustomizer) --- */}
                 <div className="md:col-span-1 overflow-y-auto pr-3 custom-scrollbar border-r border-border/50 md:pr-4 lg:pr-6">
                     <h3 className="text-lg font-semibold mb-2 text-white sticky top-0 bg-background z-10 pb-2 -mt-1 pt-1">Customize Card</h3>
                      <CardCustomizer
@@ -249,7 +248,7 @@ const ShareableCardGenerator: React.FC<ShareableCardGeneratorProps> = ({
 
                 {/* --- Column 2: Preview & Actions --- */}
                 <div className="md:col-span-2 flex flex-col items-center justify-start gap-4 overflow-y-auto pt-2 pl-2 md:pl-0">
-                     {/* Preview Container */}
+                     {/* Preview Container (Fixed Aspect Ratio) */}
                      <div className="w-full max-w-[300px] sm:max-w-[320px] aspect-[9/16] border border-border/50 rounded-lg overflow-hidden shadow-lg bg-card flex-shrink-0 relative">
                          {isLoading && (
                             <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-20">
@@ -263,6 +262,7 @@ const ShareableCardGenerator: React.FC<ShareableCardGeneratorProps> = ({
                                  allRunsData={allRunsData}
                                  options={options}
                                  cardType={cardType}
+                                 userScreenName={userScreenName} // Pass screen name
                              />
                          </div>
                      </div>
