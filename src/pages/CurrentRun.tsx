@@ -1081,9 +1081,15 @@ const CurrentRunPage = () => {
     );
   }
 
-  // If a run is active
-  const nextGameNumber = currentRun.games ? currentRun.games.length + 1 : 1;
+  // ---
+  // --- !! FIX IS HERE !! ---
+  // ---
+  // We must safely define `games` FIRST, using a nullish coalescing
+  // or OR operator, to ensure it's always an array.
   const games = currentRun.games || [];
+  // NOW we can safely use `games.length` to calculate the next game number.
+  const nextGameNumber = games.length + 1;
+  // --- !! END OF FIX !! ---
 
   return (
     <div className="space-y-6">
