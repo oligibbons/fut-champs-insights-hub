@@ -2,7 +2,7 @@ import { useAccountData } from '@/hooks/useAccountData';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { Skeleton } from '@/components/ui/skeleton';
 import CompactStatCard from './CompactStatCard'; // Import our new component
-import WeeklyWinsChart from './WeeklyWinsChart'; // Import our new hero
+import WeeklyWinsChart from '@/components/WeeklyWinsChart'; // Import our new hero using the @ alias
 // Import icons directly for clarity
 import { Trophy, TrendingUp, HeartPulse, BarChart2 } from 'lucide-react'; 
 import { useTheme } from '@/hooks/useTheme'; // Assuming you have useTheme hook
