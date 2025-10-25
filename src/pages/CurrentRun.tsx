@@ -20,7 +20,7 @@ import { Save, Loader2, UserPlus, Users, Plus, Minus, Trophy, Shield, BarChartHo
 import PlayerStatsForm from '@/components/PlayerStatsForm';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Game, PlayerPerformanceInsert, TeamStatisticsInsert, PlayerPerformance } from '@/types/futChampions';
+import { Game, PlayerPerformanceInsert, TeamStatisticsInsert, PlayerPerformance, WeeklyPerformance } from '@/types/futChampions'; // <-- MODIFIED: Added WeeklyPerformance
 import { Squad, PlayerCard, SquadPlayer } from '@/types/squads';
 import { get, set, isEqual } from 'lodash';
 import { useAllSquadsData } from '@/hooks/useAllSquadsData';
@@ -29,6 +29,15 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, For
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import { useGameVersion } from '@/contexts/GameVersionContext'; // <-- MODIFIED: Added imports
+import { supabase } from '@/integrations/supabase/client';
+import WeekProgress from '@/components/WeekProgress';
+import CurrentRunStats from '@/components/CurrentRunStats';
+import GameListItem from '@/components/GameListItem';
+import WeekCompletionPopup from '@/components/WeekCompletionPopup';
+
+// --- ADD THIS IMPORT ---
+import CurrentRunChunkStats from '@/components/CurrentRunChunkStats';
 
 // --- ZOD SCHEMA ---
 const gameFormSchema = z.object({
@@ -70,6 +79,8 @@ const gameFormSchema = z.object({
       id: z.string().uuid(), // player_id
       name: z.string(),
       position: z.string(),
+      // --- ADDED isSub for sorting ---
+      isSub: z.boolean(), 
       minutes_played: z.coerce.number().min(0).max(120).default(90),
       goals: z.coerce.number().min(0).default(0),
       assists: z.coerce.number().min(0).default(0),
@@ -217,6 +228,7 @@ type PlayerStatFormData = {
   id: string; // player_id (UUID)
   name: string;
   position: string;
+  isSub: boolean; // --- ADDED ---
   minutes_played: number;
   goals: number;
   assists: number;
@@ -298,6 +310,8 @@ const GameRecordForm = ({
             id: p.player_id || p.id, // Use player_id (UUID)
             name: p.player_name || 'Unknown',
             position: p.position || 'N/A',
+            // --- ADDED: Default isSub to false, this is imperfect but avoids breaking ---
+            isSub: false, // This will be imperfect for edited games, as we didn't store this
             minutes_played: p.minutes_played ?? 90, goals: p.goals ?? 0, assists: p.assists ?? 0,
             rating: p.rating ?? 7.0, yellow_cards: p.yellow_cards ?? 0, red_cards: p.red_cards ?? 0,
             own_goals: p.own_goals ?? 0,
@@ -396,17 +410,14 @@ const GameRecordForm = ({
                     return { // Map to PlayerStatFormData structure
                         id: sp.players!.id, name: sp.players!.name,
                         position: sp.players!.position || 'N/A',
+                        isSub: !isStarter, // --- ADDED ---
                         minutes_played: isStarter ? (watchedDuration || 90) : 0, // Subs start at 0
                         goals: 0, assists: 0, rating: 7.0,
                         yellow_cards: 0, red_cards: 0, own_goals: 0,
                     };
-                })
-                .sort((a, b) => { // Starters first, then subs, then alpha
-                    if (a.minutes_played > 0 && b.minutes_played === 0) return -1;
-                    if (a.minutes_played === 0 && b.minutes_played > 0) return 1;
-                    return a.name.localeCompare(b.name);
                 });
-
+                // Note: Sorting is now handled inside PlayerStatsForm
+             
              // Update the form state with the new player list
              // Only mark dirty if it wasn't the very initial load/reset
             setValue('player_stats', squadPlayersData, { shouldValidate: true, shouldDirty: !isInitialLoadOrReset, shouldTouch: !isInitialLoadOrReset });
@@ -864,4 +875,395 @@ const GameRecordForm = ({
   );
 };
 
-export default GameRecordForm;
+// --- MODIFIED: CurrentRunPage Component ---
+
+const CurrentRunPage = () => {
+  const { user } = useAuth();
+  const { gameVersion } = useGameVersion();
+  const { toast } = useToast();
+  const [currentRun, setCurrentRun] = useState<WeeklyPerformance | null>(null);
+  const [isLoadingRun, setIsLoadingRun] = useState(true);
+  const [isSubmittingGame, setIsSubmittingGame] = useState(false);
+  const [isFinishingRun, setIsFinishingRun] = useState(false);
+  const [showGameForm, setShowGameForm] = useState(false);
+  const [editingGame, setEditingGame] = useState<Game | null>(null);
+  const [showCompletionPopup, setShowCompletionPopup] = useState(false);
+
+  const fetchCurrentRun = useCallback(async (showLoading = true) => {
+    if (!user) {
+      setIsLoadingRun(false);
+      return;
+    }
+    if (showLoading) setIsLoadingRun(true);
+
+    try {
+      const { data, error } = await supabase
+        .from('weekly_performance')
+        .select('*, games(*, team_stats(*), player_performances(*))')
+        .eq('user_id', user.id)
+        .eq('game_version', gameVersion)
+        .eq('is_completed', false)
+        .order('week_number', { ascending: false })
+        .limit(1);
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const run = data[0];
+        // Sort games by game_number ascending
+        if (run.games) {
+          run.games.sort((a, b) => a.game_number - b.game_number);
+        }
+        setCurrentRun(run as WeeklyPerformance);
+      } else {
+        setCurrentRun(null);
+      }
+    } catch (err: any) {
+      toast({
+        title: "Error loading run",
+        description: err.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingRun(false);
+    }
+  }, [user, gameVersion, toast]);
+
+  useEffect(() => {
+    fetchCurrentRun();
+  }, [fetchCurrentRun]);
+
+  const startNewRun = async () => {
+    if (!user) return;
+    setIsLoadingRun(true);
+
+    try {
+      // 1. Get the latest week number
+      const { data: latestRun, error: latestRunError } = await supabase
+        .from('weekly_performance')
+        .select('week_number')
+        .eq('user_id', user.id)
+        .eq('game_version', gameVersion)
+        .order('week_number', { ascending: false })
+        .limit(1);
+
+      if (latestRunError) throw latestRunError;
+
+      const newWeekNumber = (latestRun && latestRun.length > 0) ? latestRun[0].week_number + 1 : 1;
+      const startDate = new Date().toISOString();
+
+      // 2. Create the new run
+      const { data: newRun, error: newRunError } = await supabase
+        .from('weekly_performance')
+        .insert({
+          user_id: user.id,
+          week_number: newWeekNumber,
+          start_date: startDate,
+          game_version: gameVersion,
+          is_completed: false,
+          custom_name: `Week ${newWeekNumber}`, // Default name
+          // Set default targets
+          target_wins: 11,
+          target_rank: 'Rank 5',
+        })
+        .select()
+        .single();
+
+      if (newRunError) throw newRunError;
+
+      setCurrentRun({ ...newRun, games: [] }); // Set as active run
+      setShowGameForm(true); // Show form to add game 1
+      toast({
+        title: "New Run Started!",
+        description: `Good luck in Week ${newWeekNumber}!`,
+      });
+
+    } catch (err: any) {
+      toast({
+        title: "Error starting new run",
+        description: err.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingRun(false);
+    }
+  };
+
+  const finishCurrentRun = async () => {
+    if (!currentRun) return;
+    setIsFinishingRun(true);
+
+    try {
+      const { error } = await supabase
+        .from('weekly_performance')
+        .update({ is_completed: true, end_date: new Date().toISOString() })
+        .eq('id', currentRun.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Run Completed!",
+        description: `${currentRun.custom_name} has been saved to your history.`,
+      });
+      setShowCompletionPopup(true); // Show summary popup
+      // Don't set currentRun to null yet, popup needs it
+    } catch (err: any) {
+      toast({
+        title: "Error finishing run",
+        description: err.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsFinishingRun(false);
+    }
+  };
+
+  const handleGameSubmit = async (
+    gameData: Omit<Game, 'id' | 'created_at' | 'week_id' | 'score_line' | 'date_played' | 'player_performances' | 'team_stats' | 'user_id'>,
+    playerPerformances: PlayerPerformanceInsert[],
+    teamStats: TeamStatisticsInsert
+  ) => {
+    if (!user || !currentRun) return;
+    setIsSubmittingGame(true);
+
+    const gameId = editingGame?.id; // Get ID if editing
+
+    try {
+      // --- 1. Upsert Game Data ---
+      const gamePayload = {
+        ...gameData,
+        id: gameId, // Pass id if editing, undefined if new
+        user_id: user.id,
+        week_id: currentRun.id,
+        score_line: `${gameData.user_goals}-${gameData.opponent_goals}`,
+        date_played: new Date().toISOString(),
+      };
+
+      const { data: savedGame, error: gameError } = await supabase
+        .from('games')
+        .upsert(gamePayload) // Use upsert
+        .select()
+        .single();
+
+      if (gameError) throw gameError;
+
+      // --- 2. Handle Team Stats ---
+      const statsPayload = {
+        ...teamStats,
+        game_id: savedGame.id,
+        user_id: user.id,
+        week_id: currentRun.id,
+        // If editing, find existing stats id
+        id: editingGame?.team_stats ? (editingGame.team_stats as any).id : undefined
+      };
+      
+      const { error: statsError } = await supabase
+        .from('team_stats')
+        .upsert(statsPayload);
+
+      if (statsError) throw statsError;
+
+      // --- 3. Handle Player Performances (Delete existing then insert new) ---
+      if (gameId) {
+        // If editing, clear old performances for this game
+        const { error: deletePerfError } = await supabase
+          .from('player_performances')
+          .delete()
+          .eq('game_id', gameId);
+        if (deletePerfError) throw deletePerfError;
+      }
+      
+      // Insert new performances (if any)
+      if (playerPerformances.length > 0) {
+        const perfPayload = playerPerformances.map(p => ({
+          ...p,
+          game_id: savedGame.id,
+          week_id: currentRun.id,
+          user_id: user.id,
+        }));
+        
+        const { error: perfError } = await supabase
+          .from('player_performances')
+          .insert(perfPayload);
+
+        if (perfError) throw perfError;
+      }
+
+      // --- 4. Update Run Summary ---
+      // Refetch run to get updated game list and recalculate
+      await fetchCurrentRun(false); // Refetch without full loading spinner
+
+      toast({
+        title: `Game ${savedGame.game_number} ${isEditing ? 'Updated' : 'Saved'}!`,
+        description: `Result: ${savedGame.result} (${savedGame.score_line})`,
+      });
+
+      // Reset form state
+      setEditingGame(null);
+      setShowGameForm(false);
+
+    } catch (err: any) {
+      console.error("Error saving game:", err);
+      toast({
+        title: "Error saving game",
+        description: err.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmittingGame(false);
+    }
+  };
+
+  const handleEditGame = (game: Game) => {
+    setEditingGame(game);
+    setShowGameForm(true);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingGame(null);
+    setShowGameForm(false);
+  };
+  
+  const handleDeleteGame = async (gameId: string) => {
+    // Note: Supabase RLS should cascade delete stats and perfs
+    try {
+        const { error } = await supabase
+            .from('games')
+            .delete()
+            .eq('id', gameId);
+        if (error) throw error;
+        
+        toast({
+            title: "Game Deleted",
+            description: "The game and its stats have been removed.",
+        });
+        // Refetch to update UI
+        await fetchCurrentRun(false); 
+        
+    } catch (err: any) {
+         toast({
+            title: "Error deleting game",
+            description: err.message,
+            variant: "destructive",
+        });
+    }
+  };
+  
+  const handlePopupClose = () => {
+      setShowCompletionPopup(false);
+      setCurrentRun(null); // Clear the run, forcing user to start a new one
+      fetchCurrentRun(); // Check for any other incomplete runs (should be none)
+  };
+
+  // --- RENDER LOGIC ---
+
+  if (isLoadingRun) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!currentRun && !isLoadingRun) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full py-16 text-center glass-card p-8">
+        <Trophy className="h-16 w-16 text-primary mb-4" />
+        <h2 className="text-2xl font-semibold text-white mb-2">No Active Run</h2>
+        <p className="text-muted-foreground mb-6">You don't have an active FUT Champions run. Start one to begin tracking!</p>
+        <Button onClick={startNewRun} disabled={isLoadingRun}>
+          Start New Run
+        </Button>
+      </div>
+    );
+  }
+
+  // If a run is active
+  const nextGameNumber = currentRun.games ? currentRun.games.length + 1 : 1;
+  const games = currentRun.games || [];
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap justify-between items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-white">{currentRun.custom_name || `Week ${currentRun.week_number}`}</h1>
+          <p className="text-muted-foreground">Tracking {games.length} {games.length === 1 ? 'game' : 'games'} so far.</p>
+        </div>
+        <div className="flex gap-2">
+            {!showGameForm && (
+                <Button onClick={() => setShowGameForm(true)} disabled={isFinishingRun}>
+                    <Plus className="h-4 w-4 mr-2" /> Record Game {nextGameNumber}
+                </Button>
+            )}
+            <Button
+                variant="destructive"
+                onClick={finishCurrentRun}
+                disabled={isFinishingRun || games.length === 0}
+                aria-label="Finish current run"
+            >
+                {isFinishingRun ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trophy className="h-4 w-4" />}
+            </Button>
+        </div>
+      </div>
+
+      {/* --- ADDED THE NEW COMPONENT HERE --- */}
+      {currentRun && (
+        <CurrentRunChunkStats currentRun={currentRun} />
+      )}
+      {/* --- END OF ADDITION --- */}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column (Stats) */}
+        <div className="lg:col-span-1 space-y-6">
+          <CurrentRunStats run={currentRun} />
+          <WeekProgress run={currentRun} />
+        </div>
+
+        {/* Right Column (Form or Game List) */}
+        <div className="lg:col-span-2">
+          {showGameForm ? (
+            <GameRecordForm
+              key={editingGame?.id || 'new'} // Remount form when editing game changes
+              onSubmit={handleGameSubmit}
+              isLoading={isSubmittingGame}
+              game={editingGame}
+              weekId={currentRun.id}
+              gameVersion={gameVersion}
+              nextGameNumber={editingGame ? editingGame.game_number : nextGameNumber}
+              onCancel={handleCancelEdit}
+            />
+          ) : (
+             <Card className="glass-card">
+                <CardHeader><CardTitle>Game History</CardTitle></CardHeader>
+                <CardContent>
+                  {games.length === 0 ? (
+                    <p className="text-muted-foreground text-center py-8">No games recorded for this run yet.</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {games.map(game => (
+                        <GameListItem 
+                            key={game.id} 
+                            game={game} 
+                            onEdit={() => handleEditGame(game)} 
+                            onDelete={() => handleDeleteGame(game.id)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+             </Card>
+          )}
+        </div>
+      </div>
+      
+      {/* Completion Popup */}
+      <WeekCompletionPopup
+        isOpen={showCompletionPopup}
+        onClose={handlePopupClose}
+        runData={currentRun}
+      />
+    </div>
+  );
+};
+
+export default CurrentRunPage;
