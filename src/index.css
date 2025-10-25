@@ -2,119 +2,270 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    /* ... all your other color variables ... */
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --primary-green: 142.1 76.2% 36.3%;
-    --primary-red: 346.8 77.2% 49.8%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
-  }
+:root {
+  --background: 240 10% 3.9%;
+  --foreground: 0 0% 98%;
+  --card: 240 10% 3.9%;
+  --card-foreground: 0 0% 98%;
+  --popover: 240 10% 3.9%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 210 90% 60%; /* FIFA Blue */
+  --primary-foreground: 210 40% 98%;
+  --secondary: 170 80% 45%; /* FIFA Green */
+  --secondary-foreground: 0 0% 98%;
+  --muted: 240 3.7% 15.9%;
+  --muted-foreground: 240 5% 64.9%;
+  --accent: 330 85% 65%; /* FIFA Purple */
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 3.7% 15.9%;
+  --input: 240 3.7% 15.9%;
+  --ring: 210 90% 60%; /* FIFA Blue */
+  --radius: 0.75rem;
 
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    /* ... all your other dark mode color variables ... */
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --primary-green: 142.1 76.2% 36.3%;
-    --primary-red: 346.8 77.2% 49.8%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-  }
+  /* Theme specific colors */
+  --fifa-blue: 210 90% 60%;
+  --fifa-green: 145 70% 45%; /* Slightly adjusted green */
+  --fifa-red: 0 80% 60%;
+  --fifa-purple: 270 70% 65%; /* Adjusted purple */
+  --fifa-gold: 45 90% 55%;
+
+  /* Define RGB versions for opacity */
+  --background-rgb: 10, 10, 10;
+  --card-rgb: 10, 10, 10;
+  --surface-rgb: 20, 20, 25; /* A slightly lighter dark surface */
+  --border-rgb: 38, 38, 42; /* Slightly more visible border */
 }
 
+.dark {
+  /* Keep the same variables for dark theme */
+  --background: 240 10% 3.9%;
+  --foreground: 0 0% 98%;
+  --card: 240 10% 3.9%;
+  --card-foreground: 0 0% 98%;
+  --popover: 240 10% 3.9%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 210 90% 60%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 170 80% 45%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 240 3.7% 15.9%;
+  --muted-foreground: 240 5% 64.9%;
+  --accent: 330 85% 65%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 70% 55%; /* Adjusted destructive */
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 3.7% 15.9%;
+  --input: 240 3.7% 15.9%;
+  --ring: 210 90% 60%;
+
+  /* Theme specific colors remain same */
+  --fifa-blue: 210 90% 60%;
+  --fifa-green: 145 70% 45%;
+  --fifa-red: 0 80% 60%;
+  --fifa-purple: 270 70% 65%;
+  --fifa-gold: 45 90% 55%;
+
+  /* RGB versions remain same */
+  --background-rgb: 10, 10, 10;
+  --card-rgb: 10, 10, 10;
+  --surface-rgb: 20, 20, 25;
+  --border-rgb: 38, 38, 42;
+}
+
+
 @layer base {
-  /* THE FIX PART 1: Make the entire page transparent by default */
-  html, body {
-    background: transparent !important;
-  }
-  body {
-    @apply text-foreground;
-  }
   * {
     @apply border-border;
   }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: 'Poppins', sans-serif; /* Example font */
+    min-height: 100vh;
+    overflow-x: hidden; /* Prevent horizontal scroll */
+  }
+
+   main {
+    padding-top: 1rem; /* Adjust as needed */
+    padding-bottom: 5rem; /* Space for bottom nav on mobile */
+  }
+
+  @media (min-width: 1024px) { /* lg breakpoint */
+    main {
+      padding-bottom: 1.5rem; /* Reset padding for desktop */
+    }
+  }
 }
 
-/* THE FIX PART 2: Create a "stacking context" for the app.
-   This makes the #root div an anchor for the z-index of its children,
-   ensuring the animated background sits correctly behind the content.
-*/
-#root {
-  isolation: isolate;
+/* Glassmorphism Card Style */
+.glass-card {
+  background-color: rgba(var(--surface-rgb), 0.7); /* Use surface color */
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(var(--border-rgb), 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+  border-radius: theme('borderRadius.2xl'); /* Larger rounding */
 }
 
-.modern-button-primary {
-    @apply bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all duration-300 transform hover:scale-105;
+/* Content card style for contrast */
+.glass-card-content {
+  background-color: rgba(var(--card-rgb), 0.9); /* More opaque card background */
+  border-radius: theme('borderRadius.xl');
+  box-shadow: theme('boxShadow.lg');
+  border: 1px solid rgba(var(--border-rgb), 0.2);
+  /* backdrop-filter: blur(8px); /* Optional: Less blur or remove */
 }
 
-.modern-button-secondary {
-    @apply bg-secondary text-secondary-foreground shadow-md hover:bg-secondary/80 transition-all duration-300 transform hover:scale-105;
+
+/* Gradient Text */
+.gradient-text {
+  background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-/* Shimmer and Glow effects remain unchanged */
-.shimmer-effect {
-    position: relative;
-    overflow: hidden;
-}
-.shimmer-effect::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -150%;
-    width: 50%;
-    height: 100%;
-    background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.07) 50%, rgba(255,255,255,0) 100%);
-    transform: skewX(-25deg);
-    transition: left 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    pointer-events: none;
-}
-.shimmer-effect:hover::before {
-    left: 150%;
-}
-.glow-effect {
-    transition: box-shadow 0.4s ease-in-out;
-}
-.glow-effect:hover {
-    box-shadow: 0 0 18px hsl(var(--primary) / 0.25);
+
+/* Styling for TabsTrigger */
+[data-state="active"].tabs-trigger-style {
+  background-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+  box-shadow: 0 4px 14px 0 rgba(0, 118, 255, 0.39);
 }
 
-.animate-fade-in {
-    animation: fadeIn 0.5s ease-in-out;
+[data-state="inactive"].tabs-trigger-style {
+  color: hsl(var(--muted-foreground));
 }
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(var(--surface-rgb), 0.5); /* Slightly transparent track */
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary));
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.8);
+}
+
+
+/* Responsive Design Adjustments */
+@media (max-width: 768px) {
+  .page-header h1 {
+    font-size: 1.875rem; /* text-3xl */
+  }
+  .page-header p {
+    font-size: 1rem; /* text-base */
+  }
+   /* Reduce padding inside cards on mobile */
+  .card-content-mobile-condensed {
+     padding: 0.75rem; /* p-3 */
+  }
+   .card-header-mobile-condensed {
+     padding: 0.75rem; /* p-3 */
+  }
+}
+
+/* Add custom styles for Club Legend Card if needed */
+.club-legend-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: theme('borderRadius.xl');
+  background-color: rgba(var(--surface-rgb), 0.8); /* Use surface with opacity */
+  border: 1px solid rgba(var(--border-rgb), 0.15);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.club-legend-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.club-legend-card-content {
+  position: relative;
+  z-index: 2;
+  padding: 1rem; /* p-4 */
+}
+
+.club-legend-card-badge {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  padding: 0.25rem 0.75rem; /* py-1 px-3 */
+  font-size: 0.75rem; /* text-xs */
+  font-weight: 600; /* font-semibold */
+  border-radius: theme('borderRadius.full');
+}
+
+.club-legend-card-name {
+  font-size: 1.25rem; /* text-xl */
+  font-weight: 700; /* font-bold */
+  color: theme('colors.white');
+  margin-top: 2.5rem; /* Space below badge */
+  margin-bottom: 0.25rem;
+}
+
+.club-legend-card-position {
+  font-size: 0.875rem; /* text-sm */
+  color: rgba(var(--foreground-rgb), 0.7); /* Muted foreground */
+  margin-bottom: 1rem;
+}
+
+.club-legend-card-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem; /* gap-2 */
+  text-align: center;
+}
+
+.club-legend-card-stat {
+  background-color: rgba(var(--card-rgb), 0.7); /* Slightly transparent card background */
+  padding: 0.5rem; /* p-2 */
+  border-radius: theme('borderRadius.lg');
+}
+
+.club-legend-card-stat-value {
+  font-size: 1.125rem; /* text-lg */
+  font-weight: 700; /* font-bold */
+  color: theme('colors.white');
+}
+
+.club-legend-card-stat-label {
+  font-size: 0.75rem; /* text-xs */
+  color: rgba(var(--foreground-rgb), 0.6); /* More muted */
+}
+
+
+/* Metric Card Style - for the small top cards on Players page */
+.metric-card {
+  background-color: rgba(var(--surface-rgb), 0.8);
+  border: 1px solid rgba(var(--border-rgb), 0.15);
+  border-radius: theme('borderRadius.xl');
+  box-shadow: theme('boxShadow.lg');
+  backdrop-filter: blur(8px);
+}
+
+.metric-card .card-header {
+   padding-bottom: 0.5rem; /* pb-2 */
+}
+.metric-card .card-title {
+    font-size: 0.875rem; /* text-sm */
+    font-weight: 500; /* font-medium */
+}
+.metric-card .card-content p:first-child { /* Player name */
+    font-size: 1.125rem; /* text-lg */
+}
+.metric-card .card-content p:nth-child(2) { /* Stat value */
+    font-size: 1.5rem; /* text-2xl */
+}
+.metric-card .card-content p:last-child { /* Subtext */
+    font-size: 0.75rem; /* text-xs */
+    color: rgba(var(--foreground-rgb), 0.6);
 }
