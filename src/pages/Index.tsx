@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import DashboardOverview from '@/components/DashboardOverview';
 import RecentRuns from '@/components/RecentRuns';
 import ClubLegends from '@/components/ClubLegends';
-import { FUTTrackrRecords } from '@/components/FUTTrackrRecords'; // Corrected import
+import { FUTTrackrRecords } from '@/components/FUTTrackrRecords';
 import DashboardSection from '@/components/DashboardSection';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -53,6 +53,7 @@ const componentsMap: Record<string, React.FC<any>> = {
 };
 
 const defaultLayout: DashboardItem[] = [
+    // Define order based on tabs
     // Overview Tab
     { id: 'overview', component: componentsMap.overview, order: 1 },
     { id: 'primaryInsight', component: componentsMap.primaryInsight, order: 2 },
@@ -86,9 +87,6 @@ const Dashboard = () => {
     const [layout, setLayout] = useState<DashboardItem[]>(initialLayout);
     const [loadingLayout, setLoadingLayout] = useState(true);
 
-    // --- Fetch data needed by child components here ---
-    // Example: Replace with your actual data fetching hook
-    // const { runs, loading: runsLoading, error: runsError } = useAllRunsData();
     // Placeholder data while hook is not used:
     const runs: any[] = []; // Replace with actual data fetching
     const runsLoading = false; // Replace with actual loading state
@@ -99,121 +97,40 @@ const Dashboard = () => {
     }, [user]);
 
     const fetchLayout = async () => {
-        // ... (fetchLayout function remains the same as your provided code) ...
-        if (!user) {
-            setLoadingLayout(false);
-            setLayout(initialLayout);
-            return;
-        }
+        // ... (fetchLayout function remains the same) ...
+        if (!user) { setLoadingLayout(false); setLayout(initialLayout); return; }
         setLoadingLayout(true);
-        try {
-            const { data, error } = await supabase
-                .from('user_settings')
-                .select('value')
-                .eq('user_id', user.id)
-                .eq('key', 'dashboard_layout')
-                .limit(1);
+        try { /* ... Supabase fetch ... */
+            const { data, error } = await supabase.from('user_settings').select('value').eq('user_id', user.id).eq('key', 'dashboard_layout').limit(1);
             if (error) throw error;
             if (data && data.length > 0 && data[0].value) {
                  const savedLayout = data[0].value as { id: string; order: number }[];
-                 let loadedLayout = savedLayout
-                     .map(item => {
-                         const component = componentsMap[item.id];
-                         return component ? { ...item, component } : null;
-                     })
-                     .filter((item): item is DashboardItem => item !== null);
-                 defaultLayout.forEach(defaultItem => {
-                     if (!loadedLayout.some(item => item.id === defaultItem.id)) {
-                         if (componentsMap[defaultItem.id]) {
-                             loadedLayout.push({...defaultItem});
-                         }
-                     }
-                 });
+                 let loadedLayout = savedLayout.map(item => { const component = componentsMap[item.id]; return component ? { ...item, component } : null; }).filter((item): item is DashboardItem => item !== null);
+                 defaultLayout.forEach(defaultItem => { if (!loadedLayout.some(item => item.id === defaultItem.id)) { if (componentsMap[defaultItem.id]) { loadedLayout.push({...defaultItem}); } } });
                  loadedLayout = loadedLayout.filter(item => componentsMap[item.id]);
                  setLayout(loadedLayout.sort((a, b) => a.order - b.order));
-            } else {
-                 setLayout(initialLayout);
-            }
-        } catch (err: any) {
-            toast({ title: "Error", description: `Failed to load dashboard layout: ${err.message}`, variant: "destructive" });
-             setLayout(initialLayout);
-        } finally {
-            setLoadingLayout(false);
-        }
+            } else { setLayout(initialLayout); }
+        } catch (err: any) { toast({ title: "Error", description: `Failed to load dashboard layout: ${err.message}`, variant: "destructive" }); setLayout(initialLayout);
+        } finally { setLoadingLayout(false); }
     };
 
 
     const findAndRenderSection = (id: string, props?: Record<string, any>) => {
-        const item = layout.find(item => item.id === id);
-        if (!item) return null;
-
+        // ... (findAndRenderSection function remains the same) ...
+        const item = layout.find(item => item.id === id); if (!item) return null;
         const Component = item.component;
-
-        const selfContainedComponents = [
-            'playerHistoryTable', 'xgAnalytics', 'playerConsistency',
-            'performanceRadar', 'matchTagAnalysis', 'formationTracker',
-            'primaryInsight', 'goalInvolvement', 'cpsGauge', 'positionalHeatMap',
-            'overview', 'runChunkAnalysis'
-        ];
-
-        // --- Pass common data props (like runs) if needed ---
-        // Add specific checks if only certain components need certain props
-        const commonProps = {
-             allRuns: runs, // Example: pass runs data
-             latestRun: runs?.[0] || null, // Example
-             // Add other common props needed by multiple components
-             ...(props || {}) // Include any specific props passed in
-        };
-
-        if (selfContainedComponents.includes(id)) {
-             return <Component key={item.id} {...commonProps} />;
-        }
-
-        let title = '';
-         switch (id) {
-             case 'playerMovers': title = 'Player Movers'; break;
-             case 'records': title = 'All-Time Records'; break;
-             case 'recentRuns': title = 'Recent Runs'; break;
-             case 'clubLegends': title = 'Club Legends'; break;
-             default: title = item.id.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-         }
-
-         return (
-             <DashboardSection key={item.id} title={title}>
-                 <Component {...commonProps} />
-             </DashboardSection>
-         );
+        const selfContainedComponents = [ 'playerHistoryTable', 'xgAnalytics', 'playerConsistency', 'performanceRadar', 'matchTagAnalysis', 'formationTracker', 'primaryInsight', 'goalInvolvement', 'cpsGauge', 'positionalHeatMap', 'overview', 'runChunkAnalysis' ];
+        const commonProps = { allRuns: runs, latestRun: runs?.[0] || null, ...(props || {}) };
+        if (selfContainedComponents.includes(id)) { return <Component key={item.id} {...commonProps} />; }
+        let title = ''; switch (id) { case 'playerMovers': title = 'Player Movers'; break; case 'records': title = 'All-Time Records'; break; case 'recentRuns': title = 'Recent Runs'; break; case 'clubLegends': title = 'Club Legends'; break; default: title = item.id.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()); }
+        return ( <DashboardSection key={item.id} title={title}> <Component {...commonProps} /> </DashboardSection> );
     };
 
-    // --- Show skeleton only while loading the layout ---
     if (loadingLayout) {
-       return ( /* ... Skeleton remains the same ... */
-         <div className="space-y-8">
-            <div className="flex items-center gap-4">
-                 <Skeleton className="h-12 w-12 rounded-lg" />
-                 <div>
-                    <Skeleton className="h-8 w-48 mb-1" />
-                    <Skeleton className="h-4 w-64" />
-                 </div>
-            </div>
-            <Skeleton className="h-12 w-full rounded-2xl" />
-            <div className="space-y-6">
-                <Skeleton className="h-64 w-full rounded-lg" />
-                <Skeleton className="h-48 w-full rounded-lg" />
-                <Skeleton className="h-48 w-full rounded-lg" />
-            </div>
-         </div>
+       return ( /* ... Skeleton ... */
+         <div className="space-y-8"> <div className="flex items-center gap-4"> <Skeleton className="h-12 w-12 rounded-lg" /> <div> <Skeleton className="h-8 w-48 mb-1" /> <Skeleton className="h-4 w-64" /> </div> </div> <Skeleton className="h-12 w-full rounded-2xl" /> <div className="space-y-6"> <Skeleton className="h-64 w-full rounded-lg" /> <Skeleton className="h-48 w-full rounded-lg" /> <Skeleton className="h-48 w-full rounded-lg" /> </div> </div>
        );
     }
-
-    // --- ACTUAL DASHBOARD RENDER ---
-    // Added a check for data loading if your components rely on it
-    // if (runsLoading) {
-    //    return <div>Loading run data...</div>; // Or a more elaborate skeleton
-    // }
-    // if (runsError) {
-    //    return <div className="text-red-500">Error loading run data: {runsError.message}</div>;
-    // }
 
     return (
         <div className="space-y-8">
@@ -239,17 +156,16 @@ const Dashboard = () => {
                      </TabsTrigger>
                 </TabsList>
 
-                {/* --- FIX: Removed forceMount for testing --- */}
-                {/* --- Pass necessary props via findAndRenderSection --- */}
+                {/* --- FIX: Added forceMount back --- */}
 
-                <TabsContent value="overview" className="space-y-6 mt-4">
+                <TabsContent value="overview" className="space-y-6 mt-4" forceMount>
                      {findAndRenderSection('overview')}
                      {findAndRenderSection('primaryInsight')}
                      {findAndRenderSection('recentRuns')}
                      {findAndRenderSection('records')}
                 </TabsContent>
 
-                <TabsContent value="players" className="space-y-6 mt-4">
+                <TabsContent value="players" className="space-y-6 mt-4" forceMount>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {findAndRenderSection('playerMovers')}
                         {findAndRenderSection('goalInvolvement')}
@@ -262,7 +178,7 @@ const Dashboard = () => {
                     </div>
                 </TabsContent>
 
-                <TabsContent value="analytics" className="space-y-6 mt-4">
+                <TabsContent value="analytics" className="space-y-6 mt-4" forceMount>
                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                          {findAndRenderSection('performanceRadar')}
                          {findAndRenderSection('runChunkAnalysis')}
