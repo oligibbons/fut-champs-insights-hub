@@ -9,9 +9,10 @@ import WeekProgress from '@/components/WeekProgress';
 import CurrentRunStats from '@/components/CurrentRunStats';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Edit } from 'lucide-react';
+import { PlusCircle, Edit, Trophy, Loader2 } from 'lucide-react'; // Import Trophy
 import { useTheme } from '@/hooks/useTheme';
 import { useMobile } from '@/hooks/use-mobile'; // <-- Import useMobile
+import { Card, CardContent } from '@/components/ui/card'; // Import Card
 
 // Import dnd-kit components
 import {
@@ -336,7 +337,12 @@ const CurrentRun = () => {
 
 
     if (loading && !currentRun) {
-        return <div className="text-center p-10">Loading your run data...</div>;
+        return (
+            <div className="flex justify-center items-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin" style={{ color: currentTheme.colors.primary }} />
+                <p className="ml-4 text-gray-400">Loading your run data...</p>
+            </div>
+        );
     }
 
     if (error) {
@@ -346,20 +352,23 @@ const CurrentRun = () => {
     return (
         <div className="space-y-6">
             {!currentRun ? (
-                 <div className="text-center p-10 space-y-4">
-                    <h2 className="text-2xl font-semibold">No Active Run</h2>
-                    <p>Ready to start tracking your FUT Champions progress?</p>
-                    <Button onClick={startNewRun} disabled={loading} style={{ backgroundColor: currentTheme.colors.primary, color: currentTheme.colors.primaryText}}>
-                        Start New Run
-                    </Button>
-                </div>
+                 <Card className="glass-card rounded-2xl shadow-2xl border-0">
+                    <CardContent className="text-center p-10 space-y-4">
+                        <Trophy className="h-16 w-16 mx-auto mb-4 text-gray-400 opacity-50" />
+                        <h2 className="text-2xl font-semibold text-white">No Active Run</h2>
+                        <p className="text-gray-400">Ready to start tracking your FUT Champions progress?</p>
+                        <Button onClick={startNewRun} disabled={loading} style={{ backgroundColor: currentTheme.colors.primary, color: currentTheme.colors.primaryText}}>
+                            Start New Run
+                        </Button>
+                    </CardContent>
+                 </Card>
             ) : (
                 <>
                      <div className="flex justify-between items-center mb-6">
                         <div className="flex items-center gap-2">
-                            <h1 className="text-3xl font-bold">{currentRun.name || "Current FUT Champions Run"}</h1>
+                            <h1 className="text-3xl font-bold text-white">{currentRun.name || "Current FUT Champions Run"}</h1>
                              <Button variant="ghost" size="icon" onClick={() => setIsNamingModalOpen(true)}>
-                                <Edit className="h-4 w-4" />
+                                <Edit className="h-4 w-4 text-gray-400 hover:text-white" />
                              </Button>
                         </div>
                          {!showForm && (
@@ -377,40 +386,57 @@ const CurrentRun = () => {
                     />
 
                     {showForm && (
-                        <GameRecordForm
-                            onSubmit={handleGameSubmit}
-                            isLoading={loading}
-                            game={editingGame ?? undefined}
-                            runId={currentRun.id}
-                            onCancel={handleCancelForm}
-                        />
+                        <Card className="glass-card rounded-2xl shadow-2xl border-0">
+                            <CardContent className="p-4 md:p-6">
+                                <GameRecordForm
+                                    onSubmit={handleGameSubmit}
+                                    isLoading={loading}
+                                    game={editingGame ?? undefined}
+                                    runId={currentRun.id}
+                                    onCancel={handleCancelForm}
+                                />
+                            </CardContent>
+                        </Card>
                     )}
 
-                    <CurrentRunStats games={games} />
-                    <WeekProgress games={games} />
+                    <Card className="glass-card rounded-2xl shadow-2xl border-0">
+                        <CardContent className="p-4 md:p-6">
+                            <CurrentRunStats games={games} />
+                        </CardContent>
+                    </Card>
+
+                    <Card className="glass-card rounded-2xl shadow-2xl border-0">
+                        <CardContent className="p-4 md:p-6">
+                            <WeekProgress games={games} />
+                        </CardContent>
+                    </Card>
 
                      {/* dnd-kit Context */}
-                     <DndContext
-                        sensors={sensors}
-                        collisionDetection={closestCenter}
-                        onDragEnd={handleDragEnd}
-                    >
-                        <SortableContext
-                            items={games.map(g => g.id)} // Use game IDs for items
-                            strategy={verticalListSortingStrategy}
-                        >
-                            <div className="space-y-4">
-                                {games.map((game) => (
-                                    <SortableGameListItem
-                                        key={game.id}
-                                        game={game}
-                                        onEdit={handleEditGame}
-                                        onDelete={handleDeleteGame}
-                                    />
-                                ))}
-                            </div>
-                        </SortableContext>
-                    </DndContext>
+                     <Card className="glass-card rounded-2xl shadow-2xl border-0">
+                        <CardContent className="p-4 md:p-6">
+                            <DndContext
+                                sensors={sensors}
+                                collisionDetection={closestCenter}
+                                onDragEnd={handleDragEnd}
+                            >
+                                <SortableContext
+                                    items={games.map(g => g.id)} // Use game IDs for items
+                                    strategy={verticalListSortingStrategy}
+                                >
+                                    <div className="space-y-4">
+                                        {games.map((game) => (
+                                            <SortableGameListItem
+                                                key={game.id}
+                                                game={game}
+                                                onEdit={handleEditGame}
+                                                onDelete={handleDeleteGame}
+                                            />
+                                        ))}
+                                    </div>
+                                </SortableContext>
+                            </DndContext>
+                        </CardContent>
+                     </Card>
                 </>
             )}
         </div>
