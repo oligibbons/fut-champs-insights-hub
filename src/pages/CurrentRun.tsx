@@ -128,7 +128,12 @@ const matchTags = [
     { id: 'iRubberBanded', name: 'I Rubber Banded', description: 'You put your controller down and stopped playing at some point.' },
     { id: 'poorQualityOpponent', name: 'Poor Quality Opponent', description: 'An opponent who is simply not very good at the game.' },
     { id: 'fairResult', name: 'Fair Result', description: 'Regardless of who won or lost, the result was a fair reflection of the performance.' },
-    { id:act, 'myOwnWorstEnemy', name: 'My Own Worst Enemy', description: 'Your own consistent mistakes caused you significant problems.' },
+    // ---
+    // --- !! FIX IS HERE !! ---
+    // ---
+    // Corrected the typo from `id:act, 'myOwnWorstEnemy'` back to `id: 'myOwnWorstEnemy'`
+    // ---
+    { id: 'myOwnWorstEnemy', name: 'My Own Worst Enemy', description: 'Your own consistent mistakes caused you significant problems.' },
     { id: 'funGame', name: 'Fun Game', description: 'A game that you enjoyed playing, irrespective of the result.' },
     { id: 'ashamedPerformance', name: 'Performance to be ashamed of', description: 'Poor performance or had to resort to ratty tactics.' },
 ];
@@ -1120,10 +1125,10 @@ const CurrentRunPage = () => {
         <div className="lg:col-span-1 space-y-6">
           
           {/* ---
-          --- !! FIX IS HERE !! ---
+          --- !! PROP FIX IS HERE !! ---
           ---
-          * We must pass the `games` prop, as expected by `CurrentRunStats.tsx`.
-          * We must pass the `currentWeek` prop, as expected by `WeekProgress.tsx`.
+          * Pass `games={games}` to `CurrentRunStats`
+          * Pass `currentWeek={currentRun}` to `WeekProgress`
           --- */}
           <CurrentRunStats games={games} />
           <WeekProgress currentWeek={currentRun} />
