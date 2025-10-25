@@ -102,7 +102,9 @@ const MobileNavItem = ({ path, icon: Icon, name }: { path: string; icon: React.E
       to={path}
       className={cn(
         'flex h-full flex-col items-center justify-center gap-1 text-xs font-medium transition-colors',
-        isActive ? 'text-primary' : 'text-muted-foreground hover:text-primary'
+        // --- MODIFIED: Bolder active state using fifa-blue ---
+        isActive ? 'text-fifa-blue font-bold' : 'text-muted-foreground hover:text-foreground'
+        // --- END MODIFIED ---
       )}
     >
       <Icon className="h-5 w-5" />
