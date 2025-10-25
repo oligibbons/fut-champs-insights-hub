@@ -1,119 +1,127 @@
+// src/components/CurrentRunStats.tsx
 import { useMemo } from 'react';
+import { Game } from '@/types/futChampions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FutChampsWeek, Game } from '@/types/futChampions';
-import { Trophy, Target, TrendingUp, BarChart3, Crosshair, Zap } from 'lucide-react';
+import { TrendingUp, TrendingDown, Users, Target, Shield, Percent, Bot } from 'lucide-react'; // Added Bot for Dribble Success
+import { useTheme } from '@/hooks/useTheme';
 
-const CurrentRunStats = ({ week, games }: { week: FutChampsWeek | null, games: Game[] }) => {
-    
-    const runStats = useMemo(() => {
-        if (!week || !games || games.length === 0) return null;
+interface CurrentRunStatsProps {
+  games: Game[];
+}
 
-        const totalGames = games.length;
-        const totalWins = games.filter(g => g.result === 'win').length;
-        const totalLosses = games.filter(g => g.result === 'loss').length;
-        const totalGoals = games.reduce((sum, game) => sum + (game.user_goals || 0), 0);
-        const totalConceded = games.reduce((sum, game) => sum + (game.opponent_goals || 0), 0);
+const CurrentRunStats = ({ games }: CurrentRunStatsProps) => {
+  const { currentTheme } = useTheme();
 
-        const allTeamStats = games.map(g => g.team_statistics).flat().filter(Boolean);
-        const totalPossession = allTeamStats.reduce((sum, stats) => sum + (stats.possession || 50), 0);
-        const totalShots = allTeamStats.reduce((sum, stats) => sum + (stats.shots || 0), 0);
-        const totalShotsOnTarget = allTeamStats.reduce((sum, stats) => sum + (stats.shots_on_target || 0), 0);
-        const totalDribbleSuccess = allTeamStats.reduce((sum, stats) => sum + (stats.dribble_success_rate || 0), 0);
-        const gamesWithDribbleStats = allTeamStats.filter(stats => stats.dribble_success_rate !== null && stats.dribble_success_rate !== undefined).length;
-
-        const avgOpponentSkill = games.reduce((sum, game) => sum + game.opponent_skill, 0) / totalGames;
-        const winRate = (totalWins / totalGames) * 100;
-        
-        return {
-            winRate: winRate.toFixed(1),
-            wins: totalWins,
-            losses: totalLosses,
-            goalRatio: (totalConceded > 0 ? totalGoals / totalConceded : totalGoals).toFixed(2),
-            goals: totalGoals,
-            conceded: totalConceded,
-            shotAccuracy: totalShots > 0 ? ((totalShotsOnTarget / totalShots) * 100).toFixed(1) : '0',
-            dribbleSuccess: gamesWithDribbleStats > 0 ? (totalDribbleSuccess / gamesWithDribbleStats).toFixed(1) : '0',
-            currentStreak: week.current_streak || 0,
-            avgOpponentSkill: avgOpponentSkill.toFixed(1),
-        };
-    }, [week, games]);
-
-    if (!runStats) {
-        return (
-            <Card>
-                <CardContent className="text-center py-12">
-                    <Trophy className="h-12 w-12 mx-auto mb-4 text-gray-400 opacity-50" />
-                    <h3 className="text-lg font-medium mb-2">No Stats Yet</h3>
-                    <p className="text-muted-foreground">Play your first game of the week to see your stats here.</p>
-                </CardContent>
-            </Card>
-        );
+  const stats = useMemo(() => {
+    if (!games || games.length === 0) {
+      return {
+        wins: 0, losses: 0, winRate: 0,
+        goalsFor: 0, goalsAgainst: 0, goalDiff: 0,
+        avgGF: 0, avgGA: 0,
+        avgOpponentSkill: 0, avgStress: 0, avgServerQuality: 0,
+        totalXG: 0, totalXGA: 0, avgXG: 0, avgXGA: 0, xGDiff: 0,
+        avgPossession: 0, avgPassAccuracy: 0, avgDribbleSuccess: 0, // Added avgDribbleSuccess
+        rageQuits: 0, disconnects: 0,
+      };
     }
 
-    return (
-        <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Win Rate</CardTitle>
-                    <Trophy className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">{runStats.winRate}%</div>
-                    <p className="text-xs text-muted-foreground">{runStats.wins}W - {runStats.losses}L</p>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Goal Ratio</CardTitle>
-                    <Target className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">{runStats.goalRatio}</div>
-                    <p className="text-xs text-muted-foreground">{runStats.goals} For / {runStats.conceded} Against</p>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Shot Accuracy</CardTitle>
-                    <Crosshair className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">{runStats.shotAccuracy}%</div>
-                    <p className="text-xs text-muted-foreground">On target</p>
-                </CardContent>
-            </Card>
-             <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Dribble Success</CardTitle>
-                    <Zap className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">{runStats.dribbleSuccess}%</div>
-                    <p className="text-xs text-muted-foreground">Successful dribbles</p>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Current Streak</CardTitle>
-                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">{runStats.currentStreak}</div>
-                    <p className="text-xs text-muted-foreground">games</p>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Avg Opponent</CardTitle>
-                    <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">{runStats.avgOpponentSkill}/10</div>
-                    <p className="text-xs text-muted-foreground">skill level</p>
-                </CardContent>
-            </Card>
+    let wins = 0;
+    let goalsFor = 0;
+    let goalsAgainst = 0;
+    let opponentSkillSum = 0;
+    let stressSum = 0;
+    let serverQualitySum = 0;
+    let xgSum = 0;
+    let xgaSum = 0;
+    let possessionSum = 0;
+    let passAccuracySum = 0;
+    let dribbleSuccessSum = 0; // Added
+    let gamesWithStats = 0;
+    let gamesWithDribbleStats = 0; // Added
+    let rageQuits = 0;
+    let disconnects = 0;
+
+    games.forEach(game => {
+      if (game.result === 'win') wins++;
+      goalsFor += game.user_goals || 0;
+      goalsAgainst += game.opponent_goals || 0;
+      opponentSkillSum += game.opponent_skill || 5; // Default to 5 if missing
+      stressSum += game.stress_level || 5; // Default to 5
+      serverQualitySum += game.server_quality || 5; // Default to 5
+
+      if (game.team_stats) {
+        gamesWithStats++;
+        xgSum += game.team_stats.expected_goals || 0;
+        xgaSum += game.team_stats.expected_goals_against || 0;
+        possessionSum += game.team_stats.possession || 50; // Default to 50
+        passAccuracySum += game.team_stats.pass_accuracy || 75; // Default to 75
+        // Added Dribble Success aggregation
+        if (game.team_stats.dribble_success_rate !== null && game.team_stats.dribble_success_rate !== undefined) {
+          dribbleSuccessSum += game.team_stats.dribble_success_rate;
+          gamesWithDribbleStats++;
+        }
+      }
+
+      if (game.game_context === 'rage_quit') rageQuits++;
+      if (game.game_context === 'disconnect') disconnects++;
+    });
+
+    const losses = games.length - wins;
+    const winRate = games.length > 0 ? (wins / games.length) * 100 : 0;
+    const goalDiff = goalsFor - goalsAgainst;
+    const avgGF = games.length > 0 ? goalsFor / games.length : 0;
+    const avgGA = games.length > 0 ? goalsAgainst / games.length : 0;
+    const avgOpponentSkill = games.length > 0 ? opponentSkillSum / games.length : 0;
+    const avgStress = games.length > 0 ? stressSum / games.length : 0;
+    const avgServerQuality = games.length > 0 ? serverQualitySum / games.length : 0;
+    const avgXG = gamesWithStats > 0 ? xgSum / gamesWithStats : 0;
+    const avgXGA = gamesWithStats > 0 ? xgaSum / gamesWithStats : 0;
+    const xGDiff = xgSum - xgaSum; // Total difference
+    const avgPossession = gamesWithStats > 0 ? possessionSum / gamesWithStats : 0;
+    const avgPassAccuracy = gamesWithStats > 0 ? passAccuracySum / gamesWithStats : 0;
+    const avgDribbleSuccess = gamesWithDribbleStats > 0 ? dribbleSuccessSum / gamesWithDribbleStats : 0; // Added calculation
+
+
+    return {
+      wins, losses, winRate,
+      goalsFor, goalsAgainst, goalDiff,
+      avgGF, avgGA,
+      avgOpponentSkill, avgStress, avgServerQuality,
+      totalXG: xgSum, totalXGA: xgaSum, avgXG, avgXGA, xGDiff,
+      avgPossession, avgPassAccuracy, avgDribbleSuccess, // Added
+      rageQuits, disconnects,
+    };
+  }, [games]);
+
+  const statItems = [
+    { label: "Win Rate", value: `${stats.winRate.toFixed(0)}%`, Icon: TrendingUp, color: currentTheme.colors.win },
+    { label: "Wins", value: stats.wins, Icon: TrendingUp, color: currentTheme.colors.win },
+    { label: "Losses", value: stats.losses, Icon: TrendingDown, color: currentTheme.colors.loss },
+    { label: "Goals For", value: stats.goalsFor, Icon: Target, color: currentTheme.colors.foreground },
+    { label: "Goals Against", value: stats.goalsAgainst, Icon: Shield, color: currentTheme.colors.foreground },
+    { label: "Goal Diff", value: stats.goalDiff, Icon: TrendingUp, color: stats.goalDiff >= 0 ? currentTheme.colors.win : currentTheme.colors.loss },
+    { label: "Avg Poss.", value: `${stats.avgPossession.toFixed(0)}%`, Icon: Percent, color: currentTheme.colors.foreground },
+    { label: "Avg Pass Acc.", value: `${stats.avgPassAccuracy.toFixed(0)}%`, Icon: Percent, color: currentTheme.colors.foreground },
+    { label: "Avg Dribble %", value: stats.avgDribbleSuccess !== undefined ? `${stats.avgDribbleSuccess.toFixed(0)}%` : 'N/A', Icon: Bot, color: currentTheme.colors.foreground }, // Added display
+    { label: "Avg Opponent", value: stats.avgOpponentSkill.toFixed(1), Icon: Users, color: currentTheme.colors.foreground },
+    { label: "Avg xG", value: stats.avgXG.toFixed(1), Icon: TrendingUp, color: currentTheme.colors.foreground },
+    { label: "Avg xGA", value: stats.avgXGA.toFixed(1), Icon: TrendingDown, color: currentTheme.colors.foreground },
+  ];
+
+  return (
+    <div>
+       <h3 className="text-lg font-semibold mb-4 text-white">Current Run Stats ({games.length} Games)</h3>
+       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            {statItems.map(({ label, value, Icon, color }) => (
+                <div key={label} className="bg-background/20 rounded-lg p-3 text-center transition-colors hover:bg-background/40">
+                    <Icon className="h-5 w-5 mx-auto mb-1.5" style={{ color: color }}/>
+                    <p className="text-sm font-semibold text-white truncate">{value}</p>
+                    <p className="text-xs text-muted-foreground truncate">{label}</p>
+                </div>
+            ))}
         </div>
-    );
+    </div>
+  );
 };
 
 export default CurrentRunStats;
