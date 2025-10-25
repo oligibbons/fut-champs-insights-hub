@@ -324,3 +324,8 @@
   scrollbar-width: thin; /* "auto" or "thin" */
   scrollbar-color: rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05); /* thumb track */
 }
+
+/* Ensure inactive TabsContent with forceMount is hidden */
+[role="tabpanel"][data-state="inactive"] {
+  display: none !important;
+}
