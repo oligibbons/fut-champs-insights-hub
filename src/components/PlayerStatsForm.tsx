@@ -70,14 +70,13 @@ const PlayerStatInput = memo(({
 
     return (
         <div className="flex flex-col items-center space-y-1">
-             {/* --- FIX: Clearer Labels --- */}
             <Label htmlFor={`${playerId}-${field}`} className="text-xs font-medium text-muted-foreground flex items-center">
                 <Icon className="h-3 w-3 mr-1" />
                 {label}
             </Label>
             <div className="flex items-center gap-1">
                 {showButtons && (
-                     <Button type="button" variant="outline" size="icon" className="w-6 h-6 p-0 shrink-0"
+                     <Button type="button" variant="outline" size="icon" className="w-6 h-6 p-0 shrink-0 border-border/50 bg-background/50 hover:bg-muted/30" // Style adjustments
                         onClick={() => onAdjust(playerId, field, -1, step, min, max)} disabled={isMin} aria-label={`Decrease ${label}`}>
                         <Minus className="h-3 w-3" />
                      </Button>
@@ -89,12 +88,13 @@ const PlayerStatInput = memo(({
                     value={value} // Directly use the string value
                     onChange={handleInputChange}
                     onBlur={handleBlur}
-                    className={cn("h-7 text-xs font-semibold text-center px-1", inputWidth)}
+                    // --- Style adjustments for input ---
+                    className={cn("h-7 text-xs font-semibold text-center px-1 text-white bg-background/50 border-border/50 focus:border-primary focus:ring-primary", inputWidth)}
                     placeholder={String(min)}
                     aria-label={label}
                 />
                  {showButtons && (
-                    <Button type="button" variant="outline" size="icon" className="w-6 h-6 p-0 shrink-0"
+                    <Button type="button" variant="outline" size="icon" className="w-6 h-6 p-0 shrink-0 border-border/50 bg-background/50 hover:bg-muted/30" // Style adjustments
                         onClick={() => onAdjust(playerId, field, 1, step, min, max)} disabled={isMax} aria-label={`Increase ${label}`}>
                          <Plus className="h-3 w-3" />
                     </Button>
@@ -152,18 +152,19 @@ const PlayerStatsForm: React.FC<PlayerStatsFormProps> = ({ players = [], onStats
   // --- RENDER ---
   return (
     <div className="space-y-3">
-       <Button type="button" variant="outline" size="sm" onClick={setAllMinutes} className="text-xs">
+       <Button type="button" variant="outline" size="sm" onClick={setAllMinutes} className="text-xs bg-background/50 border-border/50 hover:bg-muted/30">
           Set All Minutes to {gameDuration}
       </Button>
 
-      {/* --- FIX: Improved Layout Grid --- */}
       <div className="space-y-4">
         {players.map((player) => (
-          <div key={player.id} className="p-3 bg-muted/30 rounded-lg border border-border/50">
+           // --- FIX: Apply glass card styling to each player row ---
+           <div key={player.id} className="p-3 bg-background/40 rounded-lg border border-border/30 shadow-sm backdrop-blur-sm">
             {/* Player Info Row */}
             <div className="flex justify-between items-center mb-3">
+               {/* Ensure text color is appropriate for the background */}
               <span className="text-sm font-medium text-white truncate pr-2">{player.name || 'Unnamed Player'}</span>
-              <span className="text-xs uppercase text-muted-foreground bg-background px-2 py-0.5 rounded">{player.position || 'N/A'}</span>
+              <span className="text-xs uppercase text-muted-foreground bg-background/70 px-2 py-0.5 rounded">{player.position || 'N/A'}</span>
             </div>
 
              {/* Stats Grid - Responsive Columns */}
