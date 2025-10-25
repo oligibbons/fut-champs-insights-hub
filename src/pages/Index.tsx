@@ -26,6 +26,9 @@ import PositionalHeatMap from '@/components/PositionalHeatMap';
 import logo from '/fut-trackr-logo.jpg'; 
 import { useTheme } from '@/hooks/useTheme'; // Import useTheme
 
+// --- ADD THIS IMPORT ---
+import RunChunkAnalysis from '@/components/RunChunkAnalysis';
+
 interface DashboardItem {
     id: string;
     component: React.FC;
@@ -48,6 +51,8 @@ const componentsMap: Record<string, React.FC> = {
     goalInvolvement: GoalInvolvementChart,
     cpsGauge: CPSGauge,
     positionalHeatMap: PositionalHeatMap,
+    // --- ADD TO MAP ---
+    runChunkAnalysis: RunChunkAnalysis,
 };
 
 const defaultLayout: DashboardItem[] = [
@@ -64,6 +69,8 @@ const defaultLayout: DashboardItem[] = [
     { id: 'playerHistoryTable', component: componentsMap.playerHistoryTable, order: 8 },
     // Analytics Tab
     { id: 'performanceRadar', component: componentsMap.performanceRadar, order: 9 },
+    // --- ADD TO LAYOUT (adjust order as you like) ---
+    { id: 'runChunkAnalysis', component: componentsMap.runChunkAnalysis, order: 9.5 },
     { id: 'matchTagAnalysis', component: componentsMap.matchTagAnalysis, order: 10 },
     { id: 'formationTracker', component: componentsMap.formationTracker, order: 11 },
     { id: 'cpsGauge', component: componentsMap.cpsGauge, order: 12 }, 
@@ -145,7 +152,9 @@ const Dashboard = () => {
             'playerHistoryTable', 'xgAnalytics', 'playerConsistency',
             'performanceRadar', 'matchTagAnalysis', 'formationTracker',
             'primaryInsight', 'goalInvolvement', 'cpsGauge', 'positionalHeatMap',
-            'overview' // The overview component now structures itself
+            'overview', // The overview component now structures itself
+            // --- ADD TO THIS LIST ---
+            'runChunkAnalysis'
         ];
         if (selfContainedComponents.includes(id)) {
              return <item.component key={item.id} />;
@@ -255,6 +264,8 @@ const Dashboard = () => {
 
                 <TabsContent value="analytics" className="space-y-6">
                     {findAndRenderSection('performanceRadar')}
+                    {/* --- IT WILL RENDER HERE AUTOMATICALLY --- */}
+                    {findAndRenderSection('runChunkAnalysis')}
                     {findAndRenderSection('matchTagAnalysis')}
                     {findAndRenderSection('formationTracker')}
                     {findAndRenderSection('cpsGauge')}
