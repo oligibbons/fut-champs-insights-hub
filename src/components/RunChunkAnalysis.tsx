@@ -1,100 +1,96 @@
 // src/components/RunChunkAnalysis.tsx
 import { useState, useMemo } from 'react';
-// --- Make sure WeeklyPerformance is imported correctly ---
-import { WeeklyPerformance } from '@/types/futChampions'; 
+import { WeeklyPerformance } from '@/types/futChampions';
 import {
   processRunForChunks,
   calculateAllTimeChunkStats,
   AllTimeChunkStats,
   RunChunkStats,
 } from '@/utils/runAnalytics';
-import { useAllRunsData, WeeklyPerformanceWithGames } from '@/hooks/useAllRunsData';
+import { useAllRunsData } from '@/hooks/useAllRunsData'; // Removed WeeklyPerformanceWithGames, hook handles type
 import { RunChunkCard } from './RunChunkCard';
 import DashboardSection from './DashboardSection';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import WeekCompletionPopup from './WeekCompletionPopup';
 
 interface RunChunkAnalysisProps {
-  // No props needed now
+  // No props needed
 }
 
 const RunChunkAnalysis: React.FC<RunChunkAnalysisProps> = () => {
   const [view, setView] = useState<'current' | 'best' | 'worst'>('current');
+  // Hook now guarantees runs is an array
   const { runs, loading: loadingAllRuns } = useAllRunsData();
   const [selectedRun, setSelectedRun] = useState<WeeklyPerformance | null>(null);
 
-  // Find the most recent run to display as "Current"
+  // Find the most recent run
   const currentRun = useMemo(() => {
-    // --- FIX: Check (runs || []) ---
-    if (loadingAllRuns || (runs || []).length === 0) return null; 
-    // Assuming runs are sorted descending from the hook
-    return runs[0];
+    // Check loading state and if the runs array is not empty
+    if (loadingAllRuns || runs.length === 0) return null;
+    return runs[0]; // First item is the most recent (due to hook's sorting)
   }, [runs, loadingAllRuns]);
 
   // Process stats for the "Current" view
   const currentRunStats = useMemo(() => {
-    // --- FIX: Ensure currentRun has games ---
-    if (!currentRun || !Array.isArray(currentRun.games)) return null; 
+    // processRunForChunks now handles null check internally
     return processRunForChunks(currentRun);
   }, [currentRun]);
 
   // Process stats for "Best" / "Worst" views
   const allTimeStats = useMemo(() => {
-    // --- FIX: Check (runs || []) ---
-    if (loadingAllRuns || (runs || []).length === 0) return null; 
-    // Pass the potentially empty but guaranteed array `runs`
-    return calculateAllTimeChunkStats(runs); 
+    // Check loading and ensure runs is an array before calculating
+    if (loadingAllRuns || !Array.isArray(runs)) return null;
+    // calculateAllTimeChunkStats now handles empty array internally
+    return calculateAllTimeChunkStats(runs);
   }, [runs, loadingAllRuns]);
 
-  // Determine which stats to display based on the selected view
-  const displayData = useMemo(() => {
+  // Determine which *RunChunkStats* object contains the data we need for each card
+  const displayRunStatsSource = useMemo(() => {
     switch (view) {
       case 'best':
         return {
-          beginning: allTimeStats?.bestBeginning,
-          middle: allTimeStats?.bestMiddle,
-          end: allTimeStats?.bestEnd,
+          beginningSource: allTimeStats?.bestBeginning,
+          middleSource: allTimeStats?.bestMiddle,
+          endSource: allTimeStats?.bestEnd,
         };
       case 'worst':
         return {
-          beginning: allTimeStats?.worstBeginning,
-          middle: allTimeStats?.worstMiddle,
-          end: allTimeStats?.worstEnd,
+          beginningSource: allTimeStats?.worstBeginning,
+          middleSource: allTimeStats?.worstMiddle,
+          endSource: allTimeStats?.worstEnd,
         };
       case 'current':
       default:
-        // For current, return the specific chunks from currentRunStats
+        // For current, all sources point to the single currentRunStats object
         return {
-          beginning: currentRunStats, // This RunChunkStats obj contains beginning, middle, end
-          middle: currentRunStats,
-          end: currentRunStats,
+          beginningSource: currentRunStats,
+          middleSource: currentRunStats,
+          endSource: currentRunStats,
         };
     }
   }, [view, currentRunStats, allTimeStats]);
 
   const handleCardClick = (runStats: RunChunkStats | null | undefined) => {
-    // Allow clicking current run card if needed, or keep original logic
-    // if (view === 'current' || !runStats) return; 
-    if (!runStats || !runStats.runData) return; // Need runData to show popup
+    // Only allow click if we have valid runData associated
+    if (!runStats?.runData) return;
     setSelectedRun(runStats.runData);
   };
 
-  // Helper to safely get the specific chunk data
-  const getChunk = (
-    data: RunChunkStats | null | undefined, 
+  // Helper to safely get the specific chunk *record* (wins, losses etc.)
+  const getChunkRecord = (
+    source: RunChunkStats | null | undefined,
     chunkKey: 'beginning' | 'middle' | 'end'
-  ) => {
-      if (!data) return null;
-      return data[chunkKey];
-  };
-  
-  // Helper to safely get the run name
-  const getRunName = (data: RunChunkStats | null | undefined) => {
-      if (!data) return '...'; // Loading or no data
-      if (view === 'current') return `Current: ${data.runName ?? ''}`;
-      return data.runName;
+  ): ChunkRecord | null => {
+      if (!source) return null;
+      return source[chunkKey] ?? null; // Return the specific chunk record or null
   };
 
+  // Helper to safely get the run name for display
+  const getRunNameForDisplay = (source: RunChunkStats | null | undefined): string | null => {
+      if (!source) return view === 'current' ? null : '...'; // Show '...' only for best/worst loading
+      if (view === 'current') return null; // Don't show name for current view cards
+      return source.runName; // Show name for best/worst
+  };
 
   return (
     <DashboardSection title="Run Form Analysis (Games 1-15)">
@@ -107,6 +103,7 @@ const RunChunkAnalysis: React.FC<RunChunkAnalysisProps> = () => {
           }}
           className="w-full"
         >
+          {/* Use flex-1 on items to ensure they fill width equally */}
           <ToggleGroupItem value="current" aria-label="Current Run" className="flex-1">
             Current
           </ToggleGroupItem>
@@ -119,27 +116,28 @@ const RunChunkAnalysis: React.FC<RunChunkAnalysisProps> = () => {
         </ToggleGroup>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {/* --- FIX: Use helper functions to safely access data --- */}
+          {/* Pass the specific chunk record and source RunChunkStats */}
           <RunChunkCard
             title="Games 1-5"
-            stats={getChunk(displayData.beginning, 'beginning')}
-            runName={getRunName(displayData.beginning)}
+            stats={getChunkRecord(displayRunStatsSource.beginningSource, 'beginning')}
+            runName={getRunNameForDisplay(displayRunStatsSource.beginningSource)}
             isLoading={loadingAllRuns}
-            onClick={() => handleCardClick(displayData.beginning)}
+            // Pass the source RunChunkStats object itself for the click handler
+            onClick={view !== 'current' ? () => handleCardClick(displayRunStatsSource.beginningSource) : undefined}
           />
           <RunChunkCard
             title="Games 6-10"
-            stats={getChunk(displayData.middle, 'middle')}
-            runName={getRunName(displayData.middle)}
+            stats={getChunkRecord(displayRunStatsSource.middleSource, 'middle')}
+            runName={getRunNameForDisplay(displayRunStatsSource.middleSource)}
             isLoading={loadingAllRuns}
-            onClick={() => handleCardClick(displayData.middle)}
+            onClick={view !== 'current' ? () => handleCardClick(displayRunStatsSource.middleSource) : undefined}
           />
           <RunChunkCard
             title="Games 11-15"
-            stats={getChunk(displayData.end, 'end')}
-            runName={getRunName(displayData.end)}
+            stats={getChunkRecord(displayRunStatsSource.endSource, 'end')}
+            runName={getRunNameForDisplay(displayRunStatsSource.endSource)}
             isLoading={loadingAllRuns}
-            onClick={() => handleCardClick(displayData.end)}
+            onClick={view !== 'current' ? () => handleCardClick(displayRunStatsSource.endSource) : undefined}
           />
         </div>
       </div>
@@ -148,7 +146,7 @@ const RunChunkAnalysis: React.FC<RunChunkAnalysisProps> = () => {
       <WeekCompletionPopup
         isOpen={!!selectedRun}
         onClose={() => setSelectedRun(null)}
-        runData={selectedRun}
+        runData={selectedRun} // Pass the selected WeeklyPerformance object
       />
     </DashboardSection>
   );
