@@ -224,15 +224,15 @@ type PlayerStatFormData = {
 interface GameRecordFormProps {
   onSubmit: (
     // ** Use reconciled Game type **
-    gameData: Omit<Game, 'id' | 'created_at' | 'week_id' | 'score_line' | 'date_played' | 'player_performances' | 'team_stats' >,
+    gameData: Omit<Game, 'id' | 'created_at' | 'week_id' | 'score_line' | 'date_played' | 'player_performances' | 'team_stats' | 'user_id'>, // Removed user_id as it's added in parent
     playerPerformances: PlayerPerformanceInsert[],
     teamStats: TeamStatisticsInsert
   ) => void;
-  isLoading: boolean;
-  game?: Game ; // Use reconciled Game type
+  isLoading: boolean; // Renamed from isSubmitting
+  game?: Game | null; // Renamed from initialData, allow null
   weekId: string;
   gameVersion: string;
-  nextGameNumber: number;
+  nextGameNumber: number; // Renamed from gameNumber
   onCancel: () => void;
 }
 
@@ -247,12 +247,43 @@ const GameRecordForm = ({
 
   const isEditing = !!game?.id;
 
+  // --- THIS IS THE FIX ---
+  // We now create a *complete*, valid default object manually
+  // instead of trying to parse an empty one.
   const defaultValues = useMemo((): GameFormData => {
-    const baseDefaults: GameFormData = gameFormSchema.parse({}); // Use Zod default values
-
-    // Override specific defaults that depend on context
-    baseDefaults.game_number = isEditing ? (game?.game_number ?? nextGameNumber) : nextGameNumber;
-    baseDefaults.squad_id = squads.find(s => s.is_default)?.id || squads[0]?.id || '';
+    // This is the valid, base state for a NEW game
+    const baseDefaults: GameFormData = {
+        game_number: nextGameNumber,
+        user_goals: 0,
+        opponent_goals: 0,
+        result: 'win', // Will be auto-corrected by useEffect anyway
+        overtime_result: 'none',
+        opponent_username: '',
+        squad_quality_comparison: 'even',
+        game_context: 'normal',
+        comments: '',
+        duration: 90,
+        stress_level: 5,
+        squad_id: squads.find(s => s.is_default)?.id || squads[0]?.id || '',
+        server_quality: 5,
+        cross_play_enabled: false,
+        tags: [],
+        team_stats: {
+            possession: 50,
+            passes: 100,
+            pass_accuracy: 75,
+            shots: 10,
+            shots_on_target: 5,
+            corners: 3,
+            fouls: 8,
+            yellow_cards: 0,
+            red_cards: 0,
+            expected_goals: 1.0,
+            expected_goals_against: 1.0,
+            dribble_success_rate: 70,
+        },
+        player_stats: [],
+    };
 
     if (isEditing && game) {
       // Map DB PlayerPerformance to form PlayerStatFormData
@@ -269,50 +300,39 @@ const GameRecordForm = ({
             own_goals: p.own_goals ?? 0,
       }));
 
-       // Merge existing game data over base defaults
-        const mergedData = {
-          ...baseDefaults, // Start with base Zod defaults
-          game_number: game.game_number,
-          user_goals: game.user_goals ?? 0,
-          opponent_goals: game.opponent_goals ?? 0,
-          result: game.result,
-          overtime_result: game.overtime_result ?? 'none',
-          opponent_username: game.opponent_username ?? '',
-          squad_quality_comparison: game.squad_quality_comparison ?? 'even',
-          game_context: game.game_context ?? 'normal',
-          comments: game.comments ?? '',
-          duration: game.duration ?? 90,
-          stress_level: game.stress_level ?? 5,
-          squad_id: game.squad_used ?? baseDefaults.squad_id,
-          server_quality: game.server_quality ?? 5,
-          cross_play_enabled: game.cross_play_enabled ?? false,
-          tags: game.tags ?? [],
-          team_stats: { // Carefully merge team_stats
-            possession: game.team_stats?.possession ?? baseDefaults.team_stats.possession,
-            passes: game.team_stats?.passes ?? baseDefaults.team_stats.passes,
-            pass_accuracy: game.team_stats?.pass_accuracy ?? baseDefaults.team_stats.pass_accuracy,
-            shots: game.team_stats?.shots ?? baseDefaults.team_stats.shots,
-            shots_on_target: game.team_stats?.shots_on_target ?? baseDefaults.team_stats.shots_on_target,
-            corners: game.team_stats?.corners ?? baseDefaults.team_stats.corners,
-            fouls: game.team_stats?.fouls ?? baseDefaults.team_stats.fouls,
-            yellow_cards: game.team_stats?.yellow_cards ?? baseDefaults.team_stats.yellow_cards,
-            red_cards: game.team_stats?.red_cards ?? baseDefaults.team_stats.red_cards,
-            expected_goals: game.team_stats?.expected_goals ?? baseDefaults.team_stats.expected_goals,
-            expected_goals_against: game.team_stats?.expected_goals_against ?? baseDefaults.team_stats.expected_goals_against,
-            dribble_success_rate: game.team_stats?.dribble_success_rate ?? baseDefaults.team_stats.dribble_success_rate,
-          },
-          player_stats: formPlayerStats,
-        };
-        // Validate the merged data against the schema
-        try {
-            return gameFormSchema.parse(mergedData);
-        } catch (e) {
-            console.error("Error parsing default values during edit:", e);
-            return baseDefaults; // Fallback to base defaults on error
-        }
+      // Merge existing game data over base defaults
+       const mergedData = {
+         ...baseDefaults, // Start with valid base defaults
+         game_number: game.game_number,
+         user_goals: game.user_goals ?? 0,
+         opponent_goals: game.opponent_goals ?? 0,
+         result: game.result,
+         overtime_result: game.overtime_result ?? 'none',
+         opponent_username: game.opponent_username ?? '',
+         squad_quality_comparison: game.squad_quality_comparison ?? 'even',
+         game_context: game.game_context ?? 'normal',
+         comments: game.comments ?? '',
+         duration: game.duration ?? 90,
+         stress_level: game.stress_level ?? 5,
+         squad_id: game.squad_used ?? baseDefaults.squad_id,
+         server_quality: game.server_quality ?? 5,
+         cross_play_enabled: game.cross_play_enabled ?? false,
+         tags: game.tags ?? [],
+         team_stats: { // Safer merge
+           ...baseDefaults.team_stats,
+           ...(game.team_stats || {}), // Spread saved stats, or empty object if null
+         },
+         player_stats: formPlayerStats,
+       };
+       // Return the merged data directly. The resolver will validate it.
+       return mergedData;
     }
+
+    // For a new game, return the valid base defaults
     return baseDefaults;
   }, [isEditing, game, nextGameNumber, squads]);
+  // --- END OF FIX ---
+
 
   const form = useForm<GameFormData>({
     resolver: zodResolver(gameFormSchema),
@@ -373,7 +393,7 @@ const GameRecordForm = ({
              }
         }
     } else if (!squadsLoading && watchedPlayerStats && watchedPlayerStats.length > 0) { // No squad selected or loading finished, clear players if any exist
-       // setValue('player_stats', [], { shouldValidate: true, shouldDirty: true });
+        // setValue('player_stats', [], { shouldValidate: true, shouldDirty: true });
         // Maybe don't auto-clear? Let user manage? Or only clear if squadId becomes truly empty?
     }
   }, [selectedSquad, watchedDuration, setValue, getValues, isEditing, dirtyFields.squad_id, watchedPlayerStats, squadsLoading]);
@@ -409,18 +429,83 @@ const GameRecordForm = ({
 
 
   // Auto-set result
-  useEffect(() => { /* ... same code ... */ }, [watchedUserGoals, watchedOpponentGoals, watchedOvertimeResult, setValue, getValues]);
+  useEffect(() => {
+     // Don't auto-set if it's a draw and an OT result is selected
+     if (watchedUserGoals === watchedOpponentGoals && watchedOvertimeResult !== 'none') {
+        if (watchedOvertimeResult === 'win_ot' || watchedOvertimeResult === 'win_pen') {
+            setValue('result', 'win', { shouldValidate: true });
+        } else if (watchedOvertimeResult === 'loss_ot' || watchedOvertimeResult === 'loss_pen') {
+            setValue('result', 'loss', { shouldValidate: true });
+        }
+     } else { // Standard win/loss
+        const newResult = watchedUserGoals > watchedOpponentGoals ? 'win' : 'loss';
+        if (getValues('result') !== newResult) {
+             setValue('result', newResult, { shouldValidate: true });
+        }
+        // If goals are changed to not be a draw, reset OT result
+        if (watchedUserGoals !== watchedOpponentGoals && watchedOvertimeResult !== 'none') {
+             setValue('overtime_result', 'none', { shouldValidate: true });
+        }
+     }
+  }, [watchedUserGoals, watchedOpponentGoals, watchedOvertimeResult, setValue, getValues]);
 
   // Determine game_context
-  useEffect(() => { /* ... same code ... */ }, [watchedTags, watchedUserGoals, watchedOpponentGoals, watchedOvertimeResult, setValue, getValues]);
+  useEffect(() => {
+     const tags = watchedTags || [];
+     let newContext = 'normal';
+
+     // Check for specific tags
+     const rageQuitTag = tags.includes('Opponent Rage Quit') || tags.includes('I Rage Quit');
+     const freeWinTag = tags.includes('Free Win Received') || tags.includes('Free Win Given Away');
+     const disconnectTag = tags.includes('Disconnected');
+
+     // Check score-based context if no tag context
+     if (rageQuitTag) {
+        newContext = tags.includes('I Rage Quit') ? 'rage_quit_own' : 'rage_quit';
+     } else if (freeWinTag) {
+        newContext = tags.includes('Free Win Given Away') ? 'free_win_given' : 'free_win';
+     } else if (disconnectTag) {
+        newContext = 'disconnect';
+     } else if (watchedOvertimeResult === 'win_ot' || watchedOvertimeResult === 'loss_ot') {
+        newContext = 'extra_time';
+     } else if (watchedOvertimeResult === 'win_pen' || watchedOvertimeResult === 'loss_pen') {
+         newContext = 'penalties';
+     }
+     // Add more contexts based on tags or scores if needed...
+
+     if (getValues('game_context') !== newContext) {
+        setValue('game_context', newContext, { shouldValidate: true, shouldDirty: true });
+     }
+  }, [watchedTags, watchedUserGoals, watchedOpponentGoals, watchedOvertimeResult, setValue, getValues]);
 
   // Add Substitute Logic
-  const addSubstitute = () => { /* ... same code ... */ };
+  const addSubstitute = () => {
+     if (!selectedSquad) {
+         toast({ title: "No Squad Selected", description: "Please select a squad to add substitutes from.", variant: "destructive" });
+         return;
+     }
+     // This logic would open a modal to select a sub from selectedSquad.squad_players
+     // For now, let's add a blank entry
+     const currentPlayers = getValues('player_stats') || [];
+     const newSub: PlayerStatFormData = {
+        id: crypto.randomUUID(), // Temp ID
+        name: "Substitute",
+        position: "SUB",
+        minutes_played: 0,
+        goals: 0,
+        assists: 0,
+        rating: 6.0,
+        yellow_cards: 0,
+        red_cards: 0,
+        own_goals: 0,
+     };
+     setValue('player_stats', [...currentPlayers, newSub], { shouldValidate: true, shouldDirty: true });
+  };
 
   // --- SUBMIT HANDLER (Updated) ---
   const processSubmit = (data: GameFormData) => {
-     // Map form PlayerStatFormData back to PlayerPerformanceInsert
-     const playerPerformancesSubmit: PlayerPerformanceInsert[] = (data.player_stats || [])
+      // Map form PlayerStatFormData back to PlayerPerformanceInsert
+      const playerPerformancesSubmit: PlayerPerformanceInsert[] = (data.player_stats || [])
         .filter(p => p.minutes_played > 0)
         .map(p => ({
             user_id: user!.id,
@@ -434,17 +519,18 @@ const GameRecordForm = ({
             yellow_cards: p.yellow_cards,
             red_cards: p.red_cards > 0 ? 1 : 0,
             own_goals: p.own_goals,
+            // game_id and week_id will be set by the parent/server logic
         }));
 
     // Explicitly create gameDataSubmit matching the expected type for onSubmit
-     const gameDataSubmit: Omit<Game, 'id' | 'created_at' | 'week_id' | 'score_line' | 'date_played' | 'player_performances' | 'team_stats'> = {
+     const gameDataSubmit: Omit<Game, 'id' | 'created_at' | 'week_id' | 'score_line' | 'date_played' | 'player_performances' | 'team_stats' | 'user_id'> = {
         game_number: data.game_number,
-        user_id: user!.id, // Include user_id if needed by parent
+        // user_id: user!.id, // Parent's handler adds this
         user_goals: data.user_goals,
         opponent_goals: data.opponent_goals,
         result: data.result,
         overtime_result: data.overtime_result,
-        opponent_skill: data.opponent_skill, // Keep if DB still has it, otherwise remove
+        // opponent_skill: data.opponent_skill, // This was removed
         opponent_username: data.opponent_username || null, // Ensure null if empty
         squad_quality_comparison: data.squad_quality_comparison, // Added
         game_context: data.game_context,
@@ -455,15 +541,13 @@ const GameRecordForm = ({
         server_quality: data.server_quality,
         cross_play_enabled: data.cross_play_enabled,
         tags: data.tags,
-        game_version: gameVersion,
-        // Omitted fields set by DB or parent: time_played, actual_game_time, rage_moments, game_rating, game_score, opponent_xg
-    };
-    // If opponent_skill was fully removed from DB and Game type:
-    // delete (gameDataSubmit as any).opponent_skill;
+        game_version: gameVersion, // Pass this from props
+     };
 
 
     const teamStatsSubmit: TeamStatisticsInsert = {
         user_id: user!.id,
+        // game_id and week_id will be set by the parent/server logic
         possession: data.team_stats.possession,
         passes: data.team_stats.passes,
         pass_accuracy: data.team_stats.pass_accuracy,
@@ -478,11 +562,11 @@ const GameRecordForm = ({
         dribble_success_rate: data.team_stats.dribble_success_rate, // Added
     };
 
-    const hasNoStatsTag = data.tags?.some(tagName => matchTags.find(t => t.name === tagName)?.specialRule === 'no_stats');
+    const hasNoStatsTag = data.tags?.some(tagName => matchTags.find(t => t.id === tagName || t.name === tagName)?.specialRule === 'no_stats');
 
-    // ** Adjust cast if opponent_skill was removed from Game type **
+
     onSubmit(
-        gameDataSubmit as Omit<Game, 'id' | 'created_at' | 'week_id' | 'score_line'>, // Use original cast if onSubmit expects it
+        gameDataSubmit, // Removed the cast
         hasNoStatsTag ? [] : playerPerformancesSubmit,
         hasNoStatsTag ? {} as TeamStatisticsInsert : teamStatsSubmit
     );
@@ -499,11 +583,11 @@ const GameRecordForm = ({
 
             <Tabs defaultValue="details" className="flex flex-col flex-1 min-h-0">
               <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 sticky top-0 z-10 bg-background/80 backdrop-blur-sm">
-                 {/* ... TabsTriggers ... */}
-                 <TabsTrigger value="details"><Trophy className="h-4 w-4 mr-1 md:mr-2" />Match</TabsTrigger>
-                 <TabsTrigger value="opponent"><Shield className="h-4 w-4 mr-1 md:mr-2" />Opponent</TabsTrigger>
-                 <TabsTrigger value="team"><BarChartHorizontal className="h-4 w-4 mr-1 md:mr-2" />Team</TabsTrigger>
-                 <TabsTrigger value="players"><Star className="h-4 w-4 mr-1 md:mr-2" />Players</TabsTrigger>
+                   {/* ... TabsTriggers ... */}
+                   <TabsTrigger value="details"><Trophy className="h-4 w-4 mr-1 md:mr-2" />Match</TabsTrigger>
+                   <TabsTrigger value="opponent"><Shield className="h-4 w-4 mr-1 md:mr-2" />Opponent</TabsTrigger>
+                   <TabsTrigger value="team"><BarChartHorizontal className="h-4 w-4 mr-1 md:mr-2" />Team</TabsTrigger>
+                   <TabsTrigger value="players"><Star className="h-4 w-4 mr-1 md:mr-2" />Players</TabsTrigger>
               </TabsList>
 
               {/* Added ScrollArea around the TabsContent container */}
@@ -531,27 +615,27 @@ const GameRecordForm = ({
                     <div className="text-center space-y-4">
                       <Label className="text-lg font-semibold block">Final Score</Label>
                       <div className="flex items-center justify-center gap-2 md:gap-4">
-                         {/* Your Score */}
-                         <div className="flex flex-col items-center flex-1 max-w-[150px]">
-                              <Label className="text-sm font-medium text-primary mb-1">You</Label>
-                              <div className="flex items-center w-full">
-                                  <Button type="button" variant="outline" size="icon" className="w-8 h-8 p-0 shrink-0" onClick={() => adjustNumericalValue('user_goals', -1, 1, 0, 99)} disabled={watchedUserGoals <= 0}><Minus className="h-4 w-4" /></Button>
-                                  <FormField control={control} name="user_goals" render={({ field }) => ( <FormItem className="flex-1 mx-1"> <FormControl><Input {...field} type="text" inputMode="numeric" className="h-16 w-full text-center text-4xl px-0" onChange={(e) => /^\d*$/.test(e.target.value) && field.onChange(e.target.value === '' ? '' : parseInt(e.target.value,10))} onBlur={() => field.onChange(Math.max(0, Math.min(99, field.value || 0)))} /></FormControl> </FormItem> )} />
-                                  <Button type="button" variant="outline" size="icon" className="w-8 h-8 p-0 shrink-0" onClick={() => adjustNumericalValue('user_goals', 1, 1, 0, 99)}><Plus className="h-4 w-4" /></Button>
-                              </div>
-                              <FormMessage>{errors.user_goals?.message}</FormMessage>
-                         </div>
-                         <span className="text-4xl font-bold text-muted-foreground pt-5">:</span>
-                         {/* Opponent Score */}
-                         <div className="flex flex-col items-center flex-1 max-w-[150px]">
+                          {/* Your Score */}
+                          <div className="flex flex-col items-center flex-1 max-w-[150px]">
+                               <Label className="text-sm font-medium text-primary mb-1">You</Label>
+                               <div className="flex items-center w-full">
+                                   <Button type="button" variant="outline" size="icon" className="w-8 h-8 p-0 shrink-0" onClick={() => adjustNumericalValue('user_goals', -1, 1, 0, 99)} disabled={watchedUserGoals <= 0}><Minus className="h-4 w-4" /></Button>
+                                   <FormField control={control} name="user_goals" render={({ field }) => ( <FormItem className="flex-1 mx-1"> <FormControl><Input {...field} type="text" inputMode="numeric" className="h-16 w-full text-center text-4xl px-0" onChange={(e) => /^\d*$/.test(e.target.value) && field.onChange(e.target.value === '' ? '' : parseInt(e.target.value,10))} onBlur={() => field.onChange(Math.max(0, Math.min(99, isNaN(field.value) ? 0 : field.value)))} /></FormControl> </FormItem> )} />
+                                   <Button type="button" variant="outline" size="icon" className="w-8 h-8 p-0 shrink-0" onClick={() => adjustNumericalValue('user_goals', 1, 1, 0, 99)}><Plus className="h-4 w-4" /></Button>
+                               </div>
+                               <FormMessage>{errors.user_goals?.message}</FormMessage>
+                          </div>
+                          <span className="text-4xl font-bold text-muted-foreground pt-5">:</span>
+                          {/* Opponent Score */}
+                          <div className="flex flex-col items-center flex-1 max-w-[150px]">
                            <Label className="text-sm font-medium text-red-500 mb-1">Opponent</Label>
                            <div className="flex items-center w-full">
-                                  <Button type="button" variant="outline" size="icon" className="w-8 h-8 p-0 shrink-0" onClick={() => adjustNumericalValue('opponent_goals', -1, 1, 0, 99)} disabled={watchedOpponentGoals <= 0}><Minus className="h-4 w-4" /></Button>
-                                  <FormField control={control} name="opponent_goals" render={({ field }) => ( <FormItem className="flex-1 mx-1"> <FormControl><Input {...field} type="text" inputMode="numeric" className="h-16 w-full text-center text-4xl px-0" onChange={(e) => /^\d*$/.test(e.target.value) && field.onChange(e.target.value === '' ? '' : parseInt(e.target.value,10))} onBlur={() => field.onChange(Math.max(0, Math.min(99, field.value || 0)))} /></FormControl> </FormItem> )} />
-                                  <Button type="button" variant="outline" size="icon" className="w-8 h-8 p-0 shrink-0" onClick={() => adjustNumericalValue('opponent_goals', 1, 1, 0, 99)}><Plus className="h-4 w-4" /></Button>
-                              </div>
-                             <FormMessage>{errors.opponent_goals?.message}</FormMessage>
-                         </div>
+                                   <Button type="button" variant="outline" size="icon" className="w-8 h-8 p-0 shrink-0" onClick={() => adjustNumericalValue('opponent_goals', -1, 1, 0, 99)} disabled={watchedOpponentGoals <= 0}><Minus className="h-4 w-4" /></Button>
+                                   <FormField control={control} name="opponent_goals" render={({ field }) => ( <FormItem className="flex-1 mx-1"> <FormControl><Input {...field} type="text" inputMode="numeric" className="h-16 w-full text-center text-4xl px-0" onChange={(e) => /^\d*$/.test(e.target.value) && field.onChange(e.target.value === '' ? '' : parseInt(e.target.value,10))} onBlur={() => field.onChange(Math.max(0, Math.min(99, isNaN(field.value) ? 0 : field.value)))} /></FormControl> </FormItem> )} />
+                                   <Button type="button" variant="outline" size="icon" className="w-8 h-8 p-0 shrink-0" onClick={() => adjustNumericalValue('opponent_goals', 1, 1, 0, 99)}><Plus className="h-4 w-4" /></Button>
+                               </div>
+                               <FormMessage>{errors.opponent_goals?.message}</FormMessage>
+                          </div>
                       </div>
                     </div>
                     {/* Overtime/Penalty Result */}
@@ -581,121 +665,121 @@ const GameRecordForm = ({
 
                   {/* --- Opponent Tab (Updated) --- */}
                   <TabsContent value="opponent" className="space-y-6 mt-0">
-                      <FormField control={control} name="opponent_username" render={({ field }) => ( <FormItem><FormLabel>Opponent Username</FormLabel><FormControl><Input {...field} placeholder="(Optional)" /></FormControl><FormMessage /></FormItem> )} />
-                      {/* Squad Quality Comparison */}
-                       <FormField control={control} name="squad_quality_comparison" render={({ field }) => (
-                           <FormItem className="space-y-3 pt-4 border-t border-border/20">
-                               <FormLabel>Squad Quality Comparison</FormLabel>
-                               <FormControl>
-                                   <RadioGroup onValueChange={field.onChange} defaultValue={field.value ?? 'even'} className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
-                                       <FormItem className="flex items-center space-x-3 space-y-0"> <FormControl><RadioGroupItem value="opponent_better" /></FormControl><FormLabel className="font-normal">Opponent's Squad was Better</FormLabel> </FormItem>
-                                       <FormItem className="flex items-center space-x-3 space-y-0"> <FormControl><RadioGroupItem value="even" /></FormControl><FormLabel className="font-normal">Squads were Even</FormLabel> </FormItem>
-                                       <FormItem className="flex items-center space-x-3 space-y-0"> <FormControl><RadioGroupItem value="mine_better" /></FormControl><FormLabel className="font-normal">My Squad was Better</FormLabel> </FormItem>
-                                   </RadioGroup>
-                               </FormControl>
-                               <FormMessage />
-                           </FormItem>
-                       )}/>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 pt-4 border-t border-border/20">
-                          {/* Server Quality Slider */}
-                          <FormField control={control} name="server_quality" render={({ field }) => ( <FormItem><FormLabel>Server Quality: <span className="font-bold text-primary">{field.value ?? 5}</span>/10</FormLabel><FormControl><Slider value={[field.value ?? 5]} onValueChange={(v) => field.onChange(v[0])} max={10} step={1} min={1} /></FormControl><FormMessage /></FormItem>)}/>
-                          {/* Stress Level Slider */}
-                          <FormField control={control} name="stress_level" render={({ field }) => ( <FormItem><FormLabel>Your Stress Level: <span className="font-bold text-primary">{field.value ?? 5}</span>/10</FormLabel><FormControl><Slider value={[field.value ?? 5]} onValueChange={(v) => field.onChange(v[0])} max={10} step={1} min={1} /></FormControl><FormMessage /></FormItem>)}/>
-                          {/* Cross Play Switch */}
-                          <FormField control={control} name="cross_play_enabled" render={({ field }) => ( <FormItem className="flex flex-row items-center justify-between rounded-lg border border-border/20 p-3 shadow-sm mt-4 col-span-1 md:col-span-2"><div className="space-y-0.5"><FormLabel>Cross-Platform Match</FormLabel></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl></FormItem> )}/>
-                      </div>
-                       {/* Opponent Skill Slider, Formation Input REMOVED */}
+                       <FormField control={control} name="opponent_username" render={({ field }) => ( <FormItem><FormLabel>Opponent Username</FormLabel><FormControl><Input {...field} placeholder="(Optional)" /></FormControl><FormMessage /></FormItem> )} />
+                       {/* Squad Quality Comparison */}
+                        <FormField control={control} name="squad_quality_comparison" render={({ field }) => (
+                            <FormItem className="space-y-3 pt-4 border-t border-border/20">
+                                <FormLabel>Squad Quality Comparison</FormLabel>
+                                <FormControl>
+                                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value ?? 'even'} className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+                                        <FormItem className="flex items-center space-x-3 space-y-0"> <FormControl><RadioGroupItem value="opponent_better" /></FormControl><FormLabel className="font-normal">Opponent's Squad was Better</FormLabel> </FormItem>
+                                        <FormItem className="flex items-center space-x-3 space-y-0"> <FormControl><RadioGroupItem value="even" /></FormControl><FormLabel className="font-normal">Squads were Even</FormLabel> </FormItem>
+                                        <FormItem className="flex items-center space-x-3 space-y-0"> <FormControl><RadioGroupItem value="mine_better" /></FormControl><FormLabel className="font-normal">My Squad was Better</FormLabel> </FormItem>
+                                    </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}/>
+                       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 pt-4 border-t border-border/20">
+                           {/* Server Quality Slider */}
+                           <FormField control={control} name="server_quality" render={({ field }) => ( <FormItem><FormLabel>Server Quality: <span className="font-bold text-primary">{field.value ?? 5}</span>/10</FormLabel><FormControl><Slider value={[field.value ?? 5]} onValueChange={(v) => field.onChange(v[0])} max={10} step={1} min={1} /></FormControl><FormMessage /></FormItem>)}/>
+                           {/* Stress Level Slider */}
+                           <FormField control={control} name="stress_level" render={({ field }) => ( <FormItem><FormLabel>Your Stress Level: <span className="font-bold text-primary">{field.value ?? 5}</span>/10</FormLabel><FormControl><Slider value={[field.value ?? 5]} onValueChange={(v) => field.onChange(v[0])} max={10} step={1} min={1} /></FormControl><FormMessage /></FormItem>)}/>
+                           {/* Cross Play Switch */}
+                           <FormField control={control} name="cross_play_enabled" render={({ field }) => ( <FormItem className="flex flex-row items-center justify-between rounded-lg border border-border/20 p-3 shadow-sm mt-4 col-span-1 md:col-span-2"><div className="space-y-0.5"><FormLabel>Cross-Platform Match</FormLabel></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl></FormItem> )}/>
+                       </div>
+                        {/* Opponent Skill Slider, Formation Input REMOVED */}
                   </TabsContent>
 
                   {/* --- Team Stats Tab (Updated) --- */}
                   <TabsContent value="team" className="space-y-6 mt-0">
-                      <h3 className="text-lg font-semibold border-b border-border/20 pb-2">Your Team Statistics</h3>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-4 gap-y-4">
-                          <NumberInputWithSteppers name="team_stats.shots" label="Shots" control={control} adjustValue={adjustNumericalValue} getValues={getValues} />
-                          <NumberInputWithSteppers name="team_stats.shots_on_target" label="On Target" max={getValues('team_stats.shots') ?? 99} control={control} adjustValue={adjustNumericalValue} getValues={getValues} />
-                          <NumberInputWithSteppers name="team_stats.possession" label="Possession %" max={100} control={control} adjustValue={adjustNumericalValue} getValues={getValues} />
-                          <NumberInputWithSteppers name="team_stats.passes" label="Passes" step={5} max={999} control={control} adjustValue={adjustNumericalValue} getValues={getValues} />
-                          <NumberInputWithSteppers name="team_stats.pass_accuracy" label="Pass Acc %" max={100} control={control} adjustValue={adjustNumericalValue} getValues={getValues} />
-                          <NumberInputWithSteppers name="team_stats.expected_goals" label="Your xG" step={0.1} max={20} control={control} adjustValue={adjustNumericalValue} getValues={getValues} />
-                          <NumberInputWithSteppers name="team_stats.expected_goals_against" label="Opponent xG" step={0.1} max={20} control={control} adjustValue={adjustNumericalValue} getValues={getValues} />
-                          <NumberInputWithSteppers name="team_stats.dribble_success_rate" label="Dribble %" max={100} control={control} adjustValue={adjustNumericalValue} getValues={getValues} /> {/* Added */}
-                          <NumberInputWithSteppers name="team_stats.corners" label="Corners" max={99} control={control} adjustValue={adjustNumericalValue} getValues={getValues} />
-                          <NumberInputWithSteppers name="team_stats.fouls" label="Fouls" max={99} control={control} adjustValue={adjustNumericalValue} getValues={getValues} />
-                          <NumberInputWithSteppers name="team_stats.yellow_cards" label="Yellow Cards" max={11} control={control} adjustValue={adjustNumericalValue} getValues={getValues} />
-                          <NumberInputWithSteppers name="team_stats.red_cards" label="Red Cards" max={5} control={control} adjustValue={adjustNumericalValue} getValues={getValues} />
-                      </div>
-                       {/* Match Tags (Fixed Styling) */}
-                      <FormField control={control} name="tags" render={({ field }) => (
-                        <FormItem className="space-y-2 pt-4 border-t border-border/20">
-                            <FormLabel>Match Tags</FormLabel>
-                            <FormDescription className="text-xs">Select tags that apply. Hover/tap for details.</FormDescription>
-                            <TooltipProvider delayDuration={300}>
-                                <div className="flex flex-wrap gap-2">
-                                    {matchTags.map(tag => (
-                                        <Tooltip key={tag.id}>
-                                            <TooltipTrigger asChild>
-                                                <FormControl>
-                                                    <Toggle
-                                                        variant="outline" size="sm"
-                                                        className={cn("text-xs h-7 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground")} // Use cn
-                                                        pressed={field.value?.includes(tag.name)}
-                                                        onPressedChange={(isPressed) => {
-                                                            const currentTags = field.value || [];
-                                                            const newTags = isPressed ? [...currentTags, tag.name] : currentTags.filter(t => t !== tag.name);
-                                                            field.onChange(newTags);
-                                                        }}
-                                                    >
-                                                        {tag.name}
-                                                    </Toggle>
-                                                </FormControl>
-                                            </TooltipTrigger>
-                                            <TooltipContent side="bottom" align="start"><p className="max-w-xs">{tag.description}</p></TooltipContent>
-                                        </Tooltip>
-                                    ))}
-                                </div>
-                            </TooltipProvider>
-                            <FormMessage />
-                        </FormItem>
-                      )} />
-                       {/* Comments */}
-                       <FormField control={control} name="comments" render={({ field }) => (<FormItem><FormLabel>Comments</FormLabel><FormControl><Textarea {...field} placeholder="Key moments, tactics, frustrations..." /></FormControl><FormMessage /></FormItem>)}/>
+                       <h3 className="text-lg font-semibold border-b border-border/20 pb-2">Your Team Statistics</h3>
+                       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-4 gap-y-4">
+                           <NumberInputWithSteppers name="team_stats.shots" label="Shots" control={control} adjustValue={adjustNumericalValue} getValues={getValues} />
+                           <NumberInputWithSteppers name="team_stats.shots_on_target" label="On Target" max={getValues('team_stats.shots') ?? 99} control={control} adjustValue={adjustNumericalValue} getValues={getValues} />
+                           <NumberInputWithSteppers name="team_stats.possession" label="Possession %" max={100} control={control} adjustValue={adjustNumericalValue} getValues={getValues} />
+                           <NumberInputWithSteppers name="team_stats.passes" label="Passes" step={5} max={999} control={control} adjustValue={adjustNumericalValue} getValues={getValues} />
+                           <NumberInputWithSteppers name="team_stats.pass_accuracy" label="Pass Acc %" max={100} control={control} adjustValue={adjustNumericalValue} getValues={getValues} />
+                           <NumberInputWithSteppers name="team_stats.expected_goals" label="Your xG" step={0.1} max={20} control={control} adjustValue={adjustNumericalValue} getValues={getValues} />
+                           <NumberInputWithSteppers name="team_stats.expected_goals_against" label="Opponent xG" step={0.1} max={20} control={control} adjustValue={adjustNumericalValue} getValues={getValues} />
+                           <NumberInputWithSteppers name="team_stats.dribble_success_rate" label="Dribble %" max={100} control={control} adjustValue={adjustNumericalValue} getValues={getValues} /> {/* Added */}
+                           <NumberInputWithSteppers name="team_stats.corners" label="Corners" max={99} control={control} adjustValue={adjustNumericalValue} getValues={getValues} />
+                           <NumberInputWithSteppers name="team_stats.fouls" label="Fouls" max={99} control={control} adjustValue={adjustNumericalValue} getValues={getValues} />
+                           <NumberInputWithSteppers name="team_stats.yellow_cards" label="Yellow Cards" max={11} control={control} adjustValue={adjustNumericalValue} getValues={getValues} />
+                           <NumberInputWithSteppers name="team_stats.red_cards" label="Red Cards" max={5} control={control} adjustValue={adjustNumericalValue} getValues={getValues} />
+                       </div>
+                        {/* Match Tags (Fixed Styling) */}
+                       <FormField control={control} name="tags" render={({ field }) => (
+                         <FormItem className="space-y-2 pt-4 border-t border-border/20">
+                             <FormLabel>Match Tags</FormLabel>
+                             <FormDescription className="text-xs">Select tags that apply. Hover/tap for details.</FormDescription>
+                             <TooltipProvider delayDuration={300}>
+                                 <div className="flex flex-wrap gap-2">
+                                     {matchTags.map(tag => (
+                                         <Tooltip key={tag.id}>
+                                             <TooltipTrigger asChild>
+                                                 <FormControl>
+                                                     <Toggle
+                                                         variant="outline" size="sm"
+                                                         className={cn("text-xs h-7 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground")} // Use cn
+                                                         pressed={field.value?.includes(tag.name)}
+                                                         onPressedChange={(isPressed) => {
+                                                             const currentTags = field.value || [];
+                                                             const newTags = isPressed ? [...currentTags, tag.name] : currentTags.filter(t => t !== tag.name);
+                                                             field.onChange(newTags);
+                                                         }}
+                                                     >
+                                                         {tag.name}
+                                                     </Toggle>
+                                                 </FormControl>
+                                             </TooltipTrigger>
+                                             <TooltipContent side="bottom" align="start"><p className="max-w-xs">{tag.description}</p></TooltipContent>
+                                         </Tooltip>
+                                     ))}
+                                 </div>
+                             </TooltipProvider>
+                             <FormMessage />
+                         </FormItem>
+                       )} />
+                        {/* Comments */}
+                        <FormField control={control} name="comments" render={({ field }) => (<FormItem><FormLabel>Comments</FormLabel><FormControl><Textarea {...field} placeholder="Key moments, tactics, frustrations..." /></FormControl><FormMessage /></FormItem>)}/>
                   </TabsContent>
 
                   {/* --- Player Stats Tab (Updated with ScrollArea) --- */}
                   <TabsContent value="players" className="space-y-4 flex flex-col min-h-0 mt-0">
-                       <div className="flex justify-between items-center mb-4 shrink-0"> {/* Header */}
-                          <h3 className="text-lg font-semibold">Player Performances</h3>
-                          <Button onClick={addSubstitute} size="sm" type="button" variant="outline" disabled={!selectedSquad || squadsLoading}>
-                             <UserPlus className="h-4 w-4 mr-2" />Add Sub
-                          </Button>
-                      </div>
-                      {/* Added ScrollArea for player list */}
-                      <ScrollArea className="flex-grow custom-scrollbar pr-1 -mr-1 min-h-[300px]"> {/* Ensure min-height */}
-                          {squadsLoading ? (<p className="text-sm text-muted-foreground p-4">Loading squad...</p>)
-                          : !watchedSquadId ? (<p className="text-sm text-muted-foreground p-4">Please select a squad.</p>)
-                          : watchedPlayerStats && watchedPlayerStats.length > 0 ? (
-                              <FormField
-                                  control={control}
-                                  name="player_stats"
-                                  render={({ field }) => (
-                                      <FormItem>
-                                          <FormControl>
-                                              <PlayerStatsForm
-                                                  players={field.value || []} // Pass the array of players
-                                                  onStatsChange={(updatedPlayers) => field.onChange(updatedPlayers)} // Update the form state
-                                                  gameDuration={watchedDuration || 90}
-                                              />
-                                          </FormControl>
-                                          <FormMessage />
-                                      </FormItem>
-                                  )}
-                              />
-                          ) : (
-                              <div className="text-center py-8 border border-dashed rounded-lg text-muted-foreground">
-                                  <p className='px-4'>No starting players found for "{selectedSquad?.name || '...'}".</p>
-                              </div>
-                          )}
-                      </ScrollArea>
+                        <div className="flex justify-between items-center mb-4 shrink-0"> {/* Header */}
+                           <h3 className="text-lg font-semibold">Player Performances</h3>
+                           <Button onClick={addSubstitute} size="sm" type="button" variant="outline" disabled={!selectedSquad || squadsLoading}>
+                               <UserPlus className="h-4 w-4 mr-2" />Add Sub
+                           </Button>
+                        </div>
+                        {/* Added ScrollArea for player list */}
+                        <ScrollArea className="flex-grow custom-scrollbar pr-1 -mr-1 min-h-[300px]"> {/* Ensure min-height */}
+                           {squadsLoading ? (<p className="text-sm text-muted-foreground p-4">Loading squad...</p>)
+                           : !watchedSquadId ? (<p className="text-sm text-muted-foreground p-4">Please select a squad.</p>)
+                           : watchedPlayerStats && watchedPlayerStats.length > 0 ? (
+                               <FormField
+                                   control={control}
+                                   name="player_stats"
+                                   render={({ field }) => (
+                                       <FormItem>
+                                           <FormControl>
+                                               <PlayerStatsForm
+                                                   players={field.value || []} // Pass the array of players
+                                                   onStatsChange={(updatedPlayers) => field.onChange(updatedPlayers)} // Update the form state
+                                                   gameDuration={watchedDuration || 90}
+                                               />
+                                           </FormControl>
+                                           <FormMessage />
+                                       </FormItem>
+                                   )}
+                               />
+                           ) : (
+                               <div className="text-center py-8 border border-dashed rounded-lg text-muted-foreground">
+                                   <p className='px-4'>No starting players found for "{selectedSquad?.name || '...'}".</p>
+                               </div>
+                           )}
+                        </ScrollArea>
                   </TabsContent>
                </div>
               </ScrollArea>
