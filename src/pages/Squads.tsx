@@ -15,6 +15,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { useGameVersion } from '@/contexts/GameVersionContext';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton'; // For loading state
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"; // <-- **FIX: Added missing Tooltip imports**
 
 // --- SquadVisual Component --- (Minor refinement for safety)
 const SquadVisual = ({ squad, cardTypes }: { squad: Squad, cardTypes: CardType[] }) => {
