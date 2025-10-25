@@ -128,7 +128,7 @@ const matchTags = [
     { id: 'iRubberBanded', name: 'I Rubber Banded', description: 'You put your controller down and stopped playing at some point.' },
     { id: 'poorQualityOpponent', name: 'Poor Quality Opponent', description: 'An opponent who is simply not very good at the game.' },
     { id: 'fairResult', name: 'Fair Result', description: 'Regardless of who won or lost, the result was a fair reflection of the performance.' },
-    { id: 'myOwnWorstEnemy', name: 'My Own Worst Enemy', description: 'Your own consistent mistakes caused you significant problems.' },
+    { id:act, 'myOwnWorstEnemy', name: 'My Own Worst Enemy', description: 'Your own consistent mistakes caused you significant problems.' },
     { id: 'funGame', name: 'Fun Game', description: 'A game that you enjoyed playing, irrespective of the result.' },
     { id: 'ashamedPerformance', name: 'Performance to be ashamed of', description: 'Poor performance or had to resort to ratty tactics.' },
 ];
@@ -1081,15 +1081,9 @@ const CurrentRunPage = () => {
     );
   }
 
-  // ---
-  // --- !! FIX IS HERE !! ---
-  // ---
-  // We must safely define `games` FIRST, using a nullish coalescing
-  // or OR operator, to ensure it's always an array.
+  // Safely initialize games array (as corrected in previous step)
   const games = currentRun.games || [];
-  // NOW we can safely use `games.length` to calculate the next game number.
   const nextGameNumber = games.length + 1;
-  // --- !! END OF FIX !! ---
 
   return (
     <div className="space-y-6">
@@ -1124,8 +1118,16 @@ const CurrentRunPage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column (Stats) */}
         <div className="lg:col-span-1 space-y-6">
-          <CurrentRunStats run={currentRun} />
-          <WeekProgress run={currentRun} />
+          
+          {/* ---
+          --- !! FIX IS HERE !! ---
+          ---
+          * We must pass the `games` prop, as expected by `CurrentRunStats.tsx`.
+          * We must pass the `currentWeek` prop, as expected by `WeekProgress.tsx`.
+          --- */}
+          <CurrentRunStats games={games} />
+          <WeekProgress currentWeek={currentRun} />
+
         </div>
 
         {/* Right Column (Form or Game List) */}
