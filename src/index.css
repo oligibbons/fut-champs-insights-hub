@@ -3,46 +3,46 @@
 @tailwind utilities;
 
 :root {
-  /* Theme variables remain the same */
-  --background: 240 10% 3.9%;
+  /* --- MODIFIED: Saturated Dark Theme (Blue-based) --- */
+  --background: 225 30% 12%; /* Dark, saturated blue */
   --foreground: 0 0% 98%;
-  --card: 240 10% 3.9%; /* Base dark card color */
+  --card: 225 30% 15%; /* A slightly lighter blue for cards */
   --card-foreground: 0 0% 98%;
-  --popover: 240 10% 3.9%;
+  --popover: 225 30% 13%;
   --popover-foreground: 0 0% 98%;
-  --primary: 210 90% 60%; /* FIFA Blue */
+  --primary: 210 100% 75%; /* Brighter FIFA Blue */
   --primary-foreground: 210 40% 98%;
-  --secondary: 170 80% 45%; /* FIFA Green */
+  --secondary: 130 80% 65%; /* Brighter FIFA Green */
   --secondary-foreground: 0 0% 98%;
-  --muted: 240 3.7% 15.9%;
+  --muted: 220 35% 22%; /* Muted, but still blue */
   --muted-foreground: 240 5% 64.9%;
-  --accent: 330 85% 65%; /* FIFA Purple */
+  --accent: 270 85% 80%; /* Brighter FIFA Purple */
   --accent-foreground: 0 0% 98%;
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 0 0% 98%;
-  --border: 240 3.7% 15.9%;
-  --input: 240 3.7% 15.9%;
-  --ring: 210 90% 60%; /* FIFA Blue */
+  --border: 220 35% 25%; /* More noticeable blue border */
+  --input: 220 35% 25%;
+  --ring: 210 100% 75%; /* Brighter FIFA Blue */
   --radius: 0.75rem;
 
-  /* Theme specific colors */
-  --fifa-blue: 210 90% 60%;
-  --fifa-green: 145 70% 45%; /* Slightly adjusted green */
-  --fifa-red: 0 80% 60%;
-  --fifa-purple: 270 70% 65%; /* Adjusted purple */
-  --fifa-gold: 45 90% 55%;
+  /* --- MODIFIED: Brighter FIFA Colors --- */
+  --fifa-blue: 210 100% 75%;
+  --fifa-green: 130 80% 65%;
+  --fifa-red: 0 90% 75%;
+  --fifa-purple: 270 85% 80%;
+  --fifa-gold: 48 90% 65%;
 
-  /* Define RGB versions for opacity */
-  --background-rgb: 10, 10, 10;
-  --card-rgb: 15, 15, 18; /* Slightly lighter base card color for better contrast */
-  --surface-rgb: 25, 25, 30; /* Darker, slightly distinct surface */
-  --border-rgb: 45, 45, 50; /* More visible border */
+  /* --- MODIFIED: RGB versions for new blue theme --- */
+  --background-rgb: 21, 26, 40; /* from hsl(225, 30%, 12%) */
+  --card-rgb: 27, 33, 51; /* from hsl(225, 30%, 15%) */
+  --surface-rgb: 37, 46, 74; /* from hsl(220, 35%, 22%) */
+  --border-rgb: 41, 51, 89; /* from hsl(220, 35%, 25%) */
 
-  /* Additional Theme Colors */
-  --success: 140 70% 45%;
-  --warning: 45 90% 55%;
-  --danger: 0 80% 60%;
-  --info: 210 90% 60%;
+  /* Additional Theme Colors (Updated) */
+  --success: 130 80% 65%; /* Mapped to new fifa-green */
+  --warning: 48 90% 65%; /* Mapped to new fifa-gold */
+  --danger: 0 90% 75%; /* Mapped to new fifa-red */
+  --info: 210 100% 75%; /* Mapped to new fifa-blue */
   --success-foreground: 0 0% 98%;
   --warning-foreground: 240 10% 3.9%; /* Dark text for gold/yellow */
   --danger-foreground: 0 0% 98%;
@@ -51,45 +51,45 @@
 }
 
 .dark {
-  /* Keep the same variables for dark theme */
-  --background: 240 10% 3.9%;
+  /* --- MODIFIED: Saturated Dark Theme (Blue-based) --- */
+  --background: 225 30% 12%; /* Dark, saturated blue */
   --foreground: 0 0% 98%;
-  --card: 240 10% 3.9%;
+  --card: 225 30% 15%; /* A slightly lighter blue for cards */
   --card-foreground: 0 0% 98%;
-  --popover: 240 10% 3.9%;
+  --popover: 225 30% 13%;
   --popover-foreground: 0 0% 98%;
-  --primary: 210 90% 60%;
+  --primary: 210 100% 75%; /* Brighter FIFA Blue */
   --primary-foreground: 210 40% 98%;
-  --secondary: 170 80% 45%;
+  --secondary: 130 80% 65%; /* Brighter FIFA Green */
   --secondary-foreground: 0 0% 98%;
-  --muted: 240 3.7% 15.9%;
+  --muted: 220 35% 22%; /* Muted, but still blue */
   --muted-foreground: 240 5% 64.9%;
-  --accent: 330 85% 65%;
+  --accent: 270 85% 80%; /* Brighter FIFA Purple */
   --accent-foreground: 0 0% 98%;
   --destructive: 0 70% 55%; /* Adjusted destructive */
   --destructive-foreground: 0 0% 98%;
-  --border: 240 3.7% 15.9%;
-  --input: 240 3.7% 15.9%;
-  --ring: 210 90% 60%;
+  --border: 220 35% 25%; /* More noticeable blue border */
+  --input: 220 35% 25%;
+  --ring: 210 100% 75%; /* Brighter FIFA Blue */
 
-  /* Theme specific colors remain same */
-  --fifa-blue: 210 90% 60%;
-  --fifa-green: 145 70% 45%;
-  --fifa-red: 0 80% 60%;
-  --fifa-purple: 270 70% 65%;
-  --fifa-gold: 45 90% 55%;
+  /* --- MODIFIED: Brighter FIFA Colors --- */
+  --fifa-blue: 210 100% 75%;
+  --fifa-green: 130 80% 65%;
+  --fifa-red: 0 90% 75%;
+  --fifa-purple: 270 85% 80%;
+  --fifa-gold: 48 90% 65%;
 
-  /* RGB versions remain same */
-  --background-rgb: 10, 10, 10;
-  --card-rgb: 15, 15, 18;
-  --surface-rgb: 25, 25, 30;
-  --border-rgb: 45, 45, 50;
+  /* --- MODIFIED: RGB versions for new blue theme --- */
+  --background-rgb: 21, 26, 40; /* from hsl(225, 30%, 12%) */
+  --card-rgb: 27, 33, 51; /* from hsl(225, 30%, 15%) */
+  --surface-rgb: 37, 46, 74; /* from hsl(220, 35%, 22%) */
+  --border-rgb: 41, 51, 89; /* from hsl(220, 35%, 25%) */
 
-  /* Additional Theme Colors */
-  --success: 140 70% 45%;
-  --warning: 45 90% 55%;
-  --danger: 0 80% 60%;
-  --info: 210 90% 60%;
+  /* Additional Theme Colors (Updated) */
+  --success: 130 80% 65%;
+  --warning: 48 90% 65%;
+  --danger: 0 90% 75%;
+  --info: 210 100% 75%;
   --success-foreground: 0 0% 98%;
   --warning-foreground: 240 10% 3.9%;
   --danger-foreground: 0 0% 98%;
@@ -110,7 +110,7 @@
     overflow-x: hidden; /* Prevent horizontal scroll */
   }
 
-   main {
+  main {
     padding-top: 1rem; /* Adjust as needed */
     padding-bottom: 5rem; /* Space for bottom nav on mobile */
   }
@@ -190,12 +190,12 @@
   .page-header p {
     font-size: 1rem; /* text-base */
   }
-   /* Reduce padding inside cards on mobile */
+  /* Reduce padding inside cards on mobile */
   .card-content-mobile-condensed {
-     padding: 0.75rem; /* p-3 */
+    padding: 0.75rem; /* p-3 */
   }
-   .card-header-mobile-condensed {
-     padding: 0.75rem; /* p-3 */
+  .card-header-mobile-condensed {
+    padding: 0.75rem; /* p-3 */
   }
 }
 
@@ -279,21 +279,21 @@
 }
 
 .metric-card .card-header {
-   padding-bottom: 0.5rem; /* pb-2 */
+  padding-bottom: 0.5rem; /* pb-2 */
 }
 .metric-card .card-title {
-    font-size: 0.875rem; /* text-sm */
-    font-weight: 500; /* font-medium */
+  font-size: 0.875rem; /* text-sm */
+  font-weight: 500; /* font-medium */
 }
 .metric-card .card-content p:first-child { /* Player name */
-    font-size: 1.125rem; /* text-lg */
-    color: theme('colors.white'); /* Ensure player name is bright */
+  font-size: 1.125rem; /* text-lg */
+  color: theme('colors.white'); /* Ensure player name is bright */
 }
 .metric-card .card-content p:nth-child(2) { /* Stat value */
-    font-size: 1.5rem; /* text-2xl */
-    /* Color is usually set dynamically via className (e.g., text-fifa-gold) */
+  font-size: 1.5rem; /* text-2xl */
+  /* Color is usually set dynamically via className (e.g., text-fifa-gold) */
 }
 .metric-card .card-content p:last-child { /* Subtext */
-    font-size: 0.75rem; /* text-xs */
-    color: rgba(var(--foreground-rgb), 0.6);
+  font-size: 0.75rem; /* text-xs */
+  color: rgba(var(--foreground-rgb), 0.6);
 }
