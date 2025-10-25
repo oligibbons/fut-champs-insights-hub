@@ -3,21 +3,19 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGameVersion } from '@/contexts/GameVersionContext';
-// --- Make sure Game type is imported ---
-import { WeeklyPerformance, Game } from '@/types/futChampions'; 
+import { WeeklyPerformance, Game } from '@/types/futChampions'; // Ensure Game is imported
 import { toast } from '@/components/ui/use-toast';
 
-// Define a type that ensures games are included
+// Define a type that ensures games are included and is an array
 export type WeeklyPerformanceWithGames = WeeklyPerformance & {
-  // --- Ensure games is explicitly typed ---
-  games: Game[]; 
+  games: Game[]; // Explicitly an array
 };
 
 export const useAllRunsData = () => {
   const { user } = useAuth();
   const { gameVersion } = useGameVersion();
-  // --- FIX: Initialize state with [] ---
-  const [runs, setRuns] = useState<WeeklyPerformanceWithGames[]>([]); 
+  // Initialize state with []
+  const [runs, setRuns] = useState<WeeklyPerformanceWithGames[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -31,11 +29,12 @@ export const useAllRunsData = () => {
     const fetchAllRuns = async () => {
       setLoading(true);
       setError(null);
+      setRuns([]); // Reset runs before fetching
       try {
-        // --- Use corrected table names from previous fix ---
         const { data, error: fetchError } = await supabase
-          .from('weekly_performances') 
-          .select('*, games:game_results(*)') // Only fetch games here, other relations might be too much
+          .from('weekly_performances')
+          // Fetch games relation, aliased correctly
+          .select('*, games:game_results(*)') 
           .eq('user_id', user.id)
           .eq('game_version', gameVersion)
           .order('week_number', { ascending: false });
@@ -44,26 +43,25 @@ export const useAllRunsData = () => {
           throw fetchError;
         }
 
-        // Ensure data matches the expected type, filtering out any with null/undefined games
-        // Add sorting within the games array here if needed
-        const validData = data
+        // Process data: ensure 'games' is always an array and sort them
+        const processedData = (data || [])
           .map(run => {
+              // Ensure games is an array, default to [] if null/undefined
+              const gamesArray = Array.isArray(run.games) ? run.games : [];
               // Sort games within each run
-              if (Array.isArray(run.games)) {
-                  run.games.sort((a, b) => a.game_number - b.game_number);
-              }
-              return run;
+              gamesArray.sort((a, b) => a.game_number - b.game_number);
+              // Return run with guaranteed games array
+              return { ...run, games: gamesArray };
           })
-          .filter(
-            (run): run is WeeklyPerformanceWithGames => Array.isArray(run.games)
-          );
-        
-        setRuns(validData);
+          // Filter out any runs where something went wrong (though map should handle it)
+          .filter((run): run is WeeklyPerformanceWithGames => Array.isArray(run.games));
+
+        setRuns(processedData);
 
       } catch (err: any) {
         console.error('Error fetching all runs:', err);
         setError(err);
-        setRuns([]); // Reset runs on error
+        setRuns([]); // Ensure runs is empty on error
         toast({
           title: 'Error loading run history',
           description: err.message,
@@ -75,7 +73,8 @@ export const useAllRunsData = () => {
     };
 
     fetchAllRuns();
-  }, [user, gameVersion]); // Removed toast from dependencies
+  // Removed toast from dependencies as it can cause re-renders
+  }, [user, gameVersion]); 
 
   return { runs, loading, error };
 };
