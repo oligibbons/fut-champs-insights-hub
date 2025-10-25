@@ -23,7 +23,7 @@ import { Game, PlayerPerformanceInsert, TeamStatisticsInsert } from '@/types/fut
 import { get, set, isEqual } from 'lodash';
 import { useAllSquadsData, SquadWithPlayers } from '@/hooks/useAllSquadsData'; // Import the new hook
 import { useTheme } from '@/hooks/useTheme';
-import { Form } from '@/components/ui/form'; // <-- **FIX: Added missing Form import**
+import { Form } from '@/components/ui/form';
 
 // --- ZOD SCHEMA ---
 // Comprehensive schema matching DB tables
@@ -296,11 +296,14 @@ const GameRecordForm = ({
     return baseDefaults as GameFormData; // Cast needed because player_stats might be empty initially
   }, [isEditing, game, nextGameNumber, squads]); // Depend on squads for default squad_id
 
-  const { control, handleSubmit, watch, setValue, getValues, reset, formState: { errors, isSubmitting, isValid, dirtyFields } } = useForm<GameFormData>({
+  // --- **FIX**: Assign useForm result to 'form' first, then destructure ---
+  const form = useForm<GameFormData>({
     resolver: zodResolver(gameFormSchema),
     mode: 'onChange', // Validate on change for immediate feedback
     defaultValues: defaultValues,
   });
+  const { control, handleSubmit, watch, setValue, getValues, reset, formState: { errors, isSubmitting, isValid, dirtyFields } } = form;
+  // --- END FIX ---
 
    // Watch relevant fields for dynamic updates
   const watchedSquadId = watch('squad_id');
@@ -309,7 +312,7 @@ const GameRecordForm = ({
   const watchedOpponentGoals = watch('opponent_goals');
   const watchedOvertimeResult = watch('overtime_result');
   const watchedTags = watch('tags', []); // Watch tags with default
-  const watchedPlayerStats = watch('player_stats', defaultValues.player_stats); // **FIX: Watch player_stats with a default**
+  const watchedPlayerStats = watch('player_stats', defaultValues.player_stats); // Watch player_stats
 
   const selectedSquad = useMemo(() => squads.find(s => s.id === watchedSquadId), [squads, watchedSquadId]);
 
@@ -537,7 +540,7 @@ const GameRecordForm = ({
   return (
     <Card className="glass-card rounded-2xl shadow-2xl border-0 w-full max-w-4xl mx-auto"> {/* Max width for larger screens */}
       <CardContent className="p-4 md:p-6">
-        <Form {...form}>
+        <Form {...form}> {/* Ensure the 'form' object is spread here */}
           <form onSubmit={handleSubmit(processSubmit)} className="flex flex-col space-y-6 h-full"> {/* Use flex column */}
             {/* Title */}
              <h2 className="text-xl font-semibold text-white mb-4">
@@ -702,7 +705,7 @@ const GameRecordForm = ({
                     </div>
                     {squadsLoading ? (<p className="text-sm text-muted-foreground">Loading squad players...</p>)
                     : !watchedSquadId ? (<p className="text-sm text-muted-foreground">Please select a squad in the 'Match' tab.</p>)
-                    : watchedPlayerStats && watchedPlayerStats.length > 0 ? ( // <-- **FIX: Changed from watchedValues.player_stats**
+                    : watchedPlayerStats && watchedPlayerStats.length > 0 ? (
                         <Controller
                             name="player_stats"
                             control={control}
