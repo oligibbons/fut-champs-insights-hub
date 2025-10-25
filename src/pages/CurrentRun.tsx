@@ -14,7 +14,10 @@ import { Toggle } from '@/components/ui/toggle';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Card, CardContent } from '@/components/ui/card';
 import { Save, Loader2, UserPlus, Users, Plus, Minus, Trophy, Shield, BarChartHorizontal, Star, X, Goal, Footprints, Clock, Square, SquareCheck, ShieldAlert } from 'lucide-react';
-import PlayerStatsForm from './PlayerStatsForm';
+// ----------------------------------------------------------------
+// FIX 1: Changed './PlayerStatsForm' to '@/components/PlayerStatsForm'
+// ----------------------------------------------------------------
+import PlayerStatsForm from '@/components/PlayerStatsForm';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Game, PlayerPerformanceInsert, TeamStatisticsInsert, PlayerPerformance } from '@/types/futChampions';
@@ -252,7 +255,7 @@ const GameRecordForm = ({
   // Memoized default values for the form
   const defaultValues = useMemo((): GameFormData => {
     // ----------------------------------------------------------------
-    // FIX 1: Default 'squads' to '[]' to prevent 'undefined.find'
+    // FIX 2: Default 'squads' to '[]' to prevent 'undefined.find'
     // ----------------------------------------------------------------
     const safeSquads = squads || [];
 
@@ -284,7 +287,7 @@ const GameRecordForm = ({
 
      // Determine the initial squad_id based on loaded squads
      // ----------------------------------------------------------------
-     // FIX 2: Use 'safeSquads' here
+     // FIX 3: Use 'safeSquads' here
      // ----------------------------------------------------------------
      const defaultSquadId = safeSquads.find(s => s.is_default)?.id || safeSquads[0]?.id || '';
      baseDefaults.squad_id = defaultSquadId;
@@ -323,7 +326,7 @@ const GameRecordForm = ({
 
         // Ensure the merged squad_id is actually valid among the loaded squads
        // ----------------------------------------------------------------
-       // FIX 3: Use 'safeSquads' here
+       // FIX 4: Use 'safeSquads' here
        // ----------------------------------------------------------------
        const squadExists = safeSquads.some(s => s.id === mergedData.squad_id);
        if (!squadExists) {
@@ -358,7 +361,7 @@ const GameRecordForm = ({
 
   // Find the currently selected squad object
   // ----------------------------------------------------------------
-  // FIX 4: Default 'squads' to '[]' here as well
+  // FIX 5: Default 'squads' to '[]' here as well
   // ----------------------------------------------------------------
   const selectedSquad = useMemo(() => (squads || []).find(s => s.id === watchedSquadId), [squads, watchedSquadId]);
 
@@ -375,7 +378,7 @@ const GameRecordForm = ({
   // Effect to populate/update player_stats list based on selected squad and duration
   useEffect(() => {
     // ----------------------------------------------------------------
-    // FIX 5: Only check for 'selectedSquad' (which is now safe)
+    // FIX 6: Only check for 'selectedSquad' (which is now safe)
     // ----------------------------------------------------------------
     if (!squadsLoading && selectedSquad) {
         const squadJustChanged = dirtyFields.squad_id; // Did the user just change the squad dropdown?
@@ -384,7 +387,7 @@ const GameRecordForm = ({
         // Condition to repopulate: Squad dropdown was just changed, OR (it's a new game AND the list is empty)
         if (squadJustChanged || (!isEditing && isInitialLoadOrReset)) {
              // ----------------------------------------------------------------
-             // FIX 6: Default 'squad_players' to '[]' before filter/map
+             // FIX 7: Default 'squad_players' to '[]' before filter/map
              // ----------------------------------------------------------------
              const squadPlayersData = (selectedSquad.squad_players || [])
                 .filter(sp => sp.players && (sp.slot_id?.startsWith('starting-') || sp.slot_id?.startsWith('sub-')))
@@ -412,7 +415,7 @@ const GameRecordForm = ({
             // Squad didn't change, but maybe duration did? Update starter minutes.
              const updatedPlayers = watchedPlayerStats.map(currentPlayer => {
                 // ----------------------------------------------------------------
-                // FIX 7: Default 'squad_players' to '[]' before find
+                // FIX 8: Default 'squad_players' to '[]' before find
                 // ----------------------------------------------------------------
                 const squadPlayerInfo = (selectedSquad.squad_players || []).find(sp => sp.players?.id === currentPlayer.id);
                 const wasStarter = squadPlayerInfo?.slot_id?.startsWith('starting-');
