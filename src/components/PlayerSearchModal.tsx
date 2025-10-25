@@ -20,7 +20,6 @@ interface PlayerSearchModalProps {
   onClose: () => void;
   onPlayerSelect: (player: PlayerCard) => void;
   position?: string;
-  // cardTypes prop removed - modal uses useSquadData now
 }
 
 const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position }: PlayerSearchModalProps) => {
@@ -90,7 +89,7 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position }: Player
     const customType = cardTypes.find(ct => ct.id === cardTypeId);
     if(customType) return { background: `linear-gradient(135deg, ${customType.primary_color}, ${customType.secondary_color || customType.primary_color})`, color: customType.highlight_color || currentTheme.colors.primaryForeground };
     return { background: currentTheme.colors.muted, color: currentTheme.colors.mutedForeground };
-  };
+ };
 
   const handleInputChange = useCallback((field: keyof PlayerCard, value: string | number | boolean) => {
       let processedValue = value;
@@ -112,9 +111,9 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position }: Player
   const outfieldStats: (keyof PlayerCard)[] = ['pace', 'shooting', 'passing', 'dribbling', 'defending', 'physical'];
   const gkStats: (keyof PlayerCard)[] = ['diving', 'handling', 'kicking', 'reflexes', 'speed', 'positioning'];
 
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && resetAndClose()}>
-      {/* Apply glass-card styling to DialogContent */}
       <DialogContent className="max-w-xl max-h-[90vh] flex flex-col glass-card border-border/20 text-white p-0">
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/20">
           <DialogTitle>{showCreateForm ? (editingPlayer ? 'Edit Player' : 'Create New Player') : 'Search or Create Player'}</DialogTitle>
@@ -122,13 +121,14 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position }: Player
 
         {/* --- SEARCH VIEW --- */}
         {!showCreateForm ? (
-          <div className="flex flex-col gap-4 pt-4 flex-grow min-h-0 px-6"> {/* Add padding */}
+           // --- FIX: Ensure DialogFooter is INSIDE this outer div ---
+          <div className="flex flex-col gap-4 pt-4 flex-grow min-h-0 px-6">
             <div className="relative shrink-0">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input placeholder="Search existing players..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9"/>
             </div>
 
-            <ScrollArea className="flex-grow pr-3 -mr-3 min-h-[100px] max-h-[calc(80vh-200px)]"> {/* Adjusted max-h */}
+            <ScrollArea className="flex-grow pr-3 -mr-3 min-h-[100px] max-h-[calc(80vh-200px)]">
                 <div className="space-y-2">
                     {suggestions.map((player) => (
                         <div key={player.id} className="flex items-center justify-between p-2 rounded-lg group hover:bg-white/10 transition-colors cursor-pointer" onClick={() => onPlayerSelect(player)}>
@@ -145,17 +145,17 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position }: Player
                     {searchTerm.trim() && suggestions.length === 0 && (
                         <div className="text-center py-6 text-muted-foreground"><User className="h-8 w-8 mx-auto mb-2 opacity-50" /><p className="text-sm">No players found.</p></div>
                     )}
-                     {!searchTerm.trim() && !squadDataLoading && suggestions.length === 0 && ( // Show only if not loading and no search term
+                     {!searchTerm.trim() && !squadDataLoading && suggestions.length === 0 && (
                         <div className="text-center py-6 text-muted-foreground"><p className="text-sm">Start typing to search...</p></div>
                      )}
-                     {squadDataLoading && !searchTerm.trim() && ( // Loading indicator
+                     {squadDataLoading && !searchTerm.trim() && (
                          <div className="text-center py-6 text-muted-foreground"><Loader2 className="h-6 w-6 mx-auto animate-spin" /></div>
                      )}
                 </div>
             </ScrollArea>
 
-            {/* Footer correctly placed */}
-            <DialogFooter className="mt-auto pt-4 border-t border-border/20 px-6 pb-6 shrink-0">
+            {/* Footer correctly placed INSIDE the div */}
+            <DialogFooter className="mt-auto pt-4 border-t border-border/20 pb-6 shrink-0"> {/* Adjusted padding */}
                 <Button onClick={() => { setEditingPlayer(null); setNewPlayer(initialNewPlayerState); setShowCreateForm(true); }} variant="secondary" className="w-full sm:w-auto">
                    <Plus className="h-4 w-4 mr-2" />Create New Player
                </Button>
@@ -165,7 +165,7 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position }: Player
 
         {/* --- CREATE/EDIT VIEW --- */}
         {showCreateForm && (
-            <div className="flex flex-col flex-grow min-h-0 pt-4 px-6"> {/* Add padding */}
+            <div className="flex flex-col flex-grow min-h-0 pt-4 px-6">
                  <ScrollArea className="flex-grow min-h-0 pr-3 -mr-3">
                     <div className="space-y-4 pb-4">
                         {/* Core Info */}
@@ -208,8 +208,8 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position }: Player
                         </div>
                     </div>
                  </ScrollArea>
-                 <DialogFooter className="mt-auto pt-4 border-t border-border/20 px-6 pb-6 shrink-0"> {/* Add padding */}
-                    <Button onClick={() => { setShowCreateForm(false); setEditingPlayer(null); /* No reset needed here */ }} variant="outline" disabled={isSaving}>Back to Search</Button>
+                 <DialogFooter className="mt-auto pt-4 border-t border-border/20 pb-6 shrink-0"> {/* Adjusted padding */}
+                    <Button onClick={() => { setShowCreateForm(false); setEditingPlayer(null); /* No reset needed */ }} variant="outline" disabled={isSaving}>Back to Search</Button>
                     <Button onClick={handleCreateOrUpdate} disabled={isSaving}>
                         {isSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : (editingPlayer ? <Edit className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />)}
                         {editingPlayer ? 'Update Player' : 'Create Player'}
