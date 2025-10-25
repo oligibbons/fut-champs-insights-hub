@@ -1,5 +1,5 @@
 // src/utils/runAnalytics.ts
-import { Game, WeeklyPerformance } from '@/types/futChampions';
+import { Game, WeeklyPerformance } from '@/types/futChampions'; // Make sure Game is imported
 
 export interface ChunkRecord {
   wins: number;
@@ -22,18 +22,23 @@ export interface RunChunkStats {
  * Calculates the W-L record for a specific chunk of games (e.g., games 1-5).
  */
 export const calculateChunkRecord = (games: Game[], start: number, end: number): ChunkRecord => {
-  const chunkGames = (games || []).filter(
+  // --- Safety Check: Ensure games is an array ---
+  const validGames = Array.isArray(games) ? games : []; 
+  const chunkGames = validGames.filter(
     (g) => g.game_number >= start && g.game_number <= end
   );
 
   return chunkGames.reduce(
     (acc, game) => {
       const isWin = game.result === 'win';
+      // --- Safety Check: Ensure goals are numbers ---
+      const userGoals = typeof game.user_goals === 'number' ? game.user_goals : 0;
+      const opponentGoals = typeof game.opponent_goals === 'number' ? game.opponent_goals : 0;
       return {
         wins: acc.wins + (isWin ? 1 : 0),
         losses: acc.losses + (!isWin ? 1 : 0),
-        goalsFor: acc.goalsFor + (game.user_goals ?? 0),
-        goalsAgainst: acc.goalsAgainst + (game.opponent_goals ?? 0),
+        goalsFor: acc.goalsFor + userGoals,
+        goalsAgainst: acc.goalsAgainst + opponentGoals,
         gameCount: acc.gameCount + 1,
       };
     },
@@ -45,7 +50,8 @@ export const calculateChunkRecord = (games: Game[], start: number, end: number):
  * Processes a single run into its three chunks.
  */
 export const processRunForChunks = (run: WeeklyPerformance): RunChunkStats => {
-  const games = run.games || [];
+  // --- Safety Check: Ensure run.games is an array ---
+  const games = Array.isArray(run.games) ? run.games : []; 
   return {
     runId: run.id,
     runName: run.custom_name || `Week ${run.week_number}`,
@@ -63,8 +69,11 @@ const getBestChunk = (
   currentBest: RunChunkStats | null,
   newRun: RunChunkStats,
   chunkKey: 'beginning' | 'middle' | 'end'
-): RunChunkStats => {
-  if (!newRun.runData.games || newRun[chunkKey].gameCount === 0) return currentBest;
+): RunChunkStats | null => { // Allow returning null
+  // --- Safety Check: Ensure runData and games exist, and chunk has games ---
+  if (!newRun?.runData || !Array.isArray(newRun.runData.games) || newRun[chunkKey].gameCount === 0) {
+      return currentBest;
+  }
   if (!currentBest) return newRun;
 
   const currentStats = currentBest[chunkKey];
@@ -84,9 +93,11 @@ const getWorstChunk = (
   currentWorst: RunChunkStats | null,
   newRun: RunChunkStats,
   chunkKey: 'beginning' | 'middle' | 'end'
-): RunChunkStats => {
-  // Only count runs where at least one game was played in that chunk
-  if (!newRun.runData.games || newRun[chunkKey].gameCount === 0) return currentWorst;
+): RunChunkStats | null => { // Allow returning null
+  // --- Safety Check: Ensure runData and games exist, and chunk has games ---
+  if (!newRun?.runData || !Array.isArray(newRun.runData.games) || newRun[chunkKey].gameCount === 0) {
+      return currentWorst;
+  }
   if (!currentWorst) return newRun;
 
   const currentStats = currentWorst[chunkKey];
@@ -112,8 +123,19 @@ export interface AllTimeChunkStats {
  * Calculates the best/worst chunk stats from a list of all historical runs.
  */
 export const calculateAllTimeChunkStats = (
-  allRuns: WeeklyPerformance[]
+  allRuns: WeeklyPerformance[] // Expecting an array, even if empty
 ): AllTimeChunkStats => {
+  // --- !! FIX: Explicitly check if allRuns is an array !! ---
+  if (!Array.isArray(allRuns)) {
+    console.error("calculateAllTimeChunkStats received non-array:", allRuns);
+    // Return empty stats if input is invalid
+    return {
+      bestBeginning: null, bestMiddle: null, bestEnd: null,
+      worstBeginning: null, worstMiddle: null, worstEnd: null,
+    };
+  }
+  // --- End Fix ---
+
   const allRunChunkStats = allRuns.map(processRunForChunks);
 
   const stats: AllTimeChunkStats = {
@@ -126,6 +148,7 @@ export const calculateAllTimeChunkStats = (
   };
 
   for (const runStats of allRunChunkStats) {
+    // Pass existing stat and new run stat to comparison functions
     stats.bestBeginning = getBestChunk(stats.bestBeginning, runStats, 'beginning');
     stats.bestMiddle = getBestChunk(stats.bestMiddle, runStats, 'middle');
     stats.bestEnd = getBestChunk(stats.bestEnd, runStats, 'end');
