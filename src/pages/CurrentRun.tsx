@@ -16,7 +16,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { useMobile } from '@/hooks/use-mobile';
 import { Card, CardContent } from '@/components/ui/card';
 import { useGameVersion } from '@/contexts/GameVersionContext';
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors, DragEndEvent } from '@nd-kit/core';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@nd-kit/sortable';
 import { CSS } from '@nd-kit/utilities';
 // ** Added Modal Imports (ensure paths are correct) **
