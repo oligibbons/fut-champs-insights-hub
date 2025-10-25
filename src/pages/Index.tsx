@@ -238,12 +238,20 @@ const Dashboard = () => {
                     {findAndRenderSection('records')}
                 </TabsContent>
 
+                {/* --- FIX: Updated Player Hub Tab --- */}
                 <TabsContent value="players" className="space-y-6">
-                    {findAndRenderSection('playerMovers')}
-                    {findAndRenderSection('goalInvolvement')}
-                    {findAndRenderSection('clubLegends')}
-                    {findAndRenderSection('playerHistoryTable')}
+                    {/* This grid stacks on mobile (grid-cols-1) and goes 2-wide on large screens */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {findAndRenderSection('playerMovers')}
+                        {findAndRenderSection('goalInvolvement')}
+                    </div>
+                    {/* This second grid does the same, keeping the layout clean */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {findAndRenderSection('clubLegends')}
+                        {findAndRenderSection('playerHistoryTable')}
+                    </div>
                 </TabsContent>
+                {/* --- END FIX --- */}
 
                 <TabsContent value="analytics" className="space-y-6">
                     {findAndRenderSection('performanceRadar')}
