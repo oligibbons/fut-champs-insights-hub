@@ -79,21 +79,37 @@ const defaultLayout: DashboardItem[] = [
     { id: 'positionalHeatMap', component: componentsMap.positionalHeatMap, order: 15 }, 
 ];
 
+// --- THIS IS THE FIX ---
+// Filter the default layout *once* to ensure all components exist in the map.
+// This is what will be used to initialize the state.
+const initialLayout = [...defaultLayout]
+    .filter(item => componentsMap[item.id])
+    .sort((a, b) => a.order - b.order);
+
 const Dashboard = () => {
     const { user } = useAuth();
     const { toast } = useToast();
     const { currentTheme } = useTheme(); // Get theme for skeletons
-    const [layout, setLayout] = useState<DashboardItem[]>([]);
-    const [loading, setLoading] = useState(true);
+    
+    // --- THIS IS THE FIX ---
+    // Initialize state *with the default layout* instead of an empty array.
+    // This ensures all components and their hooks are rendered on the first load.
+    const [layout, setLayout] = useState<DashboardItem[]>(initialLayout);
+    const [loading, setLoading] = useState(true); // This state is now only for the *user's saved layout*
 
     useEffect(() => {
         fetchLayout();
     }, [user]);
 
-    // fetchLayout remains robust
+    // fetchLayout now *updates* the layout, rather than causing the initial render
     const fetchLayout = async () => {
-        if (!user) return;
-        setLoading(true);
+        if (!user) {
+            setLoading(false); // No user, so stop loading
+            setLayout(initialLayout); // Ensure default layout is set
+            return;
+        }
+        
+        setLoading(true); // Still set loading for user's layout fetch
         try {
             const { data, error } = await supabase
                 .from('user_settings')
@@ -109,34 +125,30 @@ const Dashboard = () => {
                 let loadedLayout = savedLayout
                     .map(item => {
                         const component = componentsMap[item.id];
-                        // Check if component exists in map before adding
                         return component ? { ...item, component } : null; 
                     })
-                    // Filter out nulls (components that might have been removed)
                     .filter((item): item is DashboardItem => item !== null);
 
                 // Add any missing default components (newly added ones)
                 defaultLayout.forEach(defaultItem => {
                     if (!loadedLayout.some(item => item.id === defaultItem.id)) {
-                         // Make sure the component actually exists before pushing
                         if (componentsMap[defaultItem.id]) {
                             loadedLayout.push({...defaultItem});
                         }
                     }
                 });
 
-                // Final filter to ensure all components in layout exist in the map
                 loadedLayout = loadedLayout.filter(item => componentsMap[item.id]); 
                 setLayout(loadedLayout.sort((a, b) => a.order - b.order));
             } else {
-                // No saved layout, use the default, ensuring all components exist
-                setLayout([...defaultLayout].filter(item => componentsMap[item.id]).sort((a, b) => a.order - b.order));
+                // No saved layout, we've already set the default, so just stop loading
+                setLayout(initialLayout);
             }
         } catch (err: any)
         {
             toast({ title: "Error", description: `Failed to load dashboard layout: ${err.message}`, variant: "destructive" });
              // Fallback to default layout on error
-            setLayout([...defaultLayout].filter(item => componentsMap[item.id]).sort((a, b) => a.order - b.order));
+            setLayout(initialLayout);
         } finally {
             setLoading(false);
         }
@@ -144,36 +156,31 @@ const Dashboard = () => {
 
 
     const findAndRenderSection = (id: string) => {
+        // This will now find items on the very first render
         const item = layout.find(item => item.id === id);
         if (!item) return null; 
         
-        // Components that render their own Card/Title wrapper
         const selfContainedComponents = [
             'playerHistoryTable', 'xgAnalytics', 'playerConsistency',
             'performanceRadar', 'matchTagAnalysis', 'formationTracker',
             'primaryInsight', 'goalInvolvement', 'cpsGauge', 'positionalHeatMap',
-            'overview', // The overview component now structures itself
-            // --- ADD TO THIS LIST ---
+            'overview',
             'runChunkAnalysis'
         ];
         if (selfContainedComponents.includes(id)) {
              return <item.component key={item.id} />;
         }
 
-        // Components that need the DashboardSection wrapper for title/structure
         let title = '';
          switch (id) {
             case 'playerMovers': title = 'Player Movers'; break;
             case 'records': title = 'All-Time Records'; break;
             case 'recentRuns': title = 'Recent Runs'; break;
             case 'clubLegends': title = 'Club Legends'; break;
-            // Add other cases here if needed
             default: 
-                // Fallback title generation if somehow missed
                 title = item.id.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
         }
 
-        // Only wrap if a title makes sense for the component type
         if (title) {
             return (
                 <DashboardSection key={item.id} title={title}>
@@ -181,42 +188,26 @@ const Dashboard = () => {
                 </DashboardSection>
             );
         } else {
-             // Render directly if no title needed (shouldn't happen often with current list)
              return <item.component key={item.id}/>
         }
     };
 
-    if (loading) {
-        return (
-            <div className="space-y-8"> {/* Match main spacing */}
-                 {/* Skeleton for Logo + Title */}
-                 <div className="flex items-center gap-4 mb-4">
-                    <Skeleton className="h-12 w-12 rounded-lg" style={{ backgroundColor: currentTheme.colors.surface }} />
-                    <div>
-                        <Skeleton className="h-8 w-40 mb-1" style={{ backgroundColor: currentTheme.colors.surface }} />
-                        <Skeleton className="h-4 w-64" style={{ backgroundColor: currentTheme.colors.surface }} />
-                    </div>
-                 </div>
-                 {/* Skeleton for Tabs */}
-                <Skeleton className="h-12 w-full md:w-96 rounded-2xl" style={{ backgroundColor: currentTheme.colors.surface }} /> 
-                {/* Skeleton for Content */}
-                <div className="space-y-6">
-                    <Skeleton className="h-64 w-full rounded-2xl" style={{ backgroundColor: currentTheme.colors.surface }} />
-                    <Skeleton className="h-48 w-full rounded-2xl" style={{ backgroundColor: currentTheme.colors.surface }} />
-                    <Skeleton className="h-96 w-full rounded-2xl" style={{ backgroundColor: currentTheme.colors.surface }} /> 
-                </div>
-            </div>
-        );
-    }
-
+    // --- THIS IS THE FIX ---
+    // The main `if (loading)` block is removed.
+    // The page structure is now rendered unconditionally.
+    // Child components will handle their own loading states.
     return (
-        <div className="space-y-8"> {/* Increased main spacing */}
+        <div className="space-y-8">
              {/* --- Logo and Title Section --- */}
-             <div className="flex items-center gap-4"> {/* Removed mb-4, spacing handled by parent */}
+             <div className="flex items-center gap-4">
+                 {/* This is a small exception: we can skeleton the logo area
+                    based on the *layout* loading state if we want,
+                    or just show it. Showing it is simpler and won't break anything.
+                 */}
                  <img 
                     src={logo} 
                     alt="FUT Trackr Logo" 
-                    className="h-12 w-12 rounded-lg object-cover shadow-md" // Added shadow
+                    className="h-12 w-12 rounded-lg object-cover shadow-md"
                  />
                  <div>
                     <h1 className="text-3xl font-bold text-white tracking-tight">Dashboard</h1>
@@ -226,7 +217,7 @@ const Dashboard = () => {
 
             <Tabs defaultValue="overview" className="space-y-6">
                 <TabsList className="glass-card rounded-2xl shadow-xl border-0 p-2 h-auto grid grid-cols-3">
-                     <TabsTrigger value="overview" className="tabs-trigger-style rounded-xl flex-1 flex gap-2 items-center justify-center"> {/* Centered content */}
+                     <TabsTrigger value="overview" className="tabs-trigger-style rounded-xl flex-1 flex gap-2 items-center justify-center">
                         <LayoutGrid className="h-4 w-4" />
                         Overview
                     </TabsTrigger>
@@ -240,7 +231,11 @@ const Dashboard = () => {
                     </TabsTrigger>
                 </TabsList>
             
-                {/* --- FIX: Add forceMount to all TabsContent --- */}
+                {/* These are all rendered from the first moment.
+                  `forceMount` is still crucial to prevent unmounting on tab switch.
+                  The components inside `findAndRenderSection` will now render
+                  their own loading states correctly.
+                */}
                 <TabsContent value="overview" className="space-y-6" forceMount>
                     {findAndRenderSection('overview')}
                     {findAndRenderSection('primaryInsight')} 
@@ -248,29 +243,22 @@ const Dashboard = () => {
                     {findAndRenderSection('records')}
                 </TabsContent>
 
-                {/* --- FIX: Add forceMount to all TabsContent --- */}
                 <TabsContent value="players" className="space-y-6" forceMount>
-                    {/* This grid stacks on mobile (grid-cols-1) and goes 2-wide on large screens */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {findAndRenderSection('playerMovers')}
                         {findAndRenderSection('goalInvolvement')}
                     </div>
-                    {/* This second grid does the same, keeping the layout clean */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {findAndRenderSection('clubLegends')}
                         {findAndRenderSection('playerHistoryTable')}
                     </div>
                 </TabsContent>
-                {/* --- END FIX --- */}
 
-                {/* --- FIX: Add forceMount to all TabsContent --- */}
                 <TabsContent value="analytics" className="space-y-6" forceMount>
                     {findAndRenderSection('performanceRadar')}
-                    {/* --- IT WILL RENDER HERE AUTOMATICALLY --- */}
                     {findAndRenderSection('runChunkAnalysis')}
                     {findAndRenderSection('matchTagAnalysis')}
                     {findAndRenderSection('formationTracker')}
-                    {/* --- MY TYPO WAS HERE. THIS IS NOW FIXED. --- */}
                     {findAndRenderSection('cpsGauge')}
                     {findAndRenderSection('xgAnalytics')}
                     {findAndRenderSection('playerConsistency')}
