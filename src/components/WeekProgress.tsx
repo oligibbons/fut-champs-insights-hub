@@ -11,7 +11,14 @@ interface WeekProgressProps {
 
 const WeekProgress = ({ currentWeek }: WeekProgressProps) => {
   const [gameVersion] = useLocalStorage('gameVersion', 'FC26');
-  const rewardRanks = getRewardRanks(gameVersion);
+  
+  // ---
+  // --- !! FIX IS HERE !! ---
+  // ---
+  // We must default to an empty array in case getRewardRanks returns
+  // undefined (e.g., if gameVersion from localStorage is old/invalid).
+  // ---
+  const rewardRanks = getRewardRanks(gameVersion) || [];
 
   // The total number of games in a weekend is 15 for both versions.
   const TOTAL_GAMES = 15;
@@ -35,19 +42,15 @@ const WeekProgress = ({ currentWeek }: WeekProgressProps) => {
 
   const { totalWins, games } = currentWeek;
   
-  // ---
-  // --- !! FIX IS HERE !! ---
-  // ---
-  // `games` (from `currentWeek.games`) can be null or undefined.
-  // We must use optional chaining (?.) and nullish coalescing (??)
-  // to safely get the length, defaulting to 0.
-  // ---
+  // Safely get gamesPlayed (from previous fix)
   const gamesPlayed = games?.length ?? 0;
   
   const progressPercentage = (gamesPlayed / TOTAL_GAMES) * 100;
 
   // Use totalWins (which is safely 0 if not present) for rank calculation
   const safeTotalWins = totalWins ?? 0;
+
+  // These .find() calls are now safe because rewardRanks is guaranteed to be an array.
   const nextReward = rewardRanks.find(rank => rank.wins > safeTotalWins);
   const currentRank = rewardRanks.slice().reverse().find(rank => safeTotalWins >= rank.wins);
 
@@ -107,6 +110,7 @@ const WeekProgress = ({ currentWeek }: WeekProgressProps) => {
               
               <TooltipProvider>
                 {Array.from({ length: MAX_WINS + 1 }, (_, i) => i).map((winCount) => {
+                  // This .find() is also safe now
                   const rankAtWin = rewardRanks.find(r => r.wins === winCount);
                   const isAchieved = safeTotalWins >= winCount;
                   
