@@ -1,4 +1,4 @@
-import { useCallback, memo } from 'react';
+import { useCallback, memo, useMemo } from 'react'; // --- FIX: Added useMemo
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -25,6 +25,24 @@ interface PlayerStatsFormProps {
   onStatsChange: (players: PlayerStatFormData[]) => void;
   gameDuration: number;
 }
+
+// --- FIX: Define the logical sort order for positions ---
+const positionOrder: { [key: string]: number } = {
+  'GK': 1,
+  'CB': 2,
+  'LB': 3,
+  'RB': 4,
+  'CDM': 5,
+  'CM': 6,
+  'LM': 7,
+  'RM': 8,
+  'CAM': 9,
+  'LW': 10,
+  'RW': 11,
+  'ST': 12,
+  'SUB': 13, // Subs come after the main squad
+  'RES': 14  // Reserves last
+};
 
 // Reusable Input Component for Player Stats
 const PlayerStatInput = memo(({
@@ -76,7 +94,9 @@ const PlayerStatInput = memo(({
             </Label>
             <div className="flex items-center gap-1">
                 {showButtons && (
-                     <Button type="button" variant="outline" size="icon" className="w-6 h-6 p-0 shrink-0 border-border/50 bg-background/50 hover:bg-muted/30" // Style adjustments
+                     <Button type="button" variant="outline" size="icon"
+                        // --- FIX: Use theme-aware colors ---
+                        className="w-6 h-6 p-0 shrink-0 border-border bg-accent/50 hover:bg-accent" 
                         onClick={() => onAdjust(playerId, field, -1, step, min, max)} disabled={isMin} aria-label={`Decrease ${label}`}>
                         <Minus className="h-3 w-3" />
                      </Button>
@@ -88,13 +108,15 @@ const PlayerStatInput = memo(({
                     value={value} // Directly use the string value
                     onChange={handleInputChange}
                     onBlur={handleBlur}
-                    // --- Style adjustments for input ---
-                    className={cn("h-7 text-xs font-semibold text-center px-1 text-white bg-background/50 border-border/50 focus:border-primary focus:ring-primary", inputWidth)}
+                    // --- FIX: Use theme-aware colors (input, text, border) ---
+                    className={cn("h-7 text-xs font-semibold text-center px-1 text-foreground bg-input/50 border-border focus:border-primary focus:ring-primary", inputWidth)}
                     placeholder={String(min)}
                     aria-label={label}
                 />
                  {showButtons && (
-                    <Button type="button" variant="outline" size="icon" className="w-6 h-6 p-0 shrink-0 border-border/50 bg-background/50 hover:bg-muted/30" // Style adjustments
+                    <Button type="button" variant="outline" size="icon"
+                        // --- FIX: Use theme-aware colors ---
+                        className="w-6 h-6 p-0 shrink-0 border-border bg-accent/50 hover:bg-accent" 
                         onClick={() => onAdjust(playerId, field, 1, step, min, max)} disabled={isMax} aria-label={`Increase ${label}`}>
                          <Plus className="h-3 w-3" />
                     </Button>
@@ -149,22 +171,31 @@ const PlayerStatsForm: React.FC<PlayerStatsFormProps> = ({ players = [], onStats
     );
   }, [players, onStatsChange, gameDuration]);
 
+  // --- FIX: Sort players based on the defined position order ---
+  const sortedPlayers = useMemo(() => {
+    const getOrder = (position: string) => positionOrder[position.toUpperCase()] || 99; // 99 for unknowns
+    return [...players].sort((a, b) => getOrder(a.position) - getOrder(b.position));
+  }, [players]);
+
   // --- RENDER ---
   return (
     <div className="space-y-3">
-       <Button type="button" variant="outline" size="sm" onClick={setAllMinutes} className="text-xs bg-background/50 border-border/50 hover:bg-muted/30">
+        {/* --- FIX: Removed hardcoded style classes, variant="outline" will use theme --- */}
+       <Button type="button" variant="outline" size="sm" onClick={setAllMinutes} className="text-xs">
           Set All Minutes to {gameDuration}
       </Button>
 
       <div className="space-y-4">
-        {players.map((player) => (
-           // --- FIX: Apply glass card styling to each player row ---
-           <div key={player.id} className="p-3 bg-background/40 rounded-lg border border-border/30 shadow-sm backdrop-blur-sm">
+        {/* --- FIX: Map over sortedPlayers instead of players --- */}
+        {sortedPlayers.map((player) => (
+           // --- FIX: Use theme-aware glass card styling (bg-card, border-border) ---
+           <div key={player.id} className="p-3 bg-card/70 rounded-lg border border-border shadow-sm backdrop-blur-sm">
             {/* Player Info Row */}
             <div className="flex justify-between items-center mb-3">
-               {/* Ensure text color is appropriate for the background */}
-              <span className="text-sm font-medium text-white truncate pr-2">{player.name || 'Unnamed Player'}</span>
-              <span className="text-xs uppercase text-muted-foreground bg-background/70 px-2 py-0.5 rounded">{player.position || 'N/A'}</span>
+               {/* --- FIX: Use theme-aware text color --- */}
+              <span className="text-sm font-medium text-card-foreground truncate pr-2">{player.name || 'Unnamed Player'}</span>
+              {/* --- FIX: Use theme-aware accent colors for the badge --- */}
+              <span className="text-xs uppercase text-accent-foreground bg-accent px-2 py-0.5 rounded font-semibold">{player.position || 'N/A'}</span>
             </div>
 
              {/* Stats Grid - Responsive Columns */}
