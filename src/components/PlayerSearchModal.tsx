@@ -93,19 +93,31 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position }: Player
 
   const handleInputChange = useCallback((field: keyof PlayerCard, value: string | number | boolean) => {
       let processedValue = value;
-      if (typeof initialNewPlayerState[field] === 'number') { processedValue = value === '' ? '' : (Number(value) || 0); }
+      // Coerce number fields safely, allow temporary empty string
+      if (typeof initialNewPlayerState[field] === 'number') {
+           processedValue = value === '' ? '' : (Number(value) || 0);
+      }
       setNewPlayer(prev => ({ ...prev, [field]: processedValue }));
-  }, [initialNewPlayerState]);
+  }, [initialNewPlayerState]); // Dependency on initial state shape
 
   const handleNumberBlur = useCallback((field: keyof PlayerCard) => {
-       const currentValue = newPlayer[field]; let finalValue = Number(currentValue) || 0;
-       if(field === 'rating' || ['pace', 'shooting', 'passing', 'dribbling', 'defending', 'physical', 'diving', 'handling', 'kicking', 'reflexes', 'speed', 'positioning'].includes(field)) { finalValue = Math.max(0, Math.min(99, finalValue)); }
-       else { finalValue = Math.max(0, finalValue); }
-        // Only update state if the final value is different from the current (potentially empty string) value
-        if (newPlayer[field] !== finalValue) {
-            setNewPlayer(prev => ({ ...prev, [field]: finalValue }));
-        }
-  }, [newPlayer]);
+       const currentValue = newPlayer[field];
+       let finalValue = Number(currentValue) || 0; // Default to 0 if empty or NaN
+
+       // Apply constraints
+       const statsFields = ['rating', 'pace', 'shooting', 'passing', 'dribbling', 'defending', 'physical', 'diving', 'handling', 'kicking', 'reflexes', 'speed', 'positioning'];
+       if(statsFields.includes(field)) {
+           finalValue = Math.max(0, Math.min(99, finalValue));
+       } else {
+           finalValue = Math.max(0, finalValue); // General non-negative (like price)
+       }
+
+       // Only update state if the final value is different
+       if (newPlayer[field] !== finalValue) {
+           setNewPlayer(prev => ({ ...prev, [field]: finalValue }));
+       }
+  }, [newPlayer]); // Dependency on newPlayer state
+
 
   const isGoalkeeper = newPlayer.position === 'GK';
   const outfieldStats: (keyof PlayerCard)[] = ['pace', 'shooting', 'passing', 'dribbling', 'defending', 'physical'];
@@ -115,20 +127,19 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position }: Player
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && resetAndClose()}>
       <DialogContent className="max-w-xl max-h-[90vh] flex flex-col glass-card border-border/20 text-white p-0">
-        <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/20">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/20 shrink-0"> {/* Ensure header doesn't shrink */}
           <DialogTitle>{showCreateForm ? (editingPlayer ? 'Edit Player' : 'Create New Player') : 'Search or Create Player'}</DialogTitle>
         </DialogHeader>
 
         {/* --- SEARCH VIEW --- */}
         {!showCreateForm ? (
-           // --- FIX: Ensure DialogFooter is INSIDE this outer div ---
-          <div className="flex flex-col gap-4 pt-4 flex-grow min-h-0 px-6">
-            <div className="relative shrink-0">
+          <div className="flex flex-col gap-4 pt-4 flex-grow min-h-0 px-6"> {/* Use flex-grow and min-h-0 */}
+            <div className="relative shrink-0"> {/* Prevent input shrink */}
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input placeholder="Search existing players..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9"/>
             </div>
 
-            <ScrollArea className="flex-grow pr-3 -mr-3 min-h-[100px] max-h-[calc(80vh-200px)]">
+            <ScrollArea className="flex-grow pr-3 -mr-3 min-h-[100px]"> {/* Let ScrollArea grow */}
                 <div className="space-y-2">
                     {suggestions.map((player) => (
                         <div key={player.id} className="flex items-center justify-between p-2 rounded-lg group hover:bg-white/10 transition-colors cursor-pointer" onClick={() => onPlayerSelect(player)}>
@@ -142,7 +153,7 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position }: Player
                            <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); handleEditPlayer(player); }} className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-white hover:bg-white/20 ml-2 shrink-0"> <Edit className="h-4 w-4" /> </Button>
                         </div>
                     ))}
-                    {searchTerm.trim() && suggestions.length === 0 && (
+                     {searchTerm.trim() && suggestions.length === 0 && (
                         <div className="text-center py-6 text-muted-foreground"><User className="h-8 w-8 mx-auto mb-2 opacity-50" /><p className="text-sm">No players found.</p></div>
                     )}
                      {!searchTerm.trim() && !squadDataLoading && suggestions.length === 0 && (
@@ -154,19 +165,18 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position }: Player
                 </div>
             </ScrollArea>
 
-            {/* Footer correctly placed INSIDE the div */}
-            <DialogFooter className="mt-auto pt-4 border-t border-border/20 pb-6 shrink-0"> {/* Adjusted padding */}
+            {/* Footer correctly placed INSIDE the main div, pushed down by flex-grow on ScrollArea */}
+            <DialogFooter className="pt-4 border-t border-border/20 px-0 pb-6 shrink-0"> {/* No horizontal padding, adjust bottom padding */}
                 <Button onClick={() => { setEditingPlayer(null); setNewPlayer(initialNewPlayerState); setShowCreateForm(true); }} variant="secondary" className="w-full sm:w-auto">
                    <Plus className="h-4 w-4 mr-2" />Create New Player
                </Button>
            </DialogFooter>
-          </div>
-        )}
-
-        {/* --- CREATE/EDIT VIEW --- */}
-        {showCreateForm && (
+          </div> // Closing outer div for !showCreateForm
+        ) : ( // Closing parenthesis for the conditional was potentially missing or misplaced
+        /* --- CREATE/EDIT VIEW --- */
+            // Needs explicit flex structure for footer push
             <div className="flex flex-col flex-grow min-h-0 pt-4 px-6">
-                 <ScrollArea className="flex-grow min-h-0 pr-3 -mr-3">
+                 <ScrollArea className="flex-grow min-h-0 pr-3 -mr-3"> {/* Scrollable form content */}
                     <div className="space-y-4 pb-4">
                         {/* Core Info */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -209,7 +219,7 @@ const PlayerSearchModal = ({ isOpen, onClose, onPlayerSelect, position }: Player
                     </div>
                  </ScrollArea>
                  <DialogFooter className="mt-auto pt-4 border-t border-border/20 pb-6 shrink-0"> {/* Adjusted padding */}
-                    <Button onClick={() => { setShowCreateForm(false); setEditingPlayer(null); /* No reset needed */ }} variant="outline" disabled={isSaving}>Back to Search</Button>
+                    <Button onClick={() => { setShowCreateForm(false); setEditingPlayer(null); /* No reset needed here */ }} variant="outline" disabled={isSaving}>Back to Search</Button>
                     <Button onClick={handleCreateOrUpdate} disabled={isSaving}>
                         {isSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : (editingPlayer ? <Edit className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />)}
                         {editingPlayer ? 'Update Player' : 'Create Player'}
