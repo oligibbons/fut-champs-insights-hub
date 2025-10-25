@@ -23,6 +23,7 @@ import { Game, PlayerPerformanceInsert, TeamStatisticsInsert } from '@/types/fut
 import { get, set, isEqual } from 'lodash';
 import { useAllSquadsData, SquadWithPlayers } from '@/hooks/useAllSquadsData'; // Import the new hook
 import { useTheme } from '@/hooks/useTheme';
+import { Form } from '@/components/ui/form'; // <-- **FIX: Added missing Form import**
 
 // --- ZOD SCHEMA ---
 // Comprehensive schema matching DB tables
@@ -308,7 +309,7 @@ const GameRecordForm = ({
   const watchedOpponentGoals = watch('opponent_goals');
   const watchedOvertimeResult = watch('overtime_result');
   const watchedTags = watch('tags', []); // Watch tags with default
-  const watchedPlayerStats = watch('player_stats', defaultValues.player_stats); // Watch player_stats
+  const watchedPlayerStats = watch('player_stats', defaultValues.player_stats); // **FIX: Watch player_stats with a default**
 
   const selectedSquad = useMemo(() => squads.find(s => s.id === watchedSquadId), [squads, watchedSquadId]);
 
@@ -701,7 +702,7 @@ const GameRecordForm = ({
                     </div>
                     {squadsLoading ? (<p className="text-sm text-muted-foreground">Loading squad players...</p>)
                     : !watchedSquadId ? (<p className="text-sm text-muted-foreground">Please select a squad in the 'Match' tab.</p>)
-                    : watchedPlayerStats && watchedPlayerStats.length > 0 ? (
+                    : watchedPlayerStats && watchedPlayerStats.length > 0 ? ( // <-- **FIX: Changed from watchedValues.player_stats**
                         <Controller
                             name="player_stats"
                             control={control}
