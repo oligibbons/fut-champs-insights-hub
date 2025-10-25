@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState, memo } from 'react';
+import { useEffect, useCallback, useState, memo, useMemo } from 'react';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -108,7 +108,7 @@ const matchTags = [
     { id: 'confirmedPro', name: 'Confirmed Pro Opponent', description: 'A game where you faced a confirmed professional FC player.' },
     { id: 'eliteOpponent', name: 'Elite Opponent', description: 'A game against an elite-level player (possibly pro, but not confirmed).' },
     { id: 'cutBackMerchant', name: 'Cut Back Merchant', description: 'An opponent whose sole game plan was to score cutbacks.' },
-    { id: 'defensiveMasterclass', name: 'Defensive Masterclass', description: 'A game where you defended to a very high level.' },
+    { id:F: 'defensiveMasterclass', name: 'Defensive Masterclass', description: 'A game where you defended to a very high level.' },
     { id: 'attackingMasterclass', name: 'Attacking Masterclass', description: 'A game where you attacked to a very high level.' },
     { id: 'defensiveDunce', name: 'Defensive Dunce', description: 'A game where you struggled to defend, to the point of embarrassment.' },
     { id: 'attackingAmateur', name: 'Attacking Amateur', description: 'A game where you couldn’t attack to save your life.' },
@@ -308,6 +308,7 @@ const GameRecordForm = ({
   const watchedOpponentGoals = watch('opponent_goals');
   const watchedOvertimeResult = watch('overtime_result');
   const watchedTags = watch('tags', []); // Watch tags with default
+  const watchedPlayerStats = watch('player_stats', defaultValues.player_stats); // Watch player_stats
 
   const selectedSquad = useMemo(() => squads.find(s => s.id === watchedSquadId), [squads, watchedSquadId]);
 
@@ -700,7 +701,7 @@ const GameRecordForm = ({
                     </div>
                     {squadsLoading ? (<p className="text-sm text-muted-foreground">Loading squad players...</p>)
                     : !watchedSquadId ? (<p className="text-sm text-muted-foreground">Please select a squad in the 'Match' tab.</p>)
-                    : watchedValues.player_stats && watchedValues.player_stats.length > 0 ? (
+                    : watchedPlayerStats && watchedPlayerStats.length > 0 ? (
                         <Controller
                             name="player_stats"
                             control={control}
