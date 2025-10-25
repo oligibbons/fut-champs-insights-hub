@@ -296,7 +296,7 @@ const CurrentRun = () => {
                 </Card>
             ) : (
                 <> {/* Active Run View */}
-                    <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6"> {/* Responsive header */}
+                    <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6"> {/* Responsive header */}
                         <div className="flex items-center gap-2">
                             <h1 className="text-2xl md:text-3xl font-bold text-white truncate max-w-[200px] sm:max-w-xs md:max-w-md">{currentRun.name || `Week ${games[0]?.week_number || '...'}`}</h1>
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsNamingModalOpen(true)}><Edit className="h-4 w-4 text-muted-foreground hover:text-white" /></Button>
