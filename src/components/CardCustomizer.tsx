@@ -2,47 +2,62 @@ import React from 'react';
 import { Switch } from '@/components/ui/switch'; //
 import { Label } from '@/components/ui/label'; //
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'; //
-import { CardOptions, availableMetrics } from './ShareableCardGenerator'; // Import shared types
+import { CardOptions, MetricDefinition } from './ShareableCardGenerator'; // Import shared types
 
 interface CardCustomizerProps {
   options: CardOptions;
   onChange: (optionKey: keyof CardOptions, value: boolean) => void;
-  availableMetrics: typeof availableMetrics; // Use the defined list
+  availableMetrics: MetricDefinition[];
   cardType: 'run' | 'overall';
 }
 
 const CardCustomizer: React.FC<CardCustomizerProps> = ({ options, onChange, availableMetrics, cardType }) => {
 
-  // Group metrics by their 'group' property
+  // Group metrics and filter based on cardType
   const groupedMetrics = availableMetrics.reduce((acc, metric) => {
-    const group = metric.group || 'Other';
-    if (!acc[group]) {
-      acc[group] = [];
+    // Determine if the metric should be shown for the current card type
+    const isRelevant = !( (cardType === 'run' && metric.overallOnly) || (cardType === 'overall' && metric.runOnly) );
+
+    if (isRelevant) {
+        const group = metric.group || 'Other';
+        if (!acc[group]) {
+            acc[group] = [];
+        }
+        acc[group].push(metric);
     }
-    // --- TODO: Add logic here to disable metrics irrelevant to cardType ---
-    // Example: Disable 'showBestRank' if cardType is 'run'
-    // metric.disabled = (cardType === 'run' && metric.id === 'showBestRank');
-    acc[group].push(metric);
     return acc;
-  }, {} as Record<string, typeof availableMetrics>);
+  }, {} as Record<string, MetricDefinition[]>);
+
+  // Define the order of groups
+  const groupOrder: (keyof typeof groupedMetrics)[] = [
+    'General',
+    'Team Stats',
+    'Player Stats',
+    'Streaks & Records',
+    'Analysis',
+    'Overall Profile',
+    // Add 'Other' if it exists, or any other custom groups
+  ].filter(group => groupedMetrics[group]); // Only include groups that have relevant metrics
 
   return (
-    <Accordion type="multiple" defaultValue={Object.keys(groupedMetrics)} className="w-full">
-      {Object.entries(groupedMetrics).map(([groupName, metrics]) => (
+    <Accordion type="multiple" defaultValue={groupOrder} className="w-full">
+      {groupOrder.map((groupName) => (
         <AccordionItem value={groupName} key={groupName}>
-          <AccordionTrigger className="text-base font-semibold">{groupName}</AccordionTrigger>
-          <AccordionContent>
-            <div className="space-y-4 pt-2">
-              {metrics.map((metric) => (
-                <div key={metric.id} className="flex items-center justify-between space-x-2 p-2 rounded-md hover:bg-muted/50">
-                  <Label htmlFor={metric.id} className="text-sm cursor-pointer">
+          <AccordionTrigger className="text-base font-medium hover:no-underline px-1"> {/* Adjust padding/style */}
+            {groupName}
+          </AccordionTrigger>
+          <AccordionContent className="pt-0"> {/* Remove top padding */}
+            <div className="space-y-3 pt-2"> {/* Adjust spacing */}
+              {groupedMetrics[groupName].map((metric) => (
+                <div key={metric.id} className="flex items-center justify-between space-x-2 px-1 py-1.5 rounded-md hover:bg-muted/30"> {/* Adjust padding/hover */}
+                  <Label htmlFor={metric.id} className="text-sm font-normal cursor-pointer flex-1 mr-2"> {/* Allow wrapping */}
                     {metric.label}
                   </Label>
                   <Switch
                     id={metric.id}
-                    checked={options[metric.id as keyof CardOptions]}
-                    onCheckedChange={(checked) => onChange(metric.id as keyof CardOptions, checked)}
-                    // disabled={metric.disabled} // Optional: Add disabled logic
+                    checked={options[metric.id]}
+                    onCheckedChange={(checked) => onChange(metric.id, checked)}
+                    className="flex-shrink-0" // Prevent switch from shrinking
                   />
                 </div>
               ))}
