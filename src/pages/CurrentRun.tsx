@@ -128,11 +128,6 @@ const matchTags = [
     { id: 'iRubberBanded', name: 'I Rubber Banded', description: 'You put your controller down and stopped playing at some point.' },
     { id: 'poorQualityOpponent', name: 'Poor Quality Opponent', description: 'An opponent who is simply not very good at the game.' },
     { id: 'fairResult', name: 'Fair Result', description: 'Regardless of who won or lost, the result was a fair reflection of the performance.' },
-    // ---
-    // --- !! FIX IS HERE !! ---
-    // ---
-    // Corrected the typo from `id:act, 'myOwnWorstEnemy'` back to `id: 'myOwnWorstEnemy'`
-    // ---
     { id: 'myOwnWorstEnemy', name: 'My Own Worst Enemy', description: 'Your own consistent mistakes caused you significant problems.' },
     { id: 'funGame', name: 'Fun Game', description: 'A game that you enjoyed playing, irrespective of the result.' },
     { id: 'ashamedPerformance', name: 'Performance to be ashamed of', description: 'Poor performance or had to resort to ratty tactics.' },
@@ -399,7 +394,13 @@ const GameRecordForm = ({
 
         } else if (!squadJustChanged && watchedPlayerStats) {
              const updatedPlayers = watchedPlayerStats.map(currentPlayer => {
-                const squadPlayerInfo = (selectedSquad.squad_players || []).find(sp => sp.players?.id === currentPlayer.id);
+                // ---
+                // --- !! PROACTIVE FIX IS HERE !! ---
+                // ---
+                // Added optional chaining (?.) to selectedSquad, as it could
+                // be undefined if no squad is selected.
+                // ---
+                const squadPlayerInfo = (selectedSquad?.squad_players || []).find(sp => sp.players?.id === currentPlayer.id);
                 const wasStarter = squadPlayerInfo?.slot_id?.startsWith('starting-');
                  const currentDefaultDuration = game?.duration || 90; 
                  const needsAutoUpdate = wasStarter && (currentPlayer.minutes_played === currentDefaultDuration || currentPlayer.minutes_played === 90 || currentPlayer.minutes_played === 120);
@@ -1124,12 +1125,7 @@ const CurrentRunPage = () => {
         {/* Left Column (Stats) */}
         <div className="lg:col-span-1 space-y-6">
           
-          {/* ---
-          --- !! PROP FIX IS HERE !! ---
-          ---
-          * Pass `games={games}` to `CurrentRunStats`
-          * Pass `currentWeek={currentRun}` to `WeekProgress`
-          --- */}
+          {/* (Props are fixed from previous step) */}
           <CurrentRunStats games={games} />
           <WeekProgress currentWeek={currentRun} />
 
