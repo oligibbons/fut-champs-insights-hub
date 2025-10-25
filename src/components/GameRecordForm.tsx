@@ -28,9 +28,9 @@ import {
 import { useSquadData } from '@/hooks/useSquadData';
 import PlayerPerformanceInput from './PlayerPerformanceInput';
 import { Card, CardContent } from '@/components/ui/card';
-import { Pen, Users, Save, Trophy, X } from 'lucide-react'; // <-- FIX 1: 'Players' changed to 'Users'
+import { Pen, Users, Save, Trophy, X } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
-import { Checkbox } from './ui/checkbox';
+// import { Checkbox } from './ui/checkbox'; // This was imported but not used, can be removed
 import PenaltyShootoutInput from './PenaltyShootoutInput';
 
 type GameFormData = {
@@ -68,12 +68,13 @@ const gameFormSchema = z.object({
 
 interface GameRecordFormProps {
   onSubmit: (
-    data: Omit<Game, 'id' | 'created_at' | 'run_id'>,
+    data: Omit<Game, 'id' | 'created_at' | 'run_id' | 'week_id'>, // <-- FIX: Adjusted type
     playerPerformances: PlayerPerformanceInsert[],
   ) => void;
   isLoading: boolean;
   game?: Game;
-  runId: string;
+  runId: string; // This is the week_id
+  gameVersion: string; // <-- FIX: Add gameVersion prop
   onCancel?: () => void;
 }
 
@@ -82,9 +83,14 @@ const GameRecordForm = ({
   isLoading,
   game,
   runId,
+  gameVersion, // <-- FIX: Destructure gameVersion
   onCancel,
 }: GameRecordFormProps) => {
-  const { activeSquadPlayers, loading: squadLoading } = useSquadData();
+  // --- FIX 1: PROVIDE A DEFAULT VALUE FOR activeSquadPlayers ---
+  // This prevents the useMemo hook from crashing on `activeSquadPlayers.length`
+  const { activeSquadPlayers = [], loading: squadLoading } = useSquadData();
+  // --- END FIX 1 ---
+  
   const { currentTheme } = useTheme();
   const [showPenalties, setShowPenalties] = useState(
     game?.overtime_result === 'win_pen' || game?.overtime_result === 'loss_pen',
@@ -183,23 +189,33 @@ const GameRecordForm = ({
   }, [overtimeResult, setValue]);
 
   const handleFormSubmit = (data: GameFormData) => {
-    const gameData: Omit<Game, 'id' | 'created_at' | 'run_id'> = {
+    // --- FIX 2: Align with 'game_results' table schema ---
+    const gameData: Omit<Game, 'id' | 'created_at' | 'run_id' | 'week_id'> = {
       game_number: data.game_number,
       score_own: data.score_own,
       score_opponent: data.score_opponent,
       opponent_username: data.opponent_username,
       result: data.result,
       overtime_result: data.overtime_result,
-      run_id: runId,
+      week_id: runId, // <-- Use 'week_id'
+      game_version: gameVersion, // <-- Pass 'game_version'
+      // These fields are missing from the form but are in the schema
+      // They will get default values from the DB
+      opponent_skill: 1, 
+      game_context: 'normal',
+      duration: 0, 
     };
+    // --- END FIX 2 ---
 
+    // --- FIX 3: Align with 'player_performances' table schema ---
     const performancesData: PlayerPerformanceInsert[] =
       data.playerPerformances.map((p) => ({
         ...p,
         rating: p.rating ? Number(p.rating) : null,
-        game_id: game?.id ?? '', // This will be set on the server if it's a new game
-        run_id: runId,
+        game_id: game?.id ?? '', 
+        // run_id: runId, // <-- REMOVE: This column doesn't exist on this table
       }));
+    // --- END FIX 3 ---
 
     onSubmit(gameData, performancesData);
   };
@@ -229,7 +245,7 @@ const GameRecordForm = ({
                   <Trophy className="mr-2 h-4 w-4" /> Game
                 </TabsTrigger>
                 <TabsTrigger value="players">
-                  <Users className="mr-2 h-4 w-4" /> Players {/* <-- FIX 2: '<Players>' changed to '<Users>' */}
+                  <Users className="mr-2 h-4 w-4" /> Players
                 </TabsTrigger>
               </TabsList>
 
