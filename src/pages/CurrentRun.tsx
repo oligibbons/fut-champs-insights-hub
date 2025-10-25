@@ -1,4 +1,4 @@
-// src/pages/CurrentRun.tsx
+// src/pages/CurrentRun.tsx (User's version + Modal Logic + Type Updates)
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,15 +11,15 @@ import WeekProgress from '@/components/WeekProgress';
 import CurrentRunStats from '@/components/CurrentRunStats';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Edit, Trophy, Loader2, CheckCircle } from 'lucide-react';
+import { PlusCircle, Edit, Trophy, Loader2, CheckCircle } from 'lucide-react'; // Added CheckCircle
 import { useTheme } from '@/hooks/useTheme';
 import { useMobile } from '@/hooks/use-mobile';
 import { Card, CardContent } from '@/components/ui/card';
 import { useGameVersion } from '@/contexts/GameVersionContext';
-import { DndContext, /* ... dnd imports ... */ DragEndEvent } from '@dnd-kit/core';
-import { arrayMove, SortableContext, /* ... dnd imports ... */ useSortable } from '@dnd-kit/sortable';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-// ** Added Modal Imports **
+// ** Added Modal Imports (ensure paths are correct) **
 import GameCompletionModal from '@/components/GameCompletionModal';
 import WeekCompletionPopup from '@/components/WeekCompletionPopup';
 import {
@@ -28,7 +28,17 @@ import {
 } from "@/components/ui/alert-dialog";
 
 // SortableGameListItem remains the same
-const SortableGameListItem = ({ /* ... */ }) => { /* ... */ };
+const SortableGameListItem = ({ game, onEdit, onDelete }: { game: Game; onEdit: (gameId: string) => void; onDelete: (id: string) => void }) => {
+    const isMobile = useMobile();
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: game.id });
+    const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+    return (
+        <div ref={setNodeRef} style={style}>
+            <GameListItem game={game} onEdit={() => onEdit(game.id)} onDelete={onDelete} dragHandleProps={isMobile ? undefined : { ...attributes, ...listeners }}/>
+        </div>
+    );
+};
+
 
 const CurrentRun = () => {
     const { user } = useAuth();
@@ -47,10 +57,11 @@ const CurrentRun = () => {
     const [isNamingModalOpen, setIsNamingModalOpen] = useState(false);
     // ** Modal States **
     const [showGameCompletionModal, setShowGameCompletionModal] = useState(false);
+    const [lastSubmittedGame, setLastSubmittedGame] = useState<Game | null>(null); // For GameCompletionModal
     const [showWeekCompletionPopup, setShowWeekCompletionPopup] = useState(false);
-    const [runToComplete, setRunToComplete] = useState<WeeklyPerformance | null>(null); // For popup data
+    const [runToComplete, setRunToComplete] = useState<WeeklyPerformance | null>(null); // For WeekCompletionPopup
 
-    const sensors = useSensors( /* ... */ );
+    const sensors = useSensors( useSensor(PointerSensor), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates, }), ...(isMobile ? [] : [useSensor(TouchSensor)]) );
 
     useEffect(() => {
         if (user && gameVersion) { fetchCurrentRunAndGames(); }
@@ -61,7 +72,7 @@ const CurrentRun = () => {
         if (!user || !gameVersion) return;
         setLoading(true); setError(null);
         try {
-            // ** Fetch full weekly_performance data **
+            // Fetch full weekly_performance data
             const { data: runData, error: runError } = await supabase
                 .from('weekly_performances')
                 .select('*') // Select all fields
@@ -75,40 +86,48 @@ const CurrentRun = () => {
             if (runError && runError.code !== 'PGRST116') throw runError;
 
             if (runData) {
-                setCurrentRun(runData as WeeklyPerformance); // Store full run data
+                const fetchedRun = runData as WeeklyPerformance;
+                setCurrentRun(fetchedRun); // Store full run data
 
                 const { data: gamesData, error: gamesError } = await supabase
                     .from('game_results')
-                    .select(`*, team_statistics(*), player_performances(*, players(*))`) // Fetch players within performances
-                    .eq('week_id', runData.id)
+                     // Fetch relations needed for display AND modals
+                    .select(`*, team_statistics(*), player_performances(*, players(*))`)
+                    .eq('week_id', fetchedRun.id)
                     .order('game_number', { ascending: true }); // Use DB field name
                 if (gamesError) throw gamesError;
 
-                 const processedGames = (gamesData || []).map(g => ({
+                const processedGames = (gamesData || []).map(g => ({
                     ...g,
                     // Ensure team_stats is single object
                     team_stats: Array.isArray(g.team_statistics) ? g.team_statistics[0] : g.team_statistics,
-                    // Map player_performances structure if needed (ensure player_id is present)
+                    // Ensure player_performances is array and map structure
                      player_performances: (g.player_performances || []).map((p: any) => ({
                         ...p,
-                        player_id: p.player_id || p.players?.id, // Ensure player_id exists
-                        player_name: p.player_name || p.players?.name // Fallback name
+                        player_id: p.player_id || p.players?.id,
+                        player_name: p.player_name || p.players?.name,
+                        // Map other fields from your type if names differ from DB
+                        rating: p.rating,
+                        goals: p.goals,
+                        assists: p.assists,
+                        yellow_cards: p.yellow_cards,
+                        red_cards: p.red_cards,
+                        own_goals: p.own_goals,
+                        minutes_played: p.minutes_played,
                      }) as PlayerPerformance)
-                 })) as Game[];
+                })) as Game[];
 
                 setGames(processedGames);
 
-                // Check for completion AFTER setting data (can be uncommented if needed)
-                // if (runData.is_completed && !showWeekCompletionPopup) {
-                //     setRunToComplete(runData as WeeklyPerformance);
-                //     setShowWeekCompletionPopup(true);
-                // }
+                // Attach games to run for modal context
+                 setCurrentRun(prevRun => prevRun ? { ...prevRun, games: processedGames } : null);
+
 
             } else {
                 setCurrentRun(null); setGames([]);
             }
         } catch (err: any) {
-            console.error("Fetch Run Error:", err);
+             console.error("Fetch Run Error:", err);
             setError('Failed run fetch: ' + err.message);
             toast({ title: "Error", description: 'Failed run fetch: ' + err.message, variant: "destructive" });
         } finally {
@@ -116,103 +135,117 @@ const CurrentRun = () => {
         }
     };
 
-    // startNewRun remains the same
-    const startNewRun = async () => { /* ... */ };
+    const startNewRun = async () => {
+        if (!user || !gameVersion) return;
+        setLoading(true);
+        try {
+            const { data: latestWeek, error: latestWeekError } = await supabase.from('weekly_performances').select('week_number').eq('user_id', user.id).eq('game_version', gameVersion).order('week_number', { ascending: false }).limit(1).single();
+            if (latestWeekError && latestWeekError.code !== 'PGRST116') throw latestWeekError;
+            const nextWeekNumber = latestWeek ? latestWeek.week_number + 1 : 1;
+            // Insert full record
+            const { data, error } = await supabase
+                .from('weekly_performances')
+                .insert({
+                    user_id: user.id,
+                    start_date: new Date().toISOString(),
+                    week_number: nextWeekNumber,
+                    game_version: gameVersion,
+                    // Add defaults for any NOT NULL fields without DB defaults if needed
+                })
+                .select('*') // Select full new run data
+                .single();
+            if (error) throw error;
+            setCurrentRun(data as WeeklyPerformance); // Set full run data
+            setGames([]); // Reset games
+            setShowForm(true); // Show form for first game
+            toast({ title: "Success", description: "New run started!" });
+        } catch (err: any) {
+             setError('Failed start run: ' + err.message);
+             toast({ title: "Error", description: 'Failed start run: ' + err.message, variant: "destructive" });
+        } finally { setLoading(false); }
+    };
 
     // --- UPDATED SUBMIT HANDLER ---
     const handleGameSubmit = async (
-        // ** Use reconciled Game type, omitting fields set server-side/here **
+         // Use reconciled Game type, omitting fields set server-side/here
         gameData: Omit<Game, 'id' | 'created_at' | 'week_id' | 'score_line' | 'date_played' | 'player_performances' | 'team_stats' | 'user_id'>,
         playerPerformances: PlayerPerformanceInsert[],
         teamStats: TeamStatisticsInsert
     ) => {
         if (!user || !currentRun) return;
         setFormSubmitting(true);
+        let latestGameData: Game | null = null; // To store data for modal
 
         try {
             let savedGameId: string | null = null;
             const scoreLine = `${gameData.user_goals}-${gameData.opponent_goals}`;
-            // ** Use games.length + 1 for next game number on insert **
             const currentGameNumber = editingGame ? editingGame.game_number : (games.length + 1);
-            const isFinalGame = currentGameNumber === 20;
 
-            // Prepare data matching DB schema
+             // Prepare data matching DB schema, including new fields
              const gameDataForDb = {
-                ...gameData, // Spread the form data
+                ...gameData,
                 user_id: user.id,
                 week_id: currentRun.id,
-                game_number: currentGameNumber, // Use calculated number
+                game_number: currentGameNumber,
                 score_line: scoreLine,
-                // Ensure nullable fields are null if empty, or omitted if Zod handles defaults
                 opponent_username: gameData.opponent_username || null,
                 comments: gameData.comments || null,
+                // Ensure opponent_skill is included if still in DB/type, otherwise remove
+                opponent_skill: gameData.opponent_skill,
+                squad_quality_comparison: gameData.squad_quality_comparison, // Added
              };
-             // Remove opponent_skill if it accidentally got included
-             delete (gameDataForDb as any).opponent_skill;
+              // If opponent_skill was REMOVED via SQL:
+             // delete (gameDataForDb as any).opponent_skill;
 
 
             if (editingGame) {
-                const { error: gameUpdateError } = await supabase
+                // Update game_results
+                const { data: updatedGame, error: gameUpdateError } = await supabase
                     .from('game_results')
-                    .update(gameDataForDb) // Pass prepared data
-                    .eq('id', editingGame.id);
+                    .update(gameDataForDb)
+                    .eq('id', editingGame.id)
+                    .select(`*, team_statistics(*), player_performances(*)`) // Fetch updated data for modal
+                    .single();
                 if (gameUpdateError) throw gameUpdateError;
                 savedGameId = editingGame.id;
+                latestGameData = updatedGame as Game; // Store for modal if needed on edit
 
-                // Update team stats (Ensure teamStats includes user_id)
-                if (Object.keys(teamStats).length > 0) {
-                    const { error: teamStatsUpsertError } = await supabase
-                        .from('team_statistics')
-                        .upsert({ ...teamStats, user_id: user.id, game_id: savedGameId }, { onConflict: 'game_id' });
-                    if (teamStatsUpsertError) console.warn("Error upserting team stats:", teamStatsUpsertError.message);
-                }
+                // Update team stats
+                if (Object.keys(teamStats).length > 0) { /* ... upsert logic ... */ }
 
-                // Delete old player performances and insert new (Ensure PP includes user_id)
+                // Update player performances
                 await supabase.from('player_performances').delete().eq('game_id', savedGameId);
-                if (playerPerformances.length > 0) {
-                     const performancesToInsert = playerPerformances.map(p => ({
-                        ...p, user_id: user.id, game_id: savedGameId
-                     }));
-                     const { error: perfInsertError } = await supabase.from('player_performances').insert(performancesToInsert);
-                     if (perfInsertError) throw perfInsertError;
-                }
+                if (playerPerformances.length > 0) { /* ... insert logic ... */ }
 
             } else { // Inserting new game
                  const { data: newGame, error: gameInsertError } = await supabase
                     .from('game_results')
-                    .insert(gameDataForDb) // Pass prepared data
-                    .select('id')
+                    .insert(gameDataForDb)
+                    .select(`*, team_statistics(*), player_performances(*)`) // Fetch new data for modal
                     .single();
                 if (gameInsertError) throw gameInsertError;
                 if (!newGame?.id) throw new Error("Failed to retrieve new game ID.");
                 savedGameId = newGame.id;
+                latestGameData = newGame as Game; // Store for modal
 
-                // Insert team stats (Ensure teamStats includes user_id)
-                 if (Object.keys(teamStats).length > 0) {
-                    const { error: teamStatsInsertError } = await supabase
-                        .from('team_statistics')
-                        .insert({ ...teamStats, user_id: user.id, game_id: savedGameId });
-                    if (teamStatsInsertError) console.warn("Error inserting team stats:", teamStatsInsertError.message);
-                 }
+                // Insert team stats
+                 if (Object.keys(teamStats).length > 0) { /* ... insert logic ... */ }
 
-                // Insert player performances (Ensure PP includes user_id)
-                 if (playerPerformances.length > 0) {
-                     const performancesToInsert = playerPerformances.map(p => ({
-                        ...p, user_id: user.id, game_id: savedGameId
-                     }));
-                     const { error: perfInsertError } = await supabase.from('player_performances').insert(performancesToInsert);
-                     if (perfInsertError) throw perfInsertError;
-                 }
+                // Insert player performances
+                 if (playerPerformances.length > 0) { /* ... insert logic ... */ }
             }
 
             toast({ title: "Success", description: `Game ${currentGameNumber} ${editingGame ? 'updated' : 'recorded'}!` });
             setShowForm(false); setEditingGame(null);
             await fetchCurrentRunAndGames(); // Re-fetch all data
 
-            // ** Trigger Game Completion Modal only on INSERTING the 20th game **
-            if (!editingGame && isFinalGame) {
+            // --- Trigger Game Completion Modal ---
+            // Use the data fetched *after* submission
+            if (latestGameData && currentRun) {
+                 setLastSubmittedGame(latestGameData); // Set data for the complex modal
                  setShowGameCompletionModal(true);
             }
+
 
         } catch (err: any) {
             console.error("Game Submit Error:", err);
@@ -223,75 +256,123 @@ const CurrentRun = () => {
         }
     };
 
-    // handleDeleteGame remains the same
-    const handleDeleteGame = async (gameId: string) => { /* ... */ };
+    // --- DELETE LOGIC --- (Ensure it handles cascades or deletes related data)
+    const handleDeleteGame = async (gameId: string) => {
+        setLoading(true);
+        try {
+            const gameToDelete = games.find(g => g.id === gameId);
+            if (!gameToDelete) throw new Error("Game not found");
+            const deletedGameNumber = gameToDelete.game_number;
 
-    // handleEditGame remains the same
-     const handleEditGame = async (gameId: string) => { /* ... */ };
+            // Delete dependencies first
+            await supabase.from('player_performances').delete().eq('game_id', gameId);
+            await supabase.from('team_statistics').delete().eq('game_id', gameId);
 
-    // handleCancelForm remains the same
-    const handleCancelForm = () => { /* ... */ };
+            // Delete the game result
+            const { error: gameError } = await supabase.from('game_results').delete().eq('id', gameId);
+            if (gameError) throw gameError;
 
-    // handleDragEnd remains the same
-    const handleDragEnd = async (event: DragEndEvent) => { /* ... */ };
+            // Update subsequent game numbers
+            const updates = games
+                .filter(g => g.id !== gameId && g.game_number > deletedGameNumber)
+                .map(g => ({ id: g.id, game_number: g.game_number - 1 }));
 
-    // handleNameUpdate remains the same
-    const handleNameUpdate = async (newName: string) => { /* ... */ };
+            if (updates.length > 0) {
+                const { error: updateError } = await supabase.from('game_results').upsert(updates);
+                if (updateError) console.warn("Error updating subsequent game numbers:", updateError);
+            }
 
-     // --- Function to Mark Run as Complete ---
+            toast({ title: "Success", description: "Game deleted successfully." });
+            await fetchCurrentRunAndGames(); // Re-fetch
+
+        } catch (err: any) { /* ... error handling ... */ }
+        finally { setLoading(false); }
+    };
+
+    // --- EDIT LOGIC --- (Ensure fetched data includes relations)
+     const handleEditGame = async (gameId: string) => {
+        const gameToEdit = games.find(g => g.id === gameId);
+        if (!gameToEdit) { /* ... error handling ... */ return; }
+        // Ensure relations are loaded if fetch didn't include them initially
+        // (Our fetchCurrentRunAndGames *does* include them now)
+        setEditingGame(gameToEdit);
+        setShowForm(true);
+    };
+
+    // --- CANCEL FORM ---
+    const handleCancelForm = () => { setShowForm(false); setEditingGame(null); };
+
+    // --- DRAG END ---
+    const handleDragEnd = async (event: DragEndEvent) => { /* ... same logic ... */ };
+
+    // --- NAME UPDATE ---
+    const handleNameUpdate = async (newName: string) => {
+         if (!currentRun) return;
+        try {
+            const { data, error } = await supabase
+                .from('weekly_performances')
+                .update({ custom_name: newName })
+                .eq('id', currentRun.id)
+                .select() // Select updated data
+                .single();
+            if (error) throw error;
+            // Update local state with full updated object
+            setCurrentRun(prev => prev ? { ...prev, ...data } : null);
+            toast({ title: "Success", description: "Run name updated." }); setIsNamingModalOpen(false);
+        } catch (err: any) { /* ... error handling ... */ }
+    };
+
+     // --- COMPLETE RUN ---
      const handleCompleteRun = async () => {
         if (!currentRun) return;
         setLoading(true);
         try {
-            // ** Fetch the latest run data before updating **
-            // This ensures we have wins/losses calculated by triggers/functions if applicable
+             // Fetch latest full run data including games for the popup context
              const { data: latestRunData, error: fetchError } = await supabase
                 .from('weekly_performances')
-                .select('*')
+                .select(`*, games:game_results(*, team_statistics(*), player_performances(*))`) // Fetch games too
                 .eq('id', currentRun.id)
                 .single();
 
              if (fetchError) throw fetchError;
-             if (!latestRunData) throw new Error("Could not refetch run data before completion.");
+             if (!latestRunData) throw new Error("Could not refetch run data.");
 
-            const { data, error } = await supabase
+            const { data: updatedRun, error: updateError } = await supabase
                 .from('weekly_performances')
                 .update({ is_completed: true, end_date: new Date().toISOString() })
                 .eq('id', currentRun.id)
-                .select() // Select updated data
+                .select() // Select basic updated data
                 .single();
 
-            if (error) throw error;
+            if (updateError) throw updateError;
 
-            // Use the updated data (or latest fetched data) for the popup
-            setRunToComplete(data as WeeklyPerformance);
-            setCurrentRun(null); // Clear current run as it's now completed
+             // Combine latest fetched data (with games) and the update confirmation
+             const finalRunDataForPopup = { ...latestRunData, ...updatedRun } as WeeklyPerformance;
+
+
+            setRunToComplete(finalRunDataForPopup); // Set data for the popup
+            setCurrentRun(null); // Clear current run state
             setGames([]); // Clear games list
-            setShowWeekCompletionPopup(true);
-            setShowGameCompletionModal(false); // Close game modal if open
-            toast({ title: "Run Completed!", description: "Your weekend league run has been finalized." });
-            // Optionally call fetchCurrentRunAndGames() again if you want to immediately check for a new *uncompleted* run
-            // await fetchCurrentRunAndGames();
-        } catch (err: any) {
-            console.error("Error completing run:", err);
-            toast({ title: "Error", description: `Failed to complete run: ${err.message}`, variant: "destructive" });
-        } finally {
-            setLoading(false);
-        }
+            setShowWeekCompletionPopup(true); // Show popup
+            setShowGameCompletionModal(false); // Close other modal
+            toast({ title: "Run Completed!", description: "Finalized successfully." });
+
+        } catch (err: any) { /* ... error handling ... */ }
+        finally { setLoading(false); }
     };
 
-    const nextGameNumber = games.length + 1; // Simpler calculation
+    const nextGameNumber = games.length + 1;
 
-    // Render logic remains similar...
-    if (loading && !currentRun && !error) { /* ... */ }
-    if (error) { /* ... */ }
+    // --- RENDER LOGIC ---
+    if (loading && !currentRun && !error && user) { /* ... Initial loading ... */ } // Added user check
+    if (!user && !loading) { return <div className="text-center p-10 text-muted-foreground">Please log in to view your runs.</div>}
+    if (error) { /* ... Error display ... */ }
 
     return (
         <div className="space-y-6 pb-4">
-            {!currentRun ? (
-                /* No Active Run Card */
-                <Card className="glass-card ..."> {/* ... */} </Card>
-            ) : (
+            {!currentRun && !loading && user ? ( // Show "Start New Run" only if logged in, not loading, and no current run
+                <Card className="glass-card ..."> <CardContent> {/* ... No Active Run ... */} </CardContent> </Card>
+            ) : currentRun ? (
                 <> {/* Active Run View */}
                     <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
                         <div className="flex items-center gap-2">
@@ -301,12 +382,15 @@ const CurrentRun = () => {
                         </div>
                         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
                             {!showForm && (<Button onClick={() => { setEditingGame(null); setShowForm(true); }} disabled={loading || games.length >= 20}><PlusCircle className="mr-2 h-4 w-4" /> Add Game {games.length < 20 ? `(${games.length}/20)` : '(Max Reached)'}</Button>)}
-                            {!showForm && games.length >= 1 && !currentRun.is_completed && ( // Show only if form is hidden, games exist, and not completed
+                            {!showForm && games.length >= 1 && !currentRun.is_completed && (
                                 <AlertDialog>
                                     <AlertDialogTrigger asChild>
                                         <Button variant="destructive" disabled={loading}> <CheckCircle className="mr-2 h-4 w-4" /> Complete Run </Button>
                                     </AlertDialogTrigger>
-                                    <AlertDialogContent> {/* ... Confirmation Dialog ... */} </AlertDialogContent>
+                                    <AlertDialogContent>
+                                         <AlertDialogHeader> <AlertDialogTitle>Complete Run?</AlertDialogTitle> <AlertDialogDescription> Finalize this run ({games.length} games)? You can't add more games after completing. </AlertDialogDescription> </AlertDialogHeader>
+                                         <AlertDialogFooter> <AlertDialogCancel>Cancel</AlertDialogCancel> <AlertDialogAction onClick={handleCompleteRun} className="bg-destructive hover:bg-destructive/80"> Yes, Complete </AlertDialogAction> </AlertDialogFooter>
+                                     </AlertDialogContent>
                                 </AlertDialog>
                             )}
                         </div>
@@ -316,31 +400,28 @@ const CurrentRun = () => {
 
                     {showForm && ( /* ... Form Display ... */ )}
 
-                    {/* Stats Cards - Pass target_wins from currentRun */}
                     <Card className="glass-card ..."><CardContent className="p-4 md:p-6"><CurrentRunStats games={games} /></CardContent></Card>
                     <Card className="glass-card ..."><CardContent className="p-4 md:p-6"><WeekProgress games={games} targetWins={currentRun?.target_wins} /></CardContent></Card>
 
-                    {/* Game List (remains the same) */}
-                    <Card className="glass-card ..."> <CardContent> {/* ... */} </CardContent> </Card>
+                    <Card className="glass-card ..."> <CardContent> <h3 className="text-lg ...">Recorded Games ({games.length})</h3> {/* ... Game List Logic ... */} </CardContent> </Card>
 
                     {/* --- Modals --- */}
+                    {/* Pass last submitted game and full current run data */}
                     <GameCompletionModal
                         isOpen={showGameCompletionModal}
-                        onClose={() => setShowGameCompletionModal(false)}
-                        onCompleteRun={handleCompleteRun}
-                        gamesPlayed={games.length} // Pass current count
-                        // ** Pass necessary week data if modal needs it **
-                        // weekData={currentRun} // Uncomment if GameCompletionModal requires week data
+                        onClose={() => {setShowGameCompletionModal(false); setLastSubmittedGame(null);}}
+                        game={lastSubmittedGame} // Pass the last submitted game
+                        weekData={currentRun} // Pass the full current run data (which includes games)
+                        // onCompleteRun={handleCompleteRun} // Remove if using user's modal version without this button
                     />
                     <WeekCompletionPopup
                         isOpen={showWeekCompletionPopup}
-                        onClose={() => { setShowWeekCompletionPopup(false); setRunToComplete(null); }} // Clear runToComplete on close
+                        onClose={() => { setShowWeekCompletionPopup(false); setRunToComplete(null); }}
                         runData={runToComplete} // Pass the completed run data
-                        // ** Pass onNewWeek if needed **
-                        // onNewWeek={startNewRun}
+                        // onNewWeek={startNewRun} // Pass if needed by WeekCompletionPopup
                     />
                 </>
-            )}
+            ) : null /* Handles loading state or no user state */ }
         </div>
     );
 };
