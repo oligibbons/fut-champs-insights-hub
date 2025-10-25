@@ -240,15 +240,16 @@ const Dashboard = () => {
                     </TabsTrigger>
                 </TabsList>
             
-                <TabsContent value="overview" className="space-y-6">
+                {/* --- FIX: Add forceMount to all TabsContent --- */}
+                <TabsContent value="overview" className="space-y-6" forceMount>
                     {findAndRenderSection('overview')}
                     {findAndRenderSection('primaryInsight')} 
                     {findAndRenderSection('recentRuns')}
                     {findAndRenderSection('records')}
                 </TabsContent>
 
-                {/* --- FIX: Updated Player Hub Tab --- */}
-                <TabsContent value="players" className="space-y-6">
+                {/* --- FIX: Add forceMount to all TabsContent --- */}
+                <TabsContent value="players" className="space-y-6" forceMount>
                     {/* This grid stacks on mobile (grid-cols-1) and goes 2-wide on large screens */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {findAndRenderSection('playerMovers')}
@@ -262,7 +263,8 @@ const Dashboard = () => {
                 </TabsContent>
                 {/* --- END FIX --- */}
 
-                <TabsContent value="analytics" className="space-y-6">
+                {/* --- FIX: Add forceMount to all TabsContent --- */}
+                <TabsContent value="analytics" className="space-y-6" forceMount>
                     {findAndRenderSection('performanceRadar')}
                     {/* --- IT WILL RENDER HERE AUTOMATICALLY --- */}
                     {findAndRenderSection('runChunkAnalysis')}
