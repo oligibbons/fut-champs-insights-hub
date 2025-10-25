@@ -1,7 +1,7 @@
 // src/components/CurrentRunChunkStats.tsx
 import { useMemo } from 'react';
 import { WeeklyPerformance } from '@/types/futChampions';
-import { processRunForChunks, ChunkRecord } from '@/utils/runAnalytics'; // Import ChunkRecord
+import { processRunForChunks, ChunkRecord } from '@/utils/runAnalytics';
 import { RunChunkCard } from './RunChunkCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -18,7 +18,14 @@ const CurrentRunChunkStats: React.FC<CurrentRunChunkStatsProps> = ({ currentRun 
   // Loading state is true if currentRun is null OR if currentRunStats is null (meaning processing failed)
   const isLoading = !currentRun || !currentRunStats;
 
-  // Safely get chunk records using optional chaining, default to null
+  // ---
+  // --- FIX IS HERE ---
+  // ---
+  // We must use optional chaining (?.) because currentRunStats can be null
+  // if processRunForChunks returns null (e.g., for an invalid run).
+  // The nullish coalescing (?? null) ensures the stats are explicitly null
+  // if currentRunStats or the .beginning property doesn't exist.
+  // ---
   const beginningStats = currentRunStats?.beginning ?? null;
   const middleStats = currentRunStats?.middle ?? null;
   const endStats = currentRunStats?.end ?? null;
@@ -40,19 +47,19 @@ const CurrentRunChunkStats: React.FC<CurrentRunChunkStatsProps> = ({ currentRun 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <RunChunkCard
                 title="Games 1-5"
-                stats={beginningStats}
-                isLoading={false} // Already handled loading state above
+                stats={beginningStats} // This is now safely null or a ChunkRecord
+                isLoading={false}
                 // No runName needed for current view
                 // No onClick needed
               />
               <RunChunkCard
                 title="Games 6-10"
-                stats={middleStats}
+                stats={middleStats} // This is now safely null or a ChunkRecord
                 isLoading={false}
               />
               <RunChunkCard
                 title="Games 11-15"
-                stats={endStats}
+                stats={endStats} // This is now safely null or a ChunkRecord
                 isLoading={false}
               />
             </div>
