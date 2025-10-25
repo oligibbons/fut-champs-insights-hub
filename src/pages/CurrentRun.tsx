@@ -12,16 +12,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Toggle } from '@/components/ui/toggle';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // <-- Added CardHeader, CardTitle
 import { Save, Loader2, UserPlus, Users, Plus, Minus, Trophy, Shield, BarChartHorizontal, Star, X, Goal, Footprints, Clock, Square, SquareCheck, ShieldAlert } from 'lucide-react';
-// ----------------------------------------------------------------
-// FIX 1: Changed './PlayerStatsForm' to '@/components/PlayerStatsForm'
-// ----------------------------------------------------------------
 import PlayerStatsForm from '@/components/PlayerStatsForm';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Game, PlayerPerformanceInsert, TeamStatisticsInsert, PlayerPerformance, WeeklyPerformance } from '@/types/futChampions'; // <-- MODIFIED: Added WeeklyPerformance
-import { Squad, PlayerCard, SquadPlayer } from '@/types/squads';
+import { Game, PlayerPerformanceInsert, TeamStatisticsInsert, PlayerPerformance, WeeklyPerformance } from '@/types/futChampions';
+import { Squad, PlayerCard } from '@/types/squads'; // <-- Removed SquadPlayer, not in use
 import { get, set, isEqual } from 'lodash';
 import { useAllSquadsData } from '@/hooks/useAllSquadsData';
 import { useTheme } from '@/hooks/useTheme';
@@ -29,7 +26,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, For
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { useGameVersion } from '@/contexts/GameVersionContext'; // <-- MODIFIED: Added imports
+import { useGameVersion } from '@/contexts/GameVersionContext';
 import { supabase } from '@/integrations/supabase/client';
 import WeekProgress from '@/components/WeekProgress';
 import CurrentRunStats from '@/components/CurrentRunStats';
@@ -266,9 +263,6 @@ const GameRecordForm = ({
 
   // Memoized default values for the form
   const defaultValues = useMemo((): GameFormData => {
-    // ----------------------------------------------------------------
-    // FIX 2: Default 'squads' to '[]' to prevent 'undefined.find'
-    // ----------------------------------------------------------------
     const safeSquads = squads || [];
 
     // Define the absolute base defaults according to the schema
@@ -297,10 +291,6 @@ const GameRecordForm = ({
         player_stats: [],
     };
 
-     // Determine the initial squad_id based on loaded squads
-     // ----------------------------------------------------------------
-     // FIX 3: Use 'safeSquads' here
-     // ----------------------------------------------------------------
      const defaultSquadId = safeSquads.find(s => s.is_default)?.id || safeSquads[0]?.id || '';
      baseDefaults.squad_id = defaultSquadId;
 
@@ -338,10 +328,6 @@ const GameRecordForm = ({
          player_stats: formPlayerStats, // Use mapped player stats
        };
 
-        // Ensure the merged squad_id is actually valid among the loaded squads
-       // ----------------------------------------------------------------
-       // FIX 4: Use 'safeSquads' here
-       // ----------------------------------------------------------------
        const squadExists = safeSquads.some(s => s.id === mergedData.squad_id);
        if (!squadExists) {
            mergedData.squad_id = defaultSquadId; // Fallback if saved squad_id is invalid/deleted
@@ -373,16 +359,10 @@ const GameRecordForm = ({
   const watchedTags = watch('tags');
   const watchedPlayerStats = watch('player_stats');
 
-  // Find the currently selected squad object
-  // ----------------------------------------------------------------
-  // FIX 5: Default 'squads' to '[]' here as well
-  // ----------------------------------------------------------------
   const selectedSquad = useMemo(() => (squads || []).find(s => s.id === watchedSquadId), [squads, watchedSquadId]);
 
    // Effect to reset the form when defaultValues change significantly
-   // (e.g., switching from editing to new, or initial squad load finishes)
   useEffect(() => {
-    // Compare stringified versions to detect deep changes
     if (JSON.stringify(form.formState.defaultValues) !== JSON.stringify(defaultValues)) {
         reset(defaultValues);
     }
@@ -391,18 +371,11 @@ const GameRecordForm = ({
 
   // Effect to populate/update player_stats list based on selected squad and duration
   useEffect(() => {
-    // ----------------------------------------------------------------
-    // FIX 6: Only check for 'selectedSquad' (which is now safe)
-    // ----------------------------------------------------------------
     if (!squadsLoading && selectedSquad) {
-        const squadJustChanged = dirtyFields.squad_id; // Did the user just change the squad dropdown?
+        const squadJustChanged = dirtyFields.squad_id; 
         const isInitialLoadOrReset = !watchedPlayerStats || watchedPlayerStats.length === 0;
 
-        // Condition to repopulate: Squad dropdown was just changed, OR (it's a new game AND the list is empty)
         if (squadJustChanged || (!isEditing && isInitialLoadOrReset)) {
-             // ----------------------------------------------------------------
-             // FIX 7: Default 'squad_players' to '[]' before filter/map
-             // ----------------------------------------------------------------
              const squadPlayersData = (selectedSquad.squad_players || [])
                 .filter(sp => sp.players && (sp.slot_id?.startsWith('starting-') || sp.slot_id?.startsWith('sub-')))
                 .map(sp => {
@@ -416,103 +389,84 @@ const GameRecordForm = ({
                         yellow_cards: 0, red_cards: 0, own_goals: 0,
                     };
                 });
-                // Note: Sorting is now handled inside PlayerStatsForm
              
-             // Update the form state with the new player list
-             // Only mark dirty if it wasn't the very initial load/reset
             setValue('player_stats', squadPlayersData, { shouldValidate: true, shouldDirty: !isInitialLoadOrReset, shouldTouch: !isInitialLoadOrReset });
 
         } else if (!squadJustChanged && watchedPlayerStats) {
-            // Squad didn't change, but maybe duration did? Update starter minutes.
              const updatedPlayers = watchedPlayerStats.map(currentPlayer => {
-                // ----------------------------------------------------------------
-                // FIX 8: Default 'squad_players' to '[]' before find
-                // ----------------------------------------------------------------
                 const squadPlayerInfo = (selectedSquad.squad_players || []).find(sp => sp.players?.id === currentPlayer.id);
                 const wasStarter = squadPlayerInfo?.slot_id?.startsWith('starting-');
-                 // Only update if they were a starter AND their current minutes suggest they played the full default time
-                 // (preserves manual adjustments like early subs)
-                 const currentDefaultDuration = game?.duration || 90; // Approx default time they might have played
+                 const currentDefaultDuration = game?.duration || 90; 
                  const needsAutoUpdate = wasStarter && (currentPlayer.minutes_played === currentDefaultDuration || currentPlayer.minutes_played === 90 || currentPlayer.minutes_played === 120);
 
                 const newMinutes = needsAutoUpdate ? (watchedDuration || 90) : currentPlayer.minutes_played;
 
-                // Return updated object only if minutes changed
                 return currentPlayer.minutes_played !== newMinutes ? { ...currentPlayer, minutes_played: newMinutes } : currentPlayer;
              });
-             // Only call setValue if the resulting array is actually different
+
              if(!isEqual(watchedPlayerStats, updatedPlayers)) {
                  setValue('player_stats', updatedPlayers, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
              }
         }
     } else if (!squadsLoading && !selectedSquad && watchedPlayerStats && watchedPlayerStats.length > 0) {
-        // Case: Squads loaded, but none is selected (or selected one is invalid)
-        // Optionally clear player stats here, or leave them as they might be manually added
         // setValue('player_stats', [], { shouldValidate: true, shouldDirty: true });
     }
-  // Dependencies need to carefully cover all conditions
   }, [
       selectedSquad, watchedDuration, setValue, isEditing, dirtyFields.squad_id,
       squadsLoading, reset, game?.duration,
-      // Watching player stats itself can cause loops, use carefully or rely on string compare/isEqual
-      // JSON.stringify(watchedPlayerStats) // Use if deep comparison needed and isEqual isn't sufficient
-      watchedPlayerStats // Might be okay if updates are guarded by isEqual check
+      watchedPlayerStats 
     ]);
 
 
   // Callback for +/- buttons on numeric inputs
   const adjustNumericalValue = useCallback((fieldName: string, delta: number, stepValue: number = 1, min: number, max: number) => {
-    const currentValue = get(getValues(), fieldName); // Get value using lodash get for nested paths
-    let currentNum = stepValue < 1 ? parseFloat(String(currentValue)) : parseInt(String(currentValue), 10); // Parse based on step
-    if (isNaN(currentNum)) { currentNum = min; } // Default to min if parsing fails
+    const currentValue = get(getValues(), fieldName); 
+    let currentNum = stepValue < 1 ? parseFloat(String(currentValue)) : parseInt(String(currentValue), 10); 
+    if (isNaN(currentNum)) { currentNum = min; } 
 
     let newValue = currentNum + (delta * stepValue);
 
-    // Handle float precision
     if (stepValue < 1 || String(fieldName).includes('rating') || String(fieldName).includes('expected_goals')) {
         const precision = String(stepValue).includes('.') ? String(stepValue).split('.')[1].length : 1;
         newValue = parseFloat(newValue.toFixed(precision));
     } else {
-        newValue = Math.round(newValue); // Ensure integer for whole steps
+        newValue = Math.round(newValue); 
     }
 
-    newValue = Math.max(min, Math.min(max, newValue)); // Clamp value
-    setValue(fieldName as any, newValue, { shouldValidate: true, shouldDirty: true, shouldTouch: true }); // Update form state
+    newValue = Math.max(min, Math.min(max, newValue)); 
+    setValue(fieldName as any, newValue, { shouldValidate: true, shouldDirty: true, shouldTouch: true }); 
   }, [getValues, setValue]);
 
 
   // Effect to automatically set the 'result' field based on scores and OT
   useEffect(() => {
-     let newResult: 'win' | 'loss' = getValues('result') ?? 'win'; // Start with current or default
+     let newResult: 'win' | 'loss' = getValues('result') ?? 'win'; 
      let needsUpdate = false;
 
-     if (watchedUserGoals === watchedOpponentGoals) { // Draw score
-        if (watchedOvertimeResult !== 'none') { // OT/Pens decided
+     if (watchedUserGoals === watchedOpponentGoals) { 
+        if (watchedOvertimeResult !== 'none') { 
             const otResult = (watchedOvertimeResult === 'win_ot' || watchedOvertimeResult === 'win_pen') ? 'win' : 'loss';
             if (newResult !== otResult) {
                 newResult = otResult;
                 needsUpdate = true;
             }
-        } else { // Draw, no OT result - ensure result is valid ('win' or 'loss')
+        } else { 
              if (newResult !== 'win' && newResult !== 'loss') {
-                 newResult = 'win'; // Default to 'win' if invalid
+                 newResult = 'win'; 
                  needsUpdate = true;
              }
-             // Keep existing valid 'win' or 'loss' if score becomes a draw without OT
         }
-     } else { // Not a draw
+     } else { 
         const scoreResult = watchedUserGoals > watchedOpponentGoals ? 'win' : 'loss';
         if (newResult !== scoreResult) {
             newResult = scoreResult;
             needsUpdate = true;
         }
-        // If score is no longer a draw, reset OT result
         if (watchedOvertimeResult !== 'none') {
-             setValue('overtime_result', 'none', { shouldValidate: true, shouldDirty: true }); // Reset OT
+             setValue('overtime_result', 'none', { shouldValidate: true, shouldDirty: true }); 
         }
      }
 
-     // Update the form only if the calculated result is different
      if (needsUpdate) {
         setValue('result', newResult, { shouldValidate: true, shouldDirty: true });
      }
@@ -521,23 +475,19 @@ const GameRecordForm = ({
   // Effect to determine game_context (e.g., 'penalties', 'rage_quit')
   useEffect(() => {
      const tags = watchedTags || [];
-     let newContext = 'normal'; // Default context
+     let newContext = 'normal'; 
      const currentContext = getValues('game_context');
 
-     // Check tags first for specific contexts
      const contextTag = matchTags.find(tag => tags.includes(tag.name) && tag.context);
      if (contextTag?.context) {
          newContext = contextTag.context;
      }
-     // If no tag defines context, check OT/Pens result
      else if (watchedOvertimeResult === 'win_ot' || watchedOvertimeResult === 'loss_ot') {
         newContext = 'extra_time';
      } else if (watchedOvertimeResult === 'win_pen' || watchedOvertimeResult === 'loss_pen') {
          newContext = 'penalties';
      }
-     // Add more context derivations if needed (e.g., based on score difference)
 
-     // Update form state only if context changed
      if (currentContext !== newContext) {
         setValue('game_context', newContext, { shouldValidate: true, shouldDirty: true });
      }
@@ -550,35 +500,30 @@ const GameRecordForm = ({
 
   // --- SUBMIT HANDLER ---
   const processSubmit = (data: GameFormData) => {
-      // 1. Filter player_stats: Keep only players with minutes_played > 0
       const validPlayerPerformances = (data.player_stats || []).filter(p => p.minutes_played > 0);
 
-      // 2. Map filtered players to PlayerPerformanceInsert structure for DB
       const playerPerformancesSubmit: PlayerPerformanceInsert[] = validPlayerPerformances.map(p => ({
             user_id: user!.id,
             player_name: p.name,
-            player_id: p.id, // Should be the UUID from players table
+            player_id: p.id, 
             position: p.position,
             minutes_played: p.minutes_played,
             goals: p.goals, assists: p.assists, rating: p.rating,
-            yellow_cards: p.yellow_cards, red_cards: p.red_cards > 0 ? 1 : 0, // Ensure boolean/0/1
+            yellow_cards: p.yellow_cards, red_cards: p.red_cards > 0 ? 1 : 0, 
             own_goals: p.own_goals,
-            // week_id and game_id are added in the parent component (CurrentRun.tsx)
         }));
 
-     // 3. Prepare game data, ensuring nulls for optional empty strings
      const gameDataSubmit: Omit<Game, 'id' | 'created_at' | 'week_id' | 'score_line' | 'date_played' | 'player_performances' | 'team_stats' | 'user_id'> = {
         game_number: data.game_number, user_goals: data.user_goals, opponent_goals: data.opponent_goals,
         result: data.result, overtime_result: data.overtime_result,
-        opponent_username: data.opponent_username || null, // Convert empty string to null
+        opponent_username: data.opponent_username || null, 
         squad_quality_comparison: data.squad_quality_comparison,
-        game_context: data.game_context, comments: data.comments || null, // Convert empty string to null
+        game_context: data.game_context, comments: data.comments || null, 
         duration: data.duration, stress_level: data.stress_level, squad_used: data.squad_id,
         server_quality: data.server_quality, cross_play_enabled: data.cross_play_enabled,
         tags: data.tags, game_version: gameVersion,
      };
 
-    // 4. Prepare team stats data
     const teamStatsSubmit: TeamStatisticsInsert = {
         user_id: user!.id, possession: data.team_stats.possession, passes: data.team_stats.passes,
         pass_accuracy: data.team_stats.pass_accuracy, shots: data.team_stats.shots,
@@ -587,39 +532,30 @@ const GameRecordForm = ({
         red_cards: data.team_stats.red_cards, expected_goals: data.team_stats.expected_goals,
         expected_goals_against: data.team_stats.expected_goals_against,
         dribble_success_rate: data.team_stats.dribble_success_rate,
-        // week_id and game_id are added in the parent component (CurrentRun.tsx)
     };
 
-    // 5. Check if a "no_stats" tag is selected
     const hasNoStatsTag = data.tags?.some(tagName =>
         matchTags.find(t => t.name === tagName)?.specialRule === 'no_stats'
     );
 
-    // 6. Call the parent onSubmit callback with prepared data
     onSubmit(
         gameDataSubmit,
-        hasNoStatsTag ? [] : playerPerformancesSubmit, // Send empty player array if no_stats
-        hasNoStatsTag ? {} as TeamStatisticsInsert : teamStatsSubmit // Send empty team stats object if no_stats
+        hasNoStatsTag ? [] : playerPerformancesSubmit, 
+        hasNoStatsTag ? {} as TeamStatisticsInsert : teamStatsSubmit 
     );
   };
 
   // --- RENDER ---
   return (
-    // Card container for the form
     <Card className="glass-card rounded-2xl shadow-2xl border-0 w-full max-w-4xl mx-auto overflow-hidden">
       <CardContent className="p-4 md:p-6">
-        {/* React Hook Form Provider */}
         <Form {...form}>
-          {/* HTML Form Element */}
           <form onSubmit={handleSubmit(processSubmit)} className="flex flex-col space-y-4 md:space-y-6 h-full">
-            {/* Form Header */}
             <h2 className="text-xl font-semibold text-white">
                 {isEditing ? `Editing Game ${game?.game_number}` : `Record Game ${nextGameNumber}`}
             </h2>
 
-            {/* Tabs for Form Sections */}
             <Tabs defaultValue="details" className="flex flex-col flex-1 min-h-0">
-              {/* Tab Navigation List */}
               <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 sticky top-0 z-10 bg-background/80 backdrop-blur-sm">
                    <TabsTrigger value="details"><Trophy className="h-4 w-4 mr-1 md:mr-2" />Match</TabsTrigger>
                    <TabsTrigger value="opponent"><Shield className="h-4 w-4 mr-1 md:mr-2" />Opponent</TabsTrigger>
@@ -627,13 +563,9 @@ const GameRecordForm = ({
                    <TabsTrigger value="players"><Star className="h-4 w-4 mr-1 md:mr-2" />Players</TabsTrigger>
               </TabsList>
 
-              {/* Scrollable Area for Tab Content */}
               <ScrollArea className="flex-1 mt-4 pr-2 -mr-2 custom-scrollbar">
-               <div className="space-y-4 md:space-y-6 pb-4"> {/* Inner container for consistent spacing */}
-
-                  {/* --- Match Details Tab --- */}
+               <div className="space-y-4 md:space-y-6 pb-4"> 
                   <TabsContent value="details" className="space-y-4 md:space-y-6 mt-0">
-                    {/* Squad Selection Dropdown */}
                     <FormField
                       control={control} name="squad_id"
                       render={({ field }) => (
@@ -643,9 +575,9 @@ const GameRecordForm = ({
                                {squadsLoading ? <Input disabled placeholder="Loading squads..." /> :
                                 (!squads || squads.length === 0) ? <Input disabled placeholder="No squads found" /> :
                                  <Select
-                                    value={field.value || ''} // Ensure value is controlled, fallback to empty string
+                                    value={field.value || ''} 
                                     onValueChange={field.onChange}
-                                    required // HTML5 required attribute
+                                    required 
                                  >
                                      <SelectTrigger id="squad_id">
                                          <SelectValue placeholder="Select squad..." />
@@ -657,18 +589,15 @@ const GameRecordForm = ({
                                      </SelectContent>
                                  </Select>}
                              </FormControl>
-                              {/* Display specific error if field is required and empty */}
                              {errors.squad_id && errors.squad_id.type === 'invalid_string' && (!field.value || field.value === '') ?
                                 <p className="text-xs text-red-500 mt-1">Please select a squad.</p> :
-                                <FormMessage /> /* For other Zod errors */}
+                                <FormMessage /> }
                          </FormItem>
                      )}
                     />
-                    {/* Final Score Input Section */}
                     <div className="text-center space-y-4 pt-4 border-t border-border/20">
                       <Label className="text-lg font-semibold block">Final Score</Label>
                       <div className="flex items-start justify-center gap-2 md:gap-4">
-                          {/* User Score */}
                           <div className="flex flex-col items-center flex-1 max-w-[150px]">
                                <Label className="text-sm font-medium text-primary mb-1">You</Label>
                                <div className="flex items-center w-full">
@@ -678,8 +607,7 @@ const GameRecordForm = ({
                                </div>
                                <FormMessage className="text-xs">{errors.user_goals?.message}</FormMessage>
                           </div>
-                          <span className="text-3xl sm:text-4xl font-bold text-muted-foreground pt-6">:</span> {/* Score Separator */}
-                          {/* Opponent Score */}
+                          <span className="text-3xl sm:text-4xl font-bold text-muted-foreground pt-6">:</span> 
                           <div className="flex flex-col items-center flex-1 max-w-[150px]">
                            <Label className="text-sm font-medium text-red-500 mb-1">Opponent</Label>
                            <div className="flex items-center w-full">
@@ -691,7 +619,6 @@ const GameRecordForm = ({
                           </div>
                       </div>
                     </div>
-                    {/* Overtime/Penalty Result Select (Show only if score is tied) */}
                     {watchedUserGoals === watchedOpponentGoals && (
                       <FormField control={control} name="overtime_result" render={({ field }) => (
                           <FormItem>
@@ -707,7 +634,6 @@ const GameRecordForm = ({
                           </FormItem>
                       )}/>
                     )}
-                    {/* Match Duration Input */}
                     <div>
                          <NumberInputWithSteppers name="duration" label="Match Duration (Mins)" step={1} min={1} max={120} className="space-y-1" inputClassName="h-10 text-base text-center" minInputWidth="w-20" control={control} adjustValue={adjustNumericalValue} getValues={getValues} />
                          <FormDescription className="text-xs mt-1">90=Full, 120=ET, less if ended early.</FormDescription>
@@ -715,11 +641,8 @@ const GameRecordForm = ({
                     </div>
                   </TabsContent>
 
-                  {/* --- Opponent Tab --- */}
                   <TabsContent value="opponent" className="space-y-4 md:space-y-6 mt-0">
-                       {/* Opponent Username Input */}
                        <FormField control={control} name="opponent_username" render={({ field }) => ( <FormItem><FormLabel>Opponent Username</FormLabel><FormControl><Input {...field} placeholder="(Optional)" /></FormControl><FormMessage /></FormItem> )} />
-                       {/* Squad Quality Radio Group */}
                         <FormField control={control} name="squad_quality_comparison" render={({ field }) => (
                             <FormItem className="space-y-3 pt-4 border-t border-border/20">
                                 <FormLabel>Squad Quality Comparison</FormLabel>
@@ -732,7 +655,6 @@ const GameRecordForm = ({
                                 </FormControl> <FormMessage />
                             </FormItem>
                         )}/>
-                        {/* Server Quality, Stress Level Sliders & Cross-Play Switch */}
                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 pt-4 border-t border-border/20">
                            <FormField control={control} name="server_quality" render={({ field }) => ( <FormItem><FormLabel>Server Quality: <span className="font-bold text-primary">{field.value ?? 5}</span>/10</FormLabel><FormControl><Slider value={[field.value ?? 5]} onValueChange={(v) => field.onChange(v[0])} max={10} step={1} min={1} /></FormControl><FormMessage /></FormItem>)}/>
                            <FormField control={control} name="stress_level" render={({ field }) => ( <FormItem><FormLabel>Your Stress Level: <span className="font-bold text-primary">{field.value ?? 5}</span>/10</FormLabel><FormControl><Slider value={[field.value ?? 5]} onValueChange={(v) => field.onChange(v[0])} max={10} step={1} min={1} /></FormControl><FormMessage /></FormItem>)}/>
@@ -740,10 +662,8 @@ const GameRecordForm = ({
                        </div>
                   </TabsContent>
 
-                  {/* --- Team Stats Tab --- */}
                   <TabsContent value="team" className="space-y-4 md:space-y-6 mt-0">
                        <h3 className="text-lg font-semibold border-b border-border/20 pb-2">Your Team Statistics</h3>
-                       {/* Grid of Team Stat Inputs */}
                        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-4">
                            <NumberInputWithSteppers name="team_stats.shots" label="Shots" control={control} adjustValue={adjustNumericalValue} getValues={getValues} min={0} max={99} />
                            <NumberInputWithSteppers name="team_stats.shots_on_target" label="On Target" max={getValues('team_stats.shots') ?? 99} control={control} adjustValue={adjustNumericalValue} getValues={getValues} min={0} />
@@ -758,7 +678,6 @@ const GameRecordForm = ({
                            <NumberInputWithSteppers name="team_stats.yellow_cards" label="Yellow Cards" max={11} control={control} adjustValue={adjustNumericalValue} getValues={getValues} min={0}/>
                            <NumberInputWithSteppers name="team_stats.red_cards" label="Red Cards" max={5} control={control} adjustValue={adjustNumericalValue} getValues={getValues} min={0}/>
                        </div>
-                       {/* Match Tags Selection */}
                        <FormField control={control} name="tags" render={({ field }) => (
                          <FormItem className="space-y-2 pt-4 border-t border-border/20">
                              <FormLabel>Match Tags</FormLabel>
@@ -772,9 +691,9 @@ const GameRecordForm = ({
                                                      <Toggle
                                                          variant="outline" size="sm"
                                                          className={cn(
-                                                            "text-xs h-7 border border-border/50 transition-colors duration-150", // Base styles + transition
-                                                            "hover:bg-muted/50", // Hover style
-                                                            "data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:border-primary" // Selected styles
+                                                            "text-xs h-7 border border-border/50 transition-colors duration-150", 
+                                                            "hover:bg-muted/50", 
+                                                            "data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:border-primary"
                                                          )}
                                                          pressed={field.value?.includes(tag.name)}
                                                          onPressedChange={(isPressed) => {
@@ -796,19 +715,15 @@ const GameRecordForm = ({
                              <FormMessage />
                          </FormItem>
                        )} />
-                       {/* Comments Textarea */}
                         <FormField control={control} name="comments" render={({ field }) => (<FormItem className="pt-4 border-t border-border/20"><FormLabel>Comments</FormLabel><FormControl><Textarea {...field} placeholder="Key moments, tactics, frustrations..." /></FormControl><FormMessage /></FormItem>)}/>
                   </TabsContent>
 
-                  {/* --- Player Stats Tab --- */}
                   <TabsContent value="players" className="space-y-4 flex flex-col min-h-0 mt-0">
-                        {/* Tab Header with Info Tooltip */}
                         <div className="flex justify-between items-center mb-2 shrink-0">
                            <h3 className="text-lg font-semibold">Player Performances</h3>
                            <TooltipProvider delayDuration={100}>
                              <Tooltip>
                                <TooltipTrigger asChild>
-                                {/* Button acts as trigger, styled subtly */}
                                 <Button type="button" variant="ghost" className='opacity-60 cursor-help px-2 h-8'>
                                   <UserPlus className="h-4 w-4 mr-1" /> Info
                                 </Button>
@@ -821,9 +736,7 @@ const GameRecordForm = ({
                              </Tooltip>
                            </TooltipProvider>
                         </div>
-                        {/* Scrollable Area for Player Stats Form */}
                         <ScrollArea className="flex-grow custom-scrollbar pr-1 -mr-1">
-                           {/* Conditional Rendering based on squad loading/selection */}
                            {squadsLoading ? (<p className="text-sm text-muted-foreground p-4 text-center">Loading squad...</p>)
                            : !watchedSquadId ? (<p className="text-sm text-muted-foreground p-4 text-center">Please select a squad first.</p>)
                            : (!watchedPlayerStats || watchedPlayerStats.length === 0) ? (
@@ -832,34 +745,29 @@ const GameRecordForm = ({
                                    <p className='text-xs px-4 mt-1'>Check squad setup or select a different squad.</p>
                                </div>
                            ) : (
-                               // Render PlayerStatsForm component when players exist
                                <FormField control={control} name="player_stats" render={({ field }) => (
                                    <FormItem>
                                        <FormControl>
                                            <PlayerStatsForm
-                                               players={field.value || []} // Pass player data array
-                                               onStatsChange={(updatedPlayers) => field.onChange(updatedPlayers)} // Update callback
-                                               gameDuration={watchedDuration || 90} // Pass game duration
+                                               players={field.value || []} 
+                                               onStatsChange={(updatedPlayers) => field.onChange(updatedPlayers)} 
+                                               gameDuration={watchedDuration || 90} 
                                            />
                                        </FormControl>
-                                       <FormMessage /> {/* Error message for the player_stats array */}
+                                       <FormMessage /> 
                                    </FormItem> )} />
                            )}
                         </ScrollArea>
                   </TabsContent>
 
-               </div> {/* End Inner Content Container */}
-              </ScrollArea> {/* End Scrollable Area */}
-            </Tabs> {/* End Tabs Component */}
+               </div> 
+              </ScrollArea> 
+            </Tabs> 
 
-            {/* Form Footer with Action Buttons */}
             <div className="flex justify-between items-center mt-auto pt-4 border-t border-border/20">
-              {/* Cancel Button */}
               <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>Cancel</Button>
-              {/* Submit Button */}
               <Button
                 type="submit"
-                // Disable if submitting, loading data, form invalid, or no valid squad selected
                 disabled={isSubmitting || isLoading || !isValid || squadsLoading || (!watchedSquadId && (!squads || squads.length > 0))}
                 aria-label={isEditing ? 'Update game record' : 'Save new game record'}
               >
@@ -868,14 +776,14 @@ const GameRecordForm = ({
               </Button>
             </div>
 
-          </form> {/* End HTML Form */}
-        </Form> {/* End RHF Provider */}
+          </form> 
+        </Form> 
       </CardContent>
     </Card>
   );
 };
 
-// --- MODIFIED: CurrentRunPage Component ---
+// --- MAIN PAGE COMPONENT ---
 
 const CurrentRunPage = () => {
   const { user } = useAuth();
@@ -897,14 +805,18 @@ const CurrentRunPage = () => {
     if (showLoading) setIsLoadingRun(true);
 
     try {
+      // --- !! FIX IS HERE !! ---
       const { data, error } = await supabase
-        .from('weekly_performance')
-        .select('*, games(*, team_stats(*), player_performances(*))')
+        .from('weekly_performances') // 1. Fixed: 'weekly_performances' (plural)
+        .select(
+          '*, games:game_results(*, team_stats:team_statistics(*), player_performances(*))' // 2. Fixed: Aliased table names
+        )
         .eq('user_id', user.id)
         .eq('game_version', gameVersion)
         .eq('is_completed', false)
         .order('week_number', { ascending: false })
         .limit(1);
+      // --- !! END OF FIX !! ---
 
       if (error) throw error;
 
@@ -940,7 +852,7 @@ const CurrentRunPage = () => {
     try {
       // 1. Get the latest week number
       const { data: latestRun, error: latestRunError } = await supabase
-        .from('weekly_performance')
+        .from('weekly_performances') // Fixed
         .select('week_number')
         .eq('user_id', user.id)
         .eq('game_version', gameVersion)
@@ -954,7 +866,7 @@ const CurrentRunPage = () => {
 
       // 2. Create the new run
       const { data: newRun, error: newRunError } = await supabase
-        .from('weekly_performance')
+        .from('weekly_performances') // Fixed
         .insert({
           user_id: user.id,
           week_number: newWeekNumber,
@@ -962,7 +874,6 @@ const CurrentRunPage = () => {
           game_version: gameVersion,
           is_completed: false,
           custom_name: `Week ${newWeekNumber}`, // Default name
-          // Set default targets
           target_wins: 11,
           target_rank: 'Rank 5',
         })
@@ -995,7 +906,7 @@ const CurrentRunPage = () => {
 
     try {
       const { error } = await supabase
-        .from('weekly_performance')
+        .from('weekly_performances') // Fixed
         .update({ is_completed: true, end_date: new Date().toISOString() })
         .eq('id', currentRun.id);
 
@@ -1006,7 +917,6 @@ const CurrentRunPage = () => {
         description: `${currentRun.custom_name} has been saved to your history.`,
       });
       setShowCompletionPopup(true); // Show summary popup
-      // Don't set currentRun to null yet, popup needs it
     } catch (err: any) {
       toast({
         title: "Error finishing run",
@@ -1026,13 +936,13 @@ const CurrentRunPage = () => {
     if (!user || !currentRun) return;
     setIsSubmittingGame(true);
 
-    const gameId = editingGame?.id; // Get ID if editing
+    const gameId = editingGame?.id; 
 
     try {
       // --- 1. Upsert Game Data ---
       const gamePayload = {
         ...gameData,
-        id: gameId, // Pass id if editing, undefined if new
+        id: gameId, 
         user_id: user.id,
         week_id: currentRun.id,
         score_line: `${gameData.user_goals}-${gameData.opponent_goals}`,
@@ -1040,8 +950,8 @@ const CurrentRunPage = () => {
       };
 
       const { data: savedGame, error: gameError } = await supabase
-        .from('games')
-        .upsert(gamePayload) // Use upsert
+        .from('game_results') // Fixed
+        .upsert(gamePayload) 
         .select()
         .single();
 
@@ -1052,20 +962,18 @@ const CurrentRunPage = () => {
         ...teamStats,
         game_id: savedGame.id,
         user_id: user.id,
-        week_id: currentRun.id,
-        // If editing, find existing stats id
+        // week_id: currentRun.id, // Not in team_statistics schema
         id: editingGame?.team_stats ? (editingGame.team_stats as any).id : undefined
       };
       
       const { error: statsError } = await supabase
-        .from('team_stats')
+        .from('team_statistics') // Fixed
         .upsert(statsPayload);
 
       if (statsError) throw statsError;
 
       // --- 3. Handle Player Performances (Delete existing then insert new) ---
       if (gameId) {
-        // If editing, clear old performances for this game
         const { error: deletePerfError } = await supabase
           .from('player_performances')
           .delete()
@@ -1073,12 +981,11 @@ const CurrentRunPage = () => {
         if (deletePerfError) throw deletePerfError;
       }
       
-      // Insert new performances (if any)
       if (playerPerformances.length > 0) {
         const perfPayload = playerPerformances.map(p => ({
           ...p,
           game_id: savedGame.id,
-          week_id: currentRun.id,
+          // week_id: currentRun.id, // Not in player_performances schema
           user_id: user.id,
         }));
         
@@ -1090,15 +997,13 @@ const CurrentRunPage = () => {
       }
 
       // --- 4. Update Run Summary ---
-      // Refetch run to get updated game list and recalculate
-      await fetchCurrentRun(false); // Refetch without full loading spinner
+      await fetchCurrentRun(false); 
 
       toast({
         title: `Game ${savedGame.game_number} ${isEditing ? 'Updated' : 'Saved'}!`,
         description: `Result: ${savedGame.result} (${savedGame.score_line})`,
       });
 
-      // Reset form state
       setEditingGame(null);
       setShowGameForm(false);
 
@@ -1125,10 +1030,9 @@ const CurrentRunPage = () => {
   };
   
   const handleDeleteGame = async (gameId: string) => {
-    // Note: Supabase RLS should cascade delete stats and perfs
     try {
         const { error } = await supabase
-            .from('games')
+            .from('game_results') // Fixed
             .delete()
             .eq('id', gameId);
         if (error) throw error;
@@ -1137,7 +1041,6 @@ const CurrentRunPage = () => {
             title: "Game Deleted",
             description: "The game and its stats have been removed.",
         });
-        // Refetch to update UI
         await fetchCurrentRun(false); 
         
     } catch (err: any) {
@@ -1151,8 +1054,8 @@ const CurrentRunPage = () => {
   
   const handlePopupClose = () => {
       setShowCompletionPopup(false);
-      setCurrentRun(null); // Clear the run, forcing user to start a new one
-      fetchCurrentRun(); // Check for any other incomplete runs (should be none)
+      setCurrentRun(null); 
+      fetchCurrentRun(); 
   };
 
   // --- RENDER LOGIC ---
@@ -1223,7 +1126,7 @@ const CurrentRunPage = () => {
         <div className="lg:col-span-2">
           {showGameForm ? (
             <GameRecordForm
-              key={editingGame?.id || 'new'} // Remount form when editing game changes
+              key={editingGame?.id || 'new'} 
               onSubmit={handleGameSubmit}
               isLoading={isSubmittingGame}
               game={editingGame}
