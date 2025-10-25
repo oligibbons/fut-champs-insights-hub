@@ -1,14 +1,14 @@
-import React, { useState, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { toJpeg } from 'html-to-image';
 import { saveAs } from 'file-saver';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'; //
-import { Button } from '@/components/ui/button'; //
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { Loader2, Camera, Download, Share2 } from 'lucide-react';
-import CardPreview from './CardPreview'; // We will create this
-import CardCustomizer from './CardCustomizer'; // We will create this
-import { WeeklyPerformance, PlayerPerformance } from '@/types/futChampions'; //
-import { useToast } from '@/hooks/use-toast'; //
-import { useTheme } from '@/hooks/useTheme'; //
+import CardPreview from './CardPreview';
+import CardCustomizer from './CardCustomizer';
+import { WeeklyPerformance } from '@/types/futChampions';
+import { useToast } from '@/hooks/use-toast';
+import { useTheme } from '@/hooks/useTheme';
 
 // Define structure for options
 export interface CardOptions {
@@ -179,16 +179,12 @@ const ShareableCardGenerator: React.FC<ShareableCardGeneratorProps> = ({
     setImageDataUrl(null);
     try {
       const bgColor = window.getComputedStyle(document.documentElement).getPropertyValue('--background').trim();
-      // Convert HSL string (like '225 30% 12%') to CSS hsl() function
       const cssBgColor = `hsl(${bgColor.replace(/ /g, ', ')})`;
 
       const dataUrl = await toJpeg(cardPreviewRef.current, {
         quality: 0.95,
-        backgroundColor: cssBgColor || (currentTheme.name === 'dark' ? '#151a28' : '#ffffff'), // Fallback
-        pixelRatio: 2, // Higher resolution
-        // Add a slight delay for complex elements/fonts to render
-        // skipAutoScale: true, // Try if scaling issues occur
-        // cacheBust: true, // Force re-render
+        backgroundColor: cssBgColor || (currentTheme.name === 'dark' ? '#151a28' : '#ffffff'),
+        pixelRatio: 2,
       });
       setImageDataUrl(dataUrl);
       toast({ title: "Preview Generated!" });
@@ -219,31 +215,30 @@ const ShareableCardGenerator: React.FC<ShareableCardGeneratorProps> = ({
                  text: `Check out my ${runData ? `Week ${runData.week_number}` : 'overall'} stats tracked via FUTTrackr.com! #FUTTrackr #FUTChamps`,
                  files: [file],
              });
-             // No toast needed here, share sheet handles confirmation/cancellation
          } else {
              toast({ title: "Web Share Not Supported", description: "Save the image and share it manually.", variant: "default" });
          }
      } catch (error: any) {
          console.error('Error sharing:', error);
-         if (String(error).includes('AbortError')) return; // User cancelled share
+         if (String(error).includes('AbortError')) return;
          toast({ title: "Error Sharing", description: error?.message || String(error), variant: "destructive" });
      }
   }, [imageDataUrl, runData, toast]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-4xl sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl h-[90vh] flex flex-col p-4 sm:p-6"> {/* Added padding */}
+        <DialogContent className="max-w-4xl sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl h-[90vh] flex flex-col p-4 sm:p-6">
             <DialogHeader>
                 <DialogTitle>Create Your {cardType === 'run' ? `Run ${runData?.week_number}` : 'Overall'} Stat Card</DialogTitle>
                 <DialogDescription>
                     Select the stats to display, generate a preview, then save or share!
                 </DialogDescription>
             </DialogHeader>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6 mt-2 flex-1 overflow-hidden"> {/* Reduced gap, mt */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6 mt-2 flex-1 overflow-hidden">
 
                 {/* --- Column 1: Customizer --- */}
-                <div className="md:col-span-1 overflow-y-auto pr-3 custom-scrollbar border-r border-border/50 md:pr-4 lg:pr-6"> {/* Added border */}
-                    <h3 className="text-lg font-semibold mb-2 text-white sticky top-0 bg-background z-10 pb-2 -mt-1 pt-1">Customize Card</h3> {/* Adjust sticky padding */}
+                <div className="md:col-span-1 overflow-y-auto pr-3 custom-scrollbar border-r border-border/50 md:pr-4 lg:pr-6">
+                    <h3 className="text-lg font-semibold mb-2 text-white sticky top-0 bg-background z-10 pb-2 -mt-1 pt-1">Customize Card</h3>
                      <CardCustomizer
                         options={options}
                         onChange={handleOptionsChange}
@@ -253,10 +248,9 @@ const ShareableCardGenerator: React.FC<ShareableCardGeneratorProps> = ({
                 </div>
 
                 {/* --- Column 2: Preview & Actions --- */}
-                <div className="md:col-span-2 flex flex-col items-center justify-start gap-4 overflow-y-auto pt-2 pl-2 md:pl-0"> {/* Allow scroll */}
+                <div className="md:col-span-2 flex flex-col items-center justify-start gap-4 overflow-y-auto pt-2 pl-2 md:pl-0">
                      {/* Preview Container */}
-                     <div className="w-full max-w-[300px] sm:max-w-[320px] aspect-[9/16] border border-border/50 rounded-lg overflow-hidden shadow-lg bg-card flex-shrink-0 relative"> {/* Use bg-card */}
-                         {/* Loading/Error Overlay? */}
+                     <div className="w-full max-w-[300px] sm:max-w-[320px] aspect-[9/16] border border-border/50 rounded-lg overflow-hidden shadow-lg bg-card flex-shrink-0 relative">
                          {isLoading && (
                             <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-20">
                                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -286,6 +280,7 @@ const ShareableCardGenerator: React.FC<ShareableCardGeneratorProps> = ({
                          </Button>
                     </div>
                     {!imageDataUrl && !isLoading && <p className="text-xs text-muted-foreground mt-1 flex-shrink-0 text-center">Generate a preview to save or share.</p>}
+                    {isLoading && <p className="text-xs text-primary mt-1 flex-shrink-0 text-center">Generating image...</p>}
                 </div>
             </div>
         </DialogContent>
