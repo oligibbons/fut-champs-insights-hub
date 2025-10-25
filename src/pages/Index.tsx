@@ -270,7 +270,7 @@ const Dashboard = () => {
                     {findAndRenderSection('runChunkAnalysis')}
                     {findAndRenderSection('matchTagAnalysis')}
                     {findAndRenderSection('formationTracker')}
-                    {findAndRenderSection('cpsGauge')}
+                    {findAndRendSection('cpsGauge')}
                     {findAndRenderSection('xgAnalytics')}
                     {findAndRenderSection('playerConsistency')}
                     {findAndRenderSection('positionalHeatMap')}
