@@ -125,12 +125,6 @@ const CurrentRun = () => {
     }
   }, [user, gameVersion]);
 
-  // ----------------------------------------------------------------
-  // FIX: Refactored this function to prevent race conditions.
-  // It now fetches the run AND its games, combines them,
-  // and then sets state ONCE. This ensures 'currentRun.games'
-  // is never 'undefined' after 'currentRun' is set.
-  // ----------------------------------------------------------------
   const fetchCurrentRunAndGames = async () => {
     if (!user || !gameVersion) return;
     setLoading(true);
@@ -594,7 +588,10 @@ const CurrentRun = () => {
         description: 'Finalized successfully.',
         variant: 'success',
       });
-    } catch (err: any)
+      // ----------------------------------------------------------------
+      // FIX: Added the missing { } around the catch block.
+      // ----------------------------------------------------------------
+    } catch (err: any) {
       console.error('Complete Run Error:', err);
       toast({
         title: 'Error',
