@@ -1,112 +1,87 @@
 import { useAccountData } from '@/hooks/useAccountData';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
-import StatCard from './StatCard';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Award, TrendingUp, BarChart2, Zap, Trophy, Goal, HeartPulse, ShieldCheck } from 'lucide-react';
+import CompactStatCard from './CompactStatCard'; // Import our new component
+import WeeklyWinsChart from './WeeklyWinsChart'; // Import our new hero
+// Import icons directly for clarity
+import { Trophy, TrendingUp, HeartPulse, BarChart2 } from 'lucide-react'; 
+import { useTheme } from '@/hooks/useTheme'; // Assuming you have useTheme hook
 
 const DashboardOverview = () => {
-  // --- FIX:
-  // 1. Default 'weeklyData' to '[]' to prevent 'useDashboardStats' from receiving undefined.
-  // 2. Add '|| {}' as a guard in case the hook itself returns undefined before auth context is ready.
   const { weeklyData = [], loading } = useAccountData() || {};
-  // --- END FIX
-  
-  const stats = useDashboardStats(weeklyData); // This is now safe
+  const { currentTheme } = useTheme(); // Use theme hook
+  const stats = useDashboardStats(weeklyData);
 
-  // This loading state is correct
   if (loading) {
-    // Display skeletons while loading
     return (
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Skeleton className="h-24 rounded-lg" />
-        <Skeleton className="h-24 rounded-lg" />
-        <Skeleton className="h-24 rounded-lg" />
-        <Skeleton className="h-24 rounded-lg" />
-        <Skeleton className="h-24 rounded-lg" />
-        <Skeleton className="h-24 rounded-lg" />
-        <Skeleton className="h-24 rounded-lg" />
-        <Skeleton className="h-24 rounded-lg" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Skeleton for the chart */}
+        <Skeleton 
+          className="h-64 rounded-2xl" 
+          style={{ backgroundColor: currentTheme.colors.surface }} // Use theme color for skeleton
+        />
+        {/* Skeleton for the compact stats grid */}
+        <div className="grid grid-cols-2 gap-4">
+          <Skeleton className="h-24 rounded-xl" style={{ backgroundColor: currentTheme.colors.surface }} />
+          <Skeleton className="h-24 rounded-xl" style={{ backgroundColor: currentTheme.colors.surface }} />
+          <Skeleton className="h-24 rounded-xl" style={{ backgroundColor: currentTheme.colors.surface }} />
+          <Skeleton className="h-24 rounded-xl" style={{ backgroundColor: currentTheme.colors.surface }} />
+        </div>
       </div>
     );
   }
 
-  // This check is also correct
-  if (!weeklyData || weeklyData.length === 0) {
-      return (
-          <div className="text-center py-8 text-muted-foreground">
-              No data available yet. Complete a week to see your stats!
-          </div>
-      );
-  }
+  // No-data state is handled by the child components (WeeklyWinsChart, etc.)
+  // We can add a top-level check if needed, but the children handle it well.
+  // const completedWeeks = weeklyData.filter(w => w.isCompleted);
+  // if (completedWeeks.length === 0) {
+  //    return <div className="text-center py-8 text-muted-foreground">Complete a week to see overview stats.</div>;
+  // }
 
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      {/* Best FUT Champs Record */}
-      <StatCard
-        title="Best Record"
-        value={`${stats.bestRecord} Wins`}
-        icon={<Trophy className="text-yellow-500" />}
-        tooltip="Your highest number of wins achieved in a single FUT Champions run."
-      />
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      
+      {/* --- COLUMN 1: THE "HERO" CHART --- */}
+      <div>
+         {/* Title moved inside DashboardSection now */}
+         {/* <h3 className="text-lg font-semibold text-white mb-3">Recent Win Trend</h3> */}
+        <WeeklyWinsChart />
+      </div>
 
-      {/* Average Wins Per Run */}
-      <StatCard
-        title="Average Wins"
-        value={stats.averageWins.toFixed(1)}
-        icon={<TrendingUp className="text-blue-500" />}
-        tooltip="The average number of wins across all your completed FUT Champions runs."
-      />
-
-      {/* --- THIS IS WHERE THE ERROR WAS. THE INVALID TEXT IS NOW REMOVED. --- */}
-
-      {/* Most Goals in a Run */}
-      <StatCard
-        title="Most Goals (Run)"
-        value={stats.mostGoalsInRun.toString()}
-        icon={<Goal className="text-green-500" />}
-        tooltip="The highest number of goals scored in a single FUT Champions run."
-      />
-
-      {/* Longest Win Streak */}
-      <StatCard
-        title="Longest Win Streak"
-        value={stats.longestWinStreak.toString()}
-        icon={<Zap className="text-orange-500" />}
-        tooltip="The highest consecutive number of wins you've achieved across all runs."
-      />
-
-      {/* Overall Goal Difference */}
-      <StatCard
-        title="Goal Difference"
-        value={stats.overallGoalDifference.toString()}
-        icon={<BarChart2 className="text-purple-500" />}
-        tooltip="Total goals scored minus total goals conceded across all recorded games."
-      />
-
-      {/* Average Player Rating */}
-      <StatCard
-        title="Avg Player Rating"
-        value={stats.averagePlayerRating.toFixed(2)}
-        icon={<Award className="text-red-500" />}
-        tooltip="The average match rating of all players across all recorded games."
-      />
-
-       {/* Club MVP */}
-      <StatCard
-        title="Club MVP"
-        value={stats.mvp} // Assumes mvp is a string (player name or "N/A")
-        icon={<HeartPulse className="text-pink-500" />} // Example icon
-        tooltip="Player with the highest average rating (min. 10 games), prioritizing goal involvements as tie-breaker."
-      />
-
-      {/* Discipline Index */}
-      <StatCard
-        title="Discipline Index"
-        value={stats.disciplineIndex} // Assumes disciplineIndex is a string like "A+", "B", etc.
-        icon={<ShieldCheck className="text-teal-500" />} // Example icon
-        tooltip="Overall team discipline rating based on fouls and cards per game (A+ is best)."
-      />
+      {/* --- COLUMN 2: SUPPORTING STATS --- */}
+      <div>
+         {/* Title moved inside DashboardSection now */}
+         {/* <h3 className="text-lg font-semibold text-white mb-3">Key Stats</h3> */}
+        <div className="grid grid-cols-2 gap-4">
+          <CompactStatCard
+            title="Best Record"
+            value={`${stats.bestRecord} Wins`}
+            icon={<Trophy />} // Pass only the icon component
+            iconColorClass="text-fifa-gold" // Pass the color class
+          />
+          <CompactStatCard
+            title="Average Wins"
+            value={stats.averageWins.toFixed(1)}
+            icon={<TrendingUp />}
+            iconColorClass="text-fifa-blue"
+          />
+          <CompactStatCard
+            title="Club MVP"
+            // Ensure MVP value doesn't overflow easily, might need truncation/tooltip later
+            value={stats.mvp && stats.mvp.length > 15 ? stats.mvp.substring(0, 12) + '...' : stats.mvp} 
+            icon={<HeartPulse />}
+            iconColorClass="text-pink-500" // Example color
+          />
+          <CompactStatCard
+            title="Goal Difference"
+            value={stats.overallGoalDifference > 0 ? `+${stats.overallGoalDifference}` : stats.overallGoalDifference}
+            icon={<BarChart2 />}
+            iconColorClass="text-fifa-purple"
+          />
+        </div>
+      </div>
+      
     </div>
   );
 };
