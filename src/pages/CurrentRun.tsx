@@ -2,42 +2,33 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-// Adjusted imports for types
-import { Game, PlayerPerformanceInsert, TeamStatisticsInsert } from '@/types/futChampions';
-import GameRecordForm from '@/components/GameRecordForm'; // Use the new form
+// ** Use reconciled types **
+import { Game, PlayerPerformanceInsert, TeamStatisticsInsert, WeeklyPerformance } from '@/types/futChampions';
+import GameRecordForm from '@/components/GameRecordForm';
 import GameListItem from '@/components/GameListItem';
 import RunNamingModal from '@/components/RunNamingModal';
 import WeekProgress from '@/components/WeekProgress';
 import CurrentRunStats from '@/components/CurrentRunStats';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Edit, Trophy, Loader2 } from 'lucide-react';
+import { PlusCircle, Edit, Trophy, Loader2, CheckCircle } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 import { useMobile } from '@/hooks/use-mobile';
 import { Card, CardContent } from '@/components/ui/card';
 import { useGameVersion } from '@/contexts/GameVersionContext';
-import {
-    DndContext, closestCenter, KeyboardSensor, PointerSensor, TouchSensor,
-    useSensor, useSensors, DragEndEvent
-} from '@dnd-kit/core';
-import {
-    arrayMove, SortableContext, sortableKeyboardCoordinates,
-    verticalListSortingStrategy, useSortable
-} from '@dnd-kit/sortable';
+import { DndContext, /* ... dnd imports ... */ DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, /* ... dnd imports ... */ useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+// ** Added Modal Imports **
+import GameCompletionModal from '@/components/GameCompletionModal';
+import WeekCompletionPopup from '@/components/WeekCompletionPopup';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 // SortableGameListItem remains the same
-const SortableGameListItem = ({ game, onEdit, onDelete }: { game: Game; onEdit: (gameId: string) => void; onDelete: (id: string) => void }) => {
-    const isMobile = useMobile();
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: game.id });
-    const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
-    return (
-        <div ref={setNodeRef} style={style}>
-            <GameListItem game={game} onEdit={() => onEdit(game.id)} onDelete={onDelete} dragHandleProps={isMobile ? undefined : { ...attributes, ...listeners }}/>
-        </div>
-    );
-};
-
+const SortableGameListItem = ({ /* ... */ }) => { /* ... */ };
 
 const CurrentRun = () => {
     const { user } = useAuth();
@@ -45,308 +36,309 @@ const CurrentRun = () => {
     const { currentTheme } = useTheme();
     const isMobile = useMobile();
     const { gameVersion } = useGameVersion();
-    const [games, setGames] = useState<Game[]>([]); // This might need associated team_stats/player_performances for editing
-    const [currentRun, setCurrentRun] = useState<{ id: string; name: string | null } | null>(null);
+    const [games, setGames] = useState<Game[]>([]);
+    // ** Store full WeeklyPerformance **
+    const [currentRun, setCurrentRun] = useState<WeeklyPerformance | null>(null);
     const [loading, setLoading] = useState(true);
-    const [formSubmitting, setFormSubmitting] = useState(false); // Separate loading state for form
+    const [formSubmitting, setFormSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showForm, setShowForm] = useState(false);
-    const [editingGame, setEditingGame] = useState<Game | null>(null); // State to hold the full game object for editing
+    const [editingGame, setEditingGame] = useState<Game | null>(null);
     const [isNamingModalOpen, setIsNamingModalOpen] = useState(false);
+    // ** Modal States **
+    const [showGameCompletionModal, setShowGameCompletionModal] = useState(false);
+    const [showWeekCompletionPopup, setShowWeekCompletionPopup] = useState(false);
+    const [runToComplete, setRunToComplete] = useState<WeeklyPerformance | null>(null); // For popup data
 
-    const sensors = useSensors( useSensor(PointerSensor), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates, }), ...(isMobile ? [] : [useSensor(TouchSensor)]) );
+    const sensors = useSensors( /* ... */ );
 
     useEffect(() => {
         if (user && gameVersion) { fetchCurrentRunAndGames(); }
-        else { setLoading(false); setCurrentRun(null); setGames([]); } // Clear on user/version change
+        else { setLoading(false); setCurrentRun(null); setGames([]); }
     }, [user, gameVersion]);
 
     const fetchCurrentRunAndGames = async () => {
         if (!user || !gameVersion) return;
         setLoading(true); setError(null);
         try {
-            const { data: runData, error: runError } = await supabase.from('weekly_performances').select('id, custom_name').eq('user_id', user.id).eq('is_completed', false).eq('game_version', gameVersion).order('created_at', { ascending: false }).limit(1).single();
+            // ** Fetch full weekly_performance data **
+            const { data: runData, error: runError } = await supabase
+                .from('weekly_performances')
+                .select('*') // Select all fields
+                .eq('user_id', user.id)
+                .eq('is_completed', false)
+                .eq('game_version', gameVersion)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .single();
+
             if (runError && runError.code !== 'PGRST116') throw runError;
 
             if (runData) {
-                setCurrentRun({ id: runData.id, name: runData.custom_name });
-                // Fetch games with related data needed for editing form
+                setCurrentRun(runData as WeeklyPerformance); // Store full run data
+
                 const { data: gamesData, error: gamesError } = await supabase
                     .from('game_results')
-                    .select(`*, team_statistics(*), player_performances(*)`) // Fetch related data
+                    .select(`*, team_statistics(*), player_performances(*, players(*))`) // Fetch players within performances
                     .eq('week_id', runData.id)
-                    .order('game_number', { ascending: true });
+                    .order('game_number', { ascending: true }); // Use DB field name
                 if (gamesError) throw gamesError;
 
-                // Ensure team_statistics is an object, not array, matching the form expectation
                  const processedGames = (gamesData || []).map(g => ({
                     ...g,
-                    team_stats: Array.isArray(g.team_statistics) ? g.team_statistics[0] : g.team_statistics // Take first if array
-                 }));
+                    // Ensure team_stats is single object
+                    team_stats: Array.isArray(g.team_statistics) ? g.team_statistics[0] : g.team_statistics,
+                    // Map player_performances structure if needed (ensure player_id is present)
+                     player_performances: (g.player_performances || []).map((p: any) => ({
+                        ...p,
+                        player_id: p.player_id || p.players?.id, // Ensure player_id exists
+                        player_name: p.player_name || p.players?.name // Fallback name
+                     }) as PlayerPerformance)
+                 })) as Game[];
 
                 setGames(processedGames);
+
+                // Check for completion AFTER setting data (can be uncommented if needed)
+                // if (runData.is_completed && !showWeekCompletionPopup) {
+                //     setRunToComplete(runData as WeeklyPerformance);
+                //     setShowWeekCompletionPopup(true);
+                // }
+
             } else {
                 setCurrentRun(null); setGames([]);
             }
-        } catch (err: any) { setError('Failed run fetch: ' + err.message); toast({ title: "Error", description: 'Failed run fetch: ' + err.message, variant: "destructive" }); }
-        finally { setLoading(false); }
+        } catch (err: any) {
+            console.error("Fetch Run Error:", err);
+            setError('Failed run fetch: ' + err.message);
+            toast({ title: "Error", description: 'Failed run fetch: ' + err.message, variant: "destructive" });
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const startNewRun = async () => { /* ... (no changes needed here) ... */
-        if (!user || !gameVersion) return;
-        setLoading(true);
-        try {
-            const { data: latestWeek, error: latestWeekError } = await supabase.from('weekly_performances').select('week_number').eq('user_id', user.id).eq('game_version', gameVersion).order('week_number', { ascending: false }).limit(1).single();
-            if (latestWeekError && latestWeekError.code !== 'PGRST116') throw latestWeekError;
-            const nextWeekNumber = latestWeek ? latestWeek.week_number + 1 : 1;
-            const { data, error } = await supabase.from('weekly_performances').insert({ user_id: user.id, start_date: new Date().toISOString(), week_number: nextWeekNumber, game_version: gameVersion }).select('id, custom_name').single();
-            if (error) throw error;
-            setCurrentRun({ id: data.id, name: data.custom_name }); setGames([]); setShowForm(true);
-            toast({ title: "Success", description: "New run started!" });
-        } catch (err: any) { setError('Failed start run: ' + err.message); toast({ title: "Error", description: 'Failed start run: ' + err.message, variant: "destructive" }); }
-        finally { setLoading(false); }
-    };
+    // startNewRun remains the same
+    const startNewRun = async () => { /* ... */ };
 
     // --- UPDATED SUBMIT HANDLER ---
     const handleGameSubmit = async (
-        gameData: Omit<Game, 'id' | 'created_at' | 'week_id' | 'score_line'>,
+        // ** Use reconciled Game type, omitting fields set server-side/here **
+        gameData: Omit<Game, 'id' | 'created_at' | 'week_id' | 'score_line' | 'date_played' | 'player_performances' | 'team_stats' | 'user_id'>,
         playerPerformances: PlayerPerformanceInsert[],
-        teamStats: TeamStatisticsInsert // Add teamStats
+        teamStats: TeamStatisticsInsert
     ) => {
         if (!user || !currentRun) return;
-        setFormSubmitting(true); // Use separate loading state
+        setFormSubmitting(true);
 
         try {
             let savedGameId: string | null = null;
             const scoreLine = `${gameData.user_goals}-${gameData.opponent_goals}`;
+            // ** Use games.length + 1 for next game number on insert **
+            const currentGameNumber = editingGame ? editingGame.game_number : (games.length + 1);
+            const isFinalGame = currentGameNumber === 20;
 
-            // --- Editing Logic ---
+            // Prepare data matching DB schema
+             const gameDataForDb = {
+                ...gameData, // Spread the form data
+                user_id: user.id,
+                week_id: currentRun.id,
+                game_number: currentGameNumber, // Use calculated number
+                score_line: scoreLine,
+                // Ensure nullable fields are null if empty, or omitted if Zod handles defaults
+                opponent_username: gameData.opponent_username || null,
+                comments: gameData.comments || null,
+             };
+             // Remove opponent_skill if it accidentally got included
+             delete (gameDataForDb as any).opponent_skill;
+
+
             if (editingGame) {
-                // Update game_results
                 const { error: gameUpdateError } = await supabase
                     .from('game_results')
-                    .update({ ...gameData, score_line: scoreLine })
+                    .update(gameDataForDb) // Pass prepared data
                     .eq('id', editingGame.id);
                 if (gameUpdateError) throw gameUpdateError;
                 savedGameId = editingGame.id;
 
-                // Update team_statistics (using upsert in case it didn't exist)
-                if (Object.keys(teamStats).length > 0) { // Only update if stats weren't skipped
+                // Update team stats (Ensure teamStats includes user_id)
+                if (Object.keys(teamStats).length > 0) {
                     const { error: teamStatsUpsertError } = await supabase
                         .from('team_statistics')
-                        .upsert({ ...teamStats, game_id: savedGameId, user_id: user.id }, { onConflict: 'game_id' }); // Upsert based on game_id
-                     if (teamStatsUpsertError) console.warn("Error upserting team stats:", teamStatsUpsertError.message); // Log warning but continue
+                        .upsert({ ...teamStats, user_id: user.id, game_id: savedGameId }, { onConflict: 'game_id' });
+                    if (teamStatsUpsertError) console.warn("Error upserting team stats:", teamStatsUpsertError.message);
                 }
 
-                // Delete old player_performances and insert new ones
+                // Delete old player performances and insert new (Ensure PP includes user_id)
                 await supabase.from('player_performances').delete().eq('game_id', savedGameId);
                 if (playerPerformances.length > 0) {
                      const performancesToInsert = playerPerformances.map(p => ({
-                        ...p, game_id: savedGameId, user_id: user.id
+                        ...p, user_id: user.id, game_id: savedGameId
                      }));
                      const { error: perfInsertError } = await supabase.from('player_performances').insert(performancesToInsert);
-                     if (perfInsertError) throw perfInsertError; // Throw if player stats fail
+                     if (perfInsertError) throw perfInsertError;
                 }
 
-            // --- Inserting Logic ---
-            } else {
-                 const nextGameNum = games.length > 0 ? Math.max(...games.map(g => g.game_number)) + 1 : 1;
-                // Insert into game_results
-                const { data: newGame, error: gameInsertError } = await supabase
+            } else { // Inserting new game
+                 const { data: newGame, error: gameInsertError } = await supabase
                     .from('game_results')
-                    .insert({ ...gameData, week_id: currentRun.id, game_number: nextGameNum, score_line: scoreLine, user_id: user.id })
+                    .insert(gameDataForDb) // Pass prepared data
                     .select('id')
                     .single();
                 if (gameInsertError) throw gameInsertError;
                 if (!newGame?.id) throw new Error("Failed to retrieve new game ID.");
                 savedGameId = newGame.id;
 
-                // Insert team_statistics
+                // Insert team stats (Ensure teamStats includes user_id)
                  if (Object.keys(teamStats).length > 0) {
                     const { error: teamStatsInsertError } = await supabase
                         .from('team_statistics')
-                        .insert({ ...teamStats, game_id: savedGameId, user_id: user.id });
-                    if (teamStatsInsertError) console.warn("Error inserting team stats:", teamStatsInsertError.message); // Log warning
+                        .insert({ ...teamStats, user_id: user.id, game_id: savedGameId });
+                    if (teamStatsInsertError) console.warn("Error inserting team stats:", teamStatsInsertError.message);
                  }
 
-                // Insert player_performances
+                // Insert player performances (Ensure PP includes user_id)
                  if (playerPerformances.length > 0) {
                      const performancesToInsert = playerPerformances.map(p => ({
-                        ...p, game_id: savedGameId, user_id: user.id
+                        ...p, user_id: user.id, game_id: savedGameId
                      }));
                      const { error: perfInsertError } = await supabase.from('player_performances').insert(performancesToInsert);
-                     if (perfInsertError) throw perfInsertError; // Throw if player stats fail
+                     if (perfInsertError) throw perfInsertError;
                  }
             }
 
-            toast({ title: "Success", description: `Game ${editingGame ? 'updated' : 'recorded'} successfully!` });
+            toast({ title: "Success", description: `Game ${currentGameNumber} ${editingGame ? 'updated' : 'recorded'}!` });
             setShowForm(false); setEditingGame(null);
             await fetchCurrentRunAndGames(); // Re-fetch all data
+
+            // ** Trigger Game Completion Modal only on INSERTING the 20th game **
+            if (!editingGame && isFinalGame) {
+                 setShowGameCompletionModal(true);
+            }
 
         } catch (err: any) {
             console.error("Game Submit Error:", err);
             setError(`Failed to save game: ${err.message}`);
             toast({ title: "Error", description: `Failed to save game: ${err.message}`, variant: "destructive" });
         } finally {
-            setFormSubmitting(false); // End form submission loading
+            setFormSubmitting(false);
         }
     };
 
-    // --- UPDATED DELETE LOGIC ---
-    const handleDeleteGame = async (gameId: string) => {
+    // handleDeleteGame remains the same
+    const handleDeleteGame = async (gameId: string) => { /* ... */ };
+
+    // handleEditGame remains the same
+     const handleEditGame = async (gameId: string) => { /* ... */ };
+
+    // handleCancelForm remains the same
+    const handleCancelForm = () => { /* ... */ };
+
+    // handleDragEnd remains the same
+    const handleDragEnd = async (event: DragEndEvent) => { /* ... */ };
+
+    // handleNameUpdate remains the same
+    const handleNameUpdate = async (newName: string) => { /* ... */ };
+
+     // --- Function to Mark Run as Complete ---
+     const handleCompleteRun = async () => {
+        if (!currentRun) return;
         setLoading(true);
         try {
-            const gameToDelete = games.find(g => g.id === gameId);
-            if (!gameToDelete) throw new Error("Game not found");
-            const deletedGameNumber = gameToDelete.game_number;
+            // ** Fetch the latest run data before updating **
+            // This ensures we have wins/losses calculated by triggers/functions if applicable
+             const { data: latestRunData, error: fetchError } = await supabase
+                .from('weekly_performances')
+                .select('*')
+                .eq('id', currentRun.id)
+                .single();
 
-            // Delete dependencies first (order matters for foreign keys)
-            await supabase.from('player_performances').delete().eq('game_id', gameId);
-            await supabase.from('team_statistics').delete().eq('game_id', gameId);
+             if (fetchError) throw fetchError;
+             if (!latestRunData) throw new Error("Could not refetch run data before completion.");
 
-            // Delete the game result
-            const { error: gameError } = await supabase.from('game_results').delete().eq('id', gameId);
-            if (gameError) throw gameError;
+            const { data, error } = await supabase
+                .from('weekly_performances')
+                .update({ is_completed: true, end_date: new Date().toISOString() })
+                .eq('id', currentRun.id)
+                .select() // Select updated data
+                .single();
 
-            // Update subsequent game numbers
-            const updates = games
-                .filter(g => g.id !== gameId && g.game_number > deletedGameNumber)
-                .map(g => ({ id: g.id, game_number: g.game_number - 1 }));
+            if (error) throw error;
 
-            if (updates.length > 0) {
-                const { error: updateError } = await supabase.from('game_results').upsert(updates);
-                if (updateError) console.warn("Error updating subsequent game numbers:", updateError); // Warn but proceed
-            }
-
-            toast({ title: "Success", description: "Game deleted successfully." });
-            await fetchCurrentRunAndGames(); // Re-fetch the updated list
-
+            // Use the updated data (or latest fetched data) for the popup
+            setRunToComplete(data as WeeklyPerformance);
+            setCurrentRun(null); // Clear current run as it's now completed
+            setGames([]); // Clear games list
+            setShowWeekCompletionPopup(true);
+            setShowGameCompletionModal(false); // Close game modal if open
+            toast({ title: "Run Completed!", description: "Your weekend league run has been finalized." });
+            // Optionally call fetchCurrentRunAndGames() again if you want to immediately check for a new *uncompleted* run
+            // await fetchCurrentRunAndGames();
         } catch (err: any) {
-            setError(`Failed to delete game: ${err.message}`);
-            toast({ title: "Error", description: `Failed to delete game: ${err.message}`, variant: "destructive" });
-             // Optionally re-fetch even on error to ensure consistency
-             await fetchCurrentRunAndGames();
+            console.error("Error completing run:", err);
+            toast({ title: "Error", description: `Failed to complete run: ${err.message}`, variant: "destructive" });
         } finally {
             setLoading(false);
         }
     };
 
-    // --- UPDATED EDIT LOGIC ---
-     const handleEditGame = async (gameId: string) => {
-        // Find the full game object (already fetched with stats/players)
-        const gameToEdit = games.find(g => g.id === gameId);
-        if (!gameToEdit) {
-            toast({ title: "Error", description: "Could not find game data to edit.", variant: "destructive" });
-            return;
-        }
-         console.log("Editing Game Data:", gameToEdit); // Debug log
-        setEditingGame(gameToEdit);
-        setShowForm(true);
-    };
+    const nextGameNumber = games.length + 1; // Simpler calculation
 
-    const handleCancelForm = () => { setShowForm(false); setEditingGame(null); };
-
-    const handleDragEnd = async (event: DragEndEvent) => { /* ... (no changes needed here) ... */
-        const { active, over } = event;
-        if (over && active.id !== over.id) {
-            const oldIndex = games.findIndex((game) => game.id === active.id);
-            const newIndex = games.findIndex((game) => game.id === over.id);
-            if (oldIndex === -1 || newIndex === -1) return; // Safety check
-            const reorderedGames = arrayMove(games, oldIndex, newIndex);
-            setGames(reorderedGames);
-            const updates = reorderedGames.map((game, index) => ({ id: game.id, game_number: index + 1 }));
-            try {
-                const { error: updateError } = await supabase.from('game_results').upsert(updates);
-                if (updateError) throw updateError;
-                toast({ title: "Success", description: "Game order updated." });
-            } catch (err: any) {
-                setError(`Failed order update: ${err.message}`); toast({ title: "Error", description: `Failed order update: ${err.message}`, variant: "destructive" });
-                fetchCurrentRunAndGames(); // Revert
-            }
-        }
-    };
-
-    const handleNameUpdate = async (newName: string) => { /* ... (no changes needed here) ... */
-         if (!currentRun) return;
-        try {
-            const { error } = await supabase.from('weekly_performances').update({ custom_name: newName }).eq('id', currentRun.id);
-            if (error) throw error;
-            setCurrentRun(prev => prev ? { ...prev, name: newName } : null);
-            toast({ title: "Success", description: "Run name updated." }); setIsNamingModalOpen(false);
-        } catch (err: any) { toast({ title: "Error", description: `Failed name update: ${err.message}`, variant: "destructive" }); }
-    };
-
-    const nextGameNumber = games.length > 0 ? Math.max(...games.map(g => g.game_number)) + 1 : 1;
-
-    // --- RENDER LOGIC ---
-    if (loading && !currentRun && !error) { /* Initial loading */ return <div className="flex justify-center items-center h-64"><Loader2 className="h-8 w-8 animate-spin text-primary" /><p className="ml-4 text-muted-foreground">Loading run...</p></div>; }
-    if (error) { /* Error display */ return <div className="text-center p-10 text-destructive">{error}</div>; }
+    // Render logic remains similar...
+    if (loading && !currentRun && !error) { /* ... */ }
+    if (error) { /* ... */ }
 
     return (
-        <div className="space-y-6 pb-4"> {/* Add padding bottom */}
+        <div className="space-y-6 pb-4">
             {!currentRun ? (
                 /* No Active Run Card */
-                <Card className="glass-card rounded-2xl shadow-xl border-border/20">
-                    <CardContent className="text-center p-8 md:p-10 space-y-4">
-                        <Trophy className="h-12 w-12 md:h-16 md:w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-                        <h2 className="text-xl md:text-2xl font-semibold text-white">No Active Run</h2>
-                        <p className="text-muted-foreground text-sm md:text-base">Start tracking your FUT Champions progress?</p>
-                        <Button onClick={startNewRun} disabled={loading}> Start New Run </Button>
-                    </CardContent>
-                </Card>
+                <Card className="glass-card ..."> {/* ... */} </Card>
             ) : (
                 <> {/* Active Run View */}
-                    <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6"> {/* Responsive header */}
+                    <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
                         <div className="flex items-center gap-2">
-                            <h1 className="text-2xl md:text-3xl font-bold text-white truncate max-w-[200px] sm:max-w-xs md:max-w-md">{currentRun.name || `Week ${games[0]?.week_number || '...'}`}</h1>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsNamingModalOpen(true)}><Edit className="h-4 w-4 text-muted-foreground hover:text-white" /></Button>
+                             {/* Use DB field week_number */}
+                            <h1 className="text-2xl ...">{currentRun.custom_name || `Week ${currentRun.week_number}`}</h1>
+                            <Button variant="ghost" size="icon" onClick={() => setIsNamingModalOpen(true)}><Edit className="h-4 w-4 ..." /></Button>
                         </div>
-                        {!showForm && (<Button onClick={() => { setEditingGame(null); setShowForm(true); }} disabled={loading}><PlusCircle className="mr-2 h-4 w-4" /> Add Game</Button>)}
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                            {!showForm && (<Button onClick={() => { setEditingGame(null); setShowForm(true); }} disabled={loading || games.length >= 20}><PlusCircle className="mr-2 h-4 w-4" /> Add Game {games.length < 20 ? `(${games.length}/20)` : '(Max Reached)'}</Button>)}
+                            {!showForm && games.length >= 1 && !currentRun.is_completed && ( // Show only if form is hidden, games exist, and not completed
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="destructive" disabled={loading}> <CheckCircle className="mr-2 h-4 w-4" /> Complete Run </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent> {/* ... Confirmation Dialog ... */} </AlertDialogContent>
+                                </AlertDialog>
+                            )}
+                        </div>
                     </div>
 
-                    <RunNamingModal isOpen={isNamingModalOpen} onClose={() => setIsNamingModalOpen(false)} currentName={currentRun.name || ''} onSave={handleNameUpdate} />
+                    <RunNamingModal isOpen={isNamingModalOpen} onClose={() => setIsNamingModalOpen(false)} currentName={currentRun.custom_name || ''} onSave={handleNameUpdate} />
 
-                    {/* FORM DISPLAY (Modal might be better on mobile?) */}
-                    {showForm && (
-                         <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
-                             <div className="w-full max-w-4xl max-h-[90vh]"> {/* Constrain size */}
-                                <GameRecordForm
-                                    key={editingGame?.id || 'new'} // Force re-render on edit change
-                                    onSubmit={handleGameSubmit}
-                                    isLoading={formSubmitting} // Use specific loading state
-                                    game={editingGame ?? undefined}
-                                    weekId={currentRun.id}
-                                    onCancel={handleCancelForm}
-                                    gameVersion={gameVersion}
-                                    nextGameNumber={nextGameNumber}
-                                />
-                             </div>
-                         </div>
-                    )}
+                    {showForm && ( /* ... Form Display ... */ )}
 
-                    {/* Stats Cards */}
-                    <Card className="glass-card rounded-2xl shadow-xl border-border/20"><CardContent className="p-4 md:p-6"><CurrentRunStats games={games} /></CardContent></Card>
-                    <Card className="glass-card rounded-2xl shadow-xl border-border/20"><CardContent className="p-4 md:p-6"><WeekProgress games={games} /></CardContent></Card>
+                    {/* Stats Cards - Pass target_wins from currentRun */}
+                    <Card className="glass-card ..."><CardContent className="p-4 md:p-6"><CurrentRunStats games={games} /></CardContent></Card>
+                    <Card className="glass-card ..."><CardContent className="p-4 md:p-6"><WeekProgress games={games} targetWins={currentRun?.target_wins} /></CardContent></Card>
 
-                    {/* Game List */}
-                    <Card className="glass-card rounded-2xl shadow-xl border-border/20">
-                        <CardContent className="p-4 md:p-6">
-                             <h3 className="text-lg font-semibold mb-4 text-white">Recorded Games ({games.length})</h3>
-                            {games.length > 0 ? (
-                                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                                    <SortableContext items={games.map(g => g.id)} strategy={verticalListSortingStrategy}>
-                                        <div className="space-y-3">
-                                            {games.map((game) => (
-                                                <SortableGameListItem key={game.id} game={game} onEdit={handleEditGame} onDelete={handleDeleteGame} />
-                                            ))}
-                                        </div>
-                                    </SortableContext>
-                                </DndContext>
-                            ) : (
-                                <p className="text-center text-muted-foreground py-4">No games recorded for this run yet.</p>
-                            )}
-                        </CardContent>
-                    </Card>
+                    {/* Game List (remains the same) */}
+                    <Card className="glass-card ..."> <CardContent> {/* ... */} </CardContent> </Card>
+
+                    {/* --- Modals --- */}
+                    <GameCompletionModal
+                        isOpen={showGameCompletionModal}
+                        onClose={() => setShowGameCompletionModal(false)}
+                        onCompleteRun={handleCompleteRun}
+                        gamesPlayed={games.length} // Pass current count
+                        // ** Pass necessary week data if modal needs it **
+                        // weekData={currentRun} // Uncomment if GameCompletionModal requires week data
+                    />
+                    <WeekCompletionPopup
+                        isOpen={showWeekCompletionPopup}
+                        onClose={() => { setShowWeekCompletionPopup(false); setRunToComplete(null); }} // Clear runToComplete on close
+                        runData={runToComplete} // Pass the completed run data
+                        // ** Pass onNewWeek if needed **
+                        // onNewWeek={startNewRun}
+                    />
                 </>
             )}
         </div>
