@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 // ** Use reconciled types **
-import { Game, PlayerPerformanceInsert, TeamStatisticsInsert, WeeklyPerformance } from '@/types/futChampions';
+import { Game, PlayerPerformanceInsert, TeamStatisticsInsert, WeeklyPerformance, PlayerPerformance } from '@/types/futChampions'; // Added PlayerPerformance
 import GameRecordForm from '@/components/GameRecordForm';
 import GameListItem from '@/components/GameListItem';
 import RunNamingModal from '@/components/RunNamingModal';
@@ -16,9 +16,9 @@ import { useTheme } from '@/hooks/useTheme';
 import { useMobile } from '@/hooks/use-mobile';
 import { Card, CardContent } from '@/components/ui/card';
 import { useGameVersion } from '@/contexts/GameVersionContext';
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
-import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors, DragEndEvent } from '@nd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@nd-kit/sortable';
+import { CSS } from '@nd-kit/utilities';
 // ** Added Modal Imports (ensure paths are correct) **
 import GameCompletionModal from '@/components/GameCompletionModal';
 import WeekCompletionPopup from '@/components/WeekCompletionPopup';
@@ -191,7 +191,7 @@ const CurrentRun = () => {
                 opponent_username: gameData.opponent_username || null,
                 comments: gameData.comments || null,
                 // Ensure opponent_skill is included if still in DB/type, otherwise remove
-                opponent_skill: gameData.opponent_skill,
+                // opponent_skill: gameData.opponent_skill, // This field was removed
                 squad_quality_comparison: gameData.squad_quality_comparison, // Added
              };
               // If opponent_skill was REMOVED via SQL:
@@ -403,9 +403,13 @@ const CurrentRun = () => {
                         <GameRecordForm
                             onSubmit={handleGameSubmit}
                             onCancel={handleCancelForm}
-                            initialData={editingGame}
-                            gameNumber={nextGameNumber}
-                            isSubmitting={formSubmitting}
+                            game={editingGame}                 // Prop name changed
+                            nextGameNumber={nextGameNumber}    // Prop name changed
+                            isLoading={formSubmitting}         // Prop name changed
+                            
+                            // Pass the new required props:
+                            weekId={currentRun.id}
+                            gameVersion={gameVersion}
                         />
                     )}
 
