@@ -4,8 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import DashboardOverview from '@/components/DashboardOverview';
 import RecentRuns from '@/components/RecentRuns';
 import ClubLegends from '@/components/ClubLegends';
-// --- FIX: Import FUTTrackrRecords as a NAMED export ---
-import { FUTTrackrRecords } from '@/components/FUTTrackrRecords';
+import { FUTTrackrRecords } from '@/components/FUTTrackrRecords'; // Corrected import
 import DashboardSection from '@/components/DashboardSection';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -22,30 +21,20 @@ import PrimaryInsightCard from '@/components/PrimaryInsightCard';
 import GoalInvolvementChart from '@/components/GoalInvolvementChart';
 import CPSGauge from '@/components/CPSGauge';
 import PositionalHeatMap from '@/components/PositionalHeatMap';
-// --- VISUAL FIX: Import the logo ---
-// Make sure the path is correct relative to this file, or use an absolute path like '/fut-trackr-logo.jpg' if it's in the public folder
 import logo from '/fut-trackr-logo.jpg';
-import { useTheme } from '@/hooks/useTheme'; // Import useTheme
-
-// --- ADD THIS IMPORT ---
+import { useTheme } from '@/hooks/useTheme';
 import RunChunkAnalysis from '@/components/RunChunkAnalysis';
+// --- Import hook for fetching data if needed ---
+// import { useAllRunsData } from '@/hooks/useAllRunsData'; // Example
 
 interface DashboardItem {
     id: string;
-    component: React.FC<any>; // Allow components to accept props
+    component: React.FC<any>;
     order: number;
-    // Add props if specific components need them passed down, e.g.,
-    // props?: Record<string, any>;
 }
 
-// --- Define props interfaces if needed by components ---
-// Example:
-// interface DashboardOverviewProps { latestRun: any; allRuns: any[] }
-// interface RecentRunsProps { runs: any[] }
-// ... etc.
-
 const componentsMap: Record<string, React.FC<any>> = {
-    overview: DashboardOverview, // The hero section (chart + 4 stats)
+    overview: DashboardOverview,
     recentRuns: RecentRuns,
     records: FUTTrackrRecords,
     playerMovers: PlayerMovers,
@@ -64,7 +53,6 @@ const componentsMap: Record<string, React.FC<any>> = {
 };
 
 const defaultLayout: DashboardItem[] = [
-    // Define order based on tabs
     // Overview Tab
     { id: 'overview', component: componentsMap.overview, order: 1 },
     { id: 'primaryInsight', component: componentsMap.primaryInsight, order: 2 },
@@ -86,7 +74,6 @@ const defaultLayout: DashboardItem[] = [
     { id: 'positionalHeatMap', component: componentsMap.positionalHeatMap, order: 15 },
 ];
 
-// Filter the default layout *once* to ensure all components exist in the map.
 const initialLayout = [...defaultLayout]
     .filter(item => componentsMap[item.id])
     .sort((a, b) => a.order - b.order);
@@ -94,29 +81,31 @@ const initialLayout = [...defaultLayout]
 const Dashboard = () => {
     const { user } = useAuth();
     const { toast } = useToast();
-    const { currentTheme } = useTheme(); // Get theme for skeletons
+    const { currentTheme } = useTheme();
 
-    // Initialize state *with the default layout*
     const [layout, setLayout] = useState<DashboardItem[]>(initialLayout);
-    const [loadingLayout, setLoadingLayout] = useState(true); // Renamed for clarity
+    const [loadingLayout, setLoadingLayout] = useState(true);
 
-    // --- You might need to fetch data needed by child components here ---
-    // Example using a hypothetical hook (adjust as needed)
+    // --- Fetch data needed by child components here ---
+    // Example: Replace with your actual data fetching hook
     // const { runs, loading: runsLoading, error: runsError } = useAllRunsData();
+    // Placeholder data while hook is not used:
+    const runs: any[] = []; // Replace with actual data fetching
+    const runsLoading = false; // Replace with actual loading state
+    const runsError = null; // Replace with actual error state
 
     useEffect(() => {
         fetchLayout();
     }, [user]);
 
-    // fetchLayout now *updates* the layout, rather than causing the initial render
     const fetchLayout = async () => {
+        // ... (fetchLayout function remains the same as your provided code) ...
         if (!user) {
-            setLoadingLayout(false); // No user, so stop loading
-            setLayout(initialLayout); // Ensure default layout is set
+            setLoadingLayout(false);
+            setLayout(initialLayout);
             return;
         }
-
-        setLoadingLayout(true); // Still set loading for user's layout fetch
+        setLoadingLayout(true);
         try {
             const { data, error } = await supabase
                 .from('user_settings')
@@ -124,9 +113,7 @@ const Dashboard = () => {
                 .eq('user_id', user.id)
                 .eq('key', 'dashboard_layout')
                 .limit(1);
-
             if (error) throw error;
-
             if (data && data.length > 0 && data[0].value) {
                  const savedLayout = data[0].value as { id: string; order: number }[];
                  let loadedLayout = savedLayout
@@ -135,8 +122,6 @@ const Dashboard = () => {
                          return component ? { ...item, component } : null;
                      })
                      .filter((item): item is DashboardItem => item !== null);
-
-                 // Add any missing default components (newly added ones)
                  defaultLayout.forEach(defaultItem => {
                      if (!loadedLayout.some(item => item.id === defaultItem.id)) {
                          if (componentsMap[defaultItem.id]) {
@@ -144,18 +129,13 @@ const Dashboard = () => {
                          }
                      }
                  });
-
-                 // Ensure all components still exist in the map after merge
                  loadedLayout = loadedLayout.filter(item => componentsMap[item.id]);
                  setLayout(loadedLayout.sort((a, b) => a.order - b.order));
             } else {
-                 // No saved layout, default is already set
                  setLayout(initialLayout);
             }
-        } catch (err: any)
-        {
+        } catch (err: any) {
             toast({ title: "Error", description: `Failed to load dashboard layout: ${err.message}`, variant: "destructive" });
-             // Fallback to default layout on error
              setLayout(initialLayout);
         } finally {
             setLoadingLayout(false);
@@ -164,52 +144,50 @@ const Dashboard = () => {
 
 
     const findAndRenderSection = (id: string, props?: Record<string, any>) => {
-        // Find the item based on ID
         const item = layout.find(item => item.id === id);
         if (!item) return null;
 
         const Component = item.component;
 
-        // Determine if the component needs the DashboardSection wrapper
         const selfContainedComponents = [
             'playerHistoryTable', 'xgAnalytics', 'playerConsistency',
             'performanceRadar', 'matchTagAnalysis', 'formationTracker',
             'primaryInsight', 'goalInvolvement', 'cpsGauge', 'positionalHeatMap',
-            'overview',
-            'runChunkAnalysis',
-            // Add other components that handle their own Card/Title styling
+            'overview', 'runChunkAnalysis'
         ];
 
+        // --- Pass common data props (like runs) if needed ---
+        // Add specific checks if only certain components need certain props
+        const commonProps = {
+             allRuns: runs, // Example: pass runs data
+             latestRun: runs?.[0] || null, // Example
+             // Add other common props needed by multiple components
+             ...(props || {}) // Include any specific props passed in
+        };
+
         if (selfContainedComponents.includes(id)) {
-             // Pass props directly to self-contained components
-             return <Component key={item.id} {...props} />;
+             return <Component key={item.id} {...commonProps} />;
         }
 
-        // Determine title for wrapped components
         let title = '';
          switch (id) {
              case 'playerMovers': title = 'Player Movers'; break;
              case 'records': title = 'All-Time Records'; break;
              case 'recentRuns': title = 'Recent Runs'; break;
              case 'clubLegends': title = 'Club Legends'; break;
-             default:
-                 // Auto-generate title (optional, adjust as needed)
-                 title = item.id.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+             default: title = item.id.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
          }
 
-         // Render wrapped components
          return (
              <DashboardSection key={item.id} title={title}>
-                 {/* Pass props to the component inside the section */}
-                 <Component {...props} />
+                 <Component {...commonProps} />
              </DashboardSection>
          );
     };
 
-    // --- SKELETON LOADER (Optional but recommended) ---
-    // Show skeletons only while fetching the *user's specific layout*
+    // --- Show skeleton only while loading the layout ---
     if (loadingLayout) {
-       return (
+       return ( /* ... Skeleton remains the same ... */
          <div className="space-y-8">
             <div className="flex items-center gap-4">
                  <Skeleton className="h-12 w-12 rounded-lg" />
@@ -218,9 +196,7 @@ const Dashboard = () => {
                     <Skeleton className="h-4 w-64" />
                  </div>
             </div>
-            {/* Skeleton for TabsList */}
             <Skeleton className="h-12 w-full rounded-2xl" />
-            {/* Skeletons for content */}
             <div className="space-y-6">
                 <Skeleton className="h-64 w-full rounded-lg" />
                 <Skeleton className="h-48 w-full rounded-lg" />
@@ -231,15 +207,19 @@ const Dashboard = () => {
     }
 
     // --- ACTUAL DASHBOARD RENDER ---
+    // Added a check for data loading if your components rely on it
+    // if (runsLoading) {
+    //    return <div>Loading run data...</div>; // Or a more elaborate skeleton
+    // }
+    // if (runsError) {
+    //    return <div className="text-red-500">Error loading run data: {runsError.message}</div>;
+    // }
+
     return (
         <div className="space-y-8">
              {/* --- Logo and Title Section --- */}
              <div className="flex items-center gap-4">
-                 <img
-                     src={logo}
-                     alt="FUT Trackr Logo"
-                     className="h-12 w-12 rounded-lg object-cover shadow-md"
-                 />
+                 <img src={logo} alt="FUT Trackr Logo" className="h-12 w-12 rounded-lg object-cover shadow-md" />
                  <div>
                      <h1 className="text-3xl font-bold text-white tracking-tight">Dashboard</h1>
                      <p style={{ color: currentTheme.colors.muted }}>Your FUT Champions command center.</p>
@@ -249,47 +229,43 @@ const Dashboard = () => {
             <Tabs defaultValue="overview" className="space-y-6">
                 <TabsList className="glass-card rounded-2xl shadow-xl border-0 p-2 h-auto grid grid-cols-3">
                      <TabsTrigger value="overview" className="tabs-trigger-style rounded-xl flex-1 flex gap-2 items-center justify-center">
-                         <LayoutGrid className="h-4 w-4" />
-                         Overview
+                         <LayoutGrid className="h-4 w-4" /> Overview
                      </TabsTrigger>
                      <TabsTrigger value="players" className="tabs-trigger-style rounded-xl flex-1 flex gap-2 items-center justify-center">
-                         <Users className="h-4 w-4" />
-                         Player Hub
+                         <Users className="h-4 w-4" /> Player Hub
                      </TabsTrigger>
                      <TabsTrigger value="analytics" className="tabs-trigger-style rounded-xl flex-1 flex gap-2 items-center justify-center">
-                         <BarChart3 className="h-4 w-4" />
-                         Analytics
+                         <BarChart3 className="h-4 w-4" /> Analytics
                      </TabsTrigger>
                 </TabsList>
 
-                {/* --- FIX: Place findAndRenderSection calls WITHIN the correct TabsContent --- */}
+                {/* --- FIX: Removed forceMount for testing --- */}
+                {/* --- Pass necessary props via findAndRenderSection --- */}
 
-                <TabsContent value="overview" className="space-y-6 mt-4" forceMount>
-                     {/* Pass necessary props if components need them */}
-                     {findAndRenderSection('overview' /*, { latestRun: runs?.[0], allRuns: runs } */)}
+                <TabsContent value="overview" className="space-y-6 mt-4">
+                     {findAndRenderSection('overview')}
                      {findAndRenderSection('primaryInsight')}
-                     {findAndRenderSection('recentRuns' /*, { runs: runs } */)}
-                     {findAndRenderSection('records' /*, { allRuns: runs } */)}
+                     {findAndRenderSection('recentRuns')}
+                     {findAndRenderSection('records')}
                 </TabsContent>
 
-                <TabsContent value="players" className="space-y-6 mt-4" forceMount>
+                <TabsContent value="players" className="space-y-6 mt-4">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {findAndRenderSection('playerMovers')}
                         {findAndRenderSection('goalInvolvement')}
                     </div>
-                    <div className="grid grid-cols-1 gap-6"> {/* Changed grid cols */}
+                    <div className="grid grid-cols-1 gap-6">
                         {findAndRenderSection('clubLegends')}
                     </div>
-                     <div className="grid grid-cols-1 gap-6"> {/* Changed grid cols */}
+                     <div className="grid grid-cols-1 gap-6">
                         {findAndRenderSection('playerHistoryTable')}
                     </div>
                 </TabsContent>
 
-                <TabsContent value="analytics" className="space-y-6 mt-4" forceMount>
-                     {/* Arrange analytics components as desired */}
+                <TabsContent value="analytics" className="space-y-6 mt-4">
                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                          {findAndRenderSection('performanceRadar')}
-                         {findAndRenderSection('runChunkAnalysis' /*, { allRuns: runs } */)}
+                         {findAndRenderSection('runChunkAnalysis')}
                      </div>
                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                          {findAndRenderSection('matchTagAnalysis')}
