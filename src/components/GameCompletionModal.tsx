@@ -130,7 +130,7 @@ const GameCompletionModal = ({ isOpen, onClose, game, weekData }: GameCompletion
         {showCelebration && isWin && null /* <-- FIX 2: Replaced empty () with null */ }
 
         {/* Header */}
-         <div className={`p-6 sm:p-8 text-center relative overflow-hidden shrink-0 ${ /* ... header bg gradient ... */ }`}>
+         <div className="p-6 sm:p-8 text-center relative overflow-hidden shrink-0"> {/* <-- FIX 3: Removed invalid template literal */}
             {/* ... header elements (icon, result text, scoreline, badges) ... */}
             <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full ... ${ isWin ? 'bg-gradient-to-br from-green-400 to-green-600' : 'bg-gradient-to-br from-red-400 to-red-600' }`}>
                {isWin ? <Trophy className="h-8 w-8 sm:h-10 sm:w-10 text-white animate-bounce" /> : <Target className="h-8 w-8 sm:h-10 sm:w-10 text-white" />}
