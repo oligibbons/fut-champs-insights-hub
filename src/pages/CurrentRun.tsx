@@ -398,7 +398,16 @@ const CurrentRun = () => {
 
                     <RunNamingModal isOpen={isNamingModalOpen} onClose={() => setIsNamingModalOpen(false)} currentName={currentRun.custom_name || ''} onSave={handleNameUpdate} />
 
-                    {showForm && ( /* ... Form Display ... */ )}
+                    {/* --- THIS IS THE FIX --- */}
+                    {showForm && (
+                        <GameRecordForm
+                            onSubmit={handleGameSubmit}
+                            onCancel={handleCancelForm}
+                            initialData={editingGame}
+                            gameNumber={nextGameNumber}
+                            isSubmitting={formSubmitting}
+                        />
+                    )}
 
                     <Card className="glass-card ..."><CardContent className="p-4 md:p-6"><CurrentRunStats games={games} /></CardContent></Card>
                     <Card className="glass-card ..."><CardContent className="p-4 md:p-6"><WeekProgress games={games} targetWins={currentRun?.target_wins} /></CardContent></Card>
