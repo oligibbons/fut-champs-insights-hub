@@ -68,7 +68,7 @@ const ShareableCardGenerator: React.FC<ShareableCardGeneratorProps> = ({
   onClose,
   userScreenName,
 }) => {
-  const cardPreviewRef = useRef<HTMLDivElement>(null);
+  const cardContainerRef = useRef<HTMLDivElement>(null); // FIX: Renamed ref and moved it to outer container to ensure background is captured
   const { toast } = useToast();
   const { currentTheme } = useTheme();
   const [options, setOptions] = useState<CardOptions>(getDefaultOptions());
@@ -93,25 +93,30 @@ const ShareableCardGenerator: React.FC<ShareableCardGeneratorProps> = ({
 
   // FIX 2: Real-time generation logic (uses debounce for performance)
   const generateImage = useCallback(async () => {
-    if (!cardPreviewRef.current) return;
+    if (!cardContainerRef.current) return; // FIX: Use new ref name
     setIsLoading(true);
     setImageDataUrl(null);
     try {
-      const bgColor = window.getComputedStyle(document.documentElement).getPropertyValue('--background').trim();
-      const cssBgColor = `hsl(${bgColor.replace(/ /g, ', ')})`;
+      // FIX: Simplified and corrected background color retrieval logic for html-to-image.
+      // Set a safe fallback background color based on the current theme's bg-card.
+      const cardBgColor = currentTheme.name === 'dark' ? '#1E293B' : '#FFFFFF'; // This is a safe fallback for bg-card (slate-800/white)
 
-      const dataUrl = await toJpeg(cardPreviewRef.current, {
+      const dataUrl = await toJpeg(cardContainerRef.current, { // FIX: Use new ref name
         quality: 0.95,
-        backgroundColor: cssBgColor || (currentTheme.name === 'dark' ? '#111111' : '#ffffff'),
+        // Using the card background color as the explicit background for toJpeg is the most reliable fix 
+        // when CSS variables for background might not be fully computed or inlined correctly.
+        backgroundColor: cardBgColor,
         pixelRatio: 2,
+        cacheBust: true,
       });
       setImageDataUrl(dataUrl);
     } catch (error: any) {
       console.error('Error generating image:', error);
+      toast({ title: "Image Generation Failed", description: "Could not generate card image. This often happens if player images fail to load due to CORS.", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
-  }, [currentTheme.name]);
+  }, [currentTheme.name, toast]); // FIX: Added toast to dependency array
 
   // --- Real-Time Update Trigger ---
   useEffect(() => {
@@ -204,6 +209,7 @@ const ShareableCardGenerator: React.FC<ShareableCardGeneratorProps> = ({
                 <div className="md:col-span-2 flex flex-col items-center justify-start gap-4 overflow-y-auto pt-2 pl-2 md:pl-0">
                      {/* Preview Container (Dynamic Height) */}
                      <div
+                        ref={cardContainerRef} // FIX: Moved ref here, the element with background/border/shadow is now the capture target
                         className="w-full max-w-[400px] border border-border/50 rounded-lg overflow-hidden shadow-lg bg-card flex-shrink-0 relative"
                         style={dynamicHeightStyle}
                      >
@@ -213,7 +219,7 @@ const ShareableCardGenerator: React.FC<ShareableCardGeneratorProps> = ({
                             </div>
                          )}
                          {/* The element to capture */}
-                         <div ref={cardPreviewRef} className="h-full w-full">
+                         <div className="h-full w-full"> 
                              <CardPreview
                                  runData={runData}
                                  allRunsData={allRunsData}
@@ -235,7 +241,9 @@ const ShareableCardGenerator: React.FC<ShareableCardGeneratorProps> = ({
                          </Button>
                     </div>
                     {isLoading && <p className="text-xs text-primary mt-1 flex-shrink-0 text-center">Generating image...</p>}
-                    {!imageDataUrl && !isLoading && <p className="text-xs text-muted-foreground mt-1 flex-shrink-0 text-center">Toggle options to generate a live preview.</p>}
+                    {!imageDataUrl && !isLoading && activeStatCount > 0 && <p className="text-xs text-muted-foreground mt-1 flex-shrink-0 text-center">Toggle options to generate a live preview.</p>}
+                    {/* Added helpful message if no metrics are selected */}
+                    {!imageDataUrl && !isLoading && activeStatCount === 0 && <p className="text-xs text-destructive mt-1 flex-shrink-0 text-center font-semibold">Please select at least one metric to generate the card.</p>}
                 </div>
             </div>
         </DialogContent>
