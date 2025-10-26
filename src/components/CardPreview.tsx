@@ -8,6 +8,16 @@ import { calculateCPS } from '@/utils/gameRating';
 import { cn } from '@/lib/utils';
 import { Playstyle } from './Playstyle'; 
 
+// --- Resolved Theme Colors (Hardcoded for Image Generation Reliability) ---
+// Using explicit values corresponding to a dark theme primary/success/destructive colors
+const RESOLVED_COLORS = {
+    PRIMARY: '#75baff',       // HSL(210, 100%, 75%) - Light Blue/Cyan
+    ACCENT: '#a262e3',        // (Assumed accent color for general text)
+    WIN: '#86efac',           // HSL(130, 80%, 65%) - FIFA Green
+    LOSS: '#f87171',          // HSL(0, 90%, 75%) - FIFA Red
+    BG_CARD: '#1b2133',       // HSL(225, 30%, 15%) - Deep Charcoal Blue
+};
+
 // --- Helper Types & Calculation Logic (Minimally defined for structure) ---
 interface CalculatedStats {
   title?: string; record?: string; wins?: number; losses?: number; winRate?: number; goalsScored?: number; goalsConceded?: number; goalDifference?: number; gamesPlayed?: number; xgDifferential?: number; cpsScore?: number; highestScorer?: { name: string; goals: number }; highestAssister?: { name: string; assists: number };
@@ -26,8 +36,7 @@ const calculateAllStats = (runData?: WeeklyPerformance | null, allRunsData?: Wee
             xgDifferential: 0.5,
             cpsScore: calculateCPS(games),
             highestScorer: { name: "Mbappé", goals: 12 }, highestAssister: { name: "Zidane", assists: 8 },
-            passAccuracy: 85, // Placeholder for fix
-            xgDifferential: 1.2, // Placeholder for fix
+            passAccuracy: 85,
         };
         stats.record = `${stats.winRate && (stats.winRate / 100 * stats.gamesPlayed).toFixed(0)}-${stats.gamesPlayed - (stats.winRate && stats.winRate / 100 * stats.gamesPlayed)}`;
         return stats;
@@ -43,7 +52,7 @@ const calculateAllStats = (runData?: WeeklyPerformance | null, allRunsData?: Wee
             highestScorer: { name: "Ronaldo", goals: 300 }, highestAssister: { name: "Messi", assists: 250 },
             goalDifference: 15,
             xgDifferential: 1.2,
-            passAccuracy: 85, // Placeholder for fix
+            passAccuracy: 85,
         };
         stats.record = `${totalWins}-${totalGames - totalWins}`;
         return stats;
@@ -64,9 +73,10 @@ interface CustomStatBlockProps {
 const ThemedStatBlock: React.FC<CustomStatBlockProps> = ({ options, optionId, Icon, label, value, unit }) => {
     if (!options[optionId] || value === undefined || value === null || value === 'N/A') return null;
 
-    const primaryColor = `hsl(var(--primary))`;
-    const winColor = 'hsl(130, 80%, 65%)'; 
-    const lossColor = 'hsl(0, 90%, 75%)'; 
+    // Use resolved colors directly
+    const primaryColor = RESOLVED_COLORS.PRIMARY;
+    const winColor = RESOLVED_COLORS.WIN; 
+    const lossColor = RESOLVED_COLORS.LOSS; 
     
     // Determine color based on metric type
     const isPositive = typeof value === 'number' && (optionId.includes('Win') || optionId.includes('Diff') || optionId.includes('Acc')) && value >= 0;
@@ -81,10 +91,10 @@ const ThemedStatBlock: React.FC<CustomStatBlockProps> = ({ options, optionId, Ic
              "bg-white/5 backdrop-blur-sm"
         )}>
             {/* Header Box (Themed Color, Heavy Weight) */}
-            <div className="flex items-center justify-between px-3 py-1.5 text-white font-bold text-[10px] uppercase tracking-widest leading-tight"
-                 style={{ backgroundColor: primaryColor, borderBottom: `2px solid ${primaryColor}` }}>
+            <div className="flex items-center justify-between px-3 py-1.5 text-black font-bold text-[10px] uppercase tracking-widest leading-tight"
+                 style={{ backgroundColor: primaryColor, borderBottom: `2px solid ${primaryColor}`, color: 'black' }}> {/* Text contrast forced to black/dark */}
                 <div className="flex items-center">
-                    <Icon className="h-3 w-3 mr-1.5" />
+                    <Icon className="h-3 w-3 mr-1.5" style={{ color: 'black' }} />
                     {label}
                 </div>
             </div>
@@ -119,9 +129,7 @@ const CardPreview: React.FC<CardPreviewProps> = ({ runData, allRunsData, options
     return availableMetrics.filter(m => options[m.id]);
   }, [options]);
 
-  const primaryColor = `hsl(var(--primary))`;
-
-  // --- Dynamic Grid Templates ---
+  // Dynamic grid setup
   const rowHeight = 110;
   const gridTemplate = {
       display: 'grid',
@@ -131,20 +139,19 @@ const CardPreview: React.FC<CardPreviewProps> = ({ runData, allRunsData, options
       padding: '16px',
   };
 
-  // --- FIX 3: Simplified Background for Debugging & Contrast ---
-  const simplifiedBackground = {
-    // Set explicit dark color and fallback
-    backgroundColor: '#111111', 
-    // Add subtle visual depth back via shadow or inset border if needed, but keep it simple
-    boxShadow: 'inset 0 0 100px rgba(0,0,0,0.5)',
+  // --- Background Style (Dark Charcoal Radial Gradient) ---
+  const radialBackground = {
+    // Explicitly set background color properties to bypass CSS variable resolution issues
+    backgroundColor: RESOLVED_COLORS.BG_CARD,
+    backgroundImage: `radial-gradient(circle at 50% 50%, 
+                      ${cn(RESOLVED_COLORS.BG_CARD, 'darken-10')} 0%, 
+                      ${RESOLVED_COLORS.BG_CARD} 90%)`,
   };
-
 
   return (
     <div 
-        // FIX 4: Ensure ALL text is white (or theme color) on the outer container for maximum contrast
         className="w-full text-white font-sans overflow-hidden relative" 
-        style={simplifiedBackground}>
+        style={radialBackground}>
       
       {/* Main Grid Container */}
       <div className="h-full w-full absolute inset-0" style={gridTemplate as React.CSSProperties}>
@@ -153,8 +160,8 @@ const CardPreview: React.FC<CardPreviewProps> = ({ runData, allRunsData, options
         <div className="flex flex-col justify-between p-3 rounded-xl bg-white/5 backdrop-blur-sm" style={{ gridArea: '1 / 1 / 2 / 2' }}>
             <img src={logo} alt="FUT Trackr Logo" className="h-9 w-9 object-cover flex-shrink-0" />
             <div className='pt-2'>
-                {/* FIX 5: Username formatting and Title using clear white text */}
-                <h3 className="text-[10px] font-medium text-white/70 uppercase tracking-widest leading-tight">
+                {/* FIX 1: Username formatting and Title */}
+                <h3 className="text-[10px] font-medium text-white/70 uppercase tracking-widest leading-none">
                     {stats.title}
                 </h3>
                 <h2 className="text-xl font-bold text-white truncate leading-tight mt-0.5">
@@ -165,7 +172,6 @@ const CardPreview: React.FC<CardPreviewProps> = ({ runData, allRunsData, options
         
         {/* Spot 2 & 3: Playstyle Component (Row 1, Col 2-3) */}
         <div className="p-3 rounded-xl bg-white/5 flex items-center justify-center" style={{ gridArea: '1 / 2 / 2 / 4' }}>
-            {/* FIX 6: Ensure Playstyle component container gives it full space */}
             <div className="h-full w-full flex items-center justify-center">
                 <Playstyle showAsCard={false} /> 
             </div>
@@ -176,6 +182,7 @@ const CardPreview: React.FC<CardPreviewProps> = ({ runData, allRunsData, options
             const row = 2 + Math.floor(index / 3);
             const colStart = 1 + (index % 3);
             
+            // --- Map Logic ---
             let statValue: any = stats[metric.id.replace('show', '').toLowerCase()] ?? 'N/A';
             let statUnit = '';
             let statLabel = metric.label;
@@ -210,8 +217,8 @@ const CardPreview: React.FC<CardPreviewProps> = ({ runData, allRunsData, options
        <div className="absolute bottom-0 left-0 right-0 py-2 text-center text-[10px] font-medium uppercase tracking-widest"
              style={{ 
                  backgroundColor: 'rgba(0, 0, 0, 0.5)', 
-                 color: 'hsl(var(--muted-foreground))', 
-                 borderTop: `1px solid ${primaryColor}` 
+                 color: 'white', // Ensure watermark is visible white
+                 borderTop: `1px solid ${RESOLVED_COLORS.PRIMARY}` // Use resolved primary color
              }}>
            DATA CAPTURED & GENERATED BY FUTTRACKR.COM
        </div>
