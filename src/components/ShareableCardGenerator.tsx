@@ -9,8 +9,9 @@ import CardCustomizer from './CardCustomizer';
 import { WeeklyPerformance } from '@/types/futChampions';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/hooks/useTheme';
+import { useAuth } from '@/contexts/AuthContext'; // Assuming useAuth provides user data for screen name
 
-// Define structure for options (Updated to remove Server/Stress and refine groups)
+// Define structure for options (UPDATED)
 export interface CardOptions {
   // General
   showRecord: boolean;
@@ -57,12 +58,9 @@ export interface CardOptions {
   showAverageWins: boolean;
   showTotalPlayersUsed: boolean;
   showTotalFormationsUsed: boolean;
-  
-  // Branding (Non-functional, always true but used to pass user data)
-  // We'll pass the username as a necessary prop, not an option
 }
 
-// Define available metrics for the customizer (Removed Server/Stress)
+// Define available metrics for the customizer (UPDATED - Removed Server/Stress)
 export interface MetricDefinition {
   id: keyof CardOptions;
   label: string;
@@ -122,12 +120,11 @@ export const availableMetrics: MetricDefinition[] = [
 const getDefaultOptions = (): CardOptions => {
   const defaultState: Partial<CardOptions> = {};
   availableMetrics.forEach(metric => {
-    let isOnByDefault = true;
-    if (metric.group === 'Team Stats' && !['showPassAccuracy', 'showShotAccuracy'].includes(metric.id)) isOnByDefault = false;
-    if (metric.group === 'Analysis' || metric.group === 'Streaks & Records') isOnByDefault = false;
-    if (metric.overallOnly || metric.runOnly) isOnByDefault = false;
-    if (['showRecord', 'showWinRate', 'showGoalsScored', 'showGoalsConceded', 'showHighestScorer', 'showHighestAssister'].includes(metric.id)) isOnByDefault = true;
-
+    let isOnByDefault = false;
+    // Set first 6 non-specific stats to true by default for square layout
+    if (['showRecord', 'showWinRate', 'showGoalsScored', 'showGoalsConceded', 'showGoalDifference', 'showGamesPlayed'].includes(metric.id)) {
+        isOnByDefault = true;
+    }
     defaultState[metric.id] = isOnByDefault;
   });
   return defaultState as CardOptions;
@@ -138,7 +135,6 @@ interface ShareableCardGeneratorProps {
   allRunsData?: WeeklyPerformance[] | null;
   isOpen: boolean;
   onClose: () => void;
-  // --- New prop for user ID/screen name ---
   userScreenName: string; 
 }
 
@@ -147,7 +143,7 @@ const ShareableCardGenerator: React.FC<ShareableCardGeneratorProps> = ({
   allRunsData,
   isOpen,
   onClose,
-  userScreenName, // Destructure new prop
+  userScreenName,
 }) => {
   const cardPreviewRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -157,11 +153,15 @@ const ShareableCardGenerator: React.FC<ShareableCardGeneratorProps> = ({
   const [isLoading, setIsLoading] = useState(false);
 
   const cardType = useMemo(() => (runData ? 'run' : 'overall'), [runData]);
+  
+  // Calculate the number of active customizable stats (for dynamic height)
+  const activeStatCount = useMemo(() => {
+    return availableMetrics.filter(m => !m.runOnly && !m.overallOnly && options[m.id]).length;
+  }, [options]);
 
   useEffect(() => {
     if (isOpen) {
-      const defaults = getDefaultOptions();
-      setOptions(defaults);
+      setOptions(getDefaultOptions());
       setImageDataUrl(null);
     }
   }, [isOpen, cardType]);
@@ -176,14 +176,14 @@ const ShareableCardGenerator: React.FC<ShareableCardGeneratorProps> = ({
     setIsLoading(true);
     setImageDataUrl(null);
     try {
+      // Use the computed background color from the document for accuracy
       const bgColor = window.getComputedStyle(document.documentElement).getPropertyValue('--background').trim();
       const cssBgColor = `hsl(${bgColor.replace(/ /g, ', ')})`;
 
       const dataUrl = await toJpeg(cardPreviewRef.current, {
         quality: 0.95,
-        backgroundColor: cssBgColor || (currentTheme.name === 'dark' ? '#151a28' : '#ffffff'),
-        pixelRatio: 2, // High resolution
-        // Note: For complex components (like charts), you might need to enforce a small delay here.
+        backgroundColor: cssBgColor || (currentTheme.name === 'dark' ? '#111111' : '#ffffff'),
+        pixelRatio: 2, 
       });
       setImageDataUrl(dataUrl);
       toast({ title: "Preview Generated!" });
@@ -224,20 +224,32 @@ const ShareableCardGenerator: React.FC<ShareableCardGeneratorProps> = ({
      }
   }, [imageDataUrl, runData, toast]);
 
+  // Determine the dynamic height class based on the number of active rows
+  const initialRows = 3; // (Header + Playstyle)
+  const statsRows = Math.ceil(activeStatCount / 3);
+  const totalRows = initialRows + statsRows;
+  
+  // Use a custom height style instead of aspect-ratio for the extension effect
+  const dynamicHeightStyle = {
+    height: `${(400 / 3) * totalRows}px`, // Base size 400px square, 133.33px per row
+    minHeight: '400px',
+  };
+
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-4xl sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl h-[90vh] flex flex-col p-4 sm:p-6">
             <DialogHeader>
                 <DialogTitle>Create Your {cardType === 'run' ? `Run ${runData?.week_number}` : 'Overall'} Stat Card</DialogTitle>
                 <DialogDescription>
-                    Select the stats to display, generate a preview, then save or share!
+                    Select up to 6 key stats for a square card, or add more to automatically extend the length.
                 </DialogDescription>
             </DialogHeader>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6 mt-2 flex-1 overflow-hidden">
 
-                {/* --- Column 1: Customizer (Filter is handled inside CardCustomizer) --- */}
+                {/* --- Column 1: Customizer --- */}
                 <div className="md:col-span-1 overflow-y-auto pr-3 custom-scrollbar border-r border-border/50 md:pr-4 lg:pr-6">
-                    <h3 className="text-lg font-semibold mb-2 text-white sticky top-0 bg-background z-10 pb-2 -mt-1 pt-1">Customize Card</h3>
+                    <h3 className="text-lg font-semibold mb-2 text-white sticky top-0 bg-background z-10 pb-2 -mt-1 pt-1">Customize Card ({activeStatCount} Active)</h3>
                      <CardCustomizer
                         options={options}
                         onChange={handleOptionsChange}
@@ -248,8 +260,11 @@ const ShareableCardGenerator: React.FC<ShareableCardGeneratorProps> = ({
 
                 {/* --- Column 2: Preview & Actions --- */}
                 <div className="md:col-span-2 flex flex-col items-center justify-start gap-4 overflow-y-auto pt-2 pl-2 md:pl-0">
-                     {/* Preview Container (Fixed Aspect Ratio) */}
-                     <div className="w-full max-w-[300px] sm:max-w-[320px] aspect-[9/16] border border-border/50 rounded-lg overflow-hidden shadow-lg bg-card flex-shrink-0 relative">
+                     {/* Preview Container (Dynamic Height) */}
+                     <div 
+                        className="w-full max-w-[400px] border border-border/50 rounded-lg overflow-hidden shadow-lg bg-card flex-shrink-0 relative"
+                        style={{ height: dynamicHeightStyle.height }}
+                     >
                          {isLoading && (
                             <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-20">
                                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -262,7 +277,10 @@ const ShareableCardGenerator: React.FC<ShareableCardGeneratorProps> = ({
                                  allRunsData={allRunsData}
                                  options={options}
                                  cardType={cardType}
-                                 userScreenName={userScreenName} // Pass screen name
+                                 userScreenName={userScreenName}
+                                 // Pass calculated layout info
+                                 activeStatCount={activeStatCount}
+                                 totalRows={totalRows}
                              />
                          </div>
                      </div>
