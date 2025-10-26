@@ -3,10 +3,10 @@ import { CardOptions, availableMetrics } from './ShareableCardGenerator';
 import { WeeklyPerformance, Game } from '@/types/futChampions';
 import { useTheme } from '@/hooks/useTheme';
 import logo from '/fut-trackr-logo.jpg'; 
-import { Trophy, Target, TrendingUp, TrendingDown, Users, Goal, Crown } from 'lucide-react';
+import { Trophy, Target, TrendingUp, TrendingDown, Users, Goal, Crown, ArrowUp, ArrowDown } from 'lucide-react'; // --- FIX: ArrowUp and ArrowDown added ---
 import { calculateCPS } from '@/utils/gameRating'; 
 import { cn } from '@/lib/utils';
-import { Playstyle } from './Playstyle'; // --- FIX: Named Import Applied ---
+import { Playstyle } from './Playstyle'; 
 
 // --- Helper Types & Calculation Logic (Minimally defined for structure) ---
 interface CalculatedStats {
@@ -118,26 +118,21 @@ const CardPreview: React.FC<CardPreviewProps> = ({ runData, allRunsData, options
   const primaryColor = `hsl(var(--primary))`;
 
   // --- Dynamic Grid Templates ---
-  // The first 3 rows are fixed (Header, Playstyle, 1st Row of Stats)
-  // Subsequent rows are added for extra stats.
-  const rowHeight = 110; // Fixed row height in pixels for dynamic scaling
-  const dynamicHeight = 100 + (totalRows * rowHeight); // Base padding (100) + row height
+  const rowHeight = 110;
+  const dynamicHeight = 100 + (totalRows * rowHeight); 
 
   const gridTemplate = {
       display: 'grid',
       gridTemplateColumns: 'repeat(3, 1fr)',
-      // Define rows for Header (110px), Playstyle (110px), and then dynamic rows for stats
       gridTemplateRows: `110px 110px repeat(${totalRows - 2}, ${rowHeight}px)`,
       gap: '12px',
-      padding: '16px', // Overall padding
-      // Override total height of the container to enable dynamic extension in CSS
+      padding: '16px',
       height: 'auto', 
       minHeight: '400px'
   };
 
   // --- Background Style (Dark Charcoal Radial Gradient) ---
   const radialBackground = {
-    // Custom charcoal gradient effect
     background: `radial-gradient(circle at 50% 50%, 
                  rgba(27, 27, 27, 1) 0%, 
                  rgba(18, 18, 18, 1) 70%)`,
@@ -146,7 +141,7 @@ const CardPreview: React.FC<CardPreviewProps> = ({ runData, allRunsData, options
   return (
     <div 
         className="w-full text-white font-sans overflow-hidden relative" 
-        style={{ ...radialBackground, height: `${dynamicHeight}px` }}> {/* Use dynamic height */}
+        style={{ ...radialBackground, height: `${dynamicHeight}px` }}>
       
       {/* Main Grid Container */}
       <div className="h-full w-full absolute inset-0" style={gridTemplate as React.CSSProperties}>
@@ -166,18 +161,15 @@ const CardPreview: React.FC<CardPreviewProps> = ({ runData, allRunsData, options
         
         {/* Spot 2 & 3: Playstyle Component (Grid span 1x2 merged, Row 1) */}
         <div className="p-3 rounded-xl bg-white/5" style={{ gridArea: '1 / 2 / 2 / 4' }}>
-            {/* The Playstyle component needs to be designed to be self-contained and visually bold */}
             <Playstyle showAsCard={false} /> 
         </div>
 
         {/* --- Custom Stat Spots (Starting Row 2) --- */}
         {activeStatsToRender.map((metric, index) => {
-            // Calculate grid area dynamically: Row starts at 2 (third row)
             const row = 2 + Math.floor(index / 3);
             const colStart = 1 + (index % 3);
             
-            // --- Map Logic ---
-            let statValue: any = stats[metric.id.replace('show', '').toLowerCase()] ?? 'N/A'; // Default generic lookup
+            let statValue: any = stats[metric.id.replace('show', '').toLowerCase()] ?? 'N/A';
             let statUnit = '';
             let statLabel = metric.label;
             let currentIcon: React.ElementType = Trophy;
@@ -186,9 +178,9 @@ const CardPreview: React.FC<CardPreviewProps> = ({ runData, allRunsData, options
             if (metric.id === 'showWinRate') { statValue = stats.winRate; statUnit = '%'; currentIcon = Trophy; }
             else if (metric.id === 'showGoalDifference') { statValue = stats.goalDifference; currentIcon = Goal; }
             else if (metric.id === 'showXGDifferential') { statValue = stats.xgDifferential; currentIcon = Target; }
-            else if (metric.id === 'showGoalsScored') { statValue = stats.goalsScored; currentIcon = ArrowUp; }
-            else if (metric.id === 'showGoalsConceded') { statValue = stats.goalsConceded; currentIcon = ArrowDown; }
-            else if (metric.id === 'showHighestScorer') { statValue = stats.highestScorer?.goals; currentIcon = Goal; statLabel = 'Top Scorer Goals'; }
+            else if (metric.id === 'showGoalsScored') { statValue = stats.goalsScored; currentIcon = ArrowUp; } // Used imported ArrowUp
+            else if (metric.id === 'showGoalsConceded') { statValue = stats.goalsConceded; currentIcon = ArrowDown; } // Used imported ArrowDown
+            else if (metric.id === 'showHighestScorer') { statValue = stats.highestScorer?.name; currentIcon = Crown; statLabel = 'Top Scorer Name'; }
             // Add more specific metric mappings here...
             
             return (
