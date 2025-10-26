@@ -100,19 +100,26 @@ const ShareableCardGenerator: React.FC<ShareableCardGeneratorProps> = ({
       // Retain the explicit background color setting as it's more reliable than CSS variable parsing
       const cardBgColor = currentTheme.name === 'dark' ? '#1E293B' : '#FFFFFF'; 
 
-      const dataUrl = await toJpeg(cardContainerRef.current, { 
+      // NEW FIX: Get actual dimensions to explicitly pass to toJpeg
+      const node = cardContainerRef.current;
+      const width = node.offsetWidth;
+      const height = node.offsetHeight;
+
+      const dataUrl = await toJpeg(node, { 
         quality: 0.95,
         backgroundColor: cardBgColor,
         pixelRatio: 2,
         cacheBust: true,
-        // NEW FIX: Use foreignObjectRendering to resolve potential CORS issues with player images.
-        // This is the most common reason for a completely blank card capture when styles are present.
         foreignObjectRendering: true, 
+        // Explicitly set dimensions based on rendered component
+        width: width, 
+        height: height,
       });
       setImageDataUrl(dataUrl);
     } catch (error: any) {
       console.error('Error generating image:', error);
-      toast({ title: "Image Generation Failed", description: "Could not generate card image. This often happens if player images fail to load due to CORS.", variant: "destructive" });
+      // Enhanced toast message to reflect the likely CORS/rendering issue
+      toast({ title: "Image Generation Failed", description: "Could not generate card image. This often happens if player images or remote styles fail to load.", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
