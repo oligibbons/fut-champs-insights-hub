@@ -68,7 +68,7 @@ const ShareableCardGenerator: React.FC<ShareableCardGeneratorProps> = ({
   onClose,
   userScreenName,
 }) => {
-  const cardContainerRef = useRef<HTMLDivElement>(null); // FIX: Renamed ref and moved it to outer container to ensure background is captured
+  const cardContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { currentTheme } = useTheme();
   const [options, setOptions] = useState<CardOptions>(getDefaultOptions());
@@ -93,21 +93,21 @@ const ShareableCardGenerator: React.FC<ShareableCardGeneratorProps> = ({
 
   // FIX 2: Real-time generation logic (uses debounce for performance)
   const generateImage = useCallback(async () => {
-    if (!cardContainerRef.current) return; // FIX: Use new ref name
+    if (!cardContainerRef.current) return; 
     setIsLoading(true);
     setImageDataUrl(null);
     try {
-      // FIX: Simplified and corrected background color retrieval logic for html-to-image.
-      // Set a safe fallback background color based on the current theme's bg-card.
-      const cardBgColor = currentTheme.name === 'dark' ? '#1E293B' : '#FFFFFF'; // This is a safe fallback for bg-card (slate-800/white)
+      // Retain the explicit background color setting as it's more reliable than CSS variable parsing
+      const cardBgColor = currentTheme.name === 'dark' ? '#1E293B' : '#FFFFFF'; 
 
-      const dataUrl = await toJpeg(cardContainerRef.current, { // FIX: Use new ref name
+      const dataUrl = await toJpeg(cardContainerRef.current, { 
         quality: 0.95,
-        // Using the card background color as the explicit background for toJpeg is the most reliable fix 
-        // when CSS variables for background might not be fully computed or inlined correctly.
         backgroundColor: cardBgColor,
         pixelRatio: 2,
         cacheBust: true,
+        // NEW FIX: Use foreignObjectRendering to resolve potential CORS issues with player images.
+        // This is the most common reason for a completely blank card capture when styles are present.
+        foreignObjectRendering: true, 
       });
       setImageDataUrl(dataUrl);
     } catch (error: any) {
@@ -116,7 +116,7 @@ const ShareableCardGenerator: React.FC<ShareableCardGeneratorProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [currentTheme.name, toast]); // FIX: Added toast to dependency array
+  }, [currentTheme.name, toast]); // Added toast to dependency array
 
   // --- Real-Time Update Trigger ---
   useEffect(() => {
@@ -209,7 +209,7 @@ const ShareableCardGenerator: React.FC<ShareableCardGeneratorProps> = ({
                 <div className="md:col-span-2 flex flex-col items-center justify-start gap-4 overflow-y-auto pt-2 pl-2 md:pl-0">
                      {/* Preview Container (Dynamic Height) */}
                      <div
-                        ref={cardContainerRef} // FIX: Moved ref here, the element with background/border/shadow is now the capture target
+                        ref={cardContainerRef}
                         className="w-full max-w-[400px] border border-border/50 rounded-lg overflow-hidden shadow-lg bg-card flex-shrink-0 relative"
                         style={dynamicHeightStyle}
                      >
@@ -242,7 +242,6 @@ const ShareableCardGenerator: React.FC<ShareableCardGeneratorProps> = ({
                     </div>
                     {isLoading && <p className="text-xs text-primary mt-1 flex-shrink-0 text-center">Generating image...</p>}
                     {!imageDataUrl && !isLoading && activeStatCount > 0 && <p className="text-xs text-muted-foreground mt-1 flex-shrink-0 text-center">Toggle options to generate a live preview.</p>}
-                    {/* Added helpful message if no metrics are selected */}
                     {!imageDataUrl && !isLoading && activeStatCount === 0 && <p className="text-xs text-destructive mt-1 flex-shrink-0 text-center font-semibold">Please select at least one metric to generate the card.</p>}
                 </div>
             </div>
