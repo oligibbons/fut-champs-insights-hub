@@ -11,121 +11,44 @@ import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext'; // Assuming useAuth provides user data for screen name
 
-// Define structure for options (UPDATED)
+// Define structure for options (Final structure)
 export interface CardOptions {
-  // General
-  showRecord: boolean;
-  showWinRate: boolean;
-  showGoalsScored: boolean;
-  showGoalsConceded: boolean;
-  showGoalDifference: boolean;
-  showGamesPlayed: boolean;
-
-  // Team Stats
-  showAvgPossession: boolean;
-  showPassAccuracy: boolean;
-  showShotAccuracy: boolean;
-  showDribbleAccuracy: boolean;
-  showXGFor: boolean;
-  showXGAgainst: boolean;
-  showXGDifferential: boolean;
-  showPassesPer90: boolean;
-  showGoalsPer90: boolean;
-
-  // Player Stats
-  showHighestRatedPlayer: boolean;
-  showAveragePlayerRating: boolean;
-  showHighestScorer: boolean;
-  showHighestAssister: boolean;
-  showCleanSheets: boolean;
-  showClubLegends: boolean;
-
-  // Streaks & Records
-  showWinStreak: boolean;
-  showLossStreak: boolean;
-  showBestRecord: boolean;
-  showWorstRecord: boolean;
-
-  // Analysis
-  showCPS: boolean;
-  showRageQuits: boolean;
-  showFormationsUsed: boolean;
-  showFavouriteFormation: boolean;
-  showMatchTagAnalysis: boolean;
-
-  // Overall Profile Only
-  showTotalRuns: boolean;
-  showAverageWins: boolean;
-  showTotalPlayersUsed: boolean;
-  showTotalFormationsUsed: boolean;
+  showRecord: boolean; showWinRate: boolean; showGoalsScored: boolean; showGoalsConceded: boolean; showGoalDifference: boolean; showGamesPlayed: boolean;
+  showAvgPossession: boolean; showPassAccuracy: boolean; showShotAccuracy: boolean; showDribbleAccuracy: boolean; showXGFor: boolean; showXGAgainst: boolean; showXGDifferential: boolean; showPassesPer90: boolean; showGoalsPer90: boolean;
+  showHighestRatedPlayer: boolean; showAveragePlayerRating: boolean; showHighestScorer: boolean; showHighestAssister: boolean; showCleanSheets: boolean; showClubLegends: boolean;
+  showWinStreak: boolean; showLossStreak: boolean; showBestRecord: boolean; showWorstRecord: boolean;
+  showCPS: boolean; showRageQuits: boolean; showFormationsUsed: boolean; showFavouriteFormation: boolean; showMatchTagAnalysis: boolean;
+  showTotalRuns: boolean; showAverageWins: boolean; showTotalPlayersUsed: boolean; showTotalFormationsUsed: boolean;
 }
 
-// Define available metrics for the customizer (UPDATED - Removed Server/Stress)
+// Define available metrics (Final list)
 export interface MetricDefinition {
-  id: keyof CardOptions;
-  label: string;
-  group: 'General' | 'Team Stats' | 'Player Stats' | 'Streaks & Records' | 'Analysis' | 'Overall Profile';
-  runOnly?: boolean;
-  overallOnly?: boolean;
+  id: keyof CardOptions; label: string; group: 'General' | 'Team Stats' | 'Player Stats' | 'Streaks & Records' | 'Analysis' | 'Overall Profile'; runOnly?: boolean; overallOnly?: boolean;
 }
 
 export const availableMetrics: MetricDefinition[] = [
-  // General
-  { id: 'showRecord', label: 'Record (W-L)', group: 'General' },
-  { id: 'showWinRate', label: 'Win Rate %', group: 'General' },
-  { id: 'showGoalsScored', label: 'Goals Scored', group: 'General' },
-  { id: 'showGoalsConceded', label: 'Goals Conceded', group: 'General' },
-  { id: 'showGoalDifference', label: 'Goal Difference', group: 'General' },
-  { id: 'showGamesPlayed', label: 'Games Played', group: 'General' },
-
-  // Team Stats
-  { id: 'showAvgPossession', label: 'Avg. Possession %', group: 'Team Stats' },
-  { id: 'showPassAccuracy', label: 'Avg. Pass Accuracy %', group: 'Team Stats' },
-  { id: 'showShotAccuracy', label: 'Avg. Shot Accuracy %', group: 'Team Stats' },
-  { id: 'showDribbleAccuracy', label: 'Avg. Dribble Success %', group: 'Team Stats' },
-  { id: 'showXGFor', label: 'Avg. Expected Goals (xG)', group: 'Team Stats' },
-  { id: 'showXGAgainst', label: 'Avg. Expected Goals Against (xGA)', group: 'Team Stats' },
-  { id: 'showXGDifferential', label: 'Avg. xG Differential', group: 'Team Stats' },
-  { id: 'showPassesPer90', label: 'Avg. Passes per 90', group: 'Team Stats' },
-  { id: 'showGoalsPer90', label: 'Avg. Goals per 90', group: 'Team Stats' },
-
-  // Player Stats
-  { id: 'showHighestRatedPlayer', label: 'MVP (Highest Avg Rating)', group: 'Player Stats' },
-  { id: 'showAveragePlayerRating', label: 'Avg. Player Rating (Team)', group: 'Player Stats' },
-  { id: 'showHighestScorer', label: 'Top Scorer', group: 'Player Stats' },
-  { id: 'showHighestAssister', label: 'Top Assister', group: 'Player Stats' },
-  { id: 'showCleanSheets', label: 'Clean Sheets', group: 'Player Stats', overallOnly: true },
-  { id: 'showClubLegends', label: 'Club Legends (Top 3)', group: 'Player Stats', overallOnly: true },
-
-  // Streaks & Records
-  { id: 'showWinStreak', label: 'Best Win Streak', group: 'Streaks & Records' },
-  { id: 'showLossStreak', label: 'Worst Loss Streak', group: 'Streaks & Records', overallOnly: true },
-  { id: 'showBestRecord', label: 'Best Run Record', group: 'Streaks & Records', overallOnly: true },
-  { id: 'showWorstRecord', label: 'Worst Run Record', group: 'Streaks & Records', overallOnly: true },
-
-  // Analysis
-  { id: 'showCPS', label: 'Champs Player Score (CPS)', group: 'Analysis', runOnly: true },
-  { id: 'showRageQuits', label: 'Rage Quits (Yours + Opponent)', group: 'Analysis' },
-  { id: 'showFormationsUsed', label: 'Formations Used', group: 'Analysis' },
-  { id: 'showFavouriteFormation', label: 'Favourite Formation', group: 'Analysis', overallOnly: true },
-  { id: 'showMatchTagAnalysis', label: 'Key Match Tags (Top 3)', group: 'Analysis' },
-
-  // Overall Profile Only
-  { id: 'showTotalRuns', label: 'Total Runs Tracked', group: 'Overall Profile', overallOnly: true },
-  { id: 'showAverageWins', label: 'Average Wins per Run', group: 'Overall Profile', overallOnly: true },
-  { id: 'showTotalPlayersUsed', label: 'Total Unique Players Used', group: 'Overall Profile', overallOnly: true },
-  { id: 'showTotalFormationsUsed', label: 'Total Unique Formations Used', group: 'Overall Profile', overallOnly: true },
+  { id: 'showRecord', label: 'Record (W-L)', group: 'General' }, { id: 'showWinRate', label: 'Win Rate %', group: 'General' }, { id: 'showGoalsScored', label: 'Goals Scored', group: 'General' }, { id: 'showGoalsConceded', label: 'Goals Conceded', group: 'General' }, { id: 'showGoalDifference', label: 'Goal Difference', group: 'General' }, { id: 'showGamesPlayed', label: 'Games Played', group: 'General' },
+  { id: 'showAvgPossession', label: 'Avg. Possession %', group: 'Team Stats' }, { id: 'showPassAccuracy', label: 'Avg. Pass Accuracy %', group: 'Team Stats' }, { id: 'showShotAccuracy', label: 'Avg. Shot Accuracy %', group: 'Team Stats' }, { id: 'showDribbleAccuracy', label: 'Avg. Dribble Success %', group: 'Team Stats' }, { id: 'showXGFor', label: 'Avg. Expected Goals (xG)', group: 'Team Stats' }, { id: 'showXGAgainst', label: 'Avg. Expected Goals Against (xGA)', group: 'Team Stats' }, { id: 'showXGDifferential', label: 'Avg. xG Differential', group: 'Team Stats' }, { id: 'showPassesPer90', label: 'Avg. Passes per 90', group: 'Team Stats' }, { id: 'showGoalsPer90', label: 'Avg. Goals per 90', group: 'Team Stats' },
+  { id: 'showHighestRatedPlayer', label: 'MVP (Highest Avg Rating)', group: 'Player Stats' }, { id: 'showAveragePlayerRating', label: 'Avg. Player Rating (Team)', group: 'Player Stats' }, { id: 'showHighestScorer', label: 'Top Scorer', group: 'Player Stats' }, { id: 'showHighestAssister', label: 'Top Assister', group: 'Player Stats' }, { id: 'showCleanSheets', label: 'Clean Sheets', group: 'Player Stats', overallOnly: true }, { id: 'showClubLegends', label: 'Club Legends (Top 3)', group: 'Player Stats', overallOnly: true },
+  { id: 'showWinStreak', label: 'Best Win Streak', group: 'Streaks & Records' }, { id: 'showLossStreak', label: 'Worst Loss Streak', group: 'Streaks & Records', overallOnly: true }, { id: 'showBestRecord', label: 'Best Run Record', group: 'Streaks & Records', overallOnly: true }, { id: 'showWorstRecord', label: 'Worst Run Record', group: 'Streaks & Records', overallOnly: true },
+  { id: 'showCPS', label: 'Champs Player Score (CPS)', group: 'Analysis', runOnly: true }, { id: 'showRageQuits', label: 'Rage Quits (Yours + Opponent)', group: 'Analysis' }, { id: 'showFormationsUsed', label: 'Formations Used', group: 'Analysis' }, { id: 'showFavouriteFormation', label: 'Favourite Formation', group: 'Analysis', overallOnly: true }, { id: 'showMatchTagAnalysis', label: 'Key Match Tags (Top 3)', group: 'Analysis' },
+  { id: 'showTotalRuns', label: 'Total Runs Tracked', group: 'Overall Profile', overallOnly: true }, { id: 'showAverageWins', label: 'Average Wins per Run', group: 'Overall Profile', overallOnly: true }, { id: 'showTotalPlayersUsed', label: 'Total Unique Players Used', group: 'Overall Profile', overallOnly: true }, { id: 'showTotalFormationsUsed', label: 'Total Unique Formations Used', group: 'Overall Profile', overallOnly: true },
 ];
 
+// --- FIX 1: Set 6 key metrics as default (Ensures square start) ---
 const getDefaultOptions = (): CardOptions => {
   const defaultState: Partial<CardOptions> = {};
+  const defaultMetricIds: (keyof CardOptions)[] = [
+    'showRecord', // High priority
+    'showWinRate', // High priority
+    'showGoalDifference', // High priority
+    'showXGDifferential', // High priority
+    'showHighestScorer', // High priority
+    'showPassAccuracy' // High priority
+  ];
+
   availableMetrics.forEach(metric => {
-    let isOnByDefault = false;
-    // Set first 6 non-specific stats to true by default for square layout
-    if (['showRecord', 'showWinRate', 'showGoalsScored', 'showGoalsConceded', 'showGoalDifference', 'showGamesPlayed'].includes(metric.id)) {
-        isOnByDefault = true;
-    }
-    defaultState[metric.id] = isOnByDefault;
+    defaultState[metric.id] = defaultMetricIds.includes(metric.id);
   });
   return defaultState as CardOptions;
 };
@@ -135,7 +58,7 @@ interface ShareableCardGeneratorProps {
   allRunsData?: WeeklyPerformance[] | null;
   isOpen: boolean;
   onClose: () => void;
-  userScreenName: string; 
+  userScreenName: string;
 }
 
 const ShareableCardGenerator: React.FC<ShareableCardGeneratorProps> = ({
@@ -153,12 +76,60 @@ const ShareableCardGenerator: React.FC<ShareableCardGeneratorProps> = ({
   const [isLoading, setIsLoading] = useState(false);
 
   const cardType = useMemo(() => (runData ? 'run' : 'overall'), [runData]);
-  
-  // Calculate the number of active customizable stats (for dynamic height)
-  const activeStatCount = useMemo(() => {
-    return availableMetrics.filter(m => !m.runOnly && !m.overallOnly && options[m.id]).length;
-  }, [options]);
 
+  // Calculate active stat count for dynamic height
+  const activeStatCount = useMemo(() => {
+    return availableMetrics.filter(m => {
+        const isRelevant = !( (cardType === 'run' && m.overallOnly) || (cardType === 'overall' && m.runOnly) );
+        return isRelevant && options[m.id];
+    }).length;
+  }, [options, cardType]);
+
+  // Determine rows: Initial 2 rows (Header/Playstyle) + stats rows
+  const initialRows = 2;
+  const statsRows = Math.ceil(Math.max(1, activeStatCount) / 3);
+  const totalRows = initialRows + statsRows;
+
+
+  // FIX 2: Real-time generation logic (uses debounce for performance)
+  const generateImage = useCallback(async () => {
+    if (!cardPreviewRef.current) return;
+    setIsLoading(true);
+    setImageDataUrl(null);
+    try {
+      const bgColor = window.getComputedStyle(document.documentElement).getPropertyValue('--background').trim();
+      const cssBgColor = `hsl(${bgColor.replace(/ /g, ', ')})`;
+
+      const dataUrl = await toJpeg(cardPreviewRef.current, {
+        quality: 0.95,
+        backgroundColor: cssBgColor || (currentTheme.name === 'dark' ? '#111111' : '#ffffff'),
+        pixelRatio: 2,
+      });
+      setImageDataUrl(dataUrl);
+    } catch (error: any) {
+      console.error('Error generating image:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentTheme.name]);
+
+  // --- Real-Time Update Trigger ---
+  useEffect(() => {
+    if (isOpen) {
+        setImageDataUrl(null); // Clear old image instantly
+        const timer = setTimeout(() => {
+            // Check if there are any active stats before attempting generation
+            if (activeStatCount > 0) {
+                 generateImage();
+            } else if (activeStatCount === 0) {
+                 setIsLoading(false);
+            }
+        }, 500); // Debounce time
+        return () => clearTimeout(timer);
+    }
+  }, [options, isOpen, cardType, generateImage, activeStatCount]); // Trigger on option change
+
+  // Initial setup and reset
   useEffect(() => {
     if (isOpen) {
       setOptions(getDefaultOptions());
@@ -168,32 +139,8 @@ const ShareableCardGenerator: React.FC<ShareableCardGeneratorProps> = ({
 
   const handleOptionsChange = useCallback((optionKey: keyof CardOptions, value: boolean) => {
     setOptions((prev) => ({ ...prev, [optionKey]: value }));
-    setImageDataUrl(null);
+    // Real-time update is handled by the useEffect dependency on `options`
   }, []);
-
-  const generateImage = useCallback(async () => {
-    if (!cardPreviewRef.current) return;
-    setIsLoading(true);
-    setImageDataUrl(null);
-    try {
-      // Use the computed background color from the document for accuracy
-      const bgColor = window.getComputedStyle(document.documentElement).getPropertyValue('--background').trim();
-      const cssBgColor = `hsl(${bgColor.replace(/ /g, ', ')})`;
-
-      const dataUrl = await toJpeg(cardPreviewRef.current, {
-        quality: 0.95,
-        backgroundColor: cssBgColor || (currentTheme.name === 'dark' ? '#111111' : '#ffffff'),
-        pixelRatio: 2, 
-      });
-      setImageDataUrl(dataUrl);
-      toast({ title: "Preview Generated!" });
-    } catch (error: any) {
-      console.error('Error generating image:', error);
-      toast({ title: "Error Generating Image", description: error?.message || String(error), variant: "destructive" });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [toast, currentTheme.name]);
 
   const saveImage = useCallback(() => {
     if (!imageDataUrl) return;
@@ -224,17 +171,12 @@ const ShareableCardGenerator: React.FC<ShareableCardGeneratorProps> = ({
      }
   }, [imageDataUrl, runData, toast]);
 
-  // Determine the dynamic height class based on the number of active rows
-  const initialRows = 3; // (Header + Playstyle)
-  const statsRows = Math.ceil(activeStatCount / 3);
-  const totalRows = initialRows + statsRows;
-  
-  // Use a custom height style instead of aspect-ratio for the extension effect
+  // Determine the dynamic height style
+  const rowHeight = 110;
+  const totalHeight = 32 + (totalRows * rowHeight);
   const dynamicHeightStyle = {
-    height: `${(400 / 3) * totalRows}px`, // Base size 400px square, 133.33px per row
-    minHeight: '400px',
+    height: `${totalHeight}px`,
   };
-
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -261,9 +203,9 @@ const ShareableCardGenerator: React.FC<ShareableCardGeneratorProps> = ({
                 {/* --- Column 2: Preview & Actions --- */}
                 <div className="md:col-span-2 flex flex-col items-center justify-start gap-4 overflow-y-auto pt-2 pl-2 md:pl-0">
                      {/* Preview Container (Dynamic Height) */}
-                     <div 
+                     <div
                         className="w-full max-w-[400px] border border-border/50 rounded-lg overflow-hidden shadow-lg bg-card flex-shrink-0 relative"
-                        style={{ height: dynamicHeightStyle.height }}
+                        style={dynamicHeightStyle}
                      >
                          {isLoading && (
                             <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-20">
@@ -278,7 +220,6 @@ const ShareableCardGenerator: React.FC<ShareableCardGeneratorProps> = ({
                                  options={options}
                                  cardType={cardType}
                                  userScreenName={userScreenName}
-                                 // Pass calculated layout info
                                  activeStatCount={activeStatCount}
                                  totalRows={totalRows}
                              />
@@ -286,10 +227,6 @@ const ShareableCardGenerator: React.FC<ShareableCardGeneratorProps> = ({
                      </div>
                      {/* Action Buttons */}
                      <div className="flex flex-wrap justify-center gap-2 mt-2 flex-shrink-0">
-                         <Button onClick={generateImage} disabled={isLoading} variant="outline" size="sm">
-                             <Camera className="h-4 w-4 mr-1 sm:mr-2" />
-                             {imageDataUrl ? 'Regenerate' : 'Generate'} Preview
-                         </Button>
                          <Button onClick={saveImage} disabled={!imageDataUrl || isLoading} size="sm">
                              <Download className="h-4 w-4 mr-1 sm:mr-2" /> Save JPEG
                          </Button>
@@ -297,8 +234,8 @@ const ShareableCardGenerator: React.FC<ShareableCardGeneratorProps> = ({
                              <Share2 className="h-4 w-4 mr-1 sm:mr-2" /> Share
                          </Button>
                     </div>
-                    {!imageDataUrl && !isLoading && <p className="text-xs text-muted-foreground mt-1 flex-shrink-0 text-center">Generate a preview to save or share.</p>}
                     {isLoading && <p className="text-xs text-primary mt-1 flex-shrink-0 text-center">Generating image...</p>}
+                    {!imageDataUrl && !isLoading && <p className="text-xs text-muted-foreground mt-1 flex-shrink-0 text-center">Toggle options to generate a live preview.</p>}
                 </div>
             </div>
         </DialogContent>
