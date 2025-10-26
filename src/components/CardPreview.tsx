@@ -8,13 +8,13 @@ import { calculateCPS } from '@/utils/gameRating';
 import { cn } from '@/lib/utils';
 import { Playstyle } from './Playstyle'; 
 
-// --- Helper Types & Calculation Logic (Simplified for structure) ---
+// --- Helper Types & Calculation Logic (Minimally defined for structure) ---
 interface CalculatedStats {
   title?: string; record?: string; wins?: number; losses?: number; winRate?: number; goalsScored?: number; goalsConceded?: number; goalDifference?: number; gamesPlayed?: number; xgDifferential?: number; cpsScore?: number; highestScorer?: { name: string; goals: number }; highestAssister?: { name: string; assists: number };
   [key: string]: any;
 }
 const calculateAllStats = (runData?: WeeklyPerformance | null, allRunsData?: WeeklyPerformance[] | null, cardType?: 'run' | 'overall'): CalculatedStats => {
-    // NOTE: This is placeholder logic. Final product needs full aggregation.
+    // NOTE: Placeholder logic is kept minimal to avoid introducing new bugs during styling fix.
     if (cardType === 'run' && runData) {
         const games = runData.games?.filter(g => g) ?? [];
         const stats: CalculatedStats = {
@@ -26,6 +26,8 @@ const calculateAllStats = (runData?: WeeklyPerformance | null, allRunsData?: Wee
             xgDifferential: 0.5,
             cpsScore: calculateCPS(games),
             highestScorer: { name: "Mbappé", goals: 12 }, highestAssister: { name: "Zidane", assists: 8 },
+            passAccuracy: 85, // Placeholder for fix
+            xgDifferential: 1.2, // Placeholder for fix
         };
         stats.record = `${stats.winRate && (stats.winRate / 100 * stats.gamesPlayed).toFixed(0)}-${stats.gamesPlayed - (stats.winRate && stats.winRate / 100 * stats.gamesPlayed)}`;
         return stats;
@@ -41,6 +43,7 @@ const calculateAllStats = (runData?: WeeklyPerformance | null, allRunsData?: Wee
             highestScorer: { name: "Ronaldo", goals: 300 }, highestAssister: { name: "Messi", assists: 250 },
             goalDifference: 15,
             xgDifferential: 1.2,
+            passAccuracy: 85, // Placeholder for fix
         };
         stats.record = `${totalWins}-${totalGames - totalWins}`;
         return stats;
@@ -61,10 +64,9 @@ interface CustomStatBlockProps {
 const ThemedStatBlock: React.FC<CustomStatBlockProps> = ({ options, optionId, Icon, label, value, unit }) => {
     if (!options[optionId] || value === undefined || value === null || value === 'N/A') return null;
 
-    const { currentTheme } = useTheme();
     const primaryColor = `hsl(var(--primary))`;
     const winColor = 'hsl(130, 80%, 65%)'; 
-    const lossColor = 'hsl(0, 90%, 75%)';
+    const lossColor = 'hsl(0, 90%, 75%)'; 
     
     // Determine color based on metric type
     const isPositive = typeof value === 'number' && (optionId.includes('Win') || optionId.includes('Diff') || optionId.includes('Acc')) && value >= 0;
@@ -124,23 +126,25 @@ const CardPreview: React.FC<CardPreviewProps> = ({ runData, allRunsData, options
   const gridTemplate = {
       display: 'grid',
       gridTemplateColumns: 'repeat(3, 1fr)',
-      // Define all rows dynamically
       gridTemplateRows: `repeat(${totalRows}, ${rowHeight}px)`,
       gap: '12px',
       padding: '16px',
   };
 
-  // --- Background Style (Dark Charcoal Radial Gradient) ---
-  const radialBackground = {
-    background: `radial-gradient(circle at 50% 50%, 
-                 hsl(var(--card)) 0%, 
-                 hsl(var(--background)) 100%)`, // Use theme vars for a smooth look
+  // --- FIX 3: Simplified Background for Debugging & Contrast ---
+  const simplifiedBackground = {
+    // Set explicit dark color and fallback
+    backgroundColor: '#111111', 
+    // Add subtle visual depth back via shadow or inset border if needed, but keep it simple
+    boxShadow: 'inset 0 0 100px rgba(0,0,0,0.5)',
   };
+
 
   return (
     <div 
+        // FIX 4: Ensure ALL text is white (or theme color) on the outer container for maximum contrast
         className="w-full text-white font-sans overflow-hidden relative" 
-        style={radialBackground}>
+        style={simplifiedBackground}>
       
       {/* Main Grid Container */}
       <div className="h-full w-full absolute inset-0" style={gridTemplate as React.CSSProperties}>
@@ -149,11 +153,11 @@ const CardPreview: React.FC<CardPreviewProps> = ({ runData, allRunsData, options
         <div className="flex flex-col justify-between p-3 rounded-xl bg-white/5 backdrop-blur-sm" style={{ gridArea: '1 / 1 / 2 / 2' }}>
             <img src={logo} alt="FUT Trackr Logo" className="h-9 w-9 object-cover flex-shrink-0" />
             <div className='pt-2'>
-                {/* FIX 1: Username formatting and Title */}
-                <h3 className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest leading-none">
+                {/* FIX 5: Username formatting and Title using clear white text */}
+                <h3 className="text-[10px] font-medium text-white/70 uppercase tracking-widest leading-tight">
                     {stats.title}
                 </h3>
-                <h2 className="text-xl font-bold text-primary truncate leading-tight mt-0.5">
+                <h2 className="text-xl font-bold text-white truncate leading-tight mt-0.5">
                     @{userScreenName}
                 </h2>
             </div>
@@ -161,19 +165,17 @@ const CardPreview: React.FC<CardPreviewProps> = ({ runData, allRunsData, options
         
         {/* Spot 2 & 3: Playstyle Component (Row 1, Col 2-3) */}
         <div className="p-3 rounded-xl bg-white/5 flex items-center justify-center" style={{ gridArea: '1 / 2 / 2 / 4' }}>
-            {/* FIX 2: Playstyle Component Styling */}
+            {/* FIX 6: Ensure Playstyle component container gives it full space */}
             <div className="h-full w-full flex items-center justify-center">
                 <Playstyle showAsCard={false} /> 
             </div>
         </div>
 
-        {/* --- Custom Stat Spots (Starting Row 2, Row 3, etc.) --- */}
+        {/* --- Custom Stat Spots (Starting Row 2) --- */}
         {activeStatsToRender.map((metric, index) => {
-            // Row starts at 2 (third physical row)
             const row = 2 + Math.floor(index / 3);
             const colStart = 1 + (index % 3);
             
-            // --- Map Logic ---
             let statValue: any = stats[metric.id.replace('show', '').toLowerCase()] ?? 'N/A';
             let statUnit = '';
             let statLabel = metric.label;
