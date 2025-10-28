@@ -221,7 +221,7 @@ const SquadBuilder = ({ squad, onSave, onCancel, cardTypes }: SquadBuilderProps)
                     return (
                       <div key={pos.id} className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group transition-transform duration-200 hover:z-10 hover:scale-105" style={{ left: `${pos.x}%`, top: `${pos.y}%` }} onClick={() => handlePositionClick(pos.id)}>
                         {player ? (
-                           <div className="relative w-16 md:w-20 text-center">
+                           <div className="relative w-14 md:w-16 text-center">
                                 {/* Player Card Visual */}
                                 <div className={cn("aspect-[3/4] w-full rounded-lg mx-auto flex flex-col items-center justify-center text-xs font-bold shadow-lg border hover:border-primary", player.is_evolution && "border-2 border-teal-400 ring-1 ring-teal-500")} style={getCardStyle(player)}>
                                     <span className="text-sm md:text-base font-black leading-tight">{player.rating}</span>
@@ -233,7 +233,7 @@ const SquadBuilder = ({ squad, onSave, onCancel, cardTypes }: SquadBuilderProps)
                                 <Button type="button" variant="destructive" size="icon" onClick={(e) => handleRemovePlayer(pos.id, e)} className="absolute -top-2 -right-2 w-5 h-5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-20" aria-label={`Remove ${player.name}`}> <Trash2 className="h-3 w-3" /> </Button>
                            </div>
                         ) : (
-                           <div className="w-16 md:w-20 text-center"> {/* Empty Slot */}
+                           <div className="w-14 md:w-16 text-center"> {/* Empty Slot */}
                                <div className="aspect-[3/4] w-full border border-dashed border-white/30 rounded-lg flex flex-col items-center justify-center text-white/50 bg-white/5 hover:bg-white/10 transition-colors duration-200 mx-auto">
                                    <Plus className="h-5 w-5 md:h-6 md:w-6 opacity-50" />
                                </div>
