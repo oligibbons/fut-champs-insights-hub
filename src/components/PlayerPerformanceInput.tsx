@@ -225,7 +225,7 @@ const PlayerPerformanceInput = ({ players = [], onChange }: PlayerPerformanceInp
                       inputMode="decimal"
                       value={player.rating === '' ? '' : player.rating}
                       onChange={(e) => handleInputChange(index, 'rating', e.target.value)}
-                      className="bg-gray-800 border-gray-600 text-white text-center h-8 w-14 text-xs font-semibold"
+                      className="bg-gray-800 border-gray-600 text-white text-center h-8 w-12 text-xs font-semibold"
                       placeholder="7.0"
                     />
                     <Button
@@ -257,7 +257,7 @@ const PlayerPerformanceInput = ({ players = [], onChange }: PlayerPerformanceInp
                       inputMode="numeric"
                       value={player.goals === '' ? '' : player.goals}
                       onChange={(e) => handleInputChange(index, 'goals', e.target.value)}
-                      className="bg-gray-800 border-gray-600 text-white text-center h-8 w-14 text-xs font-semibold"
+                      className="bg-gray-800 border-gray-600 text-white text-center h-8 w-12 text-xs font-semibold"
                       placeholder="0"
                     />
                     <Button
@@ -289,7 +289,7 @@ const PlayerPerformanceInput = ({ players = [], onChange }: PlayerPerformanceInp
                       inputMode="numeric"
                       value={player.assists === '' ? '' : player.assists}
                       onChange={(e) => handleInputChange(index, 'assists', e.target.value)}
-                      className="bg-gray-800 border-gray-600 text-white text-center h-8 w-14 text-xs font-semibold"
+                      className="bg-gray-800 border-gray-600 text-white text-center h-8 w-12 text-xs font-semibold"
                       placeholder="0"
                     />
                     <Button
@@ -321,7 +321,7 @@ const PlayerPerformanceInput = ({ players = [], onChange }: PlayerPerformanceInp
                       inputMode="numeric"
                       value={player.yellowCards === '' ? '' : player.yellowCards}
                       onChange={(e) => handleInputChange(index, 'yellowCards', e.target.value)}
-                      className="bg-gray-800 border-gray-600 text-white text-center h-8 w-14 text-xs font-semibold"
+                      className="bg-gray-800 border-gray-600 text-white text-center h-8 w-12 text-xs font-semibold"
                       placeholder="0"
                     />
                     <Button
@@ -353,7 +353,7 @@ const PlayerPerformanceInput = ({ players = [], onChange }: PlayerPerformanceInp
                       inputMode="numeric"
                       value={player.redCards === '' ? '' : player.redCards}
                       onChange={(e) => handleInputChange(index, 'redCards', e.target.value)}
-                      className="bg-gray-800 border-gray-600 text-white text-center h-8 w-14 text-xs font-semibold"
+                      className="bg-gray-800 border-gray-600 text-white text-center h-8 w-12 text-xs font-semibold"
                       placeholder="0"
                     />
                     <Button
@@ -385,7 +385,7 @@ const PlayerPerformanceInput = ({ players = [], onChange }: PlayerPerformanceInp
                       inputMode="numeric"
                       value={player.ownGoals === '' ? '' : (player.ownGoals || 0)}
                       onChange={(e) => handleInputChange(index, 'ownGoals', e.target.value)}
-                      className="bg-gray-800 border-gray-600 text-white text-center h-8 w-14 text-xs font-semibold"
+                      className="bg-gray-800 border-gray-600 text-white text-center h-8 w-12 text-xs font-semibold"
                       placeholder="0"
                     />
                     <Button
