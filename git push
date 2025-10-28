@@ -1,0 +1,4554 @@
+[33mcommit 48bc979d2cf71d802137723d4b35ed9c6b2bad3b[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 21:21:55 2025 +0000
+
+    feat: add dnd-kit for drag and drop functionality
+
+[33mcommit 00a6427d5aa40a565d6fbc46d0741f451130a1fb[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 22:02:04 2025 +0100
+
+    Create postcss.config.js
+
+[33mcommit 8711e69fee1f3dcff9404746d80c1f8193844b05[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 21:57:58 2025 +0100
+
+    Update tailwind.config.ts
+
+[33mcommit f6c4c6dc3685be0c2407b0e38ea155f80204ec2f[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 21:46:45 2025 +0100
+
+    Update index.css
+
+[33mcommit b09d24a8ab91c7da4fa8a94273752535b34b5a26[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 21:40:31 2025 +0100
+
+    Update vite.config.ts
+
+[33mcommit ef3a41c458ce1ce949a6192acaed5806072fc5e2[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 21:39:25 2025 +0100
+
+    Update index.css
+
+[33mcommit bbdcaed66e6a70773b9659436c1f918ff4e70f59[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 21:39:01 2025 +0100
+
+    Update tailwind.config.ts
+
+[33mcommit 365a053ed2af34f854b92ccc0f8d536c89e0cc8b[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 21:23:16 2025 +0100
+
+    Update Index.tsx
+
+[33mcommit ed88c497ad799373051cdc968dcd5076942545a5[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 21:22:45 2025 +0100
+
+    Update card.tsx
+
+[33mcommit f0b954c1dc0a2dc31e5e29cf784b0de3dc899b4d[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 21:22:22 2025 +0100
+
+    Update Navigation.tsx
+
+[33mcommit 6b930df728d054160456864c67515caa70b4fb09[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 21:22:01 2025 +0100
+
+    Update App.tsx
+
+[33mcommit bdee7cc8945f1d5d8d98bb4350a3dbacb60c0d3c[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 21:21:43 2025 +0100
+
+    Update index.css
+
+[33mcommit 85efb9df383c9aa91e370a34e9ddff7152f7fa93[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 21:21:19 2025 +0100
+
+    Update tailwind.config.ts
+
+[33mcommit 76d20255b371646a03dee4ca40e912c704de70d7[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 21:21:05 2025 +0100
+
+    Delete postcss.config.js
+
+[33mcommit b3bf779bef40906cb00a1499b45ba74808d08e2d[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 21:16:12 2025 +0100
+
+    Update card.tsx
+
+[33mcommit c85a17058792e6fffc0db86097078b8b7f10375d[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 21:15:40 2025 +0100
+
+    Update Navigation.tsx
+
+[33mcommit d1581f23b1be2be507bfd4704ee8f3624ab448db[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 21:15:17 2025 +0100
+
+    Update App.tsx
+
+[33mcommit 05419db106db890a9a1a76dae28fe493d0b89f71[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 21:14:45 2025 +0100
+
+    Update tailwind.config.ts
+
+[33mcommit 124b58ce42785b1b222487cb473d0c3c62eb086d[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 21:14:24 2025 +0100
+
+    Update index.css
+
+[33mcommit d822aa53c799dd0c6d03578ea480228894c5271d[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 21:11:42 2025 +0100
+
+    Update Navigation.tsx
+
+[33mcommit 7477f32956902648b96213288ccfc59b529d59d8[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 21:09:43 2025 +0100
+
+    Update tailwind.config.ts
+
+[33mcommit dc52447ae01e23600cbba09563f9e01fc8d881c9[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 21:08:23 2025 +0100
+
+    Update index.css
+
+[33mcommit 41470f4e0084898011c72a6b0fa947964b555d04[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 21:06:48 2025 +0100
+
+    Update index.css
+
+[33mcommit 12f429c0199f4199f2a812ba79544244d999c3a2[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 21:03:26 2025 +0100
+
+    Update Index.tsx
+
+[33mcommit 5aeb4baa260af52d0fa2fcd267dfc60102eb1074[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 21:03:01 2025 +0100
+
+    Update index.css
+
+[33mcommit 50626226ea9eb03d816066d07f6de3de0139fbaa[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 21:01:16 2025 +0100
+
+    Update Index.tsx
+
+[33mcommit 0dafada5c8fbf9fde3c8871b241807443dab9272[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 21:00:51 2025 +0100
+
+    Update tailwind.config.ts
+
+[33mcommit eab47f64807a1cbc9eba1e987a15eadd01de5509[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 20:58:16 2025 +0100
+
+    Update Index.tsx
+
+[33mcommit e30de05dde9f0a6d59ca79ca3ca25039441e7f04[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 20:57:34 2025 +0100
+
+    Update Navigation.tsx
+
+[33mcommit 91853eaf0a2ee8474fea219bb80e55a20a16169e[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 20:56:54 2025 +0100
+
+    Update App.tsx
+
+[33mcommit 000b3fad39d23b16210272c0755d0fd4653f0036[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 20:56:30 2025 +0100
+
+    Update index.css
+
+[33mcommit a2a4a6a090739c402b836d4cbec5d00167dfb694[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 18:26:13 2025 +0100
+
+    Update useTheme.tsx
+
+[33mcommit 49507ab28429d2f51f8f87e990edb2326af2658d[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 18:25:42 2025 +0100
+
+    Update Navigation.tsx
+
+[33mcommit d945df117043dd0d277151d153352862936704c0[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 18:24:34 2025 +0100
+
+    Update App.tsx
+
+[33mcommit e5dfca30075a231a2275e31deb87f0e371efae1c[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 18:10:12 2025 +0100
+
+    Update App.tsx
+
+[33mcommit f54e5846fde06291d85bb18ce4a9370fb5343e45[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 18:09:51 2025 +0100
+
+    Update index.css
+
+[33mcommit 0f3bb9beab53b6a38a804719e12f091970380454[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 17:59:37 2025 +0100
+
+    Update useDataSync.tsx
+
+[33mcommit 18484ac3bc573815fc909c4f0ca875e9fe3bf291[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 17:59:18 2025 +0100
+
+    Update App.tsx
+
+[33mcommit 0d7badb337262af7501f995ea6918a19b20fc478[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 17:52:16 2025 +0100
+
+    Update GameVersionContext.tsx
+
+[33mcommit 18603a7ed379989e241db5c90bfd1eee8ccf0ba9[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 17:51:54 2025 +0100
+
+    Update AuthContext.tsx
+
+[33mcommit 0534353b6c3bf775d5b6008ee660c043257be884[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 17:46:37 2025 +0100
+
+    Update useSupabaseData.ts
+
+[33mcommit f6b71b534052ea4211c97d64e3880b7f6930adeb[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 17:44:10 2025 +0100
+
+    Update useDataSync.tsx
+
+[33mcommit b9982f0912bb5fa28ce73b12dbd77ef8ea78c870[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 17:21:58 2025 +0100
+
+    Update PrimaryInsightCard.tsx
+
+[33mcommit 3394233b59cbfb05bf8943ac40be2fbeda068ae8[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 17:21:37 2025 +0100
+
+    Update StatCard.tsx
+
+[33mcommit 2822e1530546af799b81c8c3b1b815fbbee00135[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 17:21:17 2025 +0100
+
+    Update DashboardSection.tsx
+
+[33mcommit 2ebce9677b972c75249e4ef7ad90090e42542e2a[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 17:20:56 2025 +0100
+
+    Update index.css
+
+[33mcommit 6101646d17474b208c407d9a84c58f9495c71648[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 17:20:38 2025 +0100
+
+    Update App.tsx
+
+[33mcommit a5887cc7c34b88964ba285a97d10f3a75c8bc3dd[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 17:20:20 2025 +0100
+
+    Update useDataSync.tsx
+
+[33mcommit 95698e3d9a8e0b9ebeb53c2d4886bb4862952f38[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 16:50:58 2025 +0100
+
+    Update and rename useDataSync.ts to useDataSync.tsx
+
+[33mcommit 95ea5ede7c0dfb051ad4bded62f59deb3c422f9c[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 16:49:13 2025 +0100
+
+    Update useDataSync.ts
+
+[33mcommit 13c3cb06714b0ba4b8b4951b3dcf77e3b6a97bdb[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 16:47:24 2025 +0100
+
+    Update PrimaryInsightCard.tsx
+
+[33mcommit 2b6a8dc5ffbb8be8e043b202a03ed1762c27a19f[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 16:47:10 2025 +0100
+
+    Update StatCard.tsx
+
+[33mcommit 4865a0de2ad7b84edf85209d00625fe03e6bfb31[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 16:46:53 2025 +0100
+
+    Update DashboardSection.tsx
+
+[33mcommit b0ba3429ab3c4a825a16d7ea88fd6a52d77b6d0c[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 16:46:31 2025 +0100
+
+    Update index.css
+
+[33mcommit 2bf367e692c7f67764746519c013037269f4da62[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 16:46:11 2025 +0100
+
+    Update App.tsx
+
+[33mcommit 4b75330237265bd6b81d5a3794336c1da1f1dd19[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 16:45:45 2025 +0100
+
+    Update useDataSync.ts
+
+[33mcommit a9112a489698d5e85ad54968bac257c5163d186b[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 16:43:00 2025 +0100
+
+    Update PrimaryInsightCard.tsx
+
+[33mcommit 1885bf86a9601f281ef5a8247a92e84140bd087b[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 16:42:42 2025 +0100
+
+    Update StatCard.tsx
+
+[33mcommit 461588a7f876e10d972a3b9b7a6bc5e512394333[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 16:42:24 2025 +0100
+
+    Update DashboardSection.tsx
+
+[33mcommit 15df06ccda32d71873d0463380d3186cbb62f57f[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 16:42:08 2025 +0100
+
+    Update App.tsx
+
+[33mcommit 909cf1340252e5e7742681c5937bd90d23566203[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 16:41:50 2025 +0100
+
+    Update index.css
+
+[33mcommit 52fabfef1b124f582bc1fc8df87333b5103b1630[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 16:40:17 2025 +0100
+
+    Update useDataSync.ts
+
+[33mcommit 3b06c06235c85c1ad2da4d791af8a827cf649920[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 16:35:30 2025 +0100
+
+    Update PrimaryInsightCard.tsx
+
+[33mcommit fba2eeb4caf44a0f06df52d6f809bf9ac212f7a0[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 16:35:04 2025 +0100
+
+    Update index.css
+
+[33mcommit f4eb114dfc6bc8794780bbc16d16eb59f1843df5[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 16:33:24 2025 +0100
+
+    Update PrimaryInsightCard.tsx
+
+[33mcommit 577949016681ff6cee593af9e03b0fc6dda5f844[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 16:32:51 2025 +0100
+
+    Update StatCard.tsx
+
+[33mcommit 552dddf325f2ce3dba1993c638dbed292ad22ab1[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 16:32:24 2025 +0100
+
+    Update DashboardSection.tsx
+
+[33mcommit bb55ebdc0229f6c99d7298b5f16f9a01f58039ab[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 16:31:56 2025 +0100
+
+    Update App.tsx
+
+[33mcommit 30c1a1edfd899399a42ed950710f12230138ad72[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 16:31:28 2025 +0100
+
+    Update index.css
+
+[33mcommit 881635a55a6bb54f165799572aa8da1d474092b3[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 16:29:46 2025 +0100
+
+    Update index.css
+
+[33mcommit b9dc0474365372ba3d94c95f99b7f9bb0ee69f00[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 16:29:15 2025 +0100
+
+    Update App.tsx
+
+[33mcommit 7c9695581aaa665547e9e3493da6b4adcb5b72e7[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 16:24:23 2025 +0100
+
+    Update PrimaryInsightCard.tsx
+
+[33mcommit c573a706246984ba1514cb198fd6e160a10b4c02[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 16:24:00 2025 +0100
+
+    Update DashboardSection.tsx
+
+[33mcommit 90b3168134f9598a4d90ab359692131df7c1159f[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 16:23:07 2025 +0100
+
+    Update StatCard.tsx
+
+[33mcommit c02969a64d9d39cbb11f10cd9a5ae0cec80d2a63[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 16:12:15 2025 +0100
+
+    Update index.css
+
+[33mcommit d6a36ca061769456a3b3574023ca792603bcd0de[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 16:11:54 2025 +0100
+
+    Update useTheme.tsx
+
+[33mcommit 8fed61b2b9ba65ca64640de51eb8d948cfbb5eee[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 16:02:28 2025 +0100
+
+    Update useTheme.tsx
+
+[33mcommit ed44050cc7815ecca7f422cc5c117d088b0bf05d[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 15:59:37 2025 +0100
+
+    Update useTheme.tsx
+
+[33mcommit b82e4148e73f8b67d3269db6bf6b898b5b32ca51[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 15:50:26 2025 +0100
+
+    Update useTheme.tsx
+
+[33mcommit f4730b0a5f77a7a7a75d0b6a5770b7d5b82b0206[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 15:45:47 2025 +0100
+
+    Update index.css
+
+[33mcommit 616e9d7f7b45ec795dd6dd5e47b8b1a026792856[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 15:44:11 2025 +0100
+
+    Update App.tsx
+
+[33mcommit 8078d397a6af993296f4cad30901820762e808a1[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 00:26:15 2025 +0100
+
+    Update App.tsx
+
+[33mcommit 5ed88ca41d56d3900186a7c25cb101dcb36f11df[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 00:06:36 2025 +0100
+
+    Update index.css
+
+[33mcommit 2a907b7841cafaa71d12a8ffeffbdc934207745d[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 00:06:10 2025 +0100
+
+    Update index.html
+
+[33mcommit df5af80d85c77feddbdfae80b22203b6883e6887[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 00:02:44 2025 +0100
+
+    Update main.tsx
+
+[33mcommit 529e872b6c0a0e28717dd859d5fdab941980cde6[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 00:02:05 2025 +0100
+
+    Update index.css
+
+[33mcommit 78812b7835154427e37fa52442ac13b8763b1011[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Oct 7 00:01:51 2025 +0100
+
+    Delete src/App.css
+
+[33mcommit 6054df1cfec31fe96a3a7d040a17a1ea07047f2f[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 23:58:37 2025 +0100
+
+    Update index.css
+
+[33mcommit 049771a20278e11fb81a65c653328fd5dd1d7311[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 23:58:14 2025 +0100
+
+    Update index.html
+
+[33mcommit 2008955c76cf23ed3e38f9e5866ef67d6192bed5[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 23:56:43 2025 +0100
+
+    Update index.html
+
+[33mcommit 36c2f4dfae035bb33f4780d8821a4c4474e5ec78[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 23:55:36 2025 +0100
+
+    Update index.css
+
+[33mcommit 9845a950edca500e0dabefaa3c08368238a23a00[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 23:48:24 2025 +0100
+
+    Update CurrentRunStats.tsx
+
+[33mcommit 3f4d1811f674805e5ccdece59e90b5ea0a3152b1[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 23:48:01 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit 45e3b614367ebb45aac56669a0332b9b3768a21c[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 23:47:39 2025 +0100
+
+    Update tailwind.config.ts
+
+[33mcommit 11adb6e4d99fadc41cb4a2cb62285ae946573074[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 23:47:19 2025 +0100
+
+    Update index.css
+
+[33mcommit 1a9ee42e1b58156ed46a0bd119f446dd841690c6[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 23:46:45 2025 +0100
+
+    Update index.html
+
+[33mcommit 7a4b45c70c29e44c93869cbc445ce20c8c844fb3[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 22:23:44 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit 96a038fcb0f58188a68dac6b1ee29faf134f654c[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 22:22:40 2025 +0100
+
+    Update PlayerConsistencyChart.tsx
+
+[33mcommit 849ac08999139b48b82e2c3d9c49b971b38ff79e[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 22:18:53 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit 75302eafc9ce9b2d9af02367c5041accc8c1201a[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 22:15:40 2025 +0100
+
+    Update CurrentRunStats.tsx
+
+[33mcommit e184f019ffbc946e42612ee9fce4873a707756ad[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 22:15:18 2025 +0100
+
+    Update PlayerConsistencyChart.tsx
+
+[33mcommit 70ea0aacbd1e226b4714320b80f7bc6047e89a50[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 22:14:46 2025 +0100
+
+    Update Analytics.tsx
+
+[33mcommit 804f88a0e9e884eaba2106bb744ec380841d1846[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 22:13:58 2025 +0100
+
+    Update LowestRatedPlayers.tsx
+
+[33mcommit da9afc97c3bb4725b42382c01082cf8189b350a3[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 22:11:03 2025 +0100
+
+    Update PositionalHeatMap.tsx
+
+[33mcommit 15726c0c060e1f6075580756473048ea2cc220d7[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 22:09:38 2025 +0100
+
+    Update CurrentRunStats.tsx
+
+[33mcommit 41be1a78cc1b6b5f18e9ea920c8c14e16f3136f3[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 22:07:00 2025 +0100
+
+    Create LowestRatedPlayers.tsx
+
+[33mcommit 66e1e7cde12bcc5648bf63d02affa17795d52011[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 21:56:48 2025 +0100
+
+    Create XGAnalytics.tsx
+
+[33mcommit a03627c2da55b7bfc8c129aaf1246e7d45a48151[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 21:56:15 2025 +0100
+
+    Create PlayerConsistencyChart.tsx
+
+[33mcommit 20a4a5b28529b80264ed3e0ded768308c2f2f816[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 21:45:24 2025 +0100
+
+    Update card.tsx
+
+[33mcommit f99735d57a9321b7dbba128e5f914309db5ba651[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 21:45:00 2025 +0100
+
+    Update App.css
+
+[33mcommit d009ee2f0b7d9cd35d5b174167aa78a54fb182c0[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 21:44:36 2025 +0100
+
+    Update tailwind.config.ts
+
+[33mcommit 00710780947db832ca92dc66a5434b5ea42e0202[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 21:44:14 2025 +0100
+
+    Update index.html
+
+[33mcommit 6a1770abdd8008d4a6587af30e08a077c11faa08[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 21:39:10 2025 +0100
+
+    Update card.tsx
+
+[33mcommit 1455e9e1bc07ca888671e8c8aa98d795da78efe5[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 21:38:46 2025 +0100
+
+    Update App.css
+
+[33mcommit b3cef2d18aa91c71163117d0471a53f9c12cfd9b[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 21:38:20 2025 +0100
+
+    Update useTheme.tsx
+
+[33mcommit fb06adc220013a72b2bbe466aca2598ab6fdf00b[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 21:34:55 2025 +0100
+
+    Update card.tsx
+
+[33mcommit 448d01861426e02ef1f59a1d0cbb6e47d096503c[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 21:34:19 2025 +0100
+
+    Update App.css
+
+[33mcommit 81ba3f2e3d884695b9a00f1e71a8f3d584c26f1f[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 21:33:45 2025 +0100
+
+    Update useTheme.tsx
+
+[33mcommit 9b1d660d3a401c509968f27a5465ea37ad300f6a[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 20:39:30 2025 +0100
+
+    Update App.css
+
+[33mcommit 6bdea9f01c5387ec943c312e46139349f37c5063[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 20:39:04 2025 +0100
+
+    Update useTheme.tsx
+
+[33mcommit 56b8a82692407cce0df355feccc669d0c5a81456[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 20:24:48 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit 6602daa540411244ce938750cdda99efa30b495a[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 20:24:05 2025 +0100
+
+    Update CurrentWeek.tsx
+
+[33mcommit 3c96e70716406827222a19d5f115d4ae41a296b9[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 20:23:23 2025 +0100
+
+    Update GameCard.tsx
+
+[33mcommit be58c03b2b5e7993eef9d773455a7653a25d9d46[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 20:22:32 2025 +0100
+
+    Create DeleteDialog.tsx
+
+[33mcommit 2f2bd598ef76fc293639e51bc647fa5715271c91[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 20:22:05 2025 +0100
+
+    Create GameListItem.tsx
+
+[33mcommit 1dcc67ceff4a2952b8f6bede03430ec15b391648[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 20:21:11 2025 +0100
+
+    Create RunCard.tsx
+
+[33mcommit 0c4022a904d6714d91029e41aff685ec84433228[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 20:20:40 2025 +0100
+
+    Create RunSelector.tsx
+
+[33mcommit 2781db24e60cc35027e3a16d6c74f42278a323c5[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 20:09:32 2025 +0100
+
+    Update CurrentWeek.tsx
+
+[33mcommit 67d2904548b52cb6da3711c145711d451b3d03b2[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 20:06:15 2025 +0100
+
+    Update TopPerformers.tsx
+
+[33mcommit 4ed46d51fb68dbadb4915144b88137907d18d212[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 20:05:53 2025 +0100
+
+    Update CurrentWeek.tsx
+
+[33mcommit 8dda612508805475d5c5d93fca7c85412bf509fc[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 20:02:36 2025 +0100
+
+    Update TopPerformers.tsx
+
+[33mcommit 35936a2c56d656cdd6a89dc587142dae073128e9[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 19:59:00 2025 +0100
+
+    Update CurrentWeek.tsx
+
+[33mcommit 75442f57841836043c16da28f06b9109d6b82c1d[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 19:56:39 2025 +0100
+
+    Update TopPerformers.tsx
+
+[33mcommit 4d372947f709f7ac77ef882cc42c1656fe8a6aba[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 19:54:12 2025 +0100
+
+    Update CurrentWeek.tsx
+
+[33mcommit 08b238864bfd0c840ebba33821513e4bd5dca467[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 19:53:41 2025 +0100
+
+    Create RecentRuns.tsx
+
+[33mcommit 6e7d2df19310ebd16a687ea95a897300a48494b5[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 19:49:20 2025 +0100
+
+    Update CurrentRunStats.tsx
+
+[33mcommit 0010467bf6a2e6f45f63cfcb7f539aece3c2ebc6[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 19:42:39 2025 +0100
+
+    Update TopPerformers.tsx
+
+[33mcommit ead5b26671f90dc212162433d94b023281459544[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 19:42:14 2025 +0100
+
+    Update CurrentRunStats.tsx
+
+[33mcommit f09a5e6df7c9dbed88faedb20bc7600d1ad3009d[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 19:40:50 2025 +0100
+
+    Update CurrentWeek.tsx
+
+[33mcommit 3d164be8dec62036d99728156bb8c54e6649dca6[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 19:40:22 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit 8ca6f906ff30be454ce9cc8f91f9b7c018cb5735[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 19:30:22 2025 +0100
+
+    Update CurrentWeek.tsx
+
+[33mcommit e3c414fe4d703a5f282d1e1ccc6a5effc784afe3[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 19:29:59 2025 +0100
+
+    Create GameCard.tsx
+
+[33mcommit fa9f43e8b9ac29be9fd01cf296b44e86c9b76b4c[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 19:29:21 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit 79c5343163fae0fd33de54c8164919552cb4184b[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 19:25:06 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit 7037cf59be5323bdaa4e4ef8013f0808c242d12f[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 19:24:39 2025 +0100
+
+    Update CurrentWeek.tsx
+
+[33mcommit d62722c96fcc51dfb50d2aafe723f05caacb3024[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 19:21:27 2025 +0100
+
+    Update CurrentWeek.tsx
+
+[33mcommit 986c83a367fdf3909f97addd880eca5beac1ba9a[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 19:18:45 2025 +0100
+
+    Update CurrentWeek.tsx
+
+[33mcommit f98e648901b08fae40bb977b6db107988b3be630[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 19:15:42 2025 +0100
+
+    Update CurrentWeek.tsx
+
+[33mcommit 6b018f81d0199a42beab60caf908a24e7d0370a8[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 19:05:25 2025 +0100
+
+    Update CurrentWeek.tsx
+
+[33mcommit 529e2fb0355464aab625c0f88257d88acc52c76d[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 19:02:17 2025 +0100
+
+    Update CurrentWeek.tsx
+
+[33mcommit b49a66271c2c48879c29a09c8e10177a9c9db519[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 19:00:59 2025 +0100
+
+    Update CurrentWeek.tsx
+
+[33mcommit 65f5ed060a22b552c858220b4ee10144da84701c[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 18:59:35 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit cb0b8bc24b977904b0b8dadcac7d253dab022234[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 18:58:43 2025 +0100
+
+    Update CurrentWeek.tsx
+
+[33mcommit 635da1583bcb8fc36bbef5d12029a3f95f83d27c[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 18:55:28 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit 7991147f6ee28cf3fbf10eac7c2e6301da28be8b[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 18:50:00 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit 64518dee836f4d8224c09bbd54e8ecd2c392737b[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 18:46:19 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit 67488b26899b5403441caad0a64f9534bd0d5a62[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 18:40:20 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit ae4116b7e5da0d1136f49cb51851868f7f271bb4[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 18:35:58 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit c3b9551976e39a1b164b1002459e835973752b76[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 18:32:44 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit 6c74ed37d538b62cd3b35cfeec1e59b123429b2a[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 18:18:56 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit 923b31171e3e4c56688c58a909b57f2ce9fa0088[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 18:16:30 2025 +0100
+
+    Update CurrentWeek.tsx
+
+[33mcommit a81bcb6c82dd49cb298b29ccbd1901cab380f718[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 18:15:54 2025 +0100
+
+    Update useSquadData.ts
+
+[33mcommit 987358f1f84774c3bc5432e2fdcd26a54912b7da[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 18:10:44 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit 413fce866546dbf85fda8b972423e3fd6319d0a7[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 18:10:12 2025 +0100
+
+    Update CurrentWeek.tsx
+
+[33mcommit cb9ac29677f9dcb2a11f46f21b74dfc9b85ebceb[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 18:09:48 2025 +0100
+
+    Update useSquadData.ts
+
+[33mcommit f864afa59bfe46fbd1d7504c9e1781e2f270dff7[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 18:04:46 2025 +0100
+
+    Update useSquadData.ts
+
+[33mcommit 2deb41f9ca2bac2b88fcf3f615e2832f0e28de20[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 17:57:11 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit bd2ce3886abc659ac3c2010b4df1c242a91e0cf7[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 17:56:44 2025 +0100
+
+    Update CurrentWeek.tsx
+
+[33mcommit f8d22a53e1c969fbd8fa94a01032638530a3452b[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 17:56:21 2025 +0100
+
+    Update useSquadData.ts
+
+[33mcommit 6293b7bd570560895b049ffa83f531b7d09b1bb4[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 17:51:29 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit b84605b66e46c773e1e206835b039e95080ae864[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 17:49:52 2025 +0100
+
+    Update CurrentWeek.tsx
+
+[33mcommit 3c605c7a005f18a17c233e1fdf18be6fa37ede44[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 17:44:19 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit 6e02cd5755acda52dddd95f064de4e1ff48fc591[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 17:37:52 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit 176a7a41f7ea2bf5ebf89c621e90bb1bae272b72[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 17:37:03 2025 +0100
+
+    Update useSquadData.ts
+
+[33mcommit d698c3b0de16c70242f9dfe212d668f8419d2673[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 17:30:36 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit 2aed91951a785d0e8e331c15b959ad7886c9aa0b[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 17:06:05 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit 0bc4607690d34a2129287ff172d172d00553ae4a[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 17:04:46 2025 +0100
+
+    Update useSquadData.ts
+
+[33mcommit 3d6568a2aab34272455b57537e9ef2cb22e59fc7[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 17:00:34 2025 +0100
+
+    Update useSquadData.ts
+
+[33mcommit 0940835b7ce8f45c2fa955d18de0db28ac17c81c[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 17:00:14 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit 772ef6c24fa3868fd7b33b94a84f8cc704a02b8e[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 16:45:11 2025 +0100
+
+    Update useSquadData.ts
+
+[33mcommit e65300e88befa22ac3928d087423f1570d88f315[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 16:40:16 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit 455005307a5a3cd4e921fa52dd3a3aa8a342db94[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 16:39:09 2025 +0100
+
+    Update useSquadData.ts
+
+[33mcommit bb433edda8c8c6eef3c53c6b04cbf3217f1f8e9d[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 16:32:06 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit df6c05949ca9ff6307ddea59d9520a6ba1bd12b2[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 16:25:18 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit 5726627b59b0d944bb925a9d78387488604796ac[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 16:18:54 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit 259913bed6b14aa6c85761bae6fd8964ece4b1e7[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 16:15:52 2025 +0100
+
+    Update useSquadData.ts
+
+[33mcommit 2c4ea25a0ffee9a97a39f823c56ae547a2d5b340[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 16:07:10 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit 5241554664edd1d5ce8657a21e7a886a6f02f8a2[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 15:58:36 2025 +0100
+
+    Update CurrentWeek.tsx
+
+[33mcommit 874927e661a0539b22a5841859bba31a7c35c135[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 15:55:34 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit 47655771c692814de11d1bf32de9d42fe09e9a87[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 15:51:45 2025 +0100
+
+    Update CurrentWeek.tsx
+
+[33mcommit 27b9eb2e583769fc601149f449e3bb4b44e7d0f5[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 15:49:04 2025 +0100
+
+    Update CurrentWeek.tsx
+
+[33mcommit 3aee5eaa326d8a5fb8be32a7d9be5a086bdc8964[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 01:18:27 2025 +0100
+
+    Update useSquadData.ts
+
+[33mcommit 1f9a841068debcc70ac1bcb6cabceebf8952e86f[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 01:16:45 2025 +0100
+
+    Update useSquadData.ts
+
+[33mcommit b865e27d57f3fa236bfe211347d1098dd213b18a[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 01:11:24 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit f41802ff1da93c10ec9d5d4cc5b28cce642cdce4[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 01:05:54 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit 18653a385d8957dde85ecbcf6b1e4e25d4b21794[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 01:01:53 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit b9268b74dd2526626d86b4f3b5c2506fb7e2d0fe[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 00:58:32 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit 41baa5fdf354a8e7ef59417536c09af1ea689936[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 00:53:35 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit e8ee79048b5060bc09905f29f75be37b8b6cb835[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 00:48:06 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit ef0f20ae1ca9ef1eec57dfc51b1b40a887d10613[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 00:42:16 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit 4dde790780b97b6badafed4330201b74ca494060[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 00:31:57 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit 6c948f03a2c59c6ee5073cd0378cd20b03ff9ef4[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 00:27:31 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit f8caff96be623de3583d1daebef29c9bd0175199[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 00:24:23 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit 04e8944d37769704d1e7721a32e7bcff662789a5[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 00:17:24 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit 698b63288ea940f4e571a2c47ccd8fd7b8c3e448[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 00:07:13 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit 610f87079f740998bf654ecba5409569cd655d55[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Oct 6 00:01:05 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit 3a86c62c032b389415a88fd37ce60d9a44be1f08[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 23:55:46 2025 +0100
+
+    Update CurrentWeek.tsx
+
+[33mcommit 10a44a20ce035957de368c45b40a8abe2ac01f67[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 23:55:12 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit cc6e323877d2144f871a134aec8616af7d4bb38f[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 23:49:57 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit 4c0219cf35d044c38ea18d99174379649f7ea249[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 22:45:58 2025 +0100
+
+    Update MatchTagAnalysis.tsx
+
+[33mcommit 37984b7033ae1a5773b4246c9ec288a5c2076004[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 22:43:12 2025 +0100
+
+    Update TopPerformers.tsx
+
+[33mcommit fa0b76897c1251cd1f30d33c39c1f27c3dac23ab[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 22:35:05 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit d42165d662ae0aef99cd8e3934ed4e370aa8b645[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 22:30:36 2025 +0100
+
+    Update PlayerStatsForm.tsx
+
+[33mcommit 7f6ee77a77b01773c84301e8ae60cdbb6083be40[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 22:28:59 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit f217aeb1f3b763591056030b46d7093ec3c13aef[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 20:45:04 2025 +0100
+
+    Update useSquadData.ts
+
+[33mcommit 99231822a504a9f4277ee4128799551a86b28b21[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 20:44:23 2025 +0100
+
+    Update Squads.tsx
+
+[33mcommit 61f9689769bfc37163636e7dd5de5681310469cf[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 20:35:52 2025 +0100
+
+    Update useSquadData.ts
+
+[33mcommit ed9ea6825e02393b760a2ae99c694ca6a2d1f69b[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 20:24:44 2025 +0100
+
+    Update SquadBuilder.tsx
+
+[33mcommit c27f31b02e169fb397603220b8fb07d3507e2972[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 20:18:41 2025 +0100
+
+    Update SquadBuilder.tsx
+
+[33mcommit 94a9b532775eedb24d9933ebbbe75e444465d862[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 20:12:21 2025 +0100
+
+    Update SquadBuilder.tsx
+
+[33mcommit e7fab48d5d379970f6c03a29d7d4f161b72ed720[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 20:11:59 2025 +0100
+
+    Update Squads.tsx
+
+[33mcommit fb5035630c57260c617a1c26a847d9981313bb91[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 19:59:41 2025 +0100
+
+    Update PlayerSearchModal.tsx
+
+[33mcommit 8d2f3e8f65f6fd103fe2769035ae51e4181777b5[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 19:59:07 2025 +0100
+
+    Update useSquadData.ts
+
+[33mcommit a5893d530effc2e6969add91e98c26a81c48965a[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 19:50:54 2025 +0100
+
+    Update useSquadData.ts
+
+[33mcommit 30c07698bf294482882dcc08dcf503b57594b536[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 19:50:20 2025 +0100
+
+    Update PlayerSearchModal.tsx
+
+[33mcommit 7b48796324a222b253acbb98501fd88db47248ba[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 19:44:02 2025 +0100
+
+    Update SquadBuilder.tsx
+
+[33mcommit 5fdb1f4bd67d7124758bc47aecc81e5a7827baed[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 19:43:09 2025 +0100
+
+    Update squads.ts
+
+[33mcommit 635916188d4ef5be9661b8296977d192dc6dc253[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 19:38:23 2025 +0100
+
+    Update SquadBuilder.tsx
+
+[33mcommit 9ff871ca46e0a55316a0772a58d7893434b419c0[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 19:37:59 2025 +0100
+
+    Update PlayerSearchModal.tsx
+
+[33mcommit 4895202bacc431a9ded607a218fc96e074c77162[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 19:37:35 2025 +0100
+
+    Update squads.ts
+
+[33mcommit 3474fdca9f0b2f8856a50a2bffe8ff8efcd54fc7[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 19:29:32 2025 +0100
+
+    Update SquadBuilder.tsx
+
+[33mcommit 5e099b90a341402984849c2a719b08a5be1d11aa[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 19:29:06 2025 +0100
+
+    Update PlayerSearchModal.tsx
+
+[33mcommit c30409d42a31b2a3086249c8407a858b9017d221[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 19:20:35 2025 +0100
+
+    Update SquadBuilder.tsx
+
+[33mcommit 93bf7f80fc7ca7019e63435a6bdb9b84380df06f[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 19:19:28 2025 +0100
+
+    Update squads.ts
+
+[33mcommit cdf8bf1b8f0319624b2b6472bc4c3ed1d7369172[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 19:12:57 2025 +0100
+
+    Update Squads.tsx
+
+[33mcommit d93886e4d5ddbf5aaeda2a9e7f854a5cef528f17[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 19:05:28 2025 +0100
+
+    Update SquadBuilder.tsx
+
+[33mcommit 54c5c25fb669b110c9fae4360ea45b74da6660c4[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 19:04:52 2025 +0100
+
+    Update PlayerSearchModal.tsx
+
+[33mcommit 8cd58a17831124c628656475406f6dd7c4bf13c4[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 19:04:27 2025 +0100
+
+    Update squads.ts
+
+[33mcommit 8951de8a5e8b4098cc6b674b925338ae264076dc[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 18:53:54 2025 +0100
+
+    Update PlayerSearchModal.tsx
+
+[33mcommit dc960d25728ee9e8d937adb7021352164aeb0d20[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 18:31:32 2025 +0100
+
+    Update PlayerSearchModal.tsx
+
+[33mcommit 85fd8458eb4b485b5975b2624131b795ae2bf845[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 18:26:24 2025 +0100
+
+    Update SquadBuilder.tsx
+
+[33mcommit 785c1262965d797c7b22ceb666693654f9583d5e[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 17:39:36 2025 +0100
+
+    Update Admin.tsx
+
+[33mcommit 06458a0ec02e3ade47ef6d1a2fc6c687d674637c[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 17:34:46 2025 +0100
+
+    Update Admin.tsx
+
+[33mcommit df81832f4c28cd93eaea1904b1e08d93d97d2a8f[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 17:20:30 2025 +0100
+
+    Update Admin.tsx
+
+[33mcommit cbc13bbdb6e434268725f172a6e9f56fead308b5[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 17:13:41 2025 +0100
+
+    Update AccountSelector.tsx
+
+[33mcommit 44bfbfa6a863b39d59ed9ff61d728c9e69d152e9[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 17:11:03 2025 +0100
+
+    Update SquadBuilder.tsx
+
+[33mcommit 7c94a77a42ffca97fe247dbc56217fa3dea4d53b[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 17:08:39 2025 +0100
+
+    Update GameVersionContext.tsx
+
+[33mcommit b132036d9ac6fe00183a6fc8ddd417cf6b8c868d[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 17:02:48 2025 +0100
+
+    Update SquadBuilder.tsx
+
+[33mcommit 42ae98d95ab640df6f230d98f797fcf0542b9624[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 17:00:52 2025 +0100
+
+    Update squads.ts
+
+[33mcommit e6ebe867cb21b9bf5fdd97fa98bf43c0e3367815[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 16:53:52 2025 +0100
+
+    Update CardTypeCreator.tsx
+
+[33mcommit 3a91550d585bc5e1b7c10cd9dde34482f217765b[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 16:45:39 2025 +0100
+
+    Update AIInsights.tsx
+
+[33mcommit 5fba2d3fcbcd94a78e70395a19fe1d2a23538b57[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 16:44:06 2025 +0100
+
+    Update AIInsights.tsx
+
+[33mcommit d55b86c28865f43b502a38c409e0f135b4ae13fa[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 16:42:28 2025 +0100
+
+    Update AIInsights.tsx
+
+[33mcommit 7ab115ef38afaaae83731114a0cddf48d0507147[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 16:40:50 2025 +0100
+
+    Update AIInsights.tsx
+
+[33mcommit 30b1f2cb603c1595643bc35370d7d489ef5d6a03[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 16:35:23 2025 +0100
+
+    Update GameCompletionModal.tsx
+
+[33mcommit ce53646df5286e0527a655fa93ec83ae9db47192[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 16:24:27 2025 +0100
+
+    Update Index.tsx
+
+[33mcommit 2c027c891ff98105417214e130fe5bf47848cbe0[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 16:19:22 2025 +0100
+
+    Create PrimaryInsightCard.tsx
+
+[33mcommit 05a827aab23ac4b343575b1d69e2f93f070a9290[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 16:15:54 2025 +0100
+
+    Update aiInsights.ts
+
+[33mcommit f2449799b880bb541f6338b95835ec42e4b2f6c9[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 16:01:33 2025 +0100
+
+    Update AIInsights.tsx
+
+[33mcommit 644f0607e89699f813090d87e39ef4782b1d3304[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 15:58:06 2025 +0100
+
+    Update MatchTagAnalysis.tsx
+
+[33mcommit c356431898554cd454a5d758571ea0477f953589[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 15:54:14 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit 9611ef31ba31a1d672d20207289bddebd3b80fe9[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 15:43:23 2025 +0100
+
+    Update index.css
+
+[33mcommit 7836cb741717b241e0220d8bdeafe681014e1881[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 15:43:04 2025 +0100
+
+    Update Settings.tsx
+
+[33mcommit 6e31546a925cc6362635b68a1e1eb7ee8e03fddd[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 15:42:29 2025 +0100
+
+    Update useTheme.tsx
+
+[33mcommit d2cb588e3c5307ba3c99596668a404b51b73fd56[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 15:39:20 2025 +0100
+
+    Update tailwind.config.ts
+
+[33mcommit 2a8ce86fc1ba8b32fb9a1a665a4dfe615e29240f[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 15:26:56 2025 +0100
+
+    Update index.css
+
+[33mcommit 892396bbddea8de4a1b96c33cbc8fc2daf5f88d4[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 15:26:31 2025 +0100
+
+    Update useTheme.tsx
+
+[33mcommit a0b0d600bc39c6a188466d5d5ae9040547cf761c[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 15:26:14 2025 +0100
+
+    Update tailwind.config.ts
+
+[33mcommit 16db54f2bedeb8068e393099f2ea2bdb01267920[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 15:19:32 2025 +0100
+
+    Update useTheme.tsx
+
+[33mcommit db8b4562fe6ed87f26fb854ae2b9b38302d44218[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 15:19:11 2025 +0100
+
+    Update index.css
+
+[33mcommit 9e47b26ae0a160bc159631ea8dc69400c8c1cfd5[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 15:12:55 2025 +0100
+
+    Update useTheme.tsx
+
+[33mcommit edb2d88ea81b3f5ea1e7304b1664cc94ccf7b371[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 15:10:49 2025 +0100
+
+    Update useTheme.tsx
+
+[33mcommit f79a4c80c55c61756ad9a5c550118e1b5920bb78[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 15:07:27 2025 +0100
+
+    Update useTheme.tsx
+
+[33mcommit 3ee045d2bda154de01a57aa73206a57c5c96e3ef[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 14:52:54 2025 +0100
+
+    Update useTheme.tsx
+
+[33mcommit 4dc13fd2341f6e95801d88023e5ad6f99ace1cee[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 14:50:30 2025 +0100
+
+    Update Settings.tsx
+
+[33mcommit 9946eae2945424fa2af5344dea1bd5032377c633[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 14:48:10 2025 +0100
+
+    Update Settings.tsx
+
+[33mcommit d13f87a81fd96245867373a342cc95e36802f2c7[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 14:43:45 2025 +0100
+
+    Update useTheme.tsx
+
+[33mcommit dcf9312cf91dcca1f3f38f47bf0e7405e9c07e9b[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 14:40:31 2025 +0100
+
+    Update App.tsx
+
+[33mcommit ec14b4f291c6913498d9b560a087ccb23379d700[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 14:40:11 2025 +0100
+
+    Update useTheme.tsx
+
+[33mcommit 87df252014090f5744de06f9d407694b61e6bd28[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 14:36:57 2025 +0100
+
+    Update App.tsx
+
+[33mcommit 7afa0ea10d3d53476ab76ed6acd990e39a948795[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 14:36:31 2025 +0100
+
+    Update index.css
+
+[33mcommit f3842e25a5fa149d870ef2dae18b34c3e4bb8d9e[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Oct 5 14:36:06 2025 +0100
+
+    Update useTheme.tsx
+
+[33mcommit aa8c6c0b4e3812fe64eb06797fd5a7d2ab5be35e[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 22:17:55 2025 +0100
+
+    Update tailwind.config.ts
+
+[33mcommit 0f2780367e8235f7745f22db1026bb68192f3df3[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 22:17:23 2025 +0100
+
+    Update Admin.tsx
+
+[33mcommit 6de4f0251557879c7e519fb7101b2da8fe27ecc5[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 22:16:47 2025 +0100
+
+    Update index.css
+
+[33mcommit 30eb96beb05c6aaa284e5a547df7e36a9e4069f0[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 22:12:44 2025 +0100
+
+    Update useTheme.tsx
+
+[33mcommit fe8d7ac2e50e2665686a05b902cdb790cae3e2a1[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 22:11:31 2025 +0100
+
+    Update index.css
+
+[33mcommit 7a9e346dbb463e697aaa070aa25ab447f903d0ef[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 22:10:19 2025 +0100
+
+    Update App.tsx
+
+[33mcommit 87b71164a0ea155737f49cc668f16f106be21875[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 22:02:56 2025 +0100
+
+    Update App.tsx
+
+[33mcommit bc34287c07b3d430af72b6a28b26c2b15568b493[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 21:58:32 2025 +0100
+
+    Update index.css
+
+[33mcommit 296a97d7fb1326034e7e65faf4e3565ced4a99d4[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 21:55:05 2025 +0100
+
+    Update tailwind.config.ts
+
+[33mcommit 7ffd7a0c2df60057ac62cb27289d2238583cdacf[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 21:53:46 2025 +0100
+
+    Update App.tsx
+
+[33mcommit 25df3c557034834f250f89e8a52e5d67a81f6e26[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 21:50:32 2025 +0100
+
+    Update App.tsx
+
+[33mcommit 7e78d022a8d2a8de26514b13f4ba111551c16040[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 21:48:15 2025 +0100
+
+    Update App.tsx
+
+[33mcommit 94e6cb90db9c43c819d2df6e21b3c6a8f76bd332[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 21:42:01 2025 +0100
+
+    Update App.css
+
+[33mcommit 778d8bbadd43abf90d0462e9eeb3e455f24027fc[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 21:36:45 2025 +0100
+
+    Update Admin.tsx
+
+[33mcommit 8933dcab7d5be155847a0fdb9b50f86dd0a5a9a5[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 21:31:13 2025 +0100
+
+    Update vite.config.ts
+
+[33mcommit 13b17c644c2410f0e6ae45303b5e6b1a0a0a9436[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 21:30:54 2025 +0100
+
+    Update postcss.config.js
+
+[33mcommit f8fdd66713c420d7cd5eeaf8f71e41235ebe6538[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 21:28:14 2025 +0100
+
+    Update postcss.config.js
+
+[33mcommit 570b5fb0297744d33393779bbac30e1e34eb907d[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 21:26:19 2025 +0100
+
+    Update vite.config.ts
+
+[33mcommit 3af545754ad0e800e204eff393fe98b8df4a0770[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 21:24:12 2025 +0100
+
+    Update postcss.config.js
+
+[33mcommit dbd330ad1d7d0bc082c4e8377049c7541fbba664[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 21:20:44 2025 +0100
+
+    Update tailwind.config.ts
+
+[33mcommit 1f638f8fc9898da369e89bb7682679f97a3280f4[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 21:16:49 2025 +0100
+
+    Update main.tsx
+
+[33mcommit fdd2a83a466401a56c9b0dbcf94a61a5d7ddefcb[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 21:08:25 2025 +0100
+
+    Update App.css
+
+[33mcommit fc52fcef3ae68bf29cc757a0c42d3c9067b23474[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 21:06:34 2025 +0100
+
+    Update App.css
+
+[33mcommit 3a6087b9e88262c9e54e95334674befd64d88cd8[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 21:05:47 2025 +0100
+
+    Update main.tsx
+
+[33mcommit f1f11189ee30bae0d196f2234f8f7fab9b47dc78[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 21:02:44 2025 +0100
+
+    Update App.css
+
+[33mcommit c6ce8b2282baa6947c8b3432e5c933e12798a608[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 20:59:55 2025 +0100
+
+    Update main.tsx
+
+[33mcommit e298cbff504f10286fbeb8969b8c238123cf755d[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 20:54:11 2025 +0100
+
+    Update Admin.tsx
+
+[33mcommit ae1e0fdbbc34df9a4ae4a861e5b71d2c394a4741[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 20:53:37 2025 +0100
+
+    Update App.css
+
+[33mcommit f8a4248f4b1a752bc036c9ad7f3c6e8b8a34f96f[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 20:47:24 2025 +0100
+
+    Update useTheme.tsx
+
+[33mcommit febc911b69476e11bc7c03bf2d51100da0ee6b9c[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 20:42:45 2025 +0100
+
+    Update useTheme.tsx
+
+[33mcommit a3c6d888d295579351f47cfc315eefde0592adfd[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 20:39:34 2025 +0100
+
+    Update useTheme.tsx
+
+[33mcommit 9c2c97dca2e5695a86d7f54941471ad52674ba27[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 20:37:11 2025 +0100
+
+    Update Admin.tsx
+
+[33mcommit 6dfe3de5b548c857e8382317dba13535786c13dc[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 20:33:49 2025 +0100
+
+    Update card.tsx
+
+[33mcommit c4006805baa7e76f746638c3332b204895818dc0[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 20:28:39 2025 +0100
+
+    Update main.tsx
+
+[33mcommit 427bb4a5011540be66abcde0494d3bee83311f3c[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 20:28:22 2025 +0100
+
+    Update Admin.tsx
+
+[33mcommit b678bfda92cbc0cc16af87d22b9c5d14250cae7e[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 20:23:29 2025 +0100
+
+    Update Admin.tsx
+
+[33mcommit d0891dd62b3e5daddc1e34849b78e1450ac9d911[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 20:20:54 2025 +0100
+
+    Update App.css
+
+[33mcommit 8afe2ddf2e3c3609388e15a6147afe3bb2ea2ab3[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 20:12:33 2025 +0100
+
+    Update useTheme.tsx
+
+[33mcommit d34328732ac00c85d7cad669d4fe65cf6fa4c479[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 20:09:25 2025 +0100
+
+    Update main.tsx
+
+[33mcommit 4c3146ca383ce919ebc4eb0700b2e1986f653009[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 20:07:24 2025 +0100
+
+    Update App.css
+
+[33mcommit df14bd80335dfc449716e1738d61ce50fab0d3f8[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 20:04:41 2025 +0100
+
+    Update index.css
+
+[33mcommit b8649b665161124362d5ef08f740c6ed6c962b3c[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 20:01:30 2025 +0100
+
+    Update AuthContext.tsx
+
+[33mcommit f98bc6cccde48b6e9f21ba8877afa4b3fa2723b9[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 19:59:15 2025 +0100
+
+    Update AuthContext.tsx
+
+[33mcommit 3d1df6c12c66da2592e86a661b99ae562e3946bf[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 19:55:20 2025 +0100
+
+    Update useAccountData.ts
+
+[33mcommit 975645923d37b625c93e0a72491aceedc3131d2b[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 19:53:25 2025 +0100
+
+    Update ProtectedRoute.tsx
+
+[33mcommit 937771cbe85aac9d3915eb4dfccd6b0e0e0bd842[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 19:51:25 2025 +0100
+
+    Delete src/hooks/useAuth.ts
+
+[33mcommit 734cafa575c312f61d8dee6f703211ee294fb19d[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 19:49:27 2025 +0100
+
+    Update AuthContext.tsx
+
+[33mcommit 21ffb27a9c2a891aae5ffa1953f2a4e9e607094c[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 19:41:45 2025 +0100
+
+    Rename useTheme.ts to useTheme.tsx
+
+[33mcommit 70139c278b57b72f5c5aef933e93d3cb7235b9a5[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 19:41:21 2025 +0100
+
+    Update App.tsx
+
+[33mcommit 788eda4f1b156cff6c25ee5f05996ce43e426bcd[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 19:40:54 2025 +0100
+
+    Update main.tsx
+
+[33mcommit dccd88ee05a3329beb004d739e2444b07522ea51[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 19:39:04 2025 +0100
+
+    Update main.tsx
+
+[33mcommit b9fc629567945e2325bbe10eedeb65974636d99f[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 19:38:53 2025 +0100
+
+    Update App.tsx
+
+[33mcommit 1781c9535b297dd462b3bc0df9ebae8dab68f2db[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 19:29:03 2025 +0100
+
+    Update useTheme.ts
+
+[33mcommit ed86874e3583c6b85fc716bd8017952ab757eb13[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 19:28:41 2025 +0100
+
+    Update App.tsx
+
+[33mcommit 03943515eb6318a5a88df766fda50da8007facbd[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 19:28:23 2025 +0100
+
+    Update main.tsx
+
+[33mcommit 2c17691beab5ff3213ba79bf7c0024e994088c83[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 19:24:19 2025 +0100
+
+    Update App.tsx
+
+[33mcommit eda73a03b17d5231c6dbb0a97c7ab0f5b60697af[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 19:23:50 2025 +0100
+
+    Update main.tsx
+
+[33mcommit ba2a87b62c2186b96e9b8442aa4197bc6009162c[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 19:23:31 2025 +0100
+
+    Update ProtectedRoute.tsx
+
+[33mcommit 307ae2fc7675dc841995c4d765d75124280bd5df[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 19:23:05 2025 +0100
+
+    Update AuthContext.tsx
+
+[33mcommit c4d5294a6e572802598edc92dc2e4ee6aa58d4be[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 19:19:53 2025 +0100
+
+    Update App.tsx
+
+[33mcommit abd3212b012b41740edb17299e446fe7838db2d7[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 19:19:28 2025 +0100
+
+    Update main.tsx
+
+[33mcommit 9f213fc8b187775d914430e352eee6da5ae76528[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 19:17:30 2025 +0100
+
+    Update App.css
+
+[33mcommit 17459586e6b106688466d16d9e9c5dccddbd509b[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 19:16:42 2025 +0100
+
+    Update useTheme.ts
+
+[33mcommit 46d1926c5aef4e0e07abe8f447af449db82bd1ac[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 19:14:07 2025 +0100
+
+    Update useTheme.ts
+
+[33mcommit 8de38508e9d7f187a3ba2b89c80b1882049ba5a2[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 19:11:51 2025 +0100
+
+    Update ProtectedRoute.tsx
+
+[33mcommit b1e7e04a77567b381069c34602ef69d9b713e32a[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 19:11:30 2025 +0100
+
+    Update AuthContext.tsx
+
+[33mcommit 2797fa1ba595b1738639a38a9a3390f093c63862[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 19:11:02 2025 +0100
+
+    Update App.tsx
+
+[33mcommit 681740b121e1ae42d7a110ce37385bdefb23d322[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 19:10:41 2025 +0100
+
+    Update main.tsx
+
+[33mcommit e4fd4d2cdfa10a5a24bfe41663323b9e3cad4c78[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 19:05:55 2025 +0100
+
+    Update useSupabaseData.ts
+
+[33mcommit 7d1bb0e67296bca30dea2637a550904aaf44b922[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 19:05:20 2025 +0100
+
+    Update ProtectedRoute.tsx
+
+[33mcommit 888d94be86c19fa709a05a39160f37a867f1c712[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 19:04:49 2025 +0100
+
+    Update AuthContext.tsx
+
+[33mcommit 24895a51fb3e183b6f48607e59a4c4a9bc218baf[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 19:01:15 2025 +0100
+
+    Update ProtectedRoute.tsx
+
+[33mcommit 0548a0e289bb79739efa0d4c5872e3b08fa78e8c[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 18:57:47 2025 +0100
+
+    Update ProtectedRoute.tsx
+
+[33mcommit 2b061cebdb8ee8ae55f8a09319aa49d0e05a512a[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 18:52:45 2025 +0100
+
+    Update AuthContext.tsx
+
+[33mcommit 9c4754937fe7522f7e47ac117ac5cd8fb346ca5b[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 18:49:27 2025 +0100
+
+    Update AuthContext.tsx
+
+[33mcommit c8e1f12bef03711e9d2722eff64da98802032f7d[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 18:46:39 2025 +0100
+
+    Update useAccountData.ts
+
+[33mcommit 4d88dfb931e1cf7528e9c917a2c47dbf6eecb31b[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 18:45:41 2025 +0100
+
+    Update AIInsights.tsx
+
+[33mcommit e4baf059f3233ed0c952a6a7b0bfd18adc73cfe3[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 18:45:12 2025 +0100
+
+    Update Analytics.tsx
+
+[33mcommit e1734b406bc470b52c15fb917166e5b5ae7b1388[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 18:38:29 2025 +0100
+
+    Update enhancedAiInsights.ts
+
+[33mcommit 314c7a327533a81fbd6304b50df548d1b97ee24d[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 18:35:56 2025 +0100
+
+    Update AIInsights.tsx
+
+[33mcommit 885c1d77d20b79835d8052878962ca107d9e126e[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 18:35:39 2025 +0100
+
+    Update Analytics.tsx
+
+[33mcommit d895385bbfad882541d4e133e47111556b516574[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 18:32:23 2025 +0100
+
+    Update AIInsights.tsx
+
+[33mcommit 8266fe02220d0c73650c853a239dc4c5e315df49[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 18:31:57 2025 +0100
+
+    Update Analytics.tsx
+
+[33mcommit a77edc93b40379c7d627dbab76c5c79da37030d9[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 18:26:08 2025 +0100
+
+    Create PerformanceOverTimeChart.tsx
+
+[33mcommit e8baf8c1408c120fb9a946180dc14ad25afad5c7[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 18:25:18 2025 +0100
+
+    Create KeyStatsSummary.tsx
+
+[33mcommit 1c9e190fb5ad2cdb81be3546d765f6cbfdaf586f[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 18:22:47 2025 +0100
+
+    Update enhancedAiInsights.ts
+
+[33mcommit be94c8206f0d3b001ac300171e9bc670cfeb9a36[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 17:55:31 2025 +0100
+
+    Update Achievements.tsx
+
+[33mcommit c07e82a725adcfa36c972bb780fdf148d80fa1ab[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 17:55:05 2025 +0100
+
+    Update achievements.ts
+
+[33mcommit 67e22cfb9e81b1186b2ffee9a7d37107d52d90de[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 17:50:51 2025 +0100
+
+    Update CurrentWeek.tsx
+
+[33mcommit 452d987e8942abf1f151b14f8623335f33e4c2de[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 17:50:11 2025 +0100
+
+    Update Achievements.tsx
+
+[33mcommit cd23bc0fc8cbee19e3df676f07e191b148466bd2[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 17:49:04 2025 +0100
+
+    Update AchievementSystem.tsx
+
+[33mcommit 19c125f302162e14a9664588588265221fcd5e69[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 17:48:21 2025 +0100
+
+    Update achievements.ts
+
+[33mcommit 5ae122c229cfbb8ed576a7e55c11d3f7bbafad16[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 14:58:00 2025 +0100
+
+    Update Achievements.tsx
+
+[33mcommit 10dcd896824c8f7a94a601d168a191dd7fd7746a[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 14:57:29 2025 +0100
+
+    Update achievements.ts
+
+[33mcommit 0c51db7f65273186a87e52d59e4eea91dcc10c12[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 14:52:37 2025 +0100
+
+    Update AchievementCreator.tsx
+
+[33mcommit 6bb94d72438e9b26e927af0b094535bbcd086569[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 14:51:39 2025 +0100
+
+    Update CardTypeCreator.tsx
+
+[33mcommit ef0ba6e92d44daa3ba3e8d48eb7dce46d8441a26[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 14:35:02 2025 +0100
+
+    Update Admin.tsx
+
+[33mcommit 411c3a7b63d9d204b607fc5b9509fba471a0bb9d[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 14:34:25 2025 +0100
+
+    Create AchievementCreator.tsx
+
+[33mcommit a31049da83e04485be802b4f0f0f4f8bad2ed6a1[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 14:33:52 2025 +0100
+
+    Create CardTypeCreator.tsx
+
+[33mcommit fdfe25083122aa629d2c73ef7426ca2eb9f6895a[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 14:27:44 2025 +0100
+
+    Update History.tsx
+
+[33mcommit 0480df05d73d601db7c2245afd3a8987ee25cd12[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 14:27:19 2025 +0100
+
+    Update Admin.tsx
+
+[33mcommit 179d95c3eae3b16ae1b5b689aa4d221287d13fd3[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 14:12:06 2025 +0100
+
+    Update History.tsx
+
+[33mcommit 0c72870bbb6c8c68e94045b648547dfb20e45e4e[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 14:11:36 2025 +0100
+
+    Update WeekCompletionPopup.tsx
+
+[33mcommit 5edb8115391c1d9f5b09855e6ddba58f8b9807e0[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 14:11:05 2025 +0100
+
+    Update GameCompletionPopup.tsx
+
+[33mcommit f7ecf69f055a6fe1bf796ee03321a0b763c5bcc5[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 14:07:49 2025 +0100
+
+    Update CurrentWeek.tsx
+
+[33mcommit d14b978f2faea3e7f50858a0e117237e56c84c4f[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 14:07:24 2025 +0100
+
+    Update WeekCompletionPopup.tsx
+
+[33mcommit fbe62b6c0a0e0f8abaf813deac2ce951fc20428a[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 14:06:44 2025 +0100
+
+    Update GameCompletionPopup.tsx
+
+[33mcommit 27a83f9e3baca87867621a3ab153bed2255c25e9[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 13:43:26 2025 +0100
+
+    Update DashboardOverview.tsx
+
+[33mcommit 5cc7e9a6adfd33b2a5c584dd3fe7857eeed04252[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 13:43:08 2025 +0100
+
+    Update GoalInvolvementChart.tsx
+
+[33mcommit da2d2ca7e7238fc699353489f54377c5c0712cfc[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 13:40:33 2025 +0100
+
+    Update GameRecordForm.tsx
+
+[33mcommit 83fb11c4e8693cbb8c3d2942689b971c8a5bfe7d[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 13:39:37 2025 +0100
+
+    Create number-input-with-stepper.tsx
+
+[33mcommit 8dc249b790efe2acfdc065055a6de99240a03aaf[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 13:31:01 2025 +0100
+
+    Update CPSGauge.tsx
+
+[33mcommit 0b48743a9d2b9550c128bce5b34e6a2f5b5812f1[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 13:30:35 2025 +0100
+
+    Update index.css
+
+[33mcommit 2a130c4df400d801be48da23a94100a8be362464[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 13:29:09 2025 +0100
+
+    Update CurrentWeek.tsx
+
+[33mcommit 19a9317087ddb1a7fee7511500a061936f2b0ec1[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 13:28:12 2025 +0100
+
+    Update DashboardOverview.tsx
+
+[33mcommit 8e2653aa053103a5486323acc1840b3bfbf6e66e[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 13:27:22 2025 +0100
+
+    Update CPSGauge.tsx
+
+[33mcommit dc2ffe5234cedbe72215b3ccd17943da370d6551[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 13:25:33 2025 +0100
+
+    Update Index.tsx
+
+[33mcommit 3679266ee65a90a5b8fae6bf9309c7df4494c6ec[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 13:24:34 2025 +0100
+
+    Update PositionalHeatMap.tsx
+
+[33mcommit 108c17e5d9058a7f624e8d5399edcb49c4a98460[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 13:14:36 2025 +0100
+
+    Update TopPerformers.tsx
+
+[33mcommit 716e2f3f18dcea0828bbe75ab4d4a3b42bc82967[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 13:12:23 2025 +0100
+
+    Update Settings.tsx
+
+[33mcommit 5f13da0c9f87463d8d2af2e7e28eb50dbd0e4520[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 13:09:14 2025 +0100
+
+    Update useSupabaseData.ts
+
+[33mcommit f70b59940c211657a36411ce25dd40a7e4d4046e[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 13:08:51 2025 +0100
+
+    Update App.tsx
+
+[33mcommit 3dc8aaa96512b1c776c602d5a8f390ee3a02c163[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 13:08:35 2025 +0100
+
+    Create GameVersionContext.tsx
+
+[33mcommit c88724506e658974eaa74f7c741592adc03ef087[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 13:04:41 2025 +0100
+
+    Update Index.tsx
+
+[33mcommit 5ebefabfa40615d988bb556b9d13a6f217562702[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 13:03:59 2025 +0100
+
+    Update index.css
+
+[33mcommit 162fbc6ef89dd9881f930fc0b5ff3063758afd0e[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 13:01:00 2025 +0100
+
+    Update Index.tsx
+
+[33mcommit 25dc118a53afc78e2821e6894aaf2edcf171383c[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 13:00:13 2025 +0100
+
+    Update index.css
+
+[33mcommit b0c08e9a84881145bf2435a9b3fccbf5b0bc18c4[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 12:50:09 2025 +0100
+
+    Update tailwind.config.ts
+
+[33mcommit efb34290ff8a293024ce149cdf5a1f9552f6ddc1[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 12:48:46 2025 +0100
+
+    Update ShareableCard.tsx
+
+[33mcommit 7c760a9a28757a092e38a7cd1d2b09537a75b269[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 12:48:16 2025 +0100
+
+    Update Navigation.tsx
+
+[33mcommit 4be8c109ad9d3ac19aaea69f5e062636f6b5e9af[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 12:47:49 2025 +0100
+
+    Update App.tsx
+
+[33mcommit babd0087f20017fbdec25ecd293572f039522d0d[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 12:36:14 2025 +0100
+
+    Update App.tsx
+
+[33mcommit fe6fb5f3876dd01addf04799afba087e0b25ac82[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 12:35:45 2025 +0100
+
+    Update AuthContext.tsx
+
+[33mcommit abd84aee4c96dbfad49ec1c1c50cf48f3fd5fa4c[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 12:33:00 2025 +0100
+
+    Update App.tsx
+
+[33mcommit 9aafae7faefa596a7bb553be46a205012ad237b6[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 12:32:33 2025 +0100
+
+    Update AuthContext.tsx
+
+[33mcommit 66a99a9d3bd36a3cddc364d98caf27ec160d3b83[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 12:00:10 2025 +0100
+
+    Update AuthContext.tsx
+
+[33mcommit 7526e2e44e1be2a573f6ff1f7d02d3495aae02fb[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 11:59:44 2025 +0100
+
+    Update App.tsx
+
+[33mcommit 71353f9558b6ef88ce035b302b5544951bef8426[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 11:59:17 2025 +0100
+
+    Update AuthContext.tsx
+
+[33mcommit 527cdeeba582ba49fbd247a35afdc9d2746b6377[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 11:57:00 2025 +0100
+
+    Update App.tsx
+
+[33mcommit 85faa4c66bd5953e05e893eebc01278fe0fb282a[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 11:56:21 2025 +0100
+
+    Update AuthContext.tsx
+
+[33mcommit 081437ca9ec3810305990906631470c9a64e974d[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 11:52:13 2025 +0100
+
+    Update App.tsx
+
+[33mcommit 93a34f74842aa2c8adff99901632e642920fca88[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 11:51:51 2025 +0100
+
+    Update Navigation.tsx
+
+[33mcommit d43b41d4df9cb0115ed351470d9784ca6369b45a[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 11:51:17 2025 +0100
+
+    Update AuthContext.tsx
+
+[33mcommit 1428ecc1124580746f939ec29438b9e191fca22c[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 11:47:27 2025 +0100
+
+    Update App.tsx
+
+[33mcommit 2785e030c8394f6048fa46d91471ccd6f7a4874d[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 11:46:56 2025 +0100
+
+    Update Navigation.tsx
+
+[33mcommit c8deac1c88bfa702177897f93c78d53a44450005[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 11:46:17 2025 +0100
+
+    Update AuthContext.tsx
+
+[33mcommit f4a09c21428bbac0e5621e8339bffbc2c660e5a4[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 11:41:51 2025 +0100
+
+    Update Navigation.tsx
+
+[33mcommit a48eece595ca29587d5b2147ed3a0197ea9458a0[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 11:41:17 2025 +0100
+
+    Update App.tsx
+
+[33mcommit cc92cfb9b746baebe7cb6251dacbb1db5d1d4c61[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 11:37:04 2025 +0100
+
+    Update use-mobile.tsx
+
+[33mcommit 800cc449f295671f134b6b67252cc3d796f55889[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 11:36:42 2025 +0100
+
+    Update Navigation.tsx
+
+[33mcommit 9c4e1492b81f470976d7cc038397cc5bc455d6e1[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 11:32:11 2025 +0100
+
+    Update Navigation.tsx
+
+[33mcommit 5805a218e7ec15d838a9ec5b765e304462972bd8[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 11:22:04 2025 +0100
+
+    Update Squads.tsx
+
+[33mcommit a9f001ad060bd1b0833008456034ba925c42449d[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 11:13:44 2025 +0100
+
+    Update Squads.tsx
+
+[33mcommit 90f6cfa525218373a26d1d3b7987a51e8ad963ac[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 11:03:52 2025 +0100
+
+    Update Squads.tsx
+
+[33mcommit b617794fe352d64b5c986f6286f6bc70f4bc69c2[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 11:02:59 2025 +0100
+
+    Update use-mobile.tsx
+
+[33mcommit ae0dc349fec1969b9f93cc14e103fc69f4fd72c4[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 11:00:03 2025 +0100
+
+    Update App.tsx
+
+[33mcommit 541728141d6374cbf837410818d87dab613c4045[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 10:59:28 2025 +0100
+
+    Update Navigation.tsx
+
+[33mcommit 9e6d892a705b3246225adaa2bfee35cbaefc5d07[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 10:55:43 2025 +0100
+
+    Update PlayerSearchModal.tsx
+
+[33mcommit df19da4efe6698f3ca5898a283564216d08ac1b0[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 10:54:12 2025 +0100
+
+    Update SquadBuilder.tsx
+
+[33mcommit ccabc61acd7d024ea66b82e918f50af058306bad[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 10:53:40 2025 +0100
+
+    Update squads.ts
+
+[33mcommit b569ea6c0d25bc559a8eb6125fae44485d5880b1[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 10:25:53 2025 +0100
+
+    Update Admin.tsx
+
+[33mcommit 1d9a9694f0e787b62715c69c87b5621fb41c9fdf[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 10:21:49 2025 +0100
+
+    Update Admin.tsx
+
+[33mcommit 4f2f02a944c7ce7393d47948039190dc4b7060ec[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 10:14:32 2025 +0100
+
+    Update Admin.tsx
+
+[33mcommit 2164fdf425a857e6b9a9a92afa033ac9719c6020[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sat Oct 4 10:07:15 2025 +0100
+
+    Update Admin.tsx
+
+[33mcommit fa6276561ea20d65b90996f1383947a33d099989[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Thu Oct 2 23:13:14 2025 +0100
+
+    Update SquadBuilder.tsx
+
+[33mcommit 8fbbd16afad403087d6ddf9f212633ce1526558b[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Thu Oct 2 23:10:04 2025 +0100
+
+    Update Squads.tsx
+
+[33mcommit 436e84f782bc9abcd09119f3e1765b88881f8b5c[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Thu Oct 2 23:05:57 2025 +0100
+
+    Update History.tsx
+
+[33mcommit c65fe5b941eb20a417d6c56ec50c620ec99c244f[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Thu Oct 2 23:02:58 2025 +0100
+
+    Update WeeklyOverview.tsx
+
+[33mcommit 8ecc3ab7d1299ac6836d7b7a474a72d8fe5fbd44[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Thu Oct 2 22:57:30 2025 +0100
+
+    Update WeekProgress.tsx
+
+[33mcommit d55c238bd3b1efdd7cd08487ead1d5dfc4276726[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Thu Oct 2 22:50:35 2025 +0100
+
+    Update WeekCompletionPopup.tsx
+
+[33mcommit f1d1b81f3029db00a1b083721a949c764e5ab7db[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Thu Oct 2 22:44:25 2025 +0100
+
+    Update futChampions.ts
+
+[33mcommit 5b0e3ce065438721ec40fad5226c80f4f82bc38a[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Thu Oct 2 22:35:07 2025 +0100
+
+    Update useDataSync.ts
+
+[33mcommit ad835de2205e5c03ea0dd3137e4ae95ac0f27c2b[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Thu Oct 2 22:34:06 2025 +0100
+
+    Update useSupabaseData.ts
+
+[33mcommit 7d4768074403b403abdf01e3c016d195faf3bc5e[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Thu Oct 2 22:07:30 2025 +0100
+
+    Update client.ts
+
+[33mcommit fb77c37918fdce90190d48ed8a0b13a20b6be91d[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Thu Oct 2 22:06:54 2025 +0100
+
+    Update .env.local
+
+[33mcommit 23b780d7a9c4ea7b25efe8946d5bc95d87a3ecf1[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Thu Oct 2 22:04:12 2025 +0100
+
+    Update Settings.tsx
+
+[33mcommit e013530649f8253d9d481822ee0f6f709d0f80f4[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Thu Oct 2 21:49:33 2025 +0100
+
+    Create .env.local
+
+[33mcommit c8fdf3db84c4268e0db371fd4f59a4efb96b0eb8[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Thu Oct 2 21:48:43 2025 +0100
+
+    Update client.ts
+
+[33mcommit 9cb9b81560b75b7960bab90322ded870e554e933[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Thu Oct 2 21:39:14 2025 +0100
+
+    Update client.ts
+
+[33mcommit 602639bb15f25596774df217eb63d4003450c309[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Thu Oct 2 21:34:02 2025 +0100
+
+    Update client.ts
+
+[33mcommit 3e0ab38086842866b43960ffcdd3405b8de613ac[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Sun Jun 15 10:53:45 2025 +0100
+
+    Delete public directory
+    
+    Deleted Lovable files
+
+[33mcommit 901a8205219f7f3ed701a75115c21edd337cf504[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 21:11:14 2025 +0100
+
+    Deleted vite.config.ts.timestamp-1749586270735-f65e5d36cb80b.mjs
+
+[33mcommit 70a7e424fbd5dd76a0fd413aa4c09945fb598ca2[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 21:11:12 2025 +0100
+
+    Added vite.config.ts.timestamp-1749586270735-f65e5d36cb80b.mjs
+
+[33mcommit 17b31d354f0260d66d2e24ce9c273fbb91a93174[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 21:10:15 2025 +0100
+
+    Updated App.tsx
+
+[33mcommit 8db0df065a3bd7b0dc7b18bd0f46781ae994bd90[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 21:10:14 2025 +0100
+
+    Updated App.tsx
+
+[33mcommit bd2a383934b18a813a254aa3b143cc5cd20b3836[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 21:10:12 2025 +0100
+
+    Fix Mobile Navigation - Final Solution
+
+[33mcommit 6c85a3b505345fe17d89b80b9de5e87af376fac9[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 21:02:29 2025 +0100
+
+    Deleted vite.config.ts.timestamp-1749585744300-765142ad5f0ae.mjs
+
+[33mcommit acb7dadbf7464b98af9d89959446043cf10c88be[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 21:02:26 2025 +0100
+
+    Added vite.config.ts.timestamp-1749585744300-765142ad5f0ae.mjs
+
+[33mcommit e3d5ecf028613cf9906cc22b2f2015116e8a21d7[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 20:59:31 2025 +0100
+
+    Deleted vite.config.ts.timestamp-1749585567475-d6fff6f52315a.mjs
+
+[33mcommit d98fa73d137d7c7a6660721578e28ed6dad3ee16[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 20:59:30 2025 +0100
+
+    Added vite.config.ts.timestamp-1749585567475-d6fff6f52315a.mjs
+
+[33mcommit c694c3d1312c4fe29521aa7c4af0fa7ab41c1cc5[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 20:59:15 2025 +0100
+
+    Updated index.css
+
+[33mcommit e663c643367bc17d1a6cf3175f84c283acdf5234[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 20:59:11 2025 +0100
+
+    Fix Mobile Navigation and Performance Radar
+
+[33mcommit 268938febed1647a5a688d2b530e648c90c2d0cd[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 20:45:31 2025 +0100
+
+    Deleted vite.config.ts.timestamp-1749584727990-2bab49a9ca252.mjs
+
+[33mcommit fea6ff39b472a8fcb07549b0fff97143c59919a4[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 20:45:29 2025 +0100
+
+    Added vite.config.ts.timestamp-1749584727990-2bab49a9ca252.mjs
+
+[33mcommit d25fda58d33022743ca1913803b39d94484107d1[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 20:44:29 2025 +0100
+
+    Updated index.css
+
+[33mcommit 5478c935eaf2a4ca3a58f56dcbcc2feff6dbffff[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 20:44:28 2025 +0100
+
+    Fix mobile navigation and radar chart
+
+[33mcommit 575bd3fc48baa6cbf95b7dbc12a9aa9a6a482018[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 20:37:41 2025 +0100
+
+    Deleted vite.config.ts.timestamp-1749584258864-126ef962836f78.mjs
+
+[33mcommit fa3cca0e4da0f02b38556f8345f8544134e71a03[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 20:37:40 2025 +0100
+
+    Added vite.config.ts.timestamp-1749584258864-126ef962836f78.mjs
+
+[33mcommit a783315668bf2c863f1ad30e2cc90d92a71dcff8[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 20:36:44 2025 +0100
+
+    Updated App.tsx
+
+[33mcommit 1d61d5be5bac01bfcae233e442f6a303c5fbc5bd[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 20:36:43 2025 +0100
+
+    Updated App.tsx
+
+[33mcommit e120ed3b2974c207612af6c81e42ede55ef8fcb3[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 20:36:42 2025 +0100
+
+    Fix mobile navigation bar
+
+[33mcommit c99a13187dd774d77c06f86454b324428051393a[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 20:27:08 2025 +0100
+
+    Deleted vite.config.ts.timestamp-1749583625392-f5dc984a4a7098.mjs
+
+[33mcommit 78957b8173049d42ee2e990e7fa25d8e9a0f576d[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 20:27:07 2025 +0100
+
+    Added vite.config.ts.timestamp-1749583625392-f5dc984a4a7098.mjs
+
+[33mcommit 975f7800c2c5ccb3b981b8149bcdc51a2fc9dc24[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 20:23:12 2025 +0100
+
+    Deleted vite.config.ts.timestamp-1749583390246-b303e8d40737a.mjs
+
+[33mcommit 6d988949ce6b5a7e5e532aad5fa9610f14d6b057[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 20:23:11 2025 +0100
+
+    Added vite.config.ts.timestamp-1749583390246-b303e8d40737a.mjs
+
+[33mcommit 505b0c3297cfb511361ff9c4f59ea2f943cf65a3[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 20:23:05 2025 +0100
+
+    Added netlify.toml
+
+[33mcommit 2309ea61304bbd4bde6d1aeb90da0c1575a3f347[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 20:23:03 2025 +0100
+
+    Fix SPA Routing for Mobile
+
+[33mcommit a071e6b4a2639a95839407427335390efc752790[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 19:34:17 2025 +0100
+
+    Deleted vite.config.ts.timestamp-1749580453742-4127131d651d38.mjs
+
+[33mcommit 20f74d66d19e2289ec2d3225fa1d01e7502dda5e[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 19:34:15 2025 +0100
+
+    Added vite.config.ts.timestamp-1749580453742-4127131d651d38.mjs
+
+[33mcommit 01253008fe46c066ee3d5912d1d6ebe6861eb136[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 19:33:11 2025 +0100
+
+    Updated History.tsx
+
+[33mcommit 4116757dd15713e18daf82748a4f91461d1c66c2[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 19:33:10 2025 +0100
+
+    Fix Week Deletion with Supabase Integration
+
+[33mcommit 0df976491307be2521cde2803a8c5786336f91c4[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 19:23:43 2025 +0100
+
+    Deleted vite.config.ts.timestamp-1749579817804-7de05cc46f116.mjs
+
+[33mcommit f15f9a7581b7c9ce6f263604d8cb1c04f903452c[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 19:23:40 2025 +0100
+
+    Added vite.config.ts.timestamp-1749579817804-7de05cc46f116.mjs
+
+[33mcommit 0efbf20e3f7856bac54a0fdb88466b666bea92dd[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 19:20:53 2025 +0100
+
+    Updated PositionalHeatMap.tsx
+
+[33mcommit 391db7be64d5949024f3c4b2888f17b2a7401631[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 19:20:47 2025 +0100
+
+    Fix animation issues and optimize for all devices
+
+[33mcommit de4167c5d1a953ceda6dd9ab0fe4ffcb09a9026c[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 19:04:25 2025 +0100
+
+    Updated App.css
+
+[33mcommit 631e7ec424eb5e6d54b7a9392e7198b37ed29310[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 19:04:24 2025 +0100
+
+    Fix container animation and mobile optimization
+
+[33mcommit 7876788dcb6ed36577db9a2e009c80be1c00e916[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 18:55:31 2025 +0100
+
+    Replace gauge-js with custom SVG gauge
+
+[33mcommit 268e9116c2eb7d14648379fc90dd74372948d0b6[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 18:50:44 2025 +0100
+
+    Fix CPSGauge gauge-js import and instantiation
+
+[33mcommit efb38117ed83601523679dddfeae2a8e324372bc[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 18:47:33 2025 +0100
+
+    Fix CPSGauge gauge-js import and initialization issues
+
+[33mcommit 22d84fd600bd425296aa7c6ab29c2addbc4942f3[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 18:43:30 2025 +0100
+
+    Fix Gauge.js import and initialization
+
+[33mcommit 244e4d108e3a25a3953dd41b1b890a51856efa13[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 18:40:47 2025 +0100
+
+    Fix Gauge.js import and initialization
+
+[33mcommit 0312514e8afa9322aa3857e7b1ba09100ef55b15[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 18:38:05 2025 +0100
+
+    Fix CPSGauge gauge-js initialization error
+
+[33mcommit 6028ceb343a9f46d7aa19fb18f7120a3f4dbe298[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 18:36:02 2025 +0100
+
+    Fix gauge-js import and initialization
+
+[33mcommit 5152c01f408d4be3f0f434ce51d8719d0ccd3acc[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 18:32:59 2025 +0100
+
+    Deleted vite.config.ts.timestamp-1749576775711-f5caa82245d558.mjs
+
+[33mcommit f461142cf82fb6ff9a35e97f621e1e935bbb9bc5[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 18:32:57 2025 +0100
+
+    Added vite.config.ts.timestamp-1749576775711-f5caa82245d558.mjs
+
+[33mcommit 4aa167df248b591d7f939f3ead3ddb8cd5dc906f[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 18:32:32 2025 +0100
+
+    Deleted vite.config.ts.timestamp-1749576748404-f2bb61f75b883.mjs
+
+[33mcommit e1ede8dd65679e9c3032d1636a901cfe1831930d[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 18:32:30 2025 +0100
+
+    Added vite.config.ts.timestamp-1749576748404-f2bb61f75b883.mjs
+
+[33mcommit b749675b63d263b0528b9c0c2cab038918d7a0ba[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 18:32:26 2025 +0100
+
+    Updated package-lock.json
+
+[33mcommit 02e6101bda9979d1093631ec334de1d961c04053[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 18:31:55 2025 +0100
+
+    Updated GoalInvolvementChart.tsx
+
+[33mcommit 6a73d0f8023f64b027bc397fc128740bd6d54cdc[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 18:31:53 2025 +0100
+
+    Custom Voronoi Treemap Implementation
+
+[33mcommit 0bd050572fb6756860f4c336c42d2c64be87c71e[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 18:29:31 2025 +0100
+
+    Deleted vite.config.ts.timestamp-1749576568650-64b5134c1ec908.mjs
+
+[33mcommit 7aef33b6d60ca77623f98fa53081fda3bcfe64a8[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 18:29:30 2025 +0100
+
+    Added vite.config.ts.timestamp-1749576568650-64b5134c1ec908.mjs
+
+[33mcommit b3e056e950089c6b87b6a2b1d722380e7cd443aa[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 18:28:33 2025 +0100
+
+    Deleted vite.config.ts.timestamp-1749576511042-61aab9dcc7a948.mjs
+
+[33mcommit 71fc47280c330de354fd9b2436f85141535baa77[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 18:28:32 2025 +0100
+
+    Added vite.config.ts.timestamp-1749576511042-61aab9dcc7a948.mjs
+
+[33mcommit 9173869e256f267278cca3047d5664690b87017f[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 18:27:49 2025 +0100
+
+    Updated package.json
+
+[33mcommit 6fb6e89185e170d40c4deca6edaebd9b70e2c46e[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 18:27:48 2025 +0100
+
+    Implement Voronoi Treemap with amCharts
+
+[33mcommit dda79a7ae511bd7993ad525b72dfe247b4df505a[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 18:17:38 2025 +0100
+
+    Updated GoalInvolvementChart.tsx
+
+[33mcommit 0f3b3e823cbed0b8f0d1d7294d20889483c7ce9e[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 18:17:37 2025 +0100
+
+    Fix Voronoi Treemap Visualization
+
+[33mcommit b3f2a61f2d61a63cc717fda3509befdb10120f9b[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 18:06:02 2025 +0100
+
+    Fix Voronoi Treemap and Performance Visualizations
+
+[33mcommit f7b0db0839903589fb39f2d0290006450d744f8b[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 17:55:30 2025 +0100
+
+    Fix Goal Involvement Chart with Proper Voronoi Treemap
+
+[33mcommit 977c8dc88b15364fb900a788693f58586b40f15d[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 17:47:39 2025 +0100
+
+    Updated CPSGauge.tsx
+
+[33mcommit 2eb79188541dcbbb6d3d0ac3a5c05175bc86cd24[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 17:47:37 2025 +0100
+
+    Fix Goal Involvement Chart
+
+[33mcommit 012482e701057a5f11642d1dd97fb161850ed56a[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 17:40:58 2025 +0100
+
+    Fix Goal Involvement Chart
+
+[33mcommit ece6edf57a0b4eb967d3f4b0a098b80ce84bc3e4[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 17:35:20 2025 +0100
+
+    Updated GoalInvolvementChart.tsx
+
+[33mcommit f13b79147859dde21ce70f8e61d06744a76995cc[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 17:35:17 2025 +0100
+
+    Fix Visualization Components
+
+[33mcommit 223741088e1120ad9d04a0f9ae31b5df4755cdc9[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 17:26:13 2025 +0100
+
+    Enhanced FUT Champions Hub with Match Tags and Optimized Visualizations
+
+[33mcommit 8d90dbe017fcc7bf64b4c9b5e71a6f7fcd9a0063[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 16:23:22 2025 +0100
+
+    Deleted vite.config.ts.timestamp-1749568991718-2cade881d17498.mjs
+
+[33mcommit 4a188ed9d9d9e1223821c81a2e6b770e2d6d9f4a[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 16:23:15 2025 +0100
+
+    Added vite.config.ts.timestamp-1749568991718-2cade881d17498.mjs
+
+[33mcommit 26e88a5ae1b25380649140882fce4b4912373817[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 16:17:47 2025 +0100
+
+    Deleted vite.config.ts.timestamp-1749568665378-75b8b99c6a3fb8.mjs
+
+[33mcommit e0d88225fe944e417244e2a0f5e65448b4bbb1d2[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 16:17:46 2025 +0100
+
+    Added vite.config.ts.timestamp-1749568665378-75b8b99c6a3fb8.mjs
+
+[33mcommit c16287ae55d6a9b9df8b82af0f2f7cf27ae37b92[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 16:17:39 2025 +0100
+
+    Fix squadRecovery file extension
+
+[33mcommit cf9bf3d34924ec6ee5e83b9daae7a0495dba0fa4[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 16:17:07 2025 +0100
+
+    Fix PlayerCard cardType property type
+
+[33mcommit 36aebf507235f445054b0b61999989ba45cbe309[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 16:10:29 2025 +0100
+
+    Fix Vite pre-transform error by removing problematic dependency
+
+[33mcommit ffb6809e748518666eb6bb737b0719622aeefb4b[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 16:09:10 2025 +0100
+
+    Fix Vite configuration to resolve componentTagger error
+
+[33mcommit 7747bc17aa7f1f2907b685cfaddea29d717cb808[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 16:08:08 2025 +0100
+
+    Updated PerformanceRadar.tsx
+
+[33mcommit 1ec5f87a03fcea86fdc5ab4fb2035c6273d6f2c8[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 16:07:41 2025 +0100
+
+    Added PerformanceRadar.tsx
+
+[33mcommit ad3201a29ba3c469c14921bf0a6b16475afc53e8[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 16:07:37 2025 +0100
+
+    Fix Squad Recovery and Add Features
+
+[33mcommit 989b227578f093f05b7264a655acfb2048306a48[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 14:58:43 2025 +0100
+
+    Deleted vite.config.ts.timestamp-1749563913168-d468c7586c4658.mjs
+
+[33mcommit c222fb60310ca6c262ce05baaa55c859b6e6d9ee[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 14:58:37 2025 +0100
+
+    Added vite.config.ts.timestamp-1749563913168-d468c7586c4658.mjs
+
+[33mcommit 3fe0e3f470b186085a88510b5776891968415bbf[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 14:53:50 2025 +0100
+
+    Fix Admin Panel Security Errors
+
+[33mcommit c580d49ff2916245988827774e49e863f114cfec[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 14:49:46 2025 +0100
+
+    Fix missing Plus icon import in Admin component
+
+[33mcommit 8218d41cf058d26465c3a2aa02debfaa02dedec2[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 14:45:59 2025 +0100
+
+    Fix useNavigate Router Context Error
+
+[33mcommit adae424dd7834401b58e94ba97affc60c880e920[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 14:40:28 2025 +0100
+
+    Deleted vite.config.ts.timestamp-1749562824383-ce1816319cb8e8.mjs
+
+[33mcommit ee631a7d59b5bb1ec6f95a03bc4e20a8021f9484[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 14:40:26 2025 +0100
+
+    Added vite.config.ts.timestamp-1749562824383-ce1816319cb8e8.mjs
+
+[33mcommit a0f21ece3f7c909ee4f87d06c44bb8b63cbff460[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 14:40:06 2025 +0100
+
+    Updated AuthContext.tsx
+
+[33mcommit 8176fc0378cbded48934f89117341b64d547bae4[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 14:39:59 2025 +0100
+
+    Added Players.tsx
+
+[33mcommit 1a5647137622d6c613696c10004629e5f54f5fa0[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 14:39:57 2025 +0100
+
+    Fix broken links and update player metrics
+
+[33mcommit ea1e87a61f8420d1756ac1cd2f513ce27c3770e4[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 14:19:11 2025 +0100
+
+    Deleted vite.config.ts.timestamp-1749561547578-61de99159d3eb.mjs
+
+[33mcommit fb79321e5d40771cfb7153fd2064d71b9a3c9431[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 14:19:09 2025 +0100
+
+    Added vite.config.ts.timestamp-1749561547578-61de99159d3eb.mjs
+
+[33mcommit c93ffc807a25fd292c12321cc7b11da79e1263f2[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 14:13:55 2025 +0100
+
+    Fix missing gaming_accounts table
+
+[33mcommit ae99e9df6e3064a4a12d505c961184aff34e4e8e[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 14:09:17 2025 +0100
+
+    Deleted vite.config.ts.timestamp-1749560954169-e93d43edf8ca5.mjs
+
+[33mcommit 35d8a7f23f221e212fc2c1a0b910a74ea02ab123[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 14:09:15 2025 +0100
+
+    Added vite.config.ts.timestamp-1749560954169-e93d43edf8ca5.mjs
+
+[33mcommit 39810478017aaa0b3c0fae83fbee6c1cb19e911a[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 14:09:06 2025 +0100
+
+    Fix ShareableCard component with dom-to-image-more
+
+[33mcommit 99205e27737578fce7d9213657eda76dba74f85e[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 14:06:56 2025 +0100
+
+    Fix gauge-js package version
+
+[33mcommit 518924493243259f429d7465a22c2e67985e6d6c[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 14:06:23 2025 +0100
+
+    Deleted vite.config.ts.timestamp-1749560780494-94aaae7d27fce.mjs
+
+[33mcommit c84c8f258031f3316216cde64fd104f285445337[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 14:06:22 2025 +0100
+
+    Added vite.config.ts.timestamp-1749560780494-94aaae7d27fce.mjs
+
+[33mcommit fe775f5860ea760a5fbc5af773792dfbe5b76501[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 14:05:36 2025 +0100
+
+    Deleted vite.config.ts.timestamp-1749560733511-61b78318db7b8.mjs
+
+[33mcommit 6b473f53fff799a2c0877ca92e35af310ed24302[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 14:05:34 2025 +0100
+
+    Added vite.config.ts.timestamp-1749560733511-61b78318db7b8.mjs
+
+[33mcommit bbbd3a20bed74b5d0595bf1c03bb685e9681c83e[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 14:03:41 2025 +0100
+
+    Updated GoalInvolvementChart.tsx
+
+[33mcommit 47f64b90f6ce388972a61b4c2f05706ac54d2ed8[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 14:03:33 2025 +0100
+
+    Deleted vite.config.ts.timestamp-1749560600438-d8c38085648888.mjs
+
+[33mcommit a7743b73699b2f4c1c4caf6aacf2da0f9a83d96e[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 14:03:24 2025 +0100
+
+    FUT Champs Insights Hub Enhancements
+
+[33mcommit 1087eccd221ca99b98b3d472cb4552cf9aba19ec[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 03:49:51 2025 +0100
+
+    Deleted vite.config.ts.timestamp-1749523785107-3532c38a76e248.mjs
+
+[33mcommit 77143d258f273b65045dbd5a0b054236a64467c4[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 03:49:50 2025 +0100
+
+    Updated Squads.tsx
+
+[33mcommit 9037bc22921d43cf7b191e434d2ea2d3e77a9a27[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 03:49:48 2025 +0100
+
+    Added vite.config.ts.timestamp-1749523785107-3532c38a76e248.mjs
+
+[33mcommit f167f6ccc6b079fd021236c2d26257545163a29c[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 03:49:40 2025 +0100
+
+    Rebuild Squads and Fix Data Persistence
+
+[33mcommit e50a07f9a966489b093749e8bab9761263100ccb[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 03:40:55 2025 +0100
+
+    Deleted vite.config.ts.timestamp-1749523252275-29037289f61c28.mjs
+
+[33mcommit 71ad9f15a6583c6d0def88261693331b5fa9a269[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 03:40:53 2025 +0100
+
+    Added vite.config.ts.timestamp-1749523252275-29037289f61c28.mjs
+
+[33mcommit ac8ed17a4c4d95b81ae4585dbb16a1826db1c5dc[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 03:40:40 2025 +0100
+
+    Fix Squad Persistence and Default Squad Import
+
+[33mcommit 40b4fa84a9735d5dd563433e48e75caee9287071[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 03:29:23 2025 +0100
+
+    Deleted vite.config.ts.timestamp-1749522560764-6c1b72b37f9a7.mjs
+
+[33mcommit ed57f1dc339b3ecde2d3053e9bc65e18f80acf3c[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 03:29:22 2025 +0100
+
+    Added vite.config.ts.timestamp-1749522560764-6c1b72b37f9a7.mjs
+
+[33mcommit f71e16c44a747a1d485f79964befffd79c50aa17[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 03:29:09 2025 +0100
+
+    Mobile-Friendly UI Improvements for Squad and Match Recording
+
+[33mcommit b123a2fcd4cc2a5277385206481700e9a00e88fc[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 03:13:05 2025 +0100
+
+    Deleted vite.config.ts.timestamp-1749521583929-e15d9ce4c3d2b.mjs
+
+[33mcommit f4a22902bdb49b7b140fa20fe9bd6be9ade820d5[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 03:13:04 2025 +0100
+
+    Added vite.config.ts.timestamp-1749521583929-e15d9ce4c3d2b.mjs
+
+[33mcommit 843543cfb572fc30d5c1502aa164cb5a77fb69d3[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 02:09:01 2025 +0100
+
+    Deleted vite.config.ts.timestamp-1749517738226-f62e1792c05a18.mjs
+
+[33mcommit ae5ec2097643a451b419993dde35496d4cd2c72a[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 02:08:59 2025 +0100
+
+    Added vite.config.ts.timestamp-1749517738226-f62e1792c05a18.mjs
+
+[33mcommit 9867da6e34e5e7431d080ea3fb9d40ffe5583a1e[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 02:06:04 2025 +0100
+
+    Fix build errors - install terser and fix CSS import order
+
+[33mcommit 27f2e611d2989acc0e72ffd1d67079dd13d829de[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 02:00:56 2025 +0100
+
+    Deleted vite.config.ts.timestamp-1749517254096-ff282862e6b0a.mjs
+
+[33mcommit ea4de6384a8989c0439c36a299de0cf8dae30385[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 02:00:55 2025 +0100
+
+    Added vite.config.ts.timestamp-1749517254096-ff282862e6b0a.mjs
+
+[33mcommit d2544d3cbd563634500b8cee751e4278ba961896[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 02:00:05 2025 +0100
+
+    Deleted vite.config.ts.timestamp-1749517199623-e7a0537ebab87.mjs
+
+[33mcommit 919991e566967a1f3f3d5cc66623977217753c71[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 02:00:03 2025 +0100
+
+    Fix mobile input fields, player editing, and UI improvements
+
+[33mcommit 57dea92bfd12d0648b7736ac03520b5b35c14c09[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 01:35:39 2025 +0100
+
+    Deleted vite.config.ts.timestamp-1749515734945-79c3c9768a8e98.mjs
+
+[33mcommit 965e2a5a5a98c0b53e0f78606201978e7287738a[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 01:35:36 2025 +0100
+
+    Added vite.config.ts.timestamp-1749515734945-79c3c9768a8e98.mjs
+
+[33mcommit 85e354061ff21b7dcfdd557330d7e93ddd60e792[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 01:28:44 2025 +0100
+
+    Fix generateGameInsights import error
+
+[33mcommit 25192b475d95eef683d7b9fee23a290fc81f9082[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 01:26:11 2025 +0100
+
+    Deleted vite.config.ts.timestamp-1749515168919-a7bea84713b268.mjs
+
+[33mcommit 44109106c32c5de6e3f4916d3a2b59bea61a67e2[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 01:26:10 2025 +0100
+
+    Added vite.config.ts.timestamp-1749515168919-a7bea84713b268.mjs
+
+[33mcommit 8ec327a1ddd9d9fbbec0637962992840a11867e4[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 01:26:02 2025 +0100
+
+    Fix SWC plugin error in enhancedAiInsights.ts
+
+[33mcommit 2bf56cb4d11be33a44368c811abc5e664fa7fae0[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 01:20:53 2025 +0100
+
+    Deleted vite.config.ts.timestamp-1749514850235-a97d44c8e3344.mjs
+
+[33mcommit a90a2dbec177bdeeaa86049840898c1da78e8fb6[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 01:20:51 2025 +0100
+
+    Added vite.config.ts.timestamp-1749514850235-a97d44c8e3344.mjs
+
+[33mcommit 06170768acf7b0753fdea1ade83cf5be147e173c[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 01:20:42 2025 +0100
+
+    Updated enhancedAiInsights.ts
+
+[33mcommit bcf68ba333b21a58912f1611e2902fc8785c770f[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 01:20:41 2025 +0100
+
+    Fix AI Insights and Enhance Analytics Features
+
+[33mcommit e3ee0207826998b14c00117a74182a4ac6e88a37[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 01:08:15 2025 +0100
+
+    Deleted vite.config.ts.timestamp-1749514092724-8b5e612c7997b.mjs
+
+[33mcommit e5a5e7484ebe85d7d254a8eba8674a8f9dfaa549[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 01:08:14 2025 +0100
+
+    Added vite.config.ts.timestamp-1749514092724-8b5e612c7997b.mjs
+
+[33mcommit 07311bfe7d96ce70d890efc7c02c808bbabf3b28[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 01:00:28 2025 +0100
+
+    Deleted vite.config.ts.timestamp-1749513625839-27e8a5250e34b8.mjs
+
+[33mcommit dbe7bbe960db90c17ae7d4f576b728a35f92d692[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 01:00:27 2025 +0100
+
+    Added vite.config.ts.timestamp-1749513625839-27e8a5250e34b8.mjs
+
+[33mcommit 18de699f202b8d861a93f3fe7c4ca7e24047936d[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 00:51:01 2025 +0100
+
+    Added 20250609235052_velvet_cherry.sql
+
+[33mcommit c4c3fc9b26b220c3f206f296e0a2627601ccf332[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 00:48:30 2025 +0100
+
+    Deleted vite.config.ts.timestamp-1749512907135-6d41790a2ba5e.mjs
+
+[33mcommit 6767b1fd8e01938cde1f590c220154e499ccbc17[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 00:48:28 2025 +0100
+
+    Added vite.config.ts.timestamp-1749512907135-6d41790a2ba5e.mjs
+
+[33mcommit 260f8022124ee59ea020710d671c65d6e3ac342a[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 00:06:33 2025 +0100
+
+    Deleted vite.config.ts.timestamp-1749510389529-fc18ef739232b8.mjs
+
+[33mcommit d0651b440dbcda4021607c78c1d2878d315112d0[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 00:06:30 2025 +0100
+
+    Added vite.config.ts.timestamp-1749510389529-fc18ef739232b8.mjs
+
+[33mcommit 75cde922692cd16d3d6d4a245dfc4a8d35931390[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 00:05:29 2025 +0100
+
+    Updated Auth.tsx
+
+[33mcommit 14321f59851630f32fb5c25be1e7f14519155cc4[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Tue Jun 10 00:05:20 2025 +0100
+
+    FUTALYST App Improvements
+
+[33mcommit 61dd9569fe916048310deb5ee7f914730361f911[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Jun 9 23:39:25 2025 +0100
+
+    Deleted vite.config.ts.timestamp-1749508761824-6f12f0d40c76f.mjs
+
+[33mcommit 438b7b42cae80869a1f63482f6ea2c385926ad75[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Jun 9 23:39:23 2025 +0100
+
+    Added vite.config.ts.timestamp-1749508761824-6f12f0d40c76f.mjs
+
+[33mcommit 7cd92bbf01e79d22a1291eb1cf1bd64271d08081[m
+Author: oligibbons <olipg@hotmail.co.uk>
+Date:   Mon Jun 9 23:39:19 2025 +0100
+
+    Updated .gitignore
+
+[33mcommit f212928becb6482813716a89101cd868e0377f7c[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Fri Jun 6 02:36:05 2025 +0000
+
+    Fix: Resolve overlapping buttons, data display issues, and game duration input.
+    
+    Improved data fetching and display across the site. Implemented custom game duration input and added substitute player data entry.
+
+[33mcommit b31954a5631da3ccd29de686f4ed945528316bb8[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Fri Jun 6 01:51:07 2025 +0000
+
+    Expand input boxes in PlayerPerformanceInput
+    
+    Increased the size of the input boxes in the PlayerPerformanceInput component to prevent cropping of numbers.
+
+[33mcommit 074d091b832469bf57a767f700771403a97d7a21[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Fri Jun 6 01:48:18 2025 +0000
+
+    Fix: Player stats input and layout issues
+    
+    Rewrote the `PlayerPerformanceInput` component to address the persistent issue with editing player stats and the squashed input boxes. The component now uses a more straightforward approach to handle input changes and layout, ensuring readability and editability.
+
+[33mcommit 8b534c945de883a15ba6213da34eb5a435a87549[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Fri Jun 6 01:44:54 2025 +0000
+
+    Fix: Player stats input not working
+    
+    Attempted to resolve the issue with player stats input in the Record Match function by thoroughly reviewing and correcting the `PlayerPerformanceInput.tsx` component, addressing event handling and form interactions to ensure data can be modified.
+
+[33mcommit f84a40ef4e644484e4778ee64ef6b0389dce53a8[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Fri Jun 6 01:39:31 2025 +0000
+
+    Fix: Player stats input not working
+    
+    Fixed the issue where player stats could not be changed in the match record screen.
+
+[33mcommit c1988a4ccaf542253c05c83503729fe22d1d6af0[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Thu Jun 5 01:03:03 2025 +0000
+
+    Fix: Player stats input in Record Match
+    
+    Fixes the player stats input functionality in the Record Match function, ensuring data can be entered and saved. Addresses responsiveness issues across desktop and mobile screens. Adds general polish to improve the overall user experience.
+
+[33mcommit c36d252bf305efee64b6fa3d26cd0565d2443290[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Thu Jun 5 00:53:03 2025 +0000
+
+    Fix: Resolve TypeScript errors in AccountManager, UserAccountSettings, and Settings
+    
+    - Fixed "Module 'lucide-react' has no exported member 'GameController'" errors by importing the correct icon.
+    - Fixed "Property 'logout' does not exist on type 'AuthContextType'" error by ensuring the logout function is correctly accessed from the AuthContext.
+
+[33mcommit a5e7fc86fbff697b931fd1e17ce09e9319dd0856[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Thu Jun 5 00:52:06 2025 +0000
+
+    Fix: Player stats input and theme application
+    
+    - Fixed player stats input controls in GameRecordForm.
+    - Ensured themes apply to the entire app, not just the navbar.
+    - Implemented other requested improvements and fixes.
+
+[33mcommit e098c680bcdadc893c428e7f2a258612535d45ea[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Thu Jun 5 00:44:22 2025 +0000
+
+    Fix TypeScript errors in DashboardOverview and WeeklyTargets
+    
+    - Fixed 'TrendingDown' not found error in DashboardOverview.
+    - Corrected type assignment errors in WeeklyTargets related to string/number mismatches and WeeklyPerformance interface.
+
+[33mcommit b7f73f7520bba0d887f98ef4003163fb950d9498[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Thu Jun 5 00:43:02 2025 +0000
+
+    Fix and implement requested features
+    
+    Fixes player stats input, data persistence, dashboard enhancements, and other features.
+
+[33mcommit 6aa6fc09f38d889ffb973d9a60609302a1bf982e[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Thu Jun 5 00:37:56 2025 +0000
+
+    Fix Settings page TypeScript errors
+    
+    Added missing properties to `DashboardSettings` and `CurrentWeekSettings` interfaces in `useDataSync.ts` to resolve TypeScript errors in `Settings.tsx`.
+
+[33mcommit 2f94ff1c9428a056d84948da3446a241b81b34d1[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Thu Jun 5 00:36:53 2025 +0000
+
+    Fix History and Settings page errors
+    
+    Fixed errors in History and Settings pages related to function arguments and missing properties in the Settings interfaces.
+
+[33mcommit 62d00f689f1193ccd3261f79a349301471cca173[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Thu Jun 5 00:35:01 2025 +0000
+
+    Fix player stats input and defaults
+    
+    Fixed player rating input reset and updated default values in the game record form.
+
+[33mcommit e3d481dbaa1dcd29ecb8dd1347cbd0aa2b62e15d[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Thu Jun 5 00:13:37 2025 +0000
+
+    Fix TypeScript errors in multiple files.
+    
+    Correctly define and use settings properties, and fix function argument mismatches.
+
+[33mcommit baa176fba4dacde1c6530137ab8f5c9c7a127927[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Thu Jun 5 00:12:02 2025 +0000
+
+    Fix: Resolve maximum call stack size exceeded error
+    
+    The error is caused by an infinite loop in the `useDataSync` hook, likely due to circular dependencies or incorrect useEffect dependencies. This commit aims to resolve the error.
+
+[33mcommit 75e997f9a185f988e29539dff64d41141b62b209[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Thu Jun 5 00:11:14 2025 +0000
+
+    Fix: Auth page signUp function call
+    
+    Corrected the number of arguments passed to the `signUp` function in the Auth page to match the expected signature.
+
+[33mcommit 9eb81c7cae93e1d85ffd754a61cab0cc3f3eb929[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Thu Jun 5 00:10:03 2025 +0000
+
+    Fix: Address critical issues and enhance features
+    
+    - Fixed broken record match functionality (player stats not updating).
+    - Resolved data persistence issues (user logout/login data loss).
+    - Fixed weekly targets not updating.
+    - Enhanced dashboard with all-time, personal records, and current run summaries.
+    - Improved positional heat map visualization.
+    - Implemented multi-account support.
+    - Added user account management screen.
+    - Implemented theme switching with 5 themes.
+    - Improved general UX.
+
+[33mcommit 55aebc934768960e164ee426a13d3b6eda146236[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Wed Jun 4 01:11:21 2025 +0000
+
+    feat: Add positional heatmap and tooltips
+    
+    Implemented a positional heatmap visualization on the dashboard to display average player ratings by position. Added hover-over tooltips throughout the site for all analytical elements and buttons.
+
+[33mcommit 9e299d3d948ea527f290bdf65bc8e0b5df940a48[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Wed Jun 4 00:44:55 2025 +0000
+
+    Enhance dashboard analytics and AI insights
+    
+    Added all-time and week-specific analytics, graphs, charts, and tips. Ensured AI Analytics are functioning correctly.
+
+[33mcommit 308354285eedb92cadebf494711346ec99d11e39[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Wed Jun 4 00:22:46 2025 +0000
+
+    Fix CurrentRun.tsx type error
+    
+    Removed the `weekId` prop from the `GameRecordForm` component in `CurrentRun.tsx` as it is not a valid prop.
+
+[33mcommit 609c6ca7bd8f9c54a09a2524a8d0cf6c433cccdb[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Wed Jun 4 00:21:20 2025 +0000
+
+    Fix GameRecordForm and CurrentRun type errors
+    
+    Fixed type errors in `GameRecordForm.tsx` and `CurrentRun.tsx` by ensuring correct prop definitions and usage.
+
+[33mcommit 18c5efbd09cc5317ea2042a68aa82f787b7c6c8c[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Wed Jun 4 00:16:33 2025 +0000
+
+    Run Supabase SQL migration
+    
+    Migrate data storage to Supabase and implement requested UI updates.
+
+[33mcommit 475291e06831bc5f43ad641800801a5884462bfb[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Wed Jun 4 00:09:04 2025 +0000
+
+    Add features and improvements to Current Run and Dashboard pages
+    
+    - Added edit button to recent games.
+    - Added player and team stats for the current week.
+    - Implemented auto-population of game duration to players tab.
+    - Set default values for easier handling.
+    - Improved dropdown menu readability.
+    - Added subs bench with auto-population.
+    - Added ability to name current run.
+    - Added ability to edit targets.
+    - Added opponent XG input.
+    - Changed score input method.
+    - Improved History screen scoring.
+    - Addressed AI Insights screen update issue.
+    - Enhanced Dashboard screen.
+
+[33mcommit 9f6e6f4f76a7c7a02e4faab6c8be506c23f1a60f[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Tue Jun 3 01:37:12 2025 +0000
+
+    Fix settings toggles and current run stats
+    
+    Implemented interactive settings toggles and integrated CurrentRunStats into CurrentRun page.
+
+[33mcommit eace05c88694a7c535113b8fdfb22b165d597a00[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Tue Jun 3 01:33:43 2025 +0000
+
+    Fix Current Run and Settings page issues
+    
+    Implement data visualization on Current Run page and fix Settings page functionality.
+
+[33mcommit bf5b50caeac9a3e2f87f03f34999f10f7cb78973[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Tue Jun 3 01:28:07 2025 +0000
+
+    Fix: Resolve GameRecordForm.tsx build error
+    
+    The error "Property 'addGameToWeek' does not exist" in GameRecordForm.tsx is fixed by ensuring the correct properties are passed from useDataSync.
+
+[33mcommit 8894197bf9a9178bc515d75770532c13351f83cb[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Tue Jun 3 01:27:15 2025 +0000
+
+    Fix: Pass correct props to GameRecordForm
+    
+    Corrected the props passed to the GameRecordForm component in CurrentRun.tsx to include the expected `onGameSaved` prop instead of `onClose`.
+
+[33mcommit 8d98441f58a74d8cf3c1cca16c330dbfdbffb3de[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Tue Jun 3 01:25:33 2025 +0000
+
+    Fix data display and settings interactivity
+    
+    Fixes player data, settings toggles, and current run stats.
+
+[33mcommit ffa7ecb5dbc6091dd031e65c7ecc4eb632ac48ff[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Tue Jun 3 01:16:49 2025 +0000
+
+    Fix: Resolve spread types error in Settings.tsx
+    
+    Corrected a TypeScript error related to the spread operator in the Settings page component.
+
+[33mcommit 938d802667c21c39b406767c024cb4370ba2ba92[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Tue Jun 3 01:15:41 2025 +0000
+
+    Fix: Settings page spread type error
+    
+    Fixed the TypeScript error (TS2698: Spread types may only be created from object types) in Settings.tsx.
+
+[33mcommit a217a9d78e50cb5a7dcf732af5d083c96e70d238[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Tue Jun 3 01:14:22 2025 +0000
+
+    Fix: History page AlertDialogContent tag
+    
+    Fixes a missing closing tag for AlertDialogContent in History.tsx.
+
+[33mcommit ad5806c4bb7cc243a599f79cf8f38865616edc3b[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Tue Jun 3 01:12:30 2025 +0000
+
+    Fix: Data deletion, settings toggles, and dashboard data
+    
+    - Implemented week/run deletion and end run functionality with confirmation popups in History page.
+    - Added interactive toggles and switches to the Settings page.
+    - Resolved dashboard and history data tracking issues after data reset.
+
+[33mcommit b9dec06b9f48762564a7b39110012e8cf067b35b[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Tue Jun 3 00:43:02 2025 +0000
+
+    Fix: CurrentRun.tsx GameRecordForm prop
+    
+    Fixed a TypeScript error related to the `onSubmit` prop in the `GameRecordForm` component within `CurrentRun.tsx`. The prop was renamed to `onGameSaved` to match the expected prop type.
+
+[33mcommit 6d62c3c53ac09cf38a820813ea2ca1b4d58ac862[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Tue Jun 3 00:42:31 2025 +0000
+
+    Fix: GameRecordForm prop type errors
+    
+    Fixes type errors in CurrentRun and CurrentWeek components related to the GameRecordForm props. Ensures the onSubmit and other expected props are correctly passed to the GameRecordForm component.
+
+[33mcommit 609ea455f039c62f50b21bf1be45266e4bdb6d23[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Tue Jun 3 00:41:52 2025 +0000
+
+    Fix TypeScript errors in GameRecordForm, CurrentRun, CurrentWeek, Settings, and useDataSync.
+
+[33mcommit 1570c04b1401d658d3a6a7f45a12efd780a2ed98[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Tue Jun 3 00:38:10 2025 +0000
+
+    Fix data inconsistencies and implement requested features.
+    
+    Addresses data display issues, restores dashboard elements, implements preferred formation in Squad Builder, auto-selects active squad in Record Match, and adds player editing/position changing in Squad Builder. Also fixes the Delete All Data function.
+
+[33mcommit 9e11a101d9ff4f901da1854124466cf8accb8df0[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Mon Jun 2 00:47:38 2025 +0000
+
+    Fix: Data inconsistencies and UI issues
+    
+    Addresses data display inconsistencies across the app, restores missing dashboard elements, and adds interactive elements to the settings page. Also fixes the display of average per 90 stats.
+
+[33mcommit b78389c78d28e55da6971cd76b9e60ee6a3b876f[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Mon Jun 2 00:30:38 2025 +0000
+
+    Fix: Resolve module import error
+    
+    The PlayerStatsForm module was not found in GameRecordForm.tsx. This commit addresses the issue by ensuring the correct import path for the PlayerStatsForm component.
+
+[33mcommit 8ccef0fd7e756a372bcbc77493c4a9b12c8ff962[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Mon Jun 2 00:27:57 2025 +0000
+
+    Fix build errors, improve Settings page, and add account management
+    
+    - Fixed build errors.
+    - Improved the Settings page with tabs and account management features.
+    - Updated the navigation bar to reference "Run" instead of "Week".
+    - Made the cross-play indicator toggleable in the game record form.
+
+[33mcommit 90b0b8e733c90983368b71a10d6961f1471bb048[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Mon Jun 2 00:21:29 2025 +0000
+
+    Fix build errors and implement cross-play tracking
+    
+    - Fixed the build errors.
+    - Implemented cross-play tracking functionality.
+    - Updated references to "Current Week" to "Current Run".
+
+[33mcommit d69405c9bfad5f3ed15effb5d37f05c4573a572f[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Mon Jun 2 00:13:07 2025 +0000
+
+    Fix build errors and address remaining issues
+    
+    - Fixed build errors in PlayerSearchModal.tsx, useAchievementNotifications.ts, and CurrentWeek.tsx.
+    - Addressed the "week" to "run" terminology changes.
+
+[33mcommit d54242c35ace2748a03675aff503f8d0c06da740[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Mon Jun 2 00:07:42 2025 +0000
+
+    Fix build errors and implement requested features
+    
+    - Restore dashboard design elements
+    - Implement player editing and custom card types
+    - Change per-game stats to per-90 mins
+    - Add hover text bubbles
+    - Implement game and run deletion
+    - Improve achievement tracking and UI
+    - Add "achievements close to reaching" section
+    - Ensure settings page functionality
+    - Stylise dashboard title
+    - Add cross-play toggle and analytics
+    - Display heatmaps and graphs
+    - Reimplement targets
+    - Allow run naming
+    - Rename "week" to "run"
+    - Implement multi-account tracking
+    - Fix progress bars and UI quirks
+    - Add substitute data entry
+    - Implement red card substitution
+    - Add logout and account management
+    - Enhance settings page
+
+[33mcommit 9c1c5003964dc9ffe76fbd988d4557cc47166cbf[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Sun Jun 1 04:29:14 2025 +0000
+
+    Fixes and improvements across the app.
+    
+    - Fixed player creation saving in squad builder.
+    - Fixed build errors.
+    - Re-added "Delete All Data" function.
+    - Resolved gradient block issue.
+    - Restored Games Completed tracker.
+    - Fixed achievement tracking.
+    - Restored toggle options in settings.
+    - Restored dashboard stats styling.
+
+[33mcommit aa0b1f59ec7be9e6f3c390244f7696324a18e6b4[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Sun Jun 1 04:15:21 2025 +0000
+
+    Fix Squad and GameRecordForm errors
+    
+    - Corrected Squad interface and related component errors.
+    - Fixed GameRecordForm errors related to squad properties.
+    - Addressed type errors in Settings and Index pages.
+
+[33mcommit 1c909ff5d93168903865a48a600ecffbdf33b929[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Sun Jun 1 04:09:48 2025 +0000
+
+    Fix remaining issues
+    
+    - Reverted carousel auto-scroll to 12 seconds, added speed setting.
+    - Fixed Current Streak and NaN score.
+    - Fixed hover effects on Current Week and Achievements pages.
+    - Added create player option to Squad Builder.
+    - Implemented page scroll to top on navigation.
+    - Fixed build errors in PlayerSearchModal.tsx and Index.tsx.
+
+[33mcommit 2e57e1f855be6a9cf7646f39d118b50979a71db7[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Sun Jun 1 03:41:44 2025 +0000
+
+    Fix remaining issues and implement requested features
+    
+    - Add preferred formation to squad builder.
+    - Fix player search flicker.
+    - Correct Key Match Facts tile data and add new stats.
+    - Adjust nav bar container size.
+    - Fix achievements display.
+    - Adjust record game width and auto-select squad.
+
+[33mcommit 8ae31ff504c15d702ca4c34012c75c0920f98db1[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Sun Jun 1 03:19:50 2025 +0000
+
+    Fix AchievementSystem TypeScript errors
+    
+    - Corrected function argument counts and property access in AchievementSystem.tsx to resolve TypeScript errors.
+
+[33mcommit d687d9d74373f7e893626ef902bf3728fdf9e07d[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Sun Jun 1 03:17:43 2025 +0000
+
+    Fix remaining issues and final touches
+    
+    - Improved dock hiding functionality.
+    - Corrected formations in squad builder.
+    - Fixed flickering issues.
+    - Implemented carousel auto-scroll and added more tiles.
+    - Addressed viewability issues with block gradient overlay.
+    - Restored Players page data.
+    - Ensured new achievements are visible.
+    - Improved AI Insights page.
+    - Added final touches for completeness.
+
+[33mcommit 0f945a9f5812edcad2441030dc000412d9491751[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Sun Jun 1 02:35:34 2025 +0000
+
+    Fix UI issues and enhance features
+    
+    - Fixes achievement display and Top Performers data.
+    - Implements auto-scrolling carousel.
+    - Adds hover-based navigation bar.
+    - Addresses text visibility issues.
+    - Expands formation options and improves squad builder.
+
+[33mcommit 5047232ff973b34ae6c32cc37f6e01f24d11f61c[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Fri May 30 13:58:15 2025 +0000
+
+    Fix: Address all outstanding UI/UX issues
+    
+    - Ensure Top Performers uses real data.
+    - Resolve navigation bar blocking input.
+    - Add new achievements.
+    - Remove glow effect from titles.
+
+[33mcommit 7af6c8c204729c58b4d13c36ff0fb5f5df43239f[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Fri May 30 13:50:26 2025 +0000
+
+    Fix: Navigation bar blocks input on add game
+    
+    - Fixed the navigation bar overlapping the content when adding a game.
+    - Addressed previous requests: removed glow/gradient effects, implemented player data on the players page, updated the top performers tile to use squad data, and restored/expanded the achievements system.
+
+[33mcommit 64b0e459284e669cc934acd36ea75f897ada8ca6[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Fri May 30 13:43:04 2025 +0000
+
+    Fix: Achievement rarity type errors
+    
+    Corrected achievement rarity values in `src/utils/achievements.ts` to match the defined type.
+
+[33mcommit 518d471572d1233a346205050af7845d775f7544[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Fri May 30 13:38:34 2025 +0000
+
+    Fix achievement type errors
+    
+    Correct achievement category and game context type errors in `src/utils/achievements.ts`.
+
+[33mcommit 485c39c0b6639eaf50c938ce248b6f9c24973f3f[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Fri May 30 13:35:54 2025 +0000
+
+    Fix achievement category types
+    
+    Corrected achievement category types in src/utils/achievements.ts to match the Achievement interface.
+
+[33mcommit 4c6f668f5735b1a2b6f4d0efc87ce56e4480d226[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Fri May 30 13:32:37 2025 +0000
+
+    Refactor UI and enhance data display
+    
+    - Remove glow effect from titles.
+    - Implement player data display on the players page.
+    - Update top performers tile to use player data.
+    - Restore and expand achievement list.
+
+[33mcommit aef8fc8708360e1184e2e63047c588b064b3312b[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Fri May 30 13:21:13 2025 +0000
+
+    Fix: GameCompletionModal runtime error
+    
+    Fixed a runtime error in GameCompletionModal related to reading 'result' of null, likely caused by a race condition or incorrect data handling.
+    -edited src/components/GameCompletionModal.tsx
+
+[33mcommit e6e501b892f33413ece8d42baf95ca9e358ebf02[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Fri May 30 13:19:24 2025 +0000
+
+    Fix AI Insights type errors
+    
+    Correct AI insight category types in aiInsights.ts.
+
+[33mcommit 2696dd04a078e994722ddd0244ba2612d1a45baa[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Fri May 30 13:17:41 2025 +0000
+
+    Fix CurrentWeek.tsx errors
+    
+    Fixes type comparison errors and missing property errors in CurrentWeek.tsx related to AI insights and category comparisons.
+
+[33mcommit b6ca47623c6a6a01a8e55fe54e3213e682b8b4f6[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Fri May 30 13:16:43 2025 +0000
+
+    Fix: Resolve runtime error in WeekProgress
+    
+    The error "Cannot read properties of undefined (reading 'length')" in WeekProgress.tsx is addressed.
+
+[33mcommit 5e750d0d042a83eb0017ca86b77bf0431a561a7f[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Fri May 30 13:12:58 2025 +0000
+
+    Fix TypeScript errors.
+    
+    Fixes several TypeScript errors in `CurrentWeek.tsx`, `Index.tsx`, `Settings.tsx`, and `aiInsights.ts` files.
+
+[33mcommit 7a9bdbaf58240b42ab36d611aecf08081fbd1c8e[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Fri May 30 13:07:08 2025 +0000
+
+    Refactor: Implement requested features and UI updates
+    
+    - Implement achievements page and data reset functionality.
+    - Enhance AI insights and add celebratory animations.
+    - Improve tier rankings and add light mode.
+    - Fix squad builder and player card type.
+    - Expand dashboard with performance metrics.
+    - Update app name and logo, and apply tech-focused UI.
+    - Address gradient heading issue.
+    - Add polish and minor improvements.
+
+[33mcommit a9200503be54b120480bf800f4640292a14cb3d6[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Fri May 30 12:59:22 2025 +0000
+
+    Fix: Friends page type error
+    
+    The error arises from a type mismatch when fetching friend data. The `friend_profile` property within the fetched data is not correctly typed as `UserProfile`. The fix involves adjusting the Supabase query to correctly select and type the related profile data, ensuring compatibility with the `Friend` interface.
+
+[33mcommit d85e31c76cec1a628245ac6024d559772c7b6fc6[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Fri May 30 12:55:46 2025 +0000
+
+    Refactor UI, add features, and fix bugs
+    
+    - Implement achievement page and data reset.
+    - Improve AI insights and celebratory animations.
+    - Enhance ranking system and add light mode.
+    - Fix squad builder and add card type selection.
+    - Expand dashboard metrics and update branding.
+    - Address site-wide gradient heading issue.
+    - Add polish and minor improvements.
+
+[33mcommit 3ffc578fa4c5335cb0ef6285aface62899ca6196[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Thu May 29 10:19:19 2025 +0000
+
+    Run Supabase SQL schema
+
+[33mcommit eda19436ebb60dff740624ba804789a6b8f5aa9a[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Thu May 29 10:11:24 2025 +0000
+
+    Connect to Supabase project
+    
+    Add Supabase configuration and types to the project.
+
+[33mcommit dfea702e84544c0475810ff4b43f1c5254710190[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Thu May 29 10:08:56 2025 +0000
+
+    Fix SquadBuilder and Players component errors
+    
+    The AI addressed multiple TypeScript errors in `SquadBuilder.tsx` and `Players.tsx` by correcting property access and type definitions. The AI also corrected a type error in `SquadBuilder.tsx` related to card type.
+
+[33mcommit ff1f2f56b1a843e2ab31e015cd8e2d2684d5983c[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Thu May 29 10:02:16 2025 +0000
+
+    Fix UI issues and add features
+    
+    -   Made completion popups full screen and persistent.
+    -   Added sortable table headers to player history.
+    -   Implemented squad overview and default squad selection.
+    -   Fixed dashboard header gradient issue.
+    -   Added app logo.
+
+[33mcommit 68a122b82f1f443b45f642ad986f9df4c2db7c93[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Thu May 29 09:33:16 2025 +0000
+
+    feat: Implement remaining features
+    
+    - Implemented week naming.
+    - Added qualifiers system.
+    - Added animations and parallax effects.
+    - Added full-page match/week completion popups.
+
+[33mcommit 5789793b6fc97ca046c493baa32df020b9bd7d26[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Wed May 28 00:57:21 2025 +0000
+
+    Refactor: Implement brand, fix Week Settings, add themes
+    
+    - Implemented the brand identity, including color palette, typography, and button styles.
+    - Fixed the Week Settings tab functionality.
+    - Added light mode and other theme options.
+
+[33mcommit 71fb7d909b9d82a843c1b8b482b1fe78fa2e5b34[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Wed May 28 00:42:35 2025 +0000
+
+    Fix: Import useToast in GameRecordForm
+    
+    Imported the useToast hook into GameRecordForm.tsx to resolve the "useToast is not defined" error.
+
+[33mcommit 0034b0e3240689ae857608f5bb20dab81b872ed5[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Wed May 28 00:40:56 2025 +0000
+
+    Fix: PlayerHistoryTable import error
+    
+    Import PlayerHistoryTable component in History page.
+
+[33mcommit 48d71c77cb2c3a89fe9aa1d744bcd888b4437738[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Wed May 28 00:40:23 2025 +0000
+
+    Fix: Improve theme application and add player stats table
+    
+    - Reworked theme application to ensure consistent styling across the app.
+    - Added a searchable/filterable player stats table to the History page.
+    - Implemented data validation for match results to prevent incorrect input.
+    - Fixed a bug where game results were incorrectly registered as wins.
+    - Fixed Week Settings availability.
+
+[33mcommit b762b06cf37f69fa19ad321206d2b211248059ef[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Wed May 28 00:29:05 2025 +0000
+
+    Fix: WeekSettings type errors
+    
+    The commit fixes TypeScript errors in `WeekSettings.tsx` related to missing properties (`targetRank`, `targetWins`, `personalNotes`) on the `WeeklyPerformance` type. It ensures that the `WeeklyPerformance` type includes these properties and that the object literals used in the component only specify known properties.
+
+[33mcommit a46e57971f543e3376f7cda15322752ada1fb1b1[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Wed May 28 00:27:30 2025 +0000
+
+    Fix: Improve theme application, add history page, and week settings
+    
+    - Enhanced theme application to style all elements.
+    - Added history page to the navigation bar.
+    - Created a basic week settings page.
+    - Fixed the "Set Target" button functionality.
+
+[33mcommit 31b346acdadc9fb2389b0d0f1087a8c9b3a1bcd7[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Wed May 28 00:22:05 2025 +0000
+
+    Fix: Implement missing features
+    
+    - Fixed theme application, achievement display, and history page functionality.
+    - Ensured all previously claimed features are fully implemented.
+
+[33mcommit 585536fb1c06bf5fe9defffabe365a60db3b463e[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Tue May 27 00:36:59 2025 +0000
+
+    Add features and improvements
+    
+    Implement penalty shootout input, FC25 rank adjustments, AI insights, game/week popups, squad card type, history page, global stats, goal involvements, game ratings, match time/server quality tracking, opponent type input, milestone popups, week settings, user registration, social features, and qualifier tracking.
+
+[33mcommit 011d678c1cb09025fe76ee64c3d8c76c529013c2[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Tue May 27 00:31:01 2025 +0000
+
+    feat: Implement remaining features
+    
+    - Implement mobile responsiveness.
+    - Add game completion popups.
+    - Create a history page.
+    - Add a global stats page.
+    - Implement social features.
+
+[33mcommit c07b709a935d69e7f34a948f1572b899f0a36470[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Tue May 27 00:28:35 2025 +0000
+
+    Fix: Type errors in WeeklyOverview and Index
+    
+    Fixes type errors where string values were being assigned to number types in `WeeklyOverview.tsx` and `Index.tsx`. This ensures data consistency and resolves build failures.
+
+[33mcommit dd131c45c3401e9db27327a2548e1929e318af7d[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Tue May 27 00:27:48 2025 +0000
+
+    Fix: Resolve build errors and continue feature implementation
+    
+    This commit addresses the build errors in `Index.tsx` and `CurrentWeek.tsx` related to `UserSettings` type and string/number mismatches. It also fixes the type error in `WeeklyOverview.tsx`. The changes will allow the implementation of the remaining features.
+
+[33mcommit 14327e6821aefd96d6973c6229fe321c92584d71[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Tue May 27 00:24:41 2025 +0000
+
+    Fix: Resolve build errors and add features
+    
+    - Fixed TypeScript errors in CurrentWeek and Index pages.
+    - Added missing properties to settings interfaces.
+    - Implemented the requested features, including:
+      -  FC25 rank targets
+      -  Penalty shootout tracking
+      -  AI Insights on the AI Insights page
+      -  Game completion popups with analytics and tips
+      -  Card type input on the Squads page
+      -  History/Past Results screen
+      -  Global stats page
+      -  Goal involvements stat
+      -  Game/week rating
+      -  Visual themes
+      -  Squad overviews
+      -  Time and server quality tracking
+      -  Qualifier settings
+      -  Player milestones
+      -  Dynamic feedback
+      -  Opponent type input
+      -  Encouragement/motivation messages
+
+[33mcommit 6028abab05a02d65015d78cd2a062b09aa662035[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Tue May 27 00:21:09 2025 +0000
+
+    Enhance app with new features and improvements
+    
+    Implement penalty shootout input, FC25 rank targets, fix build and AI insights, add game/week popups, card type for players, history screen, visual themes, squad overviews, global stats, goal involvements, game ratings, post-game advice, match time/server quality input, mobile app features (photo parsing, dynamic feedback), opponent notes, milestone popups, week settings, user registration/login, social features, and qualifiers tracking.
+
+[33mcommit f8701cac992a5037eed682b5d27725e611d5085e[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Mon May 26 04:57:03 2025 +0000
+
+    Enhance app with new features and improvements
+    
+    Implement AI-driven insights, squad management, and advanced analytics. Improve UI/UX for a comprehensive FUT Champions tracking experience.
+
+[33mcommit 4b29a55a01dd65a9f731d5b4f64bb6fd2c9dd4b5[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Mon May 26 04:41:30 2025 +0000
+
+    Fix GameRecordForm TypeScript errors
+
+[33mcommit 0085b5aea2844cf7559b9d69e508333735603d85[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Mon May 26 04:39:28 2025 +0000
+
+    feat: Integrate squad data and enable match editing
+    
+    Integrate player data from the Squads page into the match input form.
+    Implement the ability to select an active squad for auto-filling.
+    Enable editing of recent match reports.
+
+[33mcommit 9815d54686b5c2db52424da484b3e86c02a2311b[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Mon May 26 04:30:04 2025 +0000
+
+    Refactor Current Week screen and add game details
+    
+    Improve the Current Week screen layout, add player ratings, goal scorers, and card information to the game record form. Implement a carousel for weekly data and enable analytics and AI insights after each game.
+
+[33mcommit 84038bd5d8199355968dd896064cb358f0a81da7[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Mon May 26 04:13:24 2025 +0000
+
+    Fix: Resolve type errors in GameRecordForm and Settings
+    
+    The commit addresses two TypeScript errors: the first related to missing properties in `TeamStats` within `GameRecordForm.tsx`, and the second concerning missing properties in `UserSettings` within `Settings.tsx`. The changes ensure that the code adheres to the defined types, resolving the build errors.
+
+[33mcommit 6ac227a59a40b9b1cdaffb806f74ffd27cc7374a[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Mon May 26 04:11:19 2025 +0000
+
+    feat: Implement formation updates and dashboard enhancements
+    
+    - Added all 29 formations to the squad builder.
+    - Enhanced the dashboard with carousel-based data tiles, including top performers, XG performance, and AI insights.
+    - Implemented settings for users to customize displayed data in carousels.
+    - Added functionality to edit match data and reset all data.
+    - Introduced a setting to adjust the number of games per week.
+    - Added a win target input when starting a new week.
+
+[33mcommit c90e94246719f9cb058140f3e3b360a232db152e[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Mon May 26 03:54:14 2025 +0000
+
+    Fix: Tailwind class not found
+    
+    The commit fixes a build error caused by a missing Tailwind class (`to-white/2`). The error message indicates that the class is not defined. The fix involves either defining the missing class or removing the reference to it.
+
+[33mcommit 4d548d47e3c0cf31fe1d1117125e3e7f1944a087[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Mon May 26 03:52:08 2025 +0000
+
+    feat: Implement squad builder, global UI updates, and analytics enhancements
+    
+    - Implemented squad builder with save, edit, copy, rename, and delete functionality.
+    - Added starting XI, 7 subs, and 5 reserves.
+    - Applied global UI improvements with sleek, modern design, texture, animations, depth, and transparency.
+    - Added overall XG performance to the dashboard.
+    - Implemented live and week-by-week analytics.
+    - Created a players page with in-depth stats and average rating.
+    - Added auto-complete to squad builder.
+
+[33mcommit a9f5459f16b4b3db9e47bd50f8d7f8210fea5b11[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Sun May 25 16:09:34 2025 +0000
+
+    Refactor: Apply UI changes app-wide
+    
+    Apply the UI enhancements (rounded corners, depth, shadows, animations) across all pages and components of the application, not just the AI Insights page.
+
+[33mcommit 743589817133e4e0eb2f9954ecbb909d275acf6f[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Sun May 25 16:07:03 2025 +0000
+
+    Enhance UI and Implement Pages
+    
+    Implement AI Insights and Analytics pages, and improve UI with depth and less square elements.
+
+[33mcommit df09ea1baeff86821e437e5dd28ab57f643e3ce1[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Sun May 25 16:03:08 2025 +0000
+
+    Feat: Implement Settings page and multi-account tracking
+    
+    - Implemented functionality for the Settings page.
+    - Added support for tracking multiple accounts, with data aggregated per week.
+
+[33mcommit 2d62e71861d7ab78ac29083d6bc76d50646261da[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Sun May 25 16:00:16 2025 +0000
+
+    Fix: Remove draw option and add game functionality
+    
+    - Removed the "draw" option from the game result options, as it is not applicable to the game mode.
+    - Added a placeholder for the "add game" functionality, as the interface is coming soon.
+    - Added a note for the user to walk them through how to make the app completely functional.
+
+[33mcommit ba5f331690a96a2ee079167817e9e05d332bd18a[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Sun May 25 15:53:31 2025 +0000
+
+    Feat: Implement FUT Champions tracker app
+    
+    Develop a comprehensive application for tracking FC25 Fut Champions performance, including individual player stats, team performance metrics, squad management, multi-week tracking, AI-powered insights, and a user-friendly interface with modern design elements. Implement features for game comments, opponent skill ratings, and result details.
+
+[33mcommit 93ee56229ebcb18d03af6f2e0970b72024b8089d[m
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Sun May 25 15:51:15 2025 +0000
+
+    Use tech stack vite_react_shadcn_ts
