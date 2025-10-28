@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -62,7 +61,7 @@ const PenaltyShootoutInput = ({ onPenaltyChange, initialPenalty }: PenaltyShooto
       </CardHeader>
       {hasPenalties && (
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="user-penalties" className="text-white">Your Score</Label>
               <Input
