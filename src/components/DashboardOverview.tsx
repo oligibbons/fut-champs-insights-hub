@@ -21,7 +21,7 @@ const DashboardOverview = () => {
           style={{ backgroundColor: currentTheme.colors.surface }} // Use theme color for skeleton
         />
         {/* Skeleton for the compact stats grid */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Skeleton className="h-24 rounded-xl" style={{ backgroundColor: currentTheme.colors.surface }} />
           <Skeleton className="h-24 rounded-xl" style={{ backgroundColor: currentTheme.colors.surface }} />
           <Skeleton className="h-24 rounded-xl" style={{ backgroundColor: currentTheme.colors.surface }} />
@@ -53,7 +53,7 @@ const DashboardOverview = () => {
       <div>
          {/* Title moved inside DashboardSection now */}
          {/* <h3 className="text-lg font-semibold text-white mb-3">Key Stats</h3> */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <CompactStatCard
             title="Best Record"
             value={`${stats.bestRecord} Wins`}
