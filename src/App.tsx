@@ -83,7 +83,7 @@ const MainLayout = () => {
       )}>
         <Header />
         <main className={cn(
-          "flex-1 overflow-y-auto p-6 lg:p-8 pt-24",
+          "flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 pt-24", // FIX: Reduced padding on mobile
           isMobile && "pb-24" // Add bottom padding on mobile for the nav dock
         )}>
           <div className="w-full max-w-7xl mx-auto">
