@@ -76,7 +76,7 @@ const SquadVisual = ({ squad, cardTypes }: { squad: Squad, cardTypes: CardType[]
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                       <p className="text-white text-[8px] font-semibold text-center truncate bg-black/60 rounded-b-md px-1 mt-[-2px] w-[90%] z-10">
-                                         {/* Show last name, fallback to full name */}
+                                          {/* Show last name, fallback to full name */}
                                         {player.name.includes(' ') ? player.name.split(' ').pop() : player.name}
                                       </p>
                                     </TooltipTrigger>
@@ -144,7 +144,7 @@ const Squads = () => {
         setIsBuilding(false);
         setEditingSquad(null);
         refetchSquads(); // Refetch to discard any potential unsaved changes shown in SquadBuilder preview
-    };
+     };
 
     const handleDeleteSquad = async (squadId: string) => {
         await deleteSquad(squadId);
@@ -171,27 +171,27 @@ const Squads = () => {
     if (loading && squads.length === 0) { // Show skeleton only on initial load
         return (
              <div className="space-y-8 animate-fade-in">
-                 {/* Header Skeleton */}
-                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-                     <div>
-                         <Skeleton className="h-10 w-48 mb-2" />
-                         <Skeleton className="h-4 w-64" />
-                     </div>
-                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto">
-                           <Skeleton className="h-9 w-32 rounded-full" />
-                           <Skeleton className="h-10 w-48 rounded-lg" />
-                      </div>
-                 </div>
-                 {/* Grid Skeleton */}
-                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                     {[1, 2, 3].map(i => (
-                         <Card key={i} className="rounded-3xl shadow-lg border" style={{ backgroundColor: currentTheme.colors.card, borderColor: currentTheme.colors.border }}>
-                              <CardHeader className="pb-4"><Skeleton className="h-6 w-3/4 mb-1" /><Skeleton className="h-4 w-1/4" /></CardHeader>
-                              <CardContent><Skeleton className="aspect-video rounded-xl mb-4" /></CardContent>
-                              <CardFooter className="p-4 bg-black/20 rounded-b-3xl"><Skeleton className="h-8 w-full" /></CardFooter>
-                         </Card>
-                     ))}
-                 </div>
+                  {/* Header Skeleton */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+                        <div>
+                            <Skeleton className="h-10 w-48 mb-2" />
+                            <Skeleton className="h-4 w-64" />
+                        </div>
+                         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto">
+                             <Skeleton className="h-9 w-32 rounded-full" />
+                             <Skeleton className="h-10 w-48 rounded-lg" />
+                         </div>
+                  </div>
+                  {/* Grid Skeleton */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                       {[1, 2, 3].map(i => (
+                           <Card key={i} className="rounded-3xl shadow-lg border" style={{ backgroundColor: currentTheme.colors.card, borderColor: currentTheme.colors.border }}>
+                               <CardHeader className="pb-4"><Skeleton className="h-6 w-3/4 mb-1" /><Skeleton className="h-4 w-1/4" /></CardHeader>
+                               <CardContent><Skeleton className="aspect-video rounded-xl mb-4" /></CardContent>
+                               <CardFooter className="p-4 bg-black/20 rounded-b-3xl"><Skeleton className="h-8 w-full" /></CardFooter>
+                           </Card>
+                       ))}
+                  </div>
              </div>
         );
     }
@@ -213,8 +213,8 @@ const Squads = () => {
         <div className="space-y-8 animate-fade-in">
              {/* Consistent Header */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                 <div className="flex items-center gap-4">
-                     <div className="flex-shrink-0 h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center shadow-md">
+                <div className="flex items-center gap-4">
+                    <div className="flex-shrink-0 h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center shadow-md">
                         <Users className="h-6 w-6 text-primary" />
                     </div>
                     <div>
@@ -226,20 +226,20 @@ const Squads = () => {
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto">
                     {/* Game Version Switcher */}
                      <div className="flex items-center gap-1 rounded-full p-1 border" style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: currentTheme.colors.border }}>
-                        {['FC25', 'FC26'].map(version => (
-                            <Button
-                                key={version}
-                                size="sm" variant="ghost" // Use ghost variant
-                                onClick={() => setGameVersion(version as 'FC25' | 'FC26')}
-                                className={cn(
-                                    "rounded-full transition-colors duration-200 flex-1 px-4 py-1 text-sm",
-                                    gameVersion === version ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-                                )}
-                            >
-                                {version}
-                            </Button>
-                        ))}
-                    </div>
+                         {['FC25', 'FC26'].map(version => (
+                             <Button
+                                 key={version}
+                                 size="sm" variant="ghost" // Use ghost variant
+                                 onClick={() => setGameVersion(version as 'FC25' | 'FC26')}
+                                 className={cn(
+                                     "rounded-full transition-colors duration-200 flex-1 px-4 py-1 text-sm",
+                                     gameVersion === version ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                                 )}
+                             >
+                                 {version}
+                             </Button>
+                         ))}
+                     </div>
                     <Button onClick={handleAddNewSquad} className="w-full sm:w-auto" disabled={loading}>
                         {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
                         New Squad
@@ -280,7 +280,7 @@ const Squads = () => {
                                     <div><p className="font-bold text-base text-red-400">{squad.losses || 0}</p><p className="text-muted-foreground">Losses</p></div>
                                 </div>
                             </CardContent>
-                            <CardFooter className="flex justify-between p-3 bg-black/10 mt-auto rounded-b-2xl"> {/* Footer styling */}
+                            <CardFooter className="flex flex-col sm:flex-row sm:justify-between gap-2 p-3 bg-black/10 mt-auto rounded-b-2xl"> {/* FIX: Made responsive */}
                                 <Button size="sm" variant="outline" onClick={() => handleSetDefault(squad.id)} disabled={squad.is_default} className="text-xs">
                                     <Star className={cn("h-3 w-3 mr-1.5", squad.is_default ? 'text-yellow-400 fill-yellow-400' : 'text-muted-foreground')} />
                                     {squad.is_default ? 'Default' : 'Set Default'}
