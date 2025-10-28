@@ -207,7 +207,7 @@ const PlayerPerformanceInput = ({ players = [], onChange }: PlayerPerformanceInp
               </div>
 
               {/* Performance Stats */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+              <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 gap-2">
                 <div className="space-y-2">
                   <Label className="text-white text-xs font-medium">Rating</Label>
                   <div className="flex items-center gap-1">
