@@ -577,9 +577,11 @@ const GameRecordForm = ({
                    <TabsTrigger value="players"><Star className="h-4 w-4 mr-1 md:mr-2" />Players</TabsTrigger>
               </TabsList>
 
-              {/* --- FIX 1: Added mt-4 to ScrollArea --- */}
+              {/* --- 
+              FIX 1: Tab Overlap
+              Added mt-4 to the ScrollArea component.
+              --- */}
               <ScrollArea className="flex-1 mt-4 pr-2 -mr-2 custom-scrollbar">
-                 {/* --- FIX 1: Removed pt-4 from this div --- */}
                <div className="space-y-4 md:space-y-6 pb-4"> 
                   <TabsContent value="details" className="space-y-4 md:space-y-6 mt-0">
                     <FormField
@@ -704,10 +706,14 @@ const GameRecordForm = ({
                                          <Tooltip key={tag.id}>
                                              <TooltipTrigger asChild>
                                                  <FormControl>
-                                                     {/* --- FIX 2: Removed variant="outline" to allow theme colors to apply --- */}
+                                                     {/* ---
+                                                      FIX 2: Match Tags
+                                                      - Added unique id={`tag-${tag.id}`}
+                                                      - Removed variant="outline" to allow theme colors
+                                                     --- */}
                                                      <Toggle
                                                          size="sm"
-                                                         id={`tag-${tag.id}`} // --- FIX 2: Added unique ID ---
+                                                         id={`tag-${tag.id}`} 
                                                          className={cn(
                                                             "text-xs h-7 border border-border/50 transition-colors duration-150", 
                                                             "hover:bg-muted/50", 
@@ -766,7 +772,10 @@ const GameRecordForm = ({
                                <FormField control={control} name="player_stats" render={({ field }) => (
                                    <FormItem>
                                        <FormControl>
-                                           {/* --- ADDED cardTypes prop --- */}
+                                           {/* --- 
+                                            FIX 3: Player Card Colors
+                                            - Passed down the cardTypes prop
+                                           --- */}
                                            <PlayerStatsForm
                                                players={field.value || []} 
                                                onStatsChange={(updatedPlayers) => field.onChange(updatedPlayers)} 
@@ -817,13 +826,19 @@ const CurrentRunPage = () => {
   const [editingGame, setEditingGame] = useState<Game | null>(null);
   const [showCompletionPopup, setShowCompletionPopup] = useState(false);
   
-  // --- ADDED cardTypes state ---
+  {/* --- 
+   FIX 3: Player Card Colors
+   - Added cardTypes state
+  --- */}
   const [cardTypes, setCardTypes] = useState<CardType[]>([]);
   
   const isMobile = useMobile();
   const formRef = useRef<HTMLDivElement>(null);
 
-  // --- ADDED useEffect to fetch card types ---
+  {/* --- 
+   FIX 3: Player Card Colors
+   - Added useEffect to fetch card_types from Supabase
+  --- */}
   useEffect(() => {
     const fetchCardTypes = async () => {
       if (!user) return;
@@ -1200,7 +1215,11 @@ const CurrentRunPage = () => {
                 gameVersion={gameVersion}
                 nextGameNumber={editingGame ? editingGame.game_number : nextGameNumber}
                 onCancel={handleAddMatchToggle}
-                cardTypes={cardTypes} // --- PASSED PROP ---
+                // --- 
+                // FIX 3: Player Card Colors
+                // - Passed down the fetched cardTypes
+                // ---
+                cardTypes={cardTypes} 
               />
             </div>
           ) : (

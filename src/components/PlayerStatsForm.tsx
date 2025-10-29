@@ -27,7 +27,11 @@ interface PlayerStatsFormProps {
   players: PlayerStatFormData[];
   onStatsChange: (players: PlayerStatFormData[]) => void;
   gameDuration: number;
-  cardTypes: CardType[]; // --- ADDED ---
+  // --- 
+  // FIX 3: Player Card Colors
+  // - Added cardTypes to props
+  // ---
+  cardTypes: CardType[]; 
 }
 
 // --- Define the logical sort order for positions ---
@@ -195,7 +199,11 @@ const PlayerStatsForm: React.FC<PlayerStatsFormProps> = ({ players = [], onStats
       </Button>
 
       <div className="space-y-4">
-        {/* --- FIX 3: Map over sortedPlayers with new card design --- */}
+        {/* --- 
+         FIX 3: Player Card Colors
+         - Map over sortedPlayers with new card design
+         - Dynamically find and apply card colors using inline styles
+        --- */}
         {sortedPlayers.map((player) => {
           // Parse rating safely, as it can be a string from input
           const displayRating = parseFloat(String(player.rating))?.toFixed(1) || '0.0';
