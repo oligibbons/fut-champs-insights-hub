@@ -3,7 +3,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Minus, Plus, Star, Goal, Footprints, Clock, Square, SquareCheck, ShieldAlert } from 'lucide-react';
-import { PlayerPerformance } from '@/types/futChampions'; // Use the main type
+// --- ADDED CardType IMPORT ---
+import { CardType } from '@/types/squads';
 import { cn } from '@/lib/utils';
 
 // Type specifically for the data structure used within this form component
@@ -12,6 +13,7 @@ type PlayerStatFormData = {
   name: string;
   position: string;
   isSub: boolean; 
+  card_type: string; // --- ADDED ---
   minutes_played: number | string; // Allow string for intermediate input state
   goals: number | string;
   assists: number | string;
@@ -25,6 +27,7 @@ interface PlayerStatsFormProps {
   players: PlayerStatFormData[];
   onStatsChange: (players: PlayerStatFormData[]) => void;
   gameDuration: number;
+  cardTypes: CardType[]; // --- ADDED ---
 }
 
 // --- Define the logical sort order for positions ---
@@ -128,7 +131,7 @@ PlayerStatInput.displayName = 'PlayerStatInput';
 
 
 // --- MAIN COMPONENT ---
-const PlayerStatsForm: React.FC<PlayerStatsFormProps> = ({ players = [], onStatsChange, gameDuration }) => {
+const PlayerStatsForm: React.FC<PlayerStatsFormProps> = ({ players = [], onStatsChange, gameDuration, cardTypes }) => {
 
   // Handle direct input change (string value)
   const handleInputChange = useCallback((playerId: string, field: keyof PlayerStatFormData, value: string) => {
@@ -187,67 +190,122 @@ const PlayerStatsForm: React.FC<PlayerStatsFormProps> = ({ players = [], onStats
   // --- RENDER ---
   return (
     <div className="space-y-3">
-        {/* --- FIX: Rely on variant="outline" to apply theme colors --- */}
        <Button type="button" variant="outline" size="sm" onClick={setAllMinutes} className="text-xs">
           Set Starters' Minutes to {gameDuration}
       </Button>
 
       <div className="space-y-4">
-        {/* --- Map over sortedPlayers --- */}
-        {sortedPlayers.map((player) => (
-           // --- FIX: Use theme-aware glass styling (bg-background, border-border) ---
-           <div key={player.id} className="p-3 bg-background/70 rounded-lg border border-border/50 shadow-sm backdrop-blur-sm">
-            {/* Player Info Row */}
-            <div className="flex justify-between items-center mb-3">
-               {/* --- Use theme-aware text color --- */}
-              <span className="text-sm font-medium text-foreground truncate pr-2">{player.name || 'Unnamed Player'}</span>
-              
-              {/* --- FIX: Use theme-aware secondary colors for the badge --- */}
-              <span className="text-xs uppercase text-secondary-foreground bg-secondary px-2 py-0.5 rounded font-semibold">
-                {player.position || 'N/A'}
-              </span>
-            </div>
+        {/* --- FIX 3: Map over sortedPlayers with new card design --- */}
+        {sortedPlayers.map((player) => {
+          // Parse rating safely, as it can be a string from input
+          const displayRating = parseFloat(String(player.rating))?.toFixed(1) || '0.0';
 
-             {/* Stats Grid - Responsive Columns */}
-             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-x-2 gap-y-3">
-                 <PlayerStatInput
-                    playerId={player.id} field="minutes_played" value={player.minutes_played}
-                    onChange={handleInputChange} onAdjust={handleAdjustValue} label="Min" Icon={Clock}
-                    min={0} max={gameDuration > 90 ? 120 : 90} step={5} inputWidth="w-12"
-                 />
-                 <PlayerStatInput
-                    playerId={player.id} field="rating" value={player.rating}
-                    onChange={handleInputChange} onAdjust={handleAdjustValue} label="Rat" Icon={Star}
-                    min={0} max={10} step={0.1} inputWidth="w-12"
-                 />
-                <PlayerStatInput
-                    playerId={player.id} field="goals" value={player.goals}
-                    onChange={handleInputChange} onAdjust={handleAdjustValue} label="Gls" Icon={Goal}
-                    min={0} max={20} step={1} inputWidth="w-12"
-                 />
-                <PlayerStatInput
-                    playerId={player.id} field="assists" value={player.assists}
-                    onChange={handleInputChange} onAdjust={handleAdjustValue} label="Ast" Icon={Footprints}
-                    min={0} max={20} step={1} inputWidth="w-12"
-                 />
-                 <PlayerStatInput
-                    playerId={player.id} field="yellow_cards" value={player.yellow_cards}
-                    onChange={handleInputChange} onAdjust={handleAdjustValue} label="YC" Icon={Square}
-                    min={0} max={2} step={1} inputWidth="w-12"
-                 />
-                 <PlayerStatInput
-                    playerId={player.id} field="red_cards" value={player.red_cards}
-                    onChange={handleInputChange} onAdjust={handleAdjustValue} label="RC" Icon={SquareCheck}
-                    min={0} max={1} step={1} inputWidth="w-12"
-                 />
-                 <PlayerStatInput
-                    playerId={player.id} field="own_goals" value={player.own_goals}
-                    onChange={handleInputChange} onAdjust={handleAdjustValue} label="OG" Icon={ShieldAlert}
-                    min={0} max={5} step={1} inputWidth="w-12"
-                 />
-             </div>
-          </div>
-        ))}
+          // --- Find card style ---
+          const cardStyle = cardTypes.find(ct => ct.name === player.card_type);
+          const pColor = cardStyle?.primary_color || 'hsl(var(--background))'; // Fallback to bg
+          const sColor = cardStyle?.secondary_color || 'hsl(var(--foreground))'; // Fallback to text
+          const hColor = cardStyle?.highlight_color || 'hsl(var(--primary))'; // Fallback to primary
+
+          return (
+             <div 
+                key={player.id} 
+                className={cn(
+                  "rounded-lg border border-border/50 shadow-md relative overflow-hidden transition-all",
+                  "bg-background/70 backdrop-blur-sm", // Main card bg
+                  player.isSub ? "opacity-80" : "" // Dim subs slightly
+                )}
+              >
+                {/* Card Header: Rating, Name, Position, Minutes */}
+                <div 
+                  className={cn(
+                    "flex items-start sm:items-center justify-between p-3 border-b-2 flex-col sm:flex-row gap-3 sm:gap-0" // Stack on mobile
+                  )}
+                  // --- Style applied dynamically ---
+                  style={{ 
+                    backgroundColor: pColor, 
+                    color: sColor, 
+                    borderBottomColor: hColor 
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    {/* Rating Circle */}
+                    <div 
+                      className="flex flex-col items-center justify-center w-12 h-12 rounded-lg border shrink-0"
+                      // --- Style applied dynamically ---
+                      style={{ 
+                        backgroundColor: hColor, 
+                        color: pColor, // Use primary color for text for contrast
+                        borderColor: hColor 
+                      }}
+                    >
+                      <span className="text-lg font-bold leading-none">
+                        {displayRating}
+                      </span>
+                      <span className="text-[10px] leading-none tracking-wide" style={{ opacity: 0.8 }}>RAT</span>
+                    </div>
+                    
+                    {/* Name and Position */}
+                    <div>
+                      <h4 className="text-base font-semibold truncate" style={{ color: sColor }}>
+                        {player.name || 'Unnamed Player'}
+                      </h4>
+                      <span 
+                        className="text-xs uppercase px-2 py-0.5 rounded font-semibold"
+                        // --- Style applied dynamically ---
+                        style={{ 
+                          backgroundColor: 'transparent', 
+                          color: sColor, 
+                          border: `1px solid ${sColor}`,
+                          opacity: 0.8
+                        }}
+                      >
+                        {player.position || 'N/A'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Minutes Played (pulled out of grid) */}
+                  <div className="shrink-0 sm:pl-2">
+                    {/* This component's inputs are styled to be theme-aware */}
+                    <PlayerStatInput
+                        playerId={player.id} field="minutes_played" value={player.minutes_played}
+                        onChange={handleInputChange} onAdjust={handleAdjustValue} label="Min" Icon={Clock}
+                        min={0} max={gameDuration > 90 ? 120 : 90} step={5} inputWidth="w-12"
+                    />
+                  </div>
+                </div>
+                
+                {/* Stats Grid (Goals, Assists, Cards, etc.) */}
+                <div className="p-3 grid grid-cols-3 sm:grid-cols-5 gap-x-2 gap-y-4">
+                  <PlayerStatInput
+                      playerId={player.id} field="goals" value={player.goals}
+                      onChange={handleInputChange} onAdjust={handleAdjustValue} label="Gls" Icon={Goal}
+                      min={0} max={20} step={1} inputWidth="w-12"
+                  />
+                  <PlayerStatInput
+                      playerId={player.id} field="assists" value={player.assists}
+                      onChange={handleInputChange} onAdjust={handleAdjustValue} label="Ast" Icon={Footprints}
+                      min={0} max={20} step={1} inputWidth="w-12"
+                  />
+                  <PlayerStatInput
+                      playerId={player.id} field="yellow_cards" value={player.yellow_cards}
+                      onChange={handleInputChange} onAdjust={handleAdjustValue} label="YC" Icon={Square}
+                      min={0} max={2} step={1} inputWidth="w-12"
+                  />
+                  <PlayerStatInput
+                      playerId={player.id} field="red_cards" value={player.red_cards}
+                      onChange={handleInputChange} onAdjust={handleAdjustValue} label="RC" Icon={SquareCheck}
+                      min={0} max={1} step={1} inputWidth="w-12"
+                  />
+                  <PlayerStatInput
+                      playerId={player.id} field="own_goals" value={player.own_goals}
+                      onChange={handleInputChange} onAdjust={handleAdjustValue} label="OG" Icon={ShieldAlert}
+                      min={0} max={5} step={1} inputWidth="w-12"
+                  />
+                </div>
+            </div>
+          )
+        })}
       </div>
     </div>
   );

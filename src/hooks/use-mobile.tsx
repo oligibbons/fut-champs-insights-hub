@@ -1,24 +1,18 @@
-import * as React from "react"
+import { useState, useEffect } from 'react';
 
-const MOBILE_BREAKPOINT = 768
+// Simple hook to check if screen width is below a threshold (e.g., 768px for tablets)
+export const useMobile = (breakpoint = 768): boolean => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < breakpoint);
 
-export function useMobile(): boolean | undefined {
-  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < breakpoint);
+    };
 
-  React.useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
-    
-    // Set the initial value on mount
-    setIsMobile(mql.matches);
+    window.addEventListener('resize', handleResize);
+    // Cleanup listener on component unmount
+    return () => window.removeEventListener('resize', handleResize);
+  }, [breakpoint]); // Re-run effect if breakpoint changes
 
-    // Listen for changes
-    const onChange = (e: MediaQueryListEvent) => {
-      setIsMobile(e.matches)
-    }
-    mql.addEventListener("change", onChange)
-    
-    return () => mql.removeEventListener("change", onChange)
-  }, [])
-
-  return isMobile
-}
+  return isMobile;
+};

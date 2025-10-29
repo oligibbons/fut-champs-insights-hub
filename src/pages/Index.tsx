@@ -202,13 +202,28 @@ const Dashboard = () => {
                          <TabsTrigger value="analytics" className="tabs-trigger-style rounded-xl flex-1 flex gap-2 items-center justify-center"> <BarChart3 className="h-4 w-4" /> Analytics </TabsTrigger>
                     </TabsList>
 
-                    {/* --- Tabs Content with forceMount, rendering components via findAndRenderSection --- */}
+                    {/* --- 
+                      FIX: Replaced space-y-6 with grid wrappers
+                      to match the mobile-first layout of the other tabs.
+                    --- */}
                     <TabsContent value="overview" className="space-y-6 mt-4" forceMount>
-                         {/* findAndRenderSection now passes data implicitly */}
-                         {findAndRenderSection('overview')}
-                         {findAndRenderSection('primaryInsight')}
-                         {findAndRenderSection('recentRuns')}
-                         {findAndRenderSection('records')}
+                         
+                         {/* This wrapper forces 'overview' and 'primaryInsight' into a 
+                             single column on mobile/tablet and 2 columns on desktop. */}
+                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {findAndRenderSection('overview')}
+                            {findAndRenderSection('primaryInsight')}
+                         </div>
+
+                         {/* These components are full-width, so they get their own 
+                             single-column grid wrapper for consistent spacing. */}
+                         <div className="grid grid-cols-1 gap-6">
+                            {findAndRenderSection('recentRuns')}
+                         </div>
+                         <div className="grid grid-cols-1 gap-6">
+                            {findAndRenderSection('records')}
+                         </div>
+
                     </TabsContent>
 
                     <TabsContent value="players" className="space-y-6 mt-4" forceMount>

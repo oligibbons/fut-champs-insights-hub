@@ -32,28 +32,27 @@ const DashboardOverview = () => {
   }
 
   // No-data state is handled by the child components (WeeklyWinsChart, etc.)
-  // We can add a top-level check if needed, but the children handle it well.
-  // const completedWeeks = weeklyData.filter(w => w.isCompleted);
-  // if (completedWeeks.length === 0) {
-  //    return <div className="text-center py-8 text-muted-foreground">Complete a week to see overview stats.</div>;
-  // }
-
+  // ...
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       
       {/* --- COLUMN 1: THE "HERO" CHART --- */}
       <div>
-         {/* Title moved inside DashboardSection now */}
-         {/* <h3 className="text-lg font-semibold text-white mb-3">Recent Win Trend</h3> */}
+          {/* Title moved inside DashboardSection now */}
+          {/* <h3 className="text-lg font-semibold text-white mb-3">Recent Win Trend</h3> */}
         <WeeklyWinsChart />
       </div>
 
       {/* --- COLUMN 2: SUPPORTING STATS --- */}
       <div>
-         {/* Title moved inside DashboardSection now */}
-         {/* <h3 className="text-lg font-semibold text-white mb-3">Key Stats</h3> */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Title moved inside DashboardSection now */}
+          {/* <h3 className="text-lg font-semibold text-white mb-3">Key Stats</h3> */}
+          
+          {/* --- THIS IS THE FIX --- */}
+          {/* Changed sm:grid-cols-2 to lg:grid-cols-2. */}
+          {/* This stops the stats from squashing on tablets. */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <CompactStatCard
             title="Best Record"
             value={`${stats.bestRecord} Wins`}

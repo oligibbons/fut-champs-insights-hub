@@ -54,7 +54,12 @@ const RecentRuns = () => {
     >
       <CarouselContent className="-ml-4">
         {completedRuns.map((run) => (
-          <CarouselItem key={run.weekId} className="pl-4 md:basis-1/2 lg:basis-1/3">
+          
+          // --- THIS IS THE FIX ---
+          // Changed md:basis-1/2 lg:basis-1/3
+          // to lg:basis-1/2 xl:basis-1/3
+          // This stops the carousel from showing 2 items on tablets.
+          <CarouselItem key={run.weekId} className="pl-4 lg:basis-1/2 xl:basis-1/3">
             <RunCard week={run} />
           </CarouselItem>
         ))}

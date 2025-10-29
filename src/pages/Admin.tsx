@@ -324,16 +324,19 @@ const Admin = () => {
                     </div>
                 </div>
                 <Tabs defaultValue="users" className="w-full">
-                    <div className="overflow-x-auto pb-2">
-                        <TabsList className="glass-card rounded-2xl shadow-xl border-0 p-2 h-auto inline-flex w-max">
-                            <TabsTrigger value="users" className="rounded-xl"><Users className="h-4 w-4 mr-2" />User Management</TabsTrigger>
-                            <TabsTrigger value="status" className="rounded-xl"><ShieldCheck className="h-4 w-4 mr-2" />System Status</TabsTrigger>
-                            <TabsTrigger value="card-types" className="rounded-xl"><Paintbrush className="h-4 w-4 mr-2" />Card Types</TabsTrigger>
-                            <TabsTrigger value="achievements" className="rounded-xl"><Award className="h-4 w-4 mr-2" />Achievements</TabsTrigger>
-                            <TabsTrigger value="analytics" className="rounded-xl"><BarChart className="h-4 w-4 mr-2" />Site Analytics</TabsTrigger>
-                            <TabsTrigger value="bugs" className="rounded-xl"><Bug className="h-4 w-4 mr-2" />Bug Reports</TabsTrigger>
-                        </TabsList>
-                    </div>
+                    {/* --- FIX IS HERE --- */}
+                    {/* Removed overflow-x-auto div */}
+                    {/* Added responsive grid to TabsList */}
+                    <TabsList className="glass-card rounded-2xl shadow-xl border-0 p-2 h-auto grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+                        <TabsTrigger value="users" className="rounded-xl"><Users className="h-4 w-4 mr-2" />User Management</TabsTrigger>
+                        <TabsTrigger value="status" className="rounded-xl"><ShieldCheck className="h-4 w-4 mr-2" />System Status</TabsTrigger>
+                        <TabsTrigger value="card-types" className="rounded-xl"><Paintbrush className="h-4 w-4 mr-2" />Card Types</TabsTrigger>
+                        <TabsTrigger value="achievements" className="rounded-xl"><Award className="h-4 w-4 mr-2" />Achievements</TabsTrigger>
+                        <TabsTrigger value="analytics" className="rounded-xl"><BarChart className="h-4 w-4 mr-2" />Site Analytics</TabsTrigger>
+                        <TabsTrigger value="bugs" className="rounded-xl"><Bug className="h-4 w-4 mr-2" />Bug Reports</TabsTrigger>
+                    </TabsList>
+                    {/* --- END FIX --- */}
+                    
                     <TabsContent value="users" className="mt-6"><UserManagement /></TabsContent>
                     <TabsContent value="status" className="mt-6"><SystemStatus /></TabsContent>
                     <TabsContent value="card-types" className="mt-6"><CardTypeCreator /></TabsContent>

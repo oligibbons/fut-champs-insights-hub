@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'; // Added React import
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Minus, Plus } from 'lucide-react';
+import { Label } from '@/components/ui/label'; // Kept Label import
 
 interface MobileNumberInputProps {
-  label: string;
+  label?: string; // Keep optional label
   value: number | string;
   onChange: (value: number) => void;
   min?: number;
@@ -23,7 +23,7 @@ const MobileNumberInput: React.FC<MobileNumberInputProps> = ({
   value,
   onChange,
   min = 0,
-  max = 100,
+  max = 100, // Default based on previous context
   step = 1,
   className = '',
   labelClassName = '',
@@ -34,120 +34,134 @@ const MobileNumberInput: React.FC<MobileNumberInputProps> = ({
   const [inputValue, setInputValue] = useState<string>(value.toString());
 
   useEffect(() => {
-    setInputValue(value.toString());
+    // Update input value if the prop changes from outside
+    const currentNumValue = parseFloat(inputValue);
+    const propNumValue = parseFloat(String(value));
+    // Check if values are different or if input is NaN but prop is not
+    if (isNaN(currentNumValue) || Math.abs(currentNumValue - propNumValue) > 1e-6) {
+        setInputValue(value.toString());
+    }
+    // Also handle case where prop becomes empty/invalid, reset input?
+    // Or assume prop 'value' is always controlled and valid.
   }, [value]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
-    
-    // Allow empty string for clearing the input
-    if (newValue === '') {
-      setInputValue('');
+
+    // Allow empty string or just "-" for typing
+    if (newValue === '' || (newValue === '-' && min !== undefined && min < 0)) {
+      setInputValue(newValue);
+      // Potentially call onChange with 0 or min if that's desired behavior on empty
+      // onChange(min !== undefined ? min : 0); // Uncomment if needed
       return;
     }
-    
-    // For decimal values, ensure we only allow the specified number of decimal places
-    if (decimals > 0) {
-      const regex = new RegExp(`^\\d*\\.?\\d{0,${decimals}}$`);
-      if (regex.test(newValue)) {
-        setInputValue(newValue);
-        
-        // Only call onChange if the value is within bounds
-        const numValue = parseFloat(newValue);
-        if (!isNaN(numValue) && numValue >= min && numValue <= max) {
-          onChange(parseFloat(parseFloat(newValue).toFixed(decimals)));
-        }
-      }
-    } else {
-      // For integer values
-      const regex = /^\d*$/;
-      if (regex.test(newValue)) {
-        setInputValue(newValue);
-        
-        // Only call onChange if the value is within bounds
-        const numValue = parseInt(newValue);
-        if (!isNaN(numValue) && numValue >= min && numValue <= max) {
-          onChange(numValue);
-        }
-      }
+
+    // Regex to match valid numbers (potentially negative, potentially decimal)
+    const regex = decimals > 0
+      ? new RegExp(`^-?\\d*\\.?\\d{0,${decimals}}$`)
+      : /^-?\d*$/;
+
+    if (regex.test(newValue)) {
+      setInputValue(newValue);
+      // Optional: Try parsing and calling onChange immediately for responsiveness
+      // const numValue = parseFloat(newValue);
+      // if (!isNaN(numValue)) {
+      //   onChange(numValue); // Be careful with intermediate invalid states
+      // }
     }
   };
 
   const handleBlur = () => {
-    // If empty, set to min value
-    if (inputValue === '') {
-      setInputValue(min.toString());
-      onChange(min);
-      return;
-    }
-    
-    // Ensure value is within bounds
+    let finalValue: number;
     const numValue = parseFloat(inputValue);
-    if (numValue < min) {
-      setInputValue(min.toString());
-      onChange(min);
-    } else if (numValue > max) {
-      setInputValue(max.toString());
-      onChange(max);
+
+    if (inputValue === '' || inputValue === '-' || isNaN(numValue)) {
+      // If empty, NaN, or just '-', default to min (or 0 if min undefined)
+      finalValue = min !== undefined ? min : 0;
     } else {
-      // Ensure we're using the parsed number with correct decimal places
-      const formattedValue = decimals > 0 ? parseFloat(numValue.toFixed(decimals)) : Math.round(numValue);
-      setInputValue(formattedValue.toString());
-      onChange(formattedValue);
+      // Clamp the parsed number
+      const clamped = Math.max(min !== undefined ? min : -Infinity, Math.min(max !== undefined ? max : Infinity, numValue));
+      // Format according to decimals
+      finalValue = decimals > 0 ? parseFloat(clamped.toFixed(decimals)) : Math.round(clamped);
+    }
+
+    // Update the input display to the cleaned value
+    setInputValue(finalValue.toString());
+
+    // Call onChange ONLY if the final calculated value differs from the original prop value
+    // to avoid unnecessary updates/re-renders if the user just blurs without changing.
+    const propNumValue = parseFloat(String(value));
+    if (isNaN(propNumValue) || Math.abs(propNumValue - finalValue) > 1e-6) {
+      onChange(finalValue);
     }
   };
 
+
   const increment = () => {
-    const currentValue = inputValue === '' ? min - step : parseFloat(inputValue);
-    const newValue = Math.min(max, currentValue + step);
+    // Use current prop value as base for calculation for consistency
+    const currentValue = parseFloat(String(value));
+    const baseValue = isNaN(currentValue) ? (min !== undefined ? min : 0) : currentValue;
+    const newValue = Math.min(max !== undefined ? max : Infinity, baseValue + step);
     const formattedValue = decimals > 0 ? parseFloat(newValue.toFixed(decimals)) : Math.round(newValue);
-    setInputValue(formattedValue.toString());
-    onChange(formattedValue);
+    setInputValue(formattedValue.toString()); // Update local display immediately
+    onChange(formattedValue); // Update parent state
   };
 
   const decrement = () => {
-    const currentValue = inputValue === '' ? min + step : parseFloat(inputValue);
-    const newValue = Math.max(min, currentValue - step);
+    // Use current prop value as base
+    const currentValue = parseFloat(String(value));
+     const baseValue = isNaN(currentValue) ? (min !== undefined ? min : 0) : currentValue;
+    const newValue = Math.max(min !== undefined ? min : -Infinity, baseValue - step);
     const formattedValue = decimals > 0 ? parseFloat(newValue.toFixed(decimals)) : Math.round(newValue);
-    setInputValue(formattedValue.toString());
-    onChange(formattedValue);
+    setInputValue(formattedValue.toString()); // Update local display immediately
+    onChange(formattedValue); // Update parent state
   };
 
+  // Determine current numeric value for disabling buttons accurately
+  const currentNumericValue = parseFloat(inputValue);
+  const isValidNumber = !isNaN(currentNumericValue);
+
   return (
-    <div className={`space-y-2 ${className}`}>
+    <div className={`space-y-1 ${className}`}> {/* Reduced space-y if needed */}
       {label && (
-        <Label className={`text-white font-medium ${labelClassName}`}>{label}</Label>
+        <Label className={`text-xs text-white ${labelClassName}`}>{label}</Label> // Smaller label?
       )}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1"> {/* Reduced gap */}
         <Button
-          type="button"
+          type="button" // Important for forms
           variant="outline"
           size="icon"
+          // --- FIX: Smaller button ---
+          className="h-8 w-8 p-1 shrink-0 bg-gray-800 border-gray-600 text-white hover:bg-gray-700 static-element" // Combined styles
           onClick={decrement}
-          disabled={disabled || parseFloat(inputValue || min.toString()) <= min}
-          className="h-10 w-10 bg-gray-800 border-gray-600 text-white hover:bg-gray-700 static-element"
+          disabled={disabled || !isValidNumber || (min !== undefined && currentNumericValue <= min)}
         >
           <Minus className="h-4 w-4" />
         </Button>
-        
+
         <Input
-          type="text"
+          type="text" // Use text to allow intermediate states
           inputMode={decimals > 0 ? "decimal" : "numeric"}
           value={inputValue}
           onChange={handleInputChange}
           onBlur={handleBlur}
           placeholder={placeholder}
           disabled={disabled}
-          className="bg-gray-800 border-gray-600 text-white text-center h-10 mobile-friendly-input"
+          // --- FIX: Narrower input ---
+          className="h-8 w-12 text-center px-1 bg-gray-800 border-gray-600 text-white mobile-friendly-input" // Combined styles
+          min={min} // Keep browser hints
+          max={max}
+          step={step}
         />
-        
+
         <Button
-          type="button"
+          type="button" // Important for forms
           variant="outline"
           size="icon"
+           // --- FIX: Smaller button ---
+          className="h-8 w-8 p-1 shrink-0 bg-gray-800 border-gray-600 text-white hover:bg-gray-700 static-element" // Combined styles
           onClick={increment}
-          disabled={disabled || parseFloat(inputValue || max.toString()) >= max}
-          className="h-10 w-10 bg-gray-800 border-gray-600 text-white hover:bg-gray-700 static-element"
+          disabled={disabled || !isValidNumber || (max !== undefined && currentNumericValue >= max)}
         >
           <Plus className="h-4 w-4" />
         </Button>

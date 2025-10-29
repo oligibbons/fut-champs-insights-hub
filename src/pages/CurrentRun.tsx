@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState, memo, useMemo } from 'react';
+import { useEffect, useCallback, useState, memo, useMemo, useRef } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -12,13 +12,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Toggle } from '@/components/ui/toggle';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // <-- Added CardHeader, CardTitle
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Save, Loader2, UserPlus, Users, Plus, Minus, Trophy, Shield, BarChartHorizontal, Star, X, Goal, Footprints, Clock, Square, SquareCheck, ShieldAlert } from 'lucide-react';
 import PlayerStatsForm from '@/components/PlayerStatsForm';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Game, PlayerPerformanceInsert, TeamStatisticsInsert, PlayerPerformance, WeeklyPerformance } from '@/types/futChampions';
-import { Squad, PlayerCard } from '@/types/squads'; // <-- Removed SquadPlayer, not in use
+// --- ADDED CardType IMPORT ---
+import { Squad, PlayerCard, CardType } from '@/types/squads'; 
 import { get, set, isEqual } from 'lodash';
 import { useAllSquadsData } from '@/hooks/useAllSquadsData';
 import { useTheme } from '@/hooks/useTheme';
@@ -32,9 +33,9 @@ import WeekProgress from '@/components/WeekProgress';
 import CurrentRunStats from '@/components/CurrentRunStats';
 import GameListItem from '@/components/GameListItem';
 import WeekCompletionPopup from '@/components/WeekCompletionPopup';
-
-// --- ADD THIS IMPORT ---
 import CurrentRunChunkStats from '@/components/CurrentRunChunkStats';
+
+import { useMobile } from '@/hooks/use-mobile';
 
 // --- ZOD SCHEMA ---
 const gameFormSchema = z.object({
@@ -76,7 +77,8 @@ const gameFormSchema = z.object({
       id: z.string().uuid(), // player_id
       name: z.string(),
       position: z.string(),
-      // --- ADDED isSub for sorting ---
+      // --- ADDED card_type ---
+      card_type: z.string(),
       isSub: z.boolean(), 
       minutes_played: z.coerce.number().min(0).max(120).default(90),
       goals: z.coerce.number().min(0).default(0),
@@ -225,7 +227,8 @@ type PlayerStatFormData = {
   id: string; // player_id (UUID)
   name: string;
   position: string;
-  isSub: boolean; // --- ADDED ---
+  card_type: string; // --- ADDED ---
+  isSub: boolean;
   minutes_played: number;
   goals: number;
   assists: number;
@@ -248,11 +251,12 @@ interface GameRecordFormProps {
   gameVersion: string;
   nextGameNumber: number;
   onCancel: () => void;
+  cardTypes: CardType[]; // --- ADDED ---
 }
 
 // --- MAIN FORM COMPONENT ---
 const GameRecordForm = ({
-  onSubmit, isLoading, game, weekId, gameVersion, nextGameNumber, onCancel,
+  onSubmit, isLoading, game, weekId, gameVersion, nextGameNumber, onCancel, cardTypes // --- ADDED ---
 }: GameRecordFormProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -296,16 +300,22 @@ const GameRecordForm = ({
 
     // If editing an existing game, merge its data
     if (isEditing && game) {
-      const formPlayerStats: PlayerStatFormData[] = (game.player_performances || []).map(p => ({
+      const formPlayerStats: PlayerStatFormData[] = (game.player_performances || []).map(p => {
+          // --- FIX: Find the player in the current squads data to get the card_type ---
+          const playerInfo = squads?.flatMap(s => s.squad_players.map(sp => sp.players)).find(pl => pl?.id === p.player_id);
+        
+          return {
             id: p.player_id || p.id, // Use player_id (UUID)
             name: p.player_name || 'Unknown',
             position: p.position || 'N/A',
-            // --- ADDED: Default isSub to false, this is imperfect but avoids breaking ---
+            // --- ADDED card_type ---
+            card_type: playerInfo?.card_type || 'gold_rare', // Fallback
             isSub: false, // This will be imperfect for edited games, as we didn't store this
             minutes_played: p.minutes_played ?? 90, goals: p.goals ?? 0, assists: p.assists ?? 0,
             rating: p.rating ?? 7.0, yellow_cards: p.yellow_cards ?? 0, red_cards: p.red_cards ?? 0,
             own_goals: p.own_goals ?? 0,
-      }));
+          }
+      });
 
        const mergedData = {
          ...baseDefaults, // Start with base defaults
@@ -363,10 +373,10 @@ const GameRecordForm = ({
 
    // Effect to reset the form when defaultValues change significantly
   useEffect(() => {
-    if (JSON.stringify(form.formState.defaultValues) !== JSON.stringify(defaultValues)) {
-        reset(defaultValues);
-    }
-  }, [reset, defaultValues, form.formState.defaultValues]);
+    // Reset form when default values change (e.g., when 'game' (for editing) changes)
+    // or when the default squad is loaded asynchronously.
+    reset(defaultValues);
+  }, [reset, defaultValues]);
 
 
   // Effect to populate/update player_stats list based on selected squad and duration
@@ -383,7 +393,9 @@ const GameRecordForm = ({
                     return { // Map to PlayerStatFormData structure
                         id: sp.players!.id, name: sp.players!.name,
                         position: sp.players!.position || 'N/A',
-                        isSub: !isStarter, // --- ADDED ---
+                        // --- UPDATED to include card_type ---
+                        card_type: sp.players!.card_type || 'gold_rare', 
+                        isSub: !isStarter,
                         minutes_played: isStarter ? (watchedDuration || 90) : 0, // Subs start at 0
                         goals: 0, assists: 0, rating: 7.0,
                         yellow_cards: 0, red_cards: 0, own_goals: 0,
@@ -394,15 +406,10 @@ const GameRecordForm = ({
 
         } else if (!squadJustChanged && watchedPlayerStats) {
              const updatedPlayers = watchedPlayerStats.map(currentPlayer => {
-                // ---
-                // --- !! PROACTIVE FIX IS HERE !! ---
-                // ---
-                // Added optional chaining (?.) to selectedSquad, as it could
-                // be undefined if no squad is selected.
-                // ---
                 const squadPlayerInfo = (selectedSquad?.squad_players || []).find(sp => sp.players?.id === currentPlayer.id);
                 const wasStarter = squadPlayerInfo?.slot_id?.startsWith('starting-');
                  const currentDefaultDuration = game?.duration || 90; 
+                 // Update minutes only if they were a starter and their minutes matched the *previous* duration
                  const needsAutoUpdate = wasStarter && (currentPlayer.minutes_played === currentDefaultDuration || currentPlayer.minutes_played === 90 || currentPlayer.minutes_played === 120);
 
                 const newMinutes = needsAutoUpdate ? (watchedDuration || 90) : currentPlayer.minutes_played;
@@ -419,8 +426,9 @@ const GameRecordForm = ({
     }
   }, [
       selectedSquad, watchedDuration, setValue, isEditing, dirtyFields.squad_id,
-      squadsLoading, reset, game?.duration,
-      watchedPlayerStats 
+      squadsLoading, game?.duration,
+      watchedPlayerStats, 
+      // Add `setValue` and `isEditing` to dependencies, remove `reset` as it's not used here
     ]);
 
 
@@ -569,7 +577,9 @@ const GameRecordForm = ({
                    <TabsTrigger value="players"><Star className="h-4 w-4 mr-1 md:mr-2" />Players</TabsTrigger>
               </TabsList>
 
+              {/* --- FIX 1: Added mt-4 to ScrollArea --- */}
               <ScrollArea className="flex-1 mt-4 pr-2 -mr-2 custom-scrollbar">
+                 {/* --- FIX 1: Removed pt-4 from this div --- */}
                <div className="space-y-4 md:space-y-6 pb-4"> 
                   <TabsContent value="details" className="space-y-4 md:space-y-6 mt-0">
                     <FormField
@@ -694,8 +704,10 @@ const GameRecordForm = ({
                                          <Tooltip key={tag.id}>
                                              <TooltipTrigger asChild>
                                                  <FormControl>
+                                                     {/* --- FIX 2: Removed variant="outline" to allow theme colors to apply --- */}
                                                      <Toggle
-                                                         variant="outline" size="sm"
+                                                         size="sm"
+                                                         id={`tag-${tag.id}`} // --- FIX 2: Added unique ID ---
                                                          className={cn(
                                                             "text-xs h-7 border border-border/50 transition-colors duration-150", 
                                                             "hover:bg-muted/50", 
@@ -754,10 +766,12 @@ const GameRecordForm = ({
                                <FormField control={control} name="player_stats" render={({ field }) => (
                                    <FormItem>
                                        <FormControl>
+                                           {/* --- ADDED cardTypes prop --- */}
                                            <PlayerStatsForm
                                                players={field.value || []} 
                                                onStatsChange={(updatedPlayers) => field.onChange(updatedPlayers)} 
                                                gameDuration={watchedDuration || 90} 
+                                               cardTypes={cardTypes}
                                            />
                                        </FormControl>
                                        <FormMessage /> 
@@ -802,6 +816,52 @@ const CurrentRunPage = () => {
   const [showGameForm, setShowGameForm] = useState(false);
   const [editingGame, setEditingGame] = useState<Game | null>(null);
   const [showCompletionPopup, setShowCompletionPopup] = useState(false);
+  
+  // --- ADDED cardTypes state ---
+  const [cardTypes, setCardTypes] = useState<CardType[]>([]);
+  
+  const isMobile = useMobile();
+  const formRef = useRef<HTMLDivElement>(null);
+
+  // --- ADDED useEffect to fetch card types ---
+  useEffect(() => {
+    const fetchCardTypes = async () => {
+      if (!user) return;
+      try {
+        // Fetch default types
+        const { data: defaultData, error: defaultError } = await supabase
+          .from('card_types')
+          .select('*')
+          .eq('is_default', true)
+          .eq('game_version', gameVersion);
+
+        // Fetch user-specific types
+        const { data: userData, error: userError } = await supabase
+          .from('card_types')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('game_version', gameVersion);
+
+        if (defaultError) throw defaultError;
+        if (userError) throw userError;
+
+        // Combine and remove duplicates (preferring user types)
+        const allTypes = [...(userData || []), ...(defaultData || [])];
+        const uniqueTypes = Array.from(new Map(allTypes.map(item => [item.name, item])).values());
+        setCardTypes(uniqueTypes);
+      } catch (error: any) {
+        console.error('Error fetching card types:', error.message);
+        toast({
+            title: "Error loading card types",
+            description: "Player card colors may not display correctly.",
+            variant: "destructive"
+        })
+      }
+    };
+    if(user && gameVersion) {
+        fetchCardTypes();
+    }
+  }, [user, gameVersion, toast]); // Removed supabase from deps as it's stable
 
   const fetchCurrentRun = useCallback(async (showLoading = true) => {
     if (!user) {
@@ -811,24 +871,21 @@ const CurrentRunPage = () => {
     if (showLoading) setIsLoadingRun(true);
 
     try {
-      // --- !! FIX IS HERE !! ---
       const { data, error } = await supabase
-        .from('weekly_performances') // 1. Fixed: 'weekly_performances' (plural)
+        .from('weekly_performances')
         .select(
-          '*, games:game_results(*, team_stats:team_statistics(*), player_performances(*))' // 2. Fixed: Aliased table names
+          '*, games:game_results(*, team_stats:team_statistics(*), player_performances(*))'
         )
         .eq('user_id', user.id)
         .eq('game_version', gameVersion)
         .eq('is_completed', false)
         .order('week_number', { ascending: false })
         .limit(1);
-      // --- !! END OF FIX !! ---
 
       if (error) throw error;
 
       if (data && data.length > 0) {
         const run = data[0];
-        // Sort games by game_number ascending
         if (run.games) {
           run.games.sort((a, b) => a.game_number - b.game_number);
         }
@@ -856,9 +913,8 @@ const CurrentRunPage = () => {
     setIsLoadingRun(true);
 
     try {
-      // 1. Get the latest week number
       const { data: latestRun, error: latestRunError } = await supabase
-        .from('weekly_performances') // Fixed
+        .from('weekly_performances')
         .select('week_number')
         .eq('user_id', user.id)
         .eq('game_version', gameVersion)
@@ -870,16 +926,15 @@ const CurrentRunPage = () => {
       const newWeekNumber = (latestRun && latestRun.length > 0) ? latestRun[0].week_number + 1 : 1;
       const startDate = new Date().toISOString();
 
-      // 2. Create the new run
       const { data: newRun, error: newRunError } = await supabase
-        .from('weekly_performances') // Fixed
+        .from('weekly_performances')
         .insert({
           user_id: user.id,
           week_number: newWeekNumber,
           start_date: startDate,
           game_version: gameVersion,
           is_completed: false,
-          custom_name: `Week ${newWeekNumber}`, // Default name
+          custom_name: `Week ${newWeekNumber}`,
           target_wins: 11,
           target_rank: 'Rank 5',
         })
@@ -888,8 +943,8 @@ const CurrentRunPage = () => {
 
       if (newRunError) throw newRunError;
 
-      setCurrentRun({ ...newRun, games: [] }); // Set as active run
-      setShowGameForm(true); // Show form to add game 1
+      setCurrentRun({ ...newRun, games: [] });
+      setShowGameForm(true);
       toast({
         title: "New Run Started!",
         description: `Good luck in Week ${newWeekNumber}!`,
@@ -912,7 +967,7 @@ const CurrentRunPage = () => {
 
     try {
       const { error } = await supabase
-        .from('weekly_performances') // Fixed
+        .from('weekly_performances')
         .update({ is_completed: true, end_date: new Date().toISOString() })
         .eq('id', currentRun.id);
 
@@ -922,7 +977,7 @@ const CurrentRunPage = () => {
         title: "Run Completed!",
         description: `${currentRun.custom_name} has been saved to your history.`,
       });
-      setShowCompletionPopup(true); // Show summary popup
+      setShowCompletionPopup(true);
     } catch (err: any) {
       toast({
         title: "Error finishing run",
@@ -945,7 +1000,6 @@ const CurrentRunPage = () => {
     const gameId = editingGame?.id; 
 
     try {
-      // --- 1. Upsert Game Data ---
       const gamePayload = {
         ...gameData,
         id: gameId, 
@@ -956,29 +1010,26 @@ const CurrentRunPage = () => {
       };
 
       const { data: savedGame, error: gameError } = await supabase
-        .from('game_results') // Fixed
+        .from('game_results')
         .upsert(gamePayload) 
         .select()
         .single();
 
       if (gameError) throw gameError;
 
-      // --- 2. Handle Team Stats ---
       const statsPayload = {
         ...teamStats,
         game_id: savedGame.id,
         user_id: user.id,
-        // week_id: currentRun.id, // Not in team_statistics schema
         id: editingGame?.team_stats ? (editingGame.team_stats as any).id : undefined
       };
       
       const { error: statsError } = await supabase
-        .from('team_statistics') // Fixed
+        .from('team_statistics')
         .upsert(statsPayload);
 
       if (statsError) throw statsError;
 
-      // --- 3. Handle Player Performances (Delete existing then insert new) ---
       if (gameId) {
         const { error: deletePerfError } = await supabase
           .from('player_performances')
@@ -991,7 +1042,6 @@ const CurrentRunPage = () => {
         const perfPayload = playerPerformances.map(p => ({
           ...p,
           game_id: savedGame.id,
-          // week_id: currentRun.id, // Not in player_performances schema
           user_id: user.id,
         }));
         
@@ -1002,7 +1052,6 @@ const CurrentRunPage = () => {
         if (perfError) throw perfError;
       }
 
-      // --- 4. Update Run Summary ---
       await fetchCurrentRun(false); 
 
       toast({
@@ -1025,20 +1074,36 @@ const CurrentRunPage = () => {
     }
   };
 
+  const handleAddMatchToggle = () => {
+    const isOpening = !showGameForm;
+    setShowGameForm(isOpening);
+    
+    if (!isOpening) {
+        setEditingGame(null);
+    }
+
+    if (isOpening && isMobile) {
+        setTimeout(() => {
+            formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 150);
+    }
+  };
+
   const handleEditGame = (game: Game) => {
     setEditingGame(game);
     setShowGameForm(true);
-  };
-
-  const handleCancelEdit = () => {
-    setEditingGame(null);
-    setShowGameForm(false);
+    
+    if (isMobile) {
+      setTimeout(() => {
+        formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 150);
+    }
   };
   
   const handleDeleteGame = async (gameId: string) => {
     try {
         const { error } = await supabase
-            .from('game_results') // Fixed
+            .from('game_results')
             .delete()
             .eq('id', gameId);
         if (error) throw error;
@@ -1064,8 +1129,6 @@ const CurrentRunPage = () => {
       fetchCurrentRun(); 
   };
 
-  // --- RENDER LOGIC ---
-
   if (isLoadingRun) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -1087,7 +1150,6 @@ const CurrentRunPage = () => {
     );
   }
 
-  // Safely initialize games array (as corrected in previous step)
   const games = currentRun.games || [];
   const nextGameNumber = games.length + 1;
 
@@ -1100,7 +1162,7 @@ const CurrentRunPage = () => {
         </div>
         <div className="flex gap-2">
             {!showGameForm && (
-                <Button onClick={() => setShowGameForm(true)} disabled={isFinishingRun}>
+                <Button onClick={handleAddMatchToggle} disabled={isFinishingRun}>
                     <Plus className="h-4 w-4 mr-2" /> Record Game {nextGameNumber}
                 </Button>
             )}
@@ -1115,35 +1177,32 @@ const CurrentRunPage = () => {
         </div>
       </div>
 
-      {/* --- ADDED THE NEW COMPONENT HERE --- */}
       {currentRun && (
         <CurrentRunChunkStats currentRun={currentRun} />
       )}
-      {/* --- END OF ADDITION --- */}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column (Stats) */}
         <div className="lg:col-span-1 space-y-6">
           
-          {/* (Props are fixed from previous step) */}
           <CurrentRunStats games={games} />
           <WeekProgress currentWeek={currentRun} />
 
         </div>
 
-        {/* Right Column (Form or Game List) */}
         <div className="lg:col-span-2">
           {showGameForm ? (
-            <GameRecordForm
-              key={editingGame?.id || 'new'} 
-              onSubmit={handleGameSubmit}
-              isLoading={isSubmittingGame}
-              game={editingGame}
-              weekId={currentRun.id}
-              gameVersion={gameVersion}
-              nextGameNumber={editingGame ? editingGame.game_number : nextGameNumber}
-              onCancel={handleCancelEdit}
-            />
+            <div ref={formRef} key={editingGame?.id || 'new'}> 
+              <GameRecordForm
+                onSubmit={handleGameSubmit}
+                isLoading={isSubmittingGame}
+                game={editingGame}
+                weekId={currentRun.id}
+                gameVersion={gameVersion}
+                nextGameNumber={editingGame ? editingGame.game_number : nextGameNumber}
+                onCancel={handleAddMatchToggle}
+                cardTypes={cardTypes} // --- PASSED PROP ---
+              />
+            </div>
           ) : (
              <Card className="glass-card">
                 <CardHeader><CardTitle>Game History</CardTitle></CardHeader>
@@ -1168,7 +1227,6 @@ const CurrentRunPage = () => {
         </div>
       </div>
       
-      {/* Completion Popup */}
       <WeekCompletionPopup
         isOpen={showCompletionPopup}
         onClose={handlePopupClose}

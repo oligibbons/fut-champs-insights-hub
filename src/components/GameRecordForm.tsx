@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react'; // Added React and useRef
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -30,7 +30,7 @@ const gameRecordSchema = z.object({
   game_mode: z.string().min(1, "Game mode is required"),
   opponent_name: z.string().optional(),
   match_notes: z.string().optional(),
-  game_duration: z.number().min(90),
+  game_duration: z.number().min(90), // Assuming min duration based on previous code
   penalties: z.object({
     went_to_penalties: z.boolean(),
     own_score: z.number().min(0),
@@ -42,7 +42,7 @@ const gameRecordSchema = z.object({
     name: z.string(),
     position: z.string(),
     // --- FIX: Add isSub to the schema ---
-    isSub: z.boolean(), 
+    isSub: z.boolean(),
     minutes_played: z.any().transform(val => {
       const num = parseInt(String(val), 10);
       return isNaN(num) ? 0 : num;
@@ -80,7 +80,8 @@ interface GameRecordFormProps {
   runId: string;
 }
 
-const GameRecordForm: React.FC<GameRecordFormProps> = ({ squad, onGameRecorded, runId }) => {
+// Wrap with forwardRef
+const GameRecordForm = React.forwardRef<HTMLDivElement, GameRecordFormProps>(({ squad, onGameRecorded, runId }, ref) => {
   const { user } = useAuth();
   const { gameVersion } = useGameVersion();
   const [isLoading, setIsLoading] = useState(false);
@@ -157,7 +158,7 @@ const GameRecordForm: React.FC<GameRecordFormProps> = ({ squad, onGameRecorded, 
     const performances = watchedPlayerPerformances || [];
     const validPlayers = performances.filter(p => p.minutes_played > 0);
     if (validPlayers.length === 0) return { overallRating: 0, validPlayers: 0 };
-    
+
     const totalRating = validPlayers.reduce((sum, p) => sum + Number(p.rating), 0);
     const avgRating = totalRating / validPlayers.length;
     return { overallRating: avgRating, validPlayers: validPlayers.length };
@@ -185,7 +186,7 @@ const GameRecordForm: React.FC<GameRecordFormProps> = ({ squad, onGameRecorded, 
       overallRating, // avg player rating
       validPlayers
     );
-    
+
     const gameData: Omit<Game, 'id' | 'created_at'> = {
       user_id: user.id,
       run_id: runId,
@@ -216,6 +217,7 @@ const GameRecordForm: React.FC<GameRecordFormProps> = ({ squad, onGameRecorded, 
 
     try {
       // 1. Insert the game
+      // Assuming 'games' is the correct table name based on your CurrentRun.tsx
       const { data: game, error: gameError } = await supabase
         .from('games')
         .insert(gameData)
@@ -231,8 +233,8 @@ const GameRecordForm: React.FC<GameRecordFormProps> = ({ squad, onGameRecorded, 
           game_id: game.id,
           player_id: p.id,
           user_id: user.id,
-          run_id: runId,
-          squad_id: squad.id,
+          run_id: runId, // Ensure run_id is included if your table requires it
+          squad_id: squad.id, // Ensure squad_id is included if your table requires it
           position: p.position,
           minutes_played: p.minutes_played,
           rating: p.rating,
@@ -251,7 +253,7 @@ const GameRecordForm: React.FC<GameRecordFormProps> = ({ squad, onGameRecorded, 
 
         if (perfError) throw perfError;
       }
-      
+
       toast({
         title: "Game Recorded!",
         description: `Your ${values.result} (${values.score_own}-${values.score_opponent}) has been saved.`,
@@ -259,7 +261,7 @@ const GameRecordForm: React.FC<GameRecordFormProps> = ({ squad, onGameRecorded, 
       onGameRecorded(game);
       form.reset(); // Reset form to default values
 
-      // Reset squad performances
+      // Reset squad performances in the form state
        if (squad && squad.startingXI && squad.substitutes) {
           const startingPlayers = squad.startingXI.map(pos => ({
             ...(pos.player),
@@ -279,7 +281,7 @@ const GameRecordForm: React.FC<GameRecordFormProps> = ({ squad, onGameRecorded, 
             id: p.player_id!,
             name: p.name || 'Unknown Player',
             position: p.position || 'N/A',
-            isSub: p.isSub, // <-- Pass the flag here
+            isSub: p.isSub, // Pass the flag here
             minutes_played: p.isSub ? 0 : 90, // Default starters to 90, subs to 0
             goals: 0,
             assists: 0,
@@ -290,7 +292,7 @@ const GameRecordForm: React.FC<GameRecordFormProps> = ({ squad, onGameRecorded, 
           }));
         form.setValue('playerPerformances', initialPerformances as any);
       }
-      
+
       setActiveTab('match'); // Go back to first tab
 
     } catch (error: any) {
@@ -304,7 +306,7 @@ const GameRecordForm: React.FC<GameRecordFormProps> = ({ squad, onGameRecorded, 
       setIsLoading(false);
     }
   };
-  
+
   const gameModeOptions = [
     { value: 'fut_champions', label: 'FUT Champions' },
     { value: 'rivals', label: 'Rivals' },
@@ -315,207 +317,214 @@ const GameRecordForm: React.FC<GameRecordFormProps> = ({ squad, onGameRecorded, 
   ];
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="match">Match</TabsTrigger>
-            <TabsTrigger value="opponent">Opponent</TabsTrigger>
-            <TabsTrigger value="players">Players</TabsTrigger>
-          </TabsList>
+    // Attach the forwarded ref here
+    <div ref={ref}>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            {/* --- FIX: Added glass-card styling --- */}
+            <TabsList className="glass-card rounded-2xl shadow-xl border-0 p-2 h-auto grid w-full grid-cols-3">
+              <TabsTrigger value="match" className="rounded-xl">Match</TabsTrigger>
+              <TabsTrigger value="opponent" className="rounded-xl">Opponent</TabsTrigger>
+              <TabsTrigger value="players" className="rounded-xl">Players</TabsTrigger>
+            </TabsList>
+            {/* --- END FIX --- */}
 
-          {/* --- MATCH TAB --- */}
-          <TabsContent value="match">
-            <DashboardSection title="Match Result" info="Record the final score and outcome.">
-              <div className="grid grid-cols-3 gap-4">
-                {/* Result */}
-                <FormField
-                  control={form.control}
-                  name="result"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Result</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+            {/* --- MATCH TAB --- */}
+            <TabsContent value="match">
+              <DashboardSection title="Match Result" info="Record the final score and outcome.">
+                <div className="grid grid-cols-3 gap-4">
+                  {/* Result */}
+                  <FormField
+                    control={form.control}
+                    name="result"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Result</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select result" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="win">Win</SelectItem>
+                            <SelectItem value="loss">Loss</SelectItem>
+                            <SelectItem value="draw">Draw</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  {/* Score Own */}
+                  <FormField
+                    control={form.control}
+                    name="score_own"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Your Score</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select result" />
-                          </SelectTrigger>
+                          <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value) || 0)} />
                         </FormControl>
-                        <SelectContent>
-                          <SelectItem value="win">Win</SelectItem>
-                          <SelectItem value="loss">Loss</SelectItem>
-                          <SelectItem value="draw">Draw</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                {/* Score Own */}
-                <FormField
-                  control={form.control}
-                  name="score_own"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Your Score</FormLabel>
-                      <FormControl>
-                        <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value) || 0)} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                {/* Score Opponent */}
-                <FormField
-                  control={form.control}
-                  name="score_opponent"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Opponent Score</FormLabel>
-                      <FormControl>
-                        <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value) || 0)} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  {/* Score Opponent */}
+                  <FormField
+                    control={form.control}
+                    name="score_opponent"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Opponent Score</FormLabel>
+                        <FormControl>
+                          <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value) || 0)} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-              {/* Penalties */}
+                {/* Penalties */}
+                <Controller
+                  control={form.control}
+                  name="penalties"
+                  render={({ field }) => (
+                    <PenaltyShootoutInput
+                      value={field.value || { went_to_penalties: false, own_score: 0, opponent_score: 0 }}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
+              </DashboardSection>
+
+              <DashboardSection title="Match Details" info="Provide extra context about the game.">
+                  {/* Game Mode */}
+                   <FormField
+                    control={form.control}
+                    name="game_mode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Game Mode</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select game mode" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {gameModeOptions.map(opt => (
+                              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  {/* Opponent Name */}
+                  <FormField
+                    control={form.control}
+                    name="opponent_name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Opponent Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. FUT_Champ_123" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  {/* Match Notes */}
+                  <FormField
+                    control={form.control}
+                    name="match_notes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Match Notes</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. He was very good at cutbacks..." {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+              </DashboardSection>
+            </TabsContent>
+
+            {/* --- OPPONENT TAB --- */}
+            <TabsContent value="opponent">
               <Controller
                 control={form.control}
-                name="penalties"
+                name="opponentSquad"
                 render={({ field }) => (
-                  <PenaltyShootoutInput
-                    value={field.value || { went_to_penalties: false, own_score: 0, opponent_score: 0 }}
+                  <OpponentSquadInput
+                    value={field.value}
                     onChange={field.onChange}
                   />
                 )}
               />
-            </DashboardSection>
+            </TabsContent>
 
-            <DashboardSection title="Match Details" info="Provide extra context about the game.">
-                {/* Game Mode */}
-                 <FormField
-                  control={form.control}
-                  name="game_mode"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Game Mode</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select game mode" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {gameModeOptions.map(opt => (
-                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                {/* Opponent Name */}
-                <FormField
-                  control={form.control}
-                  name="opponent_name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Opponent Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g. FUT_Champ_123" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                {/* Match Notes */}
-                <FormField
-                  control={form.control}
-                  name="match_notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Match Notes</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g. He was very good at cutbacks..." {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-            </DashboardSection>
-          </TabsContent>
+            {/* --- PLAYERS TAB --- */}
+            <TabsContent value="players">
+              {/* Removed squad?.name interpolation to avoid potential 'undefined' */}
+              <DashboardSection title="Player Performances" info="Record stats for each player in this match.">
+                {!squad ? (
+                  <div className="text-center text-muted-foreground py-8">
+                    <Users className="mx-auto h-12 w-12" />
+                    <p className="mt-4">Please select a squad on the 'Squad' tab to record player stats.</p>
+                  </div>
+                ) : (
+                  <PlayerStatsForm
+                    key={squad.id} // Re-mounts component when squad changes
+                    players={watchedPlayerPerformances}
+                    onStatsChange={players => form.setValue('playerPerformances', players)}
+                    gameDuration={watchedGameDuration}
+                  />
+                )}
+              </DashboardSection>
+            </TabsContent>
 
-          {/* --- OPPONENT TAB --- */}
-          <TabsContent value="opponent">
-            <Controller
-              control={form.control}
-              name="opponentSquad"
-              render={({ field }) => (
-                <OpponentSquadInput 
-                  value={field.value} 
-                  onChange={field.onChange} 
-                />
-              )}
-            />
-          </TabsContent>
+          </Tabs>
 
-          {/* --- PLAYERS TAB --- */}
-          <TabsContent value="players">
-            {/* --- FIX: Removed ${squad?.name} to prevent 'undefined' --- */}
-            <DashboardSection title="Player Performances" info="Record stats for each player in this match.">
-              {!squad ? (
-                <div className="text-center text-muted-foreground py-8">
-                  <Users className="mx-auto h-12 w-12" />
-                  <p className="mt-4">Please select a squad on the 'Squad' tab to record player stats.</p>
-                </div>
-              ) : (
-                <PlayerStatsForm
-                  key={squad.id} // Re-mounts component when squad changes
-                  players={watchedPlayerPerformances}
-                  onStatsChange={players => form.setValue('playerPerformances', players)}
-                  gameDuration={watchedGameDuration}
-                />
-              )}
-            </DashboardSection>
-          </TabsContent>
-
-        </Tabs>
-
-        {/* --- FORM SUBMISSION & RATING --- */}
-        <Card className="glass-card">
-          <CardContent className="pt-6">
-             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="flex items-center gap-3">
-                    <BarChart2 className="h-6 w-6 text-primary" />
-                    <div className="flex flex-col">
-                        <span className="text-sm text-muted-foreground">Est. Game Rating</span>
-                        <span className={`text-2xl font-bold ${getRatingColor(overallRating)}`}>
-                            {overallRating.toFixed(1)}
-                        </span>
-                    </div>
-                </div>
-                <Button 
-                  type="submit" 
-                  disabled={isLoading || !squad}
-                  className="w-full sm:w-auto"
-                >
-                  {isLoading ? "Saving..." : "Record Game"}
-                </Button>
-             </div>
-             {!squad && (
-                <p className="text-xs text-destructive-foreground text-center mt-4 sm:text-right">
-                    You must select a squad to record a game.
-                </p>
-             )}
-          </CardContent>
-        </Card>
-      </form>
-    </Form>
+          {/* --- FORM SUBMISSION & RATING --- */}
+          <Card className="glass-card">
+            <CardContent className="pt-6">
+               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                      <BarChart2 className="h-6 w-6 text-primary" />
+                      <div className="flex flex-col">
+                          <span className="text-sm text-muted-foreground">Est. Game Rating</span>
+                          <span className={`text-2xl font-bold ${getRatingColor(overallRating)}`}>
+                              {overallRating.toFixed(1)}
+                          </span>
+                      </div>
+                  </div>
+                  <Button
+                    type="submit"
+                    disabled={isLoading || !squad}
+                    className="w-full sm:w-auto"
+                  >
+                    {isLoading ? "Saving..." : "Record Game"}
+                  </Button>
+               </div>
+               {!squad && (
+                  <p className="text-xs text-destructive-foreground text-center mt-4 sm:text-right">
+                      You must select a squad to record a game.
+                  </p>
+               )}
+            </CardContent>
+          </Card>
+        </form>
+      </Form>
+    </div>
   );
-};
+}); // Close forwardRef
+
+GameRecordForm.displayName = 'GameRecordForm'; // Add display name
 
 export default GameRecordForm;

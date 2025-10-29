@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -211,12 +210,17 @@ const CurrentWeekCarousel = ({ currentWeek, enabledTiles }: CurrentWeekCarouselP
         <Carousel className="w-full">
           <CarouselContent className="-ml-2">
             {enabledTilesData.map((tile, index) => (
-              <CarouselItem key={tile.id} className="pl-2 md:basis-1/2 lg:basis-1/3">
+              
+              // --- THIS IS THE FIX ---
+              // Changed md:basis-1/2 lg:basis-1/3
+              // to lg:basis-1/2 xl:basis-1/3
+              // This stops the carousel from showing 2 items on tablets.
+              <CarouselItem key={tile.id} className="pl-2 lg:basis-1/2 xl:basis-1/3">
                 {tile.content}
               </CarouselItem>
             ))}
           </CarouselContent>
-          {enabledTilesData.length > 3 && (
+          {enabledTilesData.length > 2 && ( // This is fine, only shows arrows when needed
             <>
               <CarouselPrevious className="glass-card border-fifa-blue/30" />
               <CarouselNext className="glass-card border-fifa-blue/30" />
