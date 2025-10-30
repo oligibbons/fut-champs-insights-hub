@@ -22,8 +22,8 @@ import {
 } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner'; // **STEP 1: Import toast from sonner**
-import { useState } from 'react';
+import { toast } from 'sonner';
+import { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 
 // Schema for profile updates
@@ -39,8 +39,14 @@ const profileFormSchema = z.object({
   display_name: z
     .string()
     .max(50, 'Display name must be 50 characters or less.')
+    .nullable()
     .optional(),
-  avatar_url: z.string().url('Must be a valid URL.').optional().or(z.literal('')),
+  avatar_url: z
+    .string()
+    .url('Must be a valid URL.')
+    .nullable()
+    .optional()
+    .or(z.literal('')),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -51,58 +57,76 @@ const UserAccountSettings = () => {
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
+    // 1. Set empty defaults
     defaultValues: {
-      username: profile?.username || '',
-      display_name: profile?.display_name || '',
-      avatar_url: profile?.avatar_url || '',
+      username: '',
+      display_name: '',
+      avatar_url: '',
     },
-    values: { // Ensure form updates when profile loads
-      username: profile?.username || '',
-      display_name: profile?.display_name || '',
-      avatar_url: profile?.avatar_url || '',
-    },
+    // 2. Disable form while auth is loading
     disabled: authLoading,
   });
 
+  // 3. This useEffect populates the form's *default values*
+  //    only *after* the profile has finished loading. This sets the "clean" state.
+  useEffect(() => {
+    // Only reset when loading is finished.
+    // `profile` can be null for a new user, which is fine.
+    if (!authLoading) {
+      form.reset({
+        username: profile?.username || '',
+        display_name: profile?.display_name || '',
+        avatar_url: profile?.avatar_url || '',
+      });
+    }
+  }, [authLoading, profile, form.reset]);
+
+
   async function onSubmit(data: ProfileFormValues) {
-    if (!user || !profile) return;
+    // 4. This check is now the final safeguard.
+    if (!user) {
+       toast.error("Error", { description: "User not found. Please try logging in again." });
+       return;
+    }
 
     setIsSubmitting(true);
     try {
-      // 1. Update the 'profiles' table
+      // 5. Use .upsert() to CREATE or UPDATE the profile
       const { error: profileError } = await supabase
         .from('profiles')
-        .update({
+        .upsert({
+          id: user.id, // Set the ID to the user's ID
           username: data.username,
           display_name: data.display_name,
           avatar_url: data.avatar_url,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', user.id);
+        .eq('id', user.id); // Specify 'eq' for the update part
 
       if (profileError) throw profileError;
 
-      // 2. Check if username is different, if so, update 'auth.users'
-      if (data.username !== profile.username) {
+      // 6. Check for username change (only if profile existed before)
+      if (profile && data.username !== profile.username) {
         const { error: authError } = await supabase.auth.updateUser({
           data: {
-            username: data.username, // Add username to auth.users.raw_user_meta_data
+            username: data.username,
           },
         });
         if (authError) throw authError;
       }
       
-      // 3. Refetch profile data to update context
+      // 7. Call the now-working fetchProfile function
       await fetchProfile();
 
-      // **STEP 2 (SUCCESS): Show success toast**
       toast.success('Profile Updated', {
         description: 'Your account settings have been saved successfully.',
       });
+      
+      // Reset the form's dirty state to the newly saved data
+      form.reset(data);
 
     } catch (error: any) {
       console.error('Error updating profile:', error);
-      // **STEP 2 (ERROR): Show error toast**
       toast.error('Error Updating Profile', {
         description: `Failed to save settings: ${error.message}`,
       });
@@ -112,7 +136,7 @@ const UserAccountSettings = () => {
   }
 
   return (
-    <Card className="glass-card-content"> {/* **UI FIX: Use glass-card-content** */}
+    <Card className="glass-card-content">
       <CardHeader>
         <CardTitle>Account</CardTitle>
         <CardDescription>

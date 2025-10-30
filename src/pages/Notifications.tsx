@@ -2,8 +2,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Bell, AlertCircle, CheckCircle, Info, Trash2, ShieldAlert } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Bell, AlertCircle, CheckCircle, Info, Trash2 } from 'lucide-react';
+import { toast } from 'sonner'; // **MODIFIED: Import toast from sonner**
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
@@ -51,7 +51,7 @@ const NotificationIcon = ({ type }: { type: TNotification['type'] }) => {
 
 const Notifications = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
+  // **MODIFIED: Removed useToast hook**
   const [notifications, setNotifications] = useState<TNotification[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -74,10 +74,9 @@ const Notifications = () => {
       if (error) throw error;
       setNotifications(data || []);
     } catch (error: any) {
-      toast({
-        title: 'Error',
+      // **MODIFIED: Use sonner toast**
+      toast.error('Error', {
         description: `Failed to fetch notifications: ${error.message}`,
-        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -92,10 +91,9 @@ const Notifications = () => {
         prev.map((n) => (n.id === id ? { ...n, read: true } : n))
       );
     } catch (error: any) {
-      toast({
-        title: 'Error',
+      // **MODIFIED: Use sonner toast**
+      toast.error('Error', {
         description: `Failed to mark as read: ${error.message}`,
-        variant: 'destructive',
       });
     }
   };
@@ -105,15 +103,14 @@ const Notifications = () => {
       const { error } = await supabase.from('notifications').delete().eq('id', id);
       if (error) throw error;
       setNotifications((prev) => prev.filter((n) => n.id !== id));
-      toast({
-        title: 'Deleted',
+      // **MODIFIED: Use sonner toast**
+      toast.success('Deleted', {
         description: 'Notification removed.',
       });
     } catch (error: any) {
-      toast({
-        title: 'Error',
+      // **MODIFIED: Use sonner toast**
+      toast.error('Error', {
         description: `Failed to delete notification: ${error.message}`,
-        variant: 'destructive',
       });
     }
   };
@@ -124,15 +121,14 @@ const Notifications = () => {
       const { error } = await supabase.from('notifications').delete().eq('user_id', user.id);
       if (error) throw error;
       setNotifications([]);
-      toast({
-        title: 'All Cleared',
+      // **MODIFIED: Use sonner toast**
+      toast.success('All Cleared', {
         description: 'All notifications have been deleted.',
       });
     } catch (error: any) {
-      toast({
-        title: 'Error',
+      // **MODIFIED: Use sonner toast**
+      toast.error('Error', {
         description: `Failed to clear notifications: ${error.message}`,
-        variant: 'destructive',
       });
     }
   };

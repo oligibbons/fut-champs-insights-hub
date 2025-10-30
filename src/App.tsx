@@ -11,7 +11,8 @@ import Auth from './pages/Auth';
 import NotFound from './pages/NotFound';
 import Navigation from './components/Navigation';
 import ProtectedRoute from './components/ProtectedRoute';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+// **FIX: AuthProvider is no longer needed here, but useAuth is**
+import { useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './hooks/useTheme';
 import { Toaster } from "@/components/ui/sonner";
 import { DataSyncProvider } from './hooks/useDataSync.tsx';
@@ -103,37 +104,37 @@ function App() {
   return (
     <ThemeProvider>
       <AnimatedBackground />
-      <AuthProvider>
-        <GameVersionProvider>
-          <DataSyncProvider>
-            <Routes>
-              <Route path="/auth" element={<Auth />} />
+      {/* **FIX: Removed the redundant AuthProvider wrap** */}
+      <GameVersionProvider>
+        <DataSyncProvider>
+          <Routes>
+            <Route path="/auth" element={<Auth />} />
+            
+            {/* All protected routes are now children of the MainLayout route. */}
+            <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
+              <Route path="/" element={<Index />} />
+              <Route path="/current-run" element={<CurrentRun />} />
+              <Route path="/history" element={<History />} />
+              <Route path="/analytics" element={<Analytics />} />
+              <Route path="/players" element={<Players />} />
+              <Route path="/squads" element={<Squads />} />
+              <Route path="/ai-insights" element={<AIInsights />} />
+              <Route path="/achievements" element={<Achievements />} />
               
-              {/* All protected routes are now children of the MainLayout route. */}
-              <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
-                <Route path="/" element={<Index />} />
-                <Route path="/current-run" element={<CurrentRun />} />
-                <Route path="/history" element={<History />} />
-                <Route path="/analytics" element={<Analytics />} />
-                <Route path="/players" element={<Players />} />
-                <Route path="/squads" element={<Squads />} />
-                <Route path="/ai-insights" element={<AIInsights />} />
-                <Route path="/achievements" element={<Achievements />} />
-                
-                {/* **NEW: Added the Notifications route** */}
-                <Route path="/notifications" element={<Notifications />} />
-                
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/admin" element={<Admin />} />
-              </Route>
+              {/* **NEW: Added the Notifications route** */}
+              <Route path="/notifications" element={<Notifications />} />
               
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            {/* This is your 'sonner' toast component */}
-            <Toaster />
-          </DataSyncProvider>
-        </GameVersionProvider>
-      </AuthProvider>
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/admin" element={<Admin />} />
+            </Route>
+            
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          {/* This is your 'sonner' toast component */}
+          <Toaster />
+        </DataSyncProvider>
+      </GameVersionProvider>
+      {/* **FIX: Removed the redundant AuthProvider wrap** */}
     </ThemeProvider>
   );
 }
