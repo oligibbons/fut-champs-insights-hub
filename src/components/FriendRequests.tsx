@@ -4,9 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Loader2, Check, X } from 'lucide-react';
+import { Loader2, Check, X, Mail } from 'lucide-react';
+import { Badge } from './ui/badge';
 
-export const FriendRequests = () => {
+interface FriendRequestsProps {
+  requestCount: number;
+}
+
+export const FriendRequests = ({ requestCount }: FriendRequestsProps) => {
   const { data: requests, isLoading } = useFriendRequests();
   const respond = useRespondToFriendRequest();
 
@@ -17,16 +22,22 @@ export const FriendRequests = () => {
   const isLoadingResponse = respond.isPending;
 
   return (
-    <Card>
+    <Card className="glass-card shadow-lg border-white/10 rounded-2xl">
       <CardHeader>
-        <CardTitle>Friend Requests</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle>Friend Requests</CardTitle>
+          {requestCount > 0 && (
+            <Badge className="bg-primary text-primary-foreground">
+              {requestCount}
+            </Badge>
+          )}
+        </div>
         <CardDescription>
-          Accept or decline pending friend requests.
+          Accept or decline pending requests.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {isLoading && (
-          // Skeleton loading
           Array.from({ length: 2 }).map((_, i) => (
             <div key={i} className="flex items-center justify-between space-x-4">
               <div className="flex items-center space-x-4">
@@ -45,7 +56,10 @@ export const FriendRequests = () => {
         )}
 
         {!isLoading && requests && requests.length === 0 && (
-          <p className="text-sm text-muted-foreground">You have no pending friend requests.</p>
+          <div className="flex flex-col items-center justify-center h-24 text-center">
+            <Mail className="h-8 w-8 text-muted-foreground mb-2" />
+            <p className="text-sm text-muted-foreground">No pending requests</p>
+          </div>
         )}
 
         {!isLoading && requests && requests.map((req) => (
@@ -56,7 +70,7 @@ export const FriendRequests = () => {
                 <AvatarFallback>{req.requester.username.charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div>
-                <div className="font-medium">{req.requester.display_name}</div>
+                <div className="font-medium text-white">{req.requester.display_name}</div>
                 <div className="text-sm text-muted-foreground">@{req.requester.username}</div>
               </div>
             </div>
@@ -66,6 +80,7 @@ export const FriendRequests = () => {
                 size="icon"
                 onClick={() => handleResponse(req.id, 'accepted')}
                 disabled={isLoadingResponse}
+                className="hover:bg-green-500/10 hover:border-green-500"
               >
                 {isLoadingResponse ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4 text-green-500" />}
               </Button>
@@ -74,6 +89,7 @@ export const FriendRequests = () => {
                 size="icon"
                 onClick={() => handleResponse(req.id, 'declined')}
                 disabled={isLoadingResponse}
+                className="hover:bg-red-500/10 hover:border-red-500"
               >
                 {isLoadingResponse ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4 text-red-500" />}
               </Button>

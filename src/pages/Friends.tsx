@@ -1,11 +1,10 @@
 // src/pages/Friends.tsx
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AddFriendForm } from '@/components/AddFriendForm';
 import { FriendRequests } from '@/components/FriendRequests';
 import { FriendsList } from '@/components/FriendsList';
 import { useFriendRequests } from '@/hooks/useFriends';
 import { Badge } from '@/components/ui/badge';
-import { Users, UserPlus, Mail } from 'lucide-react';
+import { UsersRound } from 'lucide-react';
 
 const Friends = () => {
   const { data: requests } = useFriendRequests();
@@ -13,41 +12,33 @@ const Friends = () => {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-3xl font-bold">Friends</h1>
+      <div className="flex items-center gap-4">
+          <div className="p-3 rounded-2xl bg-primary/10">
+            <UsersRound className="h-8 w-8 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-white">
+              Friends & Community
+            </h1>
+            <p className="text-muted-foreground mt-1">Manage your friends, requests, and find new players.</p>
+          </div>
+      </div>
 
-      <Tabs defaultValue="friends" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 sm:w-auto">
-          <TabsTrigger value="friends">
-            <Users className="mr-2 h-4 w-4" />
-            My Friends
-          </TabsTrigger>
-          <TabsTrigger value="requests">
-            <Mail className="mr-2 h-4 w-4" />
-            Requests
-            {requestCount > 0 && (
-              <Badge className="ml-2 bg-primary text-primary-foreground">
-                {requestCount}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="add">
-            <UserPlus className="mr-2 h-4 w-4" />
-            Add Friend
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="friends">
+      {/* --- New 2-Column Layout --- */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        {/* --- Left Column (Friends List) --- */}
+        <div className="lg:col-span-2">
           <FriendsList />
-        </TabsContent>
+        </div>
 
-        <TabsContent value="requests">
-          <FriendRequests />
-        </TabsContent>
-
-        <TabsContent value="add">
+        {/* --- Right Column (Requests & Add) --- */}
+        <div className="space-y-8">
+          <FriendRequests requestCount={requestCount} />
           <AddFriendForm />
-        </TabsContent>
-      </Tabs>
+        </div>
+        
+      </div>
     </div>
   );
 };

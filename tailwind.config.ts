@@ -1,3 +1,4 @@
+// tailwind.config.ts (Corrected Version)
 import type { Config } from "tailwindcss"
 
 const config = {
@@ -7,6 +8,7 @@ const config = {
     './components/**/*.{ts,tsx}',
     './app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}',
+    './index.html', // Make sure this line is here
   ],
   prefix: "",
   theme: {
@@ -30,7 +32,7 @@ const config = {
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
+          foreground: "hsl(var(--primary-foreground))",
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
@@ -80,13 +82,12 @@ const config = {
         "fade-in-down": {
           from: { opacity: "0", transform: "translateY(-10px)" },
           to: { opacity: "1", transform: "translateY(0)" },
-        }
-      },
-
+        },
        shimmer: {
           '0%': { transform: 'translateX(-100%)' },
           '100%': { transform: 'translateX(100%)' },
         },
+      },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
@@ -96,7 +97,10 @@ const config = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require("tailwindcss-animate"),
+    require("@tailwindcss/typography"), // <-- THIS IS THE CRITICAL LINE YOU ARE MISSING
+  ],
 } satisfies Config
 
 export default config

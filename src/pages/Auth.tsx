@@ -1,3 +1,4 @@
+// src/pages/Auth.tsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/hooks/useTheme';
 import { Mail, Lock, User, LogIn, UserPlus } from 'lucide-react';
-import logo from '/fut-trackr-logo.jpg'; // <-- ADD THIS IMPORT
+import logo from '/fut-trackr-logo.jpg'; 
 
 const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -51,7 +52,9 @@ const Auth = () => {
           title: "Welcome back!",
           description: "Successfully signed in."
         });
-        navigate('/');
+        
+        // --- FIX: Navigate to /dashboard instead of / ---
+        navigate('/dashboard');
       }
     } catch (error: any) {
       toast({
@@ -76,7 +79,7 @@ const Auth = () => {
               src={logo} 
               alt="FUTTrackr Logo" 
               className="w-10 h-10 object-contain"
-            /> {/* <-- CHANGE THIS SRC */}
+            />
           </div>
           <CardTitle className="text-2xl font-bold text-white mb-2">
             {isSignUp ? 'Create Account' : 'Welcome Back'}

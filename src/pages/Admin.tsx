@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
+// src/pages/Admin.tsx
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -11,13 +12,16 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'; // Corrected Import
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Users, BarChart, Bug, ShieldCheck, Paintbrush, Award, Search, Edit, Trash2, Save, Lock, Unlock, RefreshCw, Plus, X, Database, Trophy, Download, Upload, Shield } from "lucide-react";
-import Navigation from '@/components/Navigation';
+// --- ADDED Home ICON ---
+import { Users, BarChart, Bug, ShieldCheck, Paintbrush, Award, Search, Edit, Trash2, Save, Lock, Unlock, RefreshCw, Plus, X, Database, Trophy, Download, Upload, Shield, Home } from "lucide-react";
 import { CardType as CustomCardTypeFromSquads } from '@/types/squads';
 import { useGameVersion } from '@/contexts/GameVersionContext';
-import { useTheme } from '@/hooks/useTheme'; // Import useTheme
+import { useTheme } from '@/hooks/useTheme';
+
+// --- ADDED IMPORT FOR THE NEW COMPONENT ---
+import HomePageEditor from '@/components/admin/HomePageEditor';
 
 // --- TYPE DEFINITIONS ---
 interface UserProfile {
@@ -166,7 +170,7 @@ const StatCard = ({ icon: Icon, title, value, isStatus }: { icon: React.ElementT
 };
 
 
-// --- CARD TYPE CREATOR COMPONENT (with 3 colors) ---
+// --- CARD TYPE CREATOR COMPONENT ---
 const CardTypeCreator = () => {
     const { user } = useAuth();
     const { gameVersion } = useGameVersion();
@@ -305,47 +309,49 @@ const Admin = () => {
     }, [user]);
 
     if(loading) return <div className="flex items-center justify-center h-screen"><RefreshCw className="h-8 w-8 animate-spin" style={{ color: currentTheme.colors.primary }}/></div>;
-    if(!isAdmin) return (<div className="min-h-screen"><Navigation /><main className="lg:ml-64 p-4 lg:p-6 flex items-center justify-center h-full"><div className="text-center"><ShieldCheck className="h-16 w-16 mx-auto mb-4 text-red-500" /><h2 className="text-2xl font-bold text-white">Access Denied</h2><p className="text-gray-400">You do not have permission to view this page.</p></div></main></div>);
+    
+    // --- UPDATED: Removed wrapper from non-admin state ---
+    if(!isAdmin) return (<div className="flex items-center justify-center h-full"><div className="text-center"><ShieldCheck className="h-16 w-16 mx-auto mb-4 text-red-500" /><h2 className="text-2xl font-bold text-white">Access Denied</h2><p className="text-gray-400">You do not have permission to view this page.</p></div></div>);
     
   return (
-    <div className="min-h-screen">
-        <Navigation />
-        <main className="lg:ml-64 p-4 lg:p-6">
-            <div className="max-w-7xl mx-auto space-y-6">
-                <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-2xl" style={{ backgroundColor: `${currentTheme.colors.primary}20` }}>
-                      <ShieldCheck className="h-8 w-8" style={{ color: currentTheme.colors.primary }} />
-                    </div>
-                    <div>
-                      <h1 className="text-3xl font-bold text-white">
-                        Admin Panel
-                      </h1>
-                      <p className="text-gray-400 mt-1">Site-wide management and analytics.</p>
-                    </div>
-                </div>
-                <Tabs defaultValue="users" className="w-full">
-                    {/* --- FIX IS HERE --- */}
-                    {/* Removed overflow-x-auto div */}
-                    {/* Added responsive grid to TabsList */}
-                    <TabsList className="glass-card rounded-2xl shadow-xl border-0 p-2 h-auto grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
-                        <TabsTrigger value="users" className="rounded-xl"><Users className="h-4 w-4 mr-2" />User Management</TabsTrigger>
-                        <TabsTrigger value="status" className="rounded-xl"><ShieldCheck className="h-4 w-4 mr-2" />System Status</TabsTrigger>
-                        <TabsTrigger value="card-types" className="rounded-xl"><Paintbrush className="h-4 w-4 mr-2" />Card Types</TabsTrigger>
-                        <TabsTrigger value="achievements" className="rounded-xl"><Award className="h-4 w-4 mr-2" />Achievements</TabsTrigger>
-                        <TabsTrigger value="analytics" className="rounded-xl"><BarChart className="h-4 w-4 mr-2" />Site Analytics</TabsTrigger>
-                        <TabsTrigger value="bugs" className="rounded-xl"><Bug className="h-4 w-4 mr-2" />Bug Reports</TabsTrigger>
-                    </TabsList>
-                    {/* --- END FIX --- */}
-                    
-                    <TabsContent value="users" className="mt-6"><UserManagement /></TabsContent>
-                    <TabsContent value="status" className="mt-6"><SystemStatus /></TabsContent>
-                    <TabsContent value="card-types" className="mt-6"><CardTypeCreator /></TabsContent>
-                    <TabsContent value="achievements" className="mt-6"><AchievementCreator /></TabsContent>
-                    <TabsContent value="analytics" className="mt-6"><SiteAnalytics /></TabsContent>
-                    <TabsContent value="bugs" className="mt-6"><BugReports /></TabsContent>
-                </Tabs>
+    // --- UPDATED: Removed Navigation and main wrappers ---
+    <div className="max-w-7xl mx-auto space-y-6">
+        <div className="flex items-center gap-4">
+            <div className="p-3 rounded-2xl" style={{ backgroundColor: `${currentTheme.colors.primary}20` }}>
+              <ShieldCheck className="h-8 w-8" style={{ color: currentTheme.colors.primary }} />
             </div>
-        </main>
+            <div>
+              <h1 className="text-3xl font-bold text-white">
+                Admin Panel
+              </h1>
+              <p className="text-gray-400 mt-1">Site-wide management and analytics.</p>
+            </div>
+        </div>
+        <Tabs defaultValue="users" className="w-full">
+            <TabsList className="glass-card rounded-2xl shadow-xl border-0 p-2 h-auto grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
+                <TabsTrigger value="users" className="rounded-xl"><Users className="h-4 w-4 mr-2" />User Management</TabsTrigger>
+                <TabsTrigger value="status" className="rounded-xl"><ShieldCheck className="h-4 w-4 mr-2" />System Status</TabsTrigger>
+                
+                {/* --- ADDED HOME PAGE TAB --- */}
+                <TabsTrigger value="home-page" className="rounded-xl"><Home className="h-4 w-4 mr-2" />Home Page</TabsTrigger>
+
+                <TabsTrigger value="card-types" className="rounded-xl"><Paintbrush className="h-4 w-4 mr-2" />Card Types</TabsTrigger>
+                <TabsTrigger value="achievements" className="rounded-xl"><Award className="h-4 w-4 mr-2" />Achievements</TabsTrigger>
+                <TabsTrigger value="analytics" className="rounded-xl"><BarChart className="h-4 w-4 mr-2" />Site Analytics</TabsTrigger>
+                <TabsTrigger value="bugs" className="rounded-xl"><Bug className="h-4 w-4 mr-2" />Bug Reports</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="users" className="mt-6"><UserManagement /></TabsContent>
+            <TabsContent value="status" className="mt-6"><SystemStatus /></TabsContent>
+
+            {/* --- ADDED HOME PAGE TAB CONTENT --- */}
+            <TabsContent value="home-page" className="mt-6"><HomePageEditor /></TabsContent>
+
+            <TabsContent value="card-types" className="mt-6"><CardTypeCreator /></TabsContent>
+            <TabsContent value="achievements" className="mt-6"><AchievementCreator /></TabsContent>
+            <TabsContent value="analytics" className="mt-6"><SiteAnalytics /></TabsContent>
+            <TabsContent value="bugs" className="mt-6"><BugReports /></TabsContent>
+        </Tabs>
     </div>
   );
 };
