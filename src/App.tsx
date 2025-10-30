@@ -10,7 +10,11 @@ import Settings from './pages/Settings';
 import Auth from './pages/Auth';
 import NotFound from './pages/NotFound';
 import Navigation from './components/Navigation';
+
+// --- MODIFIED: Import PublicRoute ---
 import ProtectedRoute from './components/ProtectedRoute';
+import PublicRoute from './components/PublicRoute'; // <-- ADD THIS
+
 import { useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './hooks/useTheme';
 import { Toaster } from "@/components/ui/sonner";
@@ -105,18 +109,21 @@ function App() {
       <GameVersionProvider>
         <DataSyncProvider>
           <Routes>
-            {/* --- NEW: Public routes --- */}
-            {/* These routes are for users who are NOT logged in */}
-            <Route path="/" element={<Home />} />
-            <Route path="/auth" element={<Auth />} />
+            {/* --- MODIFIED: Public routes wrapped in PublicRoute --- */}
+            <Route 
+              path="/" 
+              element={<PublicRoute><Home /></PublicRoute>} 
+            />
+            <Route 
+              path="/auth" 
+              element={<PublicRoute><Auth /></PublicRoute>} 
+            />
 
             {/* --- Special protected route outside main layout --- */}
             <Route path="/join/:token" element={<ProtectedRoute><JoinLeaguePage /></ProtectedRoute>} />
             
             {/* --- Protected routes with main layout --- */}
-            {/* All app routes are now children of the MainLayout route */}
             <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
-              {/* --- FIX: Changed Dashboard (Index) path to /dashboard --- */}
               <Route path="/dashboard" element={<Index />} />
               <Route path="/current-run" element={<CurrentRun />} />
               <Route path="/history" element={<History />} />
@@ -131,7 +138,6 @@ function App() {
               <Route path="/challenge/:leagueId" element={<LeagueDetailsPage />} />
               <Route path="/settings" element={<Settings />} />
               
-              {/* --- FIX: Wrapped Admin route in admin-only ProtectedRoute --- */}
               <Route 
                 path="/admin" 
                 element={

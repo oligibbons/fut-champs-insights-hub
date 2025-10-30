@@ -1,5 +1,5 @@
 // src/pages/ChallengeMode.tsx
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react'; // <-- ADD useCallback
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
@@ -155,10 +155,12 @@ const ChallengeMode = () => {
     return { activeLeagues: active, completedLeagues: completed };
   }, [leagues]);
 
-  const handleLeagueCreated = (newLeagueId: string) => {
+  // --- THIS IS THE FIX ---
+  // Wrap the handler in useCallback to stabilize the function prop
+  const handleLeagueCreated = useCallback((newLeagueId: string) => {
     setIsCreateModalOpen(false);
     navigate(`/challenge/${newLeagueId}`);
-  };
+  }, [navigate]); // Add navigate as a dependency
 
   return (
     <div className="space-y-8">
