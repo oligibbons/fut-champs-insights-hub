@@ -5,7 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
-// --- THIS IS THE MISSING IMPORT ---
+// --- THIS IS THE CRUCIAL IMPORT ---
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 import { Loader2, Save } from 'lucide-react';
