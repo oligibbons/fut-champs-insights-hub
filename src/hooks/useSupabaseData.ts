@@ -1,8 +1,11 @@
+// src/hooks/useSupabaseData.ts
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { WeeklyPerformance, GameResult, PlayerPerformance, TeamStats } from '@/types/futChampions';
 import { useGameVersion } from '@/contexts/GameVersionContext';
+// Added useQuery for the new hook
+import { useQuery } from '@tanstack/react-query';
 
 export function useSupabaseData() {
   const { user } = useAuth();
@@ -280,3 +283,49 @@ export function useSupabaseData() {
     refreshData: fetchWeeklyData
   };
 }
+
+
+// --- NEW HOOK ADDED HERE ---
+
+/**
+ * Fetches active and recently completed runs for the current user.
+ * Used for "anchoring" a new challenge league.
+ */
+export const useSelectableUserRuns = () => {
+  const { user } = useAuth();
+  const { gameVersion } = useGameVersion();
+
+  return useQuery({
+    queryKey: ['selectableUserRuns', user?.id, gameVersion],
+    queryFn: async () => {
+      if (!user) throw new Error('User not authenticated');
+
+      // Fetch runs from the last 30 days that are not completed,
+      // OR the most recent completed run.
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+      const { data, error } = await supabase
+        .from('weekly_performances')
+        .select('id, custom_name, week_number, start_date, is_completed, total_wins, total_losses')
+        .eq('user_id', user.id)
+        .eq('game_version', gameVersion)
+        .gte('start_date', thirtyDaysAgo)
+        .order('start_date', { ascending: false })
+        .limit(10); // Limit to the 10 most recent runs
+
+      if (error) {
+        console.error('Error fetching selectable runs:', error);
+        throw new Error(error.message);
+      }
+
+      return data.map(run => ({
+        ...run,
+        // Create a user-friendly label
+        label: run.custom_name 
+          ? `${run.custom_name} (W${run.week_number})`
+          : `Week ${run.week_number} (${new Date(run.start_date).toLocaleDateString()})`
+      }));
+    },
+    enabled: !!user,
+  });
+};

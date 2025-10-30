@@ -1,73 +1,67 @@
-# Welcome to your Lovable project
+# FUT Champs Insights Hub
 
-## Project info
+FUT Champs Insights Hub is a modern web application designed to track, analyze, and gain deep insights into your EA Sports FC Ultimate Team Champions performance.
 
-**URL**: https://lovable.dev/projects/27a6cc26-ee9e-4ae6-949a-aaab2dc979fe
+This tool goes beyond simple win/loss tracking, allowing you to record detailed match stats, analyze player performance, track achievements, and receive AI-powered feedback to improve your gameplay.
 
-## How can I edit this code?
+## ✨ Key Features
 
-There are several ways of editing your application.
+* **🏆 Current Run Tracking:** Log every game of your FUT Champions run in real-time, including score, stats, player ratings, and notes.
+* **📊 In-Depth Analytics:** A full analytics dashboard to visualize your performance over time. Track key metrics like your win/loss ratio, goals for/against, xG (Expected Goals) performance, and more.
+* **🤖 AI-Powered Insights:** Get personalized feedback on your performance. The AI analyzes your recorded data to identify trends, strengths, and weaknesses in your gameplay.
+* **⚽ Player Performance:** Track the stats for every player in your squad across multiple runs. See who your top performers are and who's letting you down.
+* **🥇 Achievement System:** Unlock achievements and hit milestones for your in-game performance (e.g., "100 Wins," "Perfect Run").
+* **🔒 Secure & Synced:** Built with Supabase, all your data is securely stored and synced across your devices.
+* **📱 Mobile-First Design:** Fully responsive layout, allowing you to log games and check stats easily from your phone.
 
-**Use Lovable**
+## 🛠️ Tech Stack
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/27a6cc26-ee9e-4ae6-949a-aaab2dc979fe) and start prompting.
+This project is built with a modern, type-safe stack:
 
-Changes made via Lovable will be committed automatically to this repo.
+* **Frontend:** React (Vite) & TypeScript
+* **Backend & Database:** Supabase (PostgreSQL)
+* **Styling:** Tailwind CSS
+* **UI Components:** shadcn/ui
+* **State Management:** React Query
+* **Forms:** React Hook Form & Zod
 
-**Use your preferred IDE**
+## 🚀 Getting Started
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Prerequisites
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+* Node.js (v18 or newer)
+* npm (or yarn/pnpm)
+* A Supabase account
 
-Follow these steps:
+### Setup
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+1.  **Clone the repository:**
+    ```bash
+    git clone [https://github.com/oligibbons/fut-champs-insights-hub.git](https://github.com/oligibbons/fut-champs-insights-hub.git)
+    cd fut-champs-insights-hub
+    ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
 
-# Step 3: Install the necessary dependencies.
-npm i
+3.  **Set up environment variables:**
+    * Create a `.env` file in the root of the project.
+    * Log in to your Supabase account and find your Project URL and anon key.
+    * Add them to the `.env` file:
+        ```env
+        VITE_SUPABASE_URL=YOUR_SUPABASE_URL
+        VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
+        ```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+4.  **Run the Supabase migrations:**
+    * Install the Supabase CLI: `npm install supabase --save-dev`
+    * Link your project (you'll need your project ID): `npx supabase link --project-ref YOUR-PROJECT-ID`
+    * Push the database schema: `npx supabase db push`
 
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/27a6cc26-ee9e-4ae6-949a-aaab2dc979fe) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+5.  **Run the development server:**
+    ```bash
+    npm run dev
+    ```
+    The application will be available at `http://localhost:5173` (or another port if 5173 is in use).

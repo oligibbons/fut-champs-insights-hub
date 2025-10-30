@@ -1,3 +1,5 @@
+// src/integrations/supabase/types.ts
+
 export type Json =
   | string
   | number
@@ -9,6 +11,7 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      // --- EXISTING TABLES ---
       achievements: {
         Row: {
           achievement_id: string
@@ -368,6 +371,7 @@ export type Database = {
           total_wins: number | null
           updated_at: string
           username: string
+          is_admin?: boolean // Added this based on AuthContext
         }
         Insert: {
           avatar_url?: string | null
@@ -382,6 +386,7 @@ export type Database = {
           total_wins?: number | null
           updated_at?: string
           username: string
+          is_admin?: boolean
         }
         Update: {
           avatar_url?: string | null
@@ -396,8 +401,17 @@ export type Database = {
           total_wins?: number | null
           updated_at?: string
           username?: string
+          is_admin?: boolean
         }
-        Relationships: []
+        Relationships: [
+           {
+            foreignKeyName: "profiles_id_fkey" // Assumed from your schema dump
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       squads: {
         Row: {
@@ -642,12 +656,260 @@ export type Database = {
           },
         ]
       }
+
+      // --- NEW TABLES ---
+
+      champs_leagues: {
+        Row: {
+          id: string
+          name: string
+          admin_user_id: string
+          champs_run_end_date: string
+          created_at: string
+          updated_at: string
+          is_completed: boolean | null
+          league_code: string | null
+          max_participants: number | null
+          description: string | null
+          status: string // We added this
+        }
+        Insert: {
+          id?: string
+          name: string
+          admin_user_id: string
+          champs_run_end_date: string
+          created_at?: string
+          updated_at?: string
+          is_completed?: boolean | null
+          league_code?: string | null
+          max_participants?: number | null
+          description?: string | null
+          status?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          admin_user_id?: string
+          champs_run_end_date?: string
+          created_at?: string
+          updated_at?: string
+          is_completed?: boolean | null
+          league_code?: string | null
+          max_participants?: number | null
+          description?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "champs_leagues_admin_user_id_fkey"
+            columns: ["admin_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+
+      champs_league_participants: {
+        Row: {
+          id: string
+          league_id: string
+          user_id: string
+          joined_at: string
+          total_points: number | null
+          last_updated: string | null
+          weekly_performance_id: string | null // We added this
+        }
+        Insert: {
+          id?: string
+          league_id: string
+          user_id: string
+          joined_at?: string
+          total_points?: number | null
+          last_updated?: string | null
+          weekly_performance_id?: string | null
+        }
+        Update: {
+          id?: string
+          league_id?: string
+          user_id?: string
+          joined_at?: string
+          total_points?: number | null
+          last_updated?: string | null
+          weekly_performance_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "champs_league_participants_league_id_fkey"
+            columns: ["league_id"]
+            isOneToOne: false
+            referencedRelation: "champs_leagues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "champs_league_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "champs_league_participants_weekly_performance_id_fkey"
+            columns: ["weekly_performance_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_performances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+
+      champs_league_challenges: {
+        Row: {
+          id: string
+          league_id: string
+          challenge_id: string
+          points: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          league_id: string
+          challenge_id: string
+          points: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          league_id?: string
+          challenge_id?: string
+          points?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "champs_league_challenges_league_id_fkey"
+            columns: ["league_id"]
+            isOneToOne: false
+            referencedRelation: "champs_leagues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+
+      champs_league_challenge_results: {
+        Row: {
+          id: string
+          league_id: string
+          challenge_id: string
+          user_id: string
+          points_earned: number | null
+          game_achieved: number | null
+          metric_value: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          league_id: string
+          challenge_id: string
+          user_id: string
+          points_earned?: number | null
+          game_achieved?: number | null
+          metric_value?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          league_id?: string
+          challenge_id?: string
+          user_id?: string
+          points_earned?: number | null
+          game_achieved?: number | null
+          metric_value?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "champs_league_challenge_results_league_id_fkey"
+            columns: ["league_id"]
+            isOneToOne: false
+            referencedRelation: "champs_leagues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "champs_league_challenge_results_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+
+      league_invites: {
+        Row: {
+          id: string
+          league_id: string
+          inviter_id: string
+          invitee_id: string | null
+          token: string
+          status: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          league_id: string
+          inviter_id: string
+          invitee_id?: string | null
+          token: string
+          status?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          league_id?: string
+          inviter_id?: string
+          invitee_id?: string | null
+          token?: string
+          status?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "league_invites_inviter_id_fkey"
+            columns: ["inviter_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "league_invites_invitee_id_fkey"
+            columns: ["invitee_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "league_invites_league_id_fkey"
+            columns: ["league_id"]
+            isOneToOne: false
+            referencedRelation: "champs_leagues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      // --- ADD THIS NEW FUNCTION ---
+      is_league_participant: {
+        Args: {
+          league_id_to_check: string
+          user_id_to_check: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
@@ -657,6 +919,48 @@ export type Database = {
     }
   }
 }
+
+// --- HELPER TYPES (based on your schema) ---
+
+// Base profile
+export type Profile = Database["public"]["Tables"]["profiles"]["Row"]
+
+// Friend type using your 'friends' table structure
+export type Friend = Database["public"]["Tables"]["friends"]["Row"] & {
+  // We'll join the profile in the hook, calling it 'friend_profile'
+  friend_profile: Profile 
+}
+// Friend request type
+export type FriendRequest = Database["public"]["Tables"]["friends"]["Row"] & {
+  // We'll join the requester's profile
+  requester_profile: Profile
+}
+
+// League types
+export type League = Database["public"]["Tables"]["champs_leagues"]["Row"]
+export type LeagueParticipant = Database["public"]["Tables"]["champs_league_participants"]["Row"] & {
+  profile: Profile // Joined participant profile
+}
+export type LeagueChallenge = Database["public"]["Tables"]["champs_league_challenges"]["Row"]
+export type LeagueChallengeResult = Database["public"]["Tables"]["champs_league_challenge_results"]["Row"]
+export type LeagueInvite = Database["public"]["Tables"]["league_invites"]["Row"]
+
+// The complete, detailed league object
+export type LeagueDetails = League & {
+  participants: LeagueParticipant[]
+  challenges: LeagueChallenge[]
+  results: LeagueChallengeResult[]
+  admin: Profile // Joined admin profile
+}
+
+// In-app invite, joined with league name and inviter profile
+export type PendingLeagueInvite = LeagueInvite & {
+  champs_leagues: Pick<League, "id" | "name">
+  inviter: Pick<Profile, "id" | "display_name" | "username" | "avatar_url">
+}
+
+
+// --- EXISTING HELPER TYPES (from your file) ---
 
 type DefaultSchema = Database[Extract<keyof Database, "public">]
 

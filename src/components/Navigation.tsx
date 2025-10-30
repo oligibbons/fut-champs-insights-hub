@@ -1,8 +1,8 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-// **NEW: Imported Bell icon**
-import { Home, Users, TrendingUp, Settings, Trophy, History, LogOut, Award, Shield, BarChart3, Brain, Bell } from 'lucide-react';
+// **MODIFIED: Imported 'Play'**
+import { Home, Users, TrendingUp, Settings, Trophy, History, LogOut, Award, Shield, BarChart3, Brain, Bell, Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import logo from '/fut-trackr-logo.jpg';
 
@@ -16,13 +16,17 @@ const Navigation = ({ isExpanded, setIsExpanded }: NavigationProps) => {
   
   const navigationItems = [
     { name: 'Dashboard', path: '/', icon: Home },
-    { name: 'Current Run', path: '/current-run', icon: Trophy },
+    // **MODIFIED: Changed icon from Trophy to Play**
+    { name: 'Current Run', path: '/current-run', icon: Play }, 
     { name: 'History', path: '/history', icon: History },
     { name: 'Squads', path: '/squads', icon: Users },
     { name: 'Players', path: '/players', icon: TrendingUp },
     { name: 'Analytics', path: '/analytics', icon: BarChart3 },
     { name: 'AI Insights', path: '/ai-insights', icon: Brain },
     { name: 'Achievements', path: '/achievements', icon: Award },
+    // --- ADDED LINKS ---
+    { name: 'Friends', path: '/friends', icon: Users },
+    { name: 'Challenge Mode', path: '/challenge', icon: Trophy },
   ];
   
   const bottomNavItems = [

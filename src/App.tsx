@@ -32,6 +32,12 @@ import { MobileBottomNav } from './components/MobileBottomNav';
 // **NEW: Import the Notifications page**
 import Notifications from './pages/Notifications';
 
+// --- ADDED IMPORTS ---
+import Friends from './pages/Friends';
+import ChallengeMode from './pages/ChallengeMode';
+import LeagueDetailsPage from './pages/LeagueDetailsPage';
+import JoinLeaguePage from './pages/JoinLeaguePage'; // <-- ADDED
+
 const Header = () => {
   const { user } = useAuth();
   const location = useLocation();
@@ -109,6 +115,11 @@ function App() {
         <DataSyncProvider>
           <Routes>
             <Route path="/auth" element={<Auth />} />
+
+            {/* --- ADDED JOIN ROUTE --- */}
+            {/* This route is wrapped in ProtectedRoute to ensure a user is logged in, */}
+            {/* but it's outside the MainLayout so it doesn't show the nav bars. */}
+            <Route path="/join/:token" element={<ProtectedRoute><JoinLeaguePage /></ProtectedRoute>} />
             
             {/* All protected routes are now children of the MainLayout route. */}
             <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
@@ -123,6 +134,11 @@ function App() {
               
               {/* **NEW: Added the Notifications route** */}
               <Route path="/notifications" element={<Notifications />} />
+              
+              {/* --- ADDED CHALLENGE & FRIENDS ROUTES --- */}
+              <Route path="/friends" element={<Friends />} />
+              <Route path="/challenge" element={<ChallengeMode />} />
+              <Route path="/challenge/:leagueId" element={<LeagueDetailsPage />} />
               
               <Route path="/settings" element={<Settings />} />
               <Route path="/admin" element={<Admin />} />

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-// **NEW: Imported Bell icon**
+// **MODIFIED: Added Trophy and Users**
 import { Home, Users, Trophy, History, MoreHorizontal, TrendingUp, Brain, Award, Settings, BarChart3, Shield, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useScrollDirection } from '@/hooks/useScrollDirection';
@@ -22,6 +22,9 @@ const moreItems = [
   { name: 'Analytics', path: '/analytics', icon: BarChart3 },
   { name: 'AI Insights', path: '/ai-insights', icon: Brain },
   { name: 'Achievements', path: '/achievements', icon: Award },
+  // --- ADDED LINKS ---
+  { name: 'Friends', path: '/friends', icon: Users },
+  { name: 'Challenge', path: '/challenge', icon: Trophy }, // <-- TYPO "name:a:" was fixed here
   // **NEW: Added Notifications link**
   { name: 'Notifications', path: '/notifications', icon: Bell },
   { name: 'Settings', path: '/settings', icon: Settings },
