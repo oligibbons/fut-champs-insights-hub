@@ -1,19 +1,96 @@
-import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
-import { User, Session } from '@supabase/supabase-js';
+// src/contexts/AuthContext.tsx
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
+import { User, Session, AuthError } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  isAdmin: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, username?: string) => Promise<{ error: any }>;
-  signOut: () => Promise<void>;
+  signInWithProvider: (provider: 'google' | 'discord') => Promise<void>;
+  signOut: (options?: { scope: 'global' | 'local' }) => Promise<{ error: AuthError | null }>; // **FIX: Updated type**
+  updateUser: (credentials: { email?: string; password?: string; data?: any; }) => Promise<{ user: User | null; error: AuthError | null; }>;
+  reauthenticate: (password: string) => Promise<{ error: AuthError | null; }>;
+  updatePassword: (newPassword: string) => Promise<{ error: AuthError | null; }>;
 }
 
-export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
+  }, []);
+
+  const signInWithProvider = async (provider: 'google' | 'discord') => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
+    if (error) throw error;
+  };
+
+  // **FIX: Modified signOut to accept scope**
+  const signOut = async (options?: { scope: 'global' | 'local' }) => {
+    const { error } = await supabase.auth.signOut(options); // Pass options to supabase
+    setUser(null);
+    setSession(null);
+    return { error };
+  };
+
+  const updateUser = async (credentials: { email?: string; password?: string; data?: any; }) => {
+    const { data, error } = await supabase.auth.updateUser(credentials);
+    return { user: data.user, error };
+  };
+  
+  const reauthenticate = async (password: string) => {
+      const { error } = await supabase.auth.reauthenticate({
+          type: 'password',
+          email: user?.email, // Assumes email is available
+          password,
+      });
+      return { error };
+  };
+  
+  const updatePassword = async (newPassword: string) => {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      return { error };
+  };
+
+  const value = {
+    user,
+    session,
+    loading,
+    signInWithProvider,
+    signOut,
+    updateUser,
+    reauthenticate,
+    updatePassword,
+  };
+
+  return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
+};
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -21,93 +98,4 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-};
-
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const getInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        try {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('is_admin')
-            .eq('id', session.user.id)
-            .maybeSingle();
-
-          if (error) throw error;
-          setIsAdmin(data?.is_admin || false);
-        } catch (error) {
-          console.error("Error checking admin status:", error);
-          setIsAdmin(false);
-        }
-      } else {
-        setIsAdmin(false);
-      }
-      setLoading(false);
-    };
-
-    getInitialSession();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setSession(session);
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-
-      if (!currentUser) {
-        setIsAdmin(false);
-      }
-      // Re-check admin status on auth change if necessary, otherwise initial check is enough
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (!error) navigate('/');
-    return { error };
-  };
-
-  const signUp = async (email: string, password: string, username?: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { emailRedirectTo: redirectUrl, data: username ? { username } : undefined }
-    });
-    return { error };
-  };
-
-  const signOut = async () => {
-    await supabase.auth.signOut();
-    navigate('/auth');
-  };
-
-  // FIX: Memoize the context value
-  const value = useMemo(() => ({
-    user,
-    session,
-    loading,
-    isAdmin,
-    signIn,
-    signUp,
-    signOut,
-  }), [user, session, loading, isAdmin]);
-
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
 };
