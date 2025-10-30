@@ -1,7 +1,8 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { Home, Users, TrendingUp, Settings, Trophy, History, LogOut, Award, Shield, BarChart3, Brain } from 'lucide-react';
+// **NEW: Imported Bell icon**
+import { Home, Users, TrendingUp, Settings, Trophy, History, LogOut, Award, Shield, BarChart3, Brain, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import logo from '/fut-trackr-logo.jpg';
 
@@ -25,6 +26,8 @@ const Navigation = ({ isExpanded, setIsExpanded }: NavigationProps) => {
   ];
   
   const bottomNavItems = [
+      // **NEW: Added Notifications link**
+      { name: 'Notifications', path: '/notifications', icon: Bell },
       { name: 'Settings', path: '/settings', icon: Settings },
   ];
 
@@ -33,7 +36,6 @@ const Navigation = ({ isExpanded, setIsExpanded }: NavigationProps) => {
   const navWidth = isExpanded ? '16rem' : '5.5rem';
 
   return (
-    // This <nav> is now the root element, no more mobile hamburger
     <nav 
       className={cn(
         `fixed left-0 top-0 h-full border-r z-40 transform transition-all duration-300 ease-in-out flex-col bg-black/30 backdrop-blur-xl border-white/10`,

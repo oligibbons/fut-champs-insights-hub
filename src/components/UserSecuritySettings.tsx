@@ -35,10 +35,10 @@ const passwordSchema = z.object({
 type PasswordFormValues = z.infer<typeof passwordSchema>;
 
 const UserSecuritySettings = () => {
-  const { user, updateUser, reauthenticate, updatePassword, signOut } = useAuth(); // **NEW: Import signOut**
+  const { user, updateUser, reauthenticate, updatePassword, signOut } = useAuth();
   const [isEmailSubmitting, setIsEmailSubmitting] = useState(false);
   const [isPasswordSubmitting, setIsPasswordSubmitting] = useState(false);
-  const [isSignOutAllSubmitting, setIsSignOutAllSubmitting] = useState(false); // **NEW**
+  const [isSignOutAllSubmitting, setIsSignOutAllSubmitting] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
 
@@ -94,7 +94,6 @@ const UserSecuritySettings = () => {
     }
   };
 
-  // **NEW: Handler for signing out of all devices**
   const handleSignOutAll = async () => {
     setIsSignOutAllSubmitting(true);
     try {
@@ -103,8 +102,6 @@ const UserSecuritySettings = () => {
       toast.success('Signed out from all devices', {
         description: 'You have been signed out from all other sessions. You will need to log in again on other devices.',
       });
-      // Note: This signs out the current session as well,
-      // but the AuthProvider will handle the redirect to the login page.
     } catch (error: any) {
       toast.error('Failed to sign out all devices', { description: error.message });
     } finally {
@@ -215,7 +212,6 @@ const UserSecuritySettings = () => {
           ) : (
             <Alert>
               <AlertTitle>Social Login Active</AlertTitle>
-              {/* **FIX: Corrected the closing tag here** */}
               <AlertDescription>
                 You are logged in via a social provider ({user?.app_metadata.provider}). You must change your password on that platform.
               </AlertDescription>
@@ -224,7 +220,7 @@ const UserSecuritySettings = () => {
         </CardContent>
       </Card>
       
-      {/* **NEW: Active Sessions Card** */}
+      {/* Active Sessions Card */}
       <Card className="glass-card-content">
         <CardHeader>
           <CardTitle>Active Sessions</CardTitle>

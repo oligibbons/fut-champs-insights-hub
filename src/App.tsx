@@ -28,6 +28,9 @@ import AnimatedBackground from './components/ui/AnimatedBackground';
 import { useMobile } from './hooks/use-mobile'; 
 import { MobileBottomNav } from './components/MobileBottomNav'; 
 
+// **NEW: Import the Notifications page**
+import Notifications from './pages/Notifications';
+
 const Header = () => {
   const { user } = useAuth();
   const location = useLocation();
@@ -58,7 +61,6 @@ const Header = () => {
   );
 };
 
-// --- FIX: Moved Layout component outside of App ---
 // This component now defines its own state and renders an <Outlet />
 // for the child routes (the pages).
 const MainLayout = () => {
@@ -98,8 +100,6 @@ const MainLayout = () => {
 
 
 function App() {
-  // --- FIX: Removed state from App, as it's now managed by MainLayout ---
-  
   return (
     <ThemeProvider>
       <AnimatedBackground />
@@ -109,9 +109,7 @@ function App() {
             <Routes>
               <Route path="/auth" element={<Auth />} />
               
-              {/* --- FIX: Use a Layout Route --- */}
               {/* All protected routes are now children of the MainLayout route. */}
-              {/* This ensures the layout persists across page navigation. */}
               <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
                 <Route path="/" element={<Index />} />
                 <Route path="/current-run" element={<CurrentRun />} />
@@ -121,13 +119,17 @@ function App() {
                 <Route path="/squads" element={<Squads />} />
                 <Route path="/ai-insights" element={<AIInsights />} />
                 <Route path="/achievements" element={<Achievements />} />
+                
+                {/* **NEW: Added the Notifications route** */}
+                <Route path="/notifications" element={<Notifications />} />
+                
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/admin" element={<Admin />} />
               </Route>
-              {/* --- END FIX --- */}
               
               <Route path="*" element={<NotFound />} />
             </Routes>
+            {/* This is your 'sonner' toast component */}
             <Toaster />
           </DataSyncProvider>
         </GameVersionProvider>

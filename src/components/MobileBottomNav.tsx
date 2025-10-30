@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Users, Trophy, History, MoreHorizontal, TrendingUp, Brain, Award, Settings, BarChart3, Shield } from 'lucide-react';
+// **NEW: Imported Bell icon**
+import { Home, Users, Trophy, History, MoreHorizontal, TrendingUp, Brain, Award, Settings, BarChart3, Shield, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useScrollDirection } from '@/hooks/useScrollDirection';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from '@/components/ui/sheet';
@@ -21,6 +22,8 @@ const moreItems = [
   { name: 'Analytics', path: '/analytics', icon: BarChart3 },
   { name: 'AI Insights', path: '/ai-insights', icon: Brain },
   { name: 'Achievements', path: '/achievements', icon: Award },
+  // **NEW: Added Notifications link**
+  { name: 'Notifications', path: '/notifications', icon: Bell },
   { name: 'Settings', path: '/settings', icon: Settings },
 ];
 
@@ -102,9 +105,7 @@ const MobileNavItem = ({ path, icon: Icon, name }: { path: string; icon: React.E
       to={path}
       className={cn(
         'flex h-full flex-col items-center justify-center gap-1 text-xs font-medium transition-colors',
-        // --- MODIFIED: Bolder active state using fifa-blue ---
         isActive ? 'text-fifa-blue font-bold' : 'text-muted-foreground hover:text-foreground'
-        // --- END MODIFIED ---
       )}
     >
       <Icon className="h-5 w-5" />

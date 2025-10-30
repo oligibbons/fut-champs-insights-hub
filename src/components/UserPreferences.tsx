@@ -1,111 +1,200 @@
 // src/components/UserPreferences.tsx
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useGameVersion } from '@/contexts/GameVersionContext';
-import { toast } from 'sonner';
-import AccountSelector from '@/components/AccountSelector';
-import { useUserSettings } from '@/hooks/useUserSettings'; // **NEW: Import settings hook**
-import { Switch } from '@/components/ui/switch'; // **NEW: Import Switch**
-import { Skeleton } from '@/components/ui/skeleton'; // **NEW: Import Skeleton**
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast'; // **Import toast**
+import { Loader2 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
-// Helper to format the toggle labels nicely
-const formatToggleLabel = (key: string) => {
-  return key
-    .replace('show', '')
-    .replace(/([A-Z])/g, ' $1') // Add space before capital letters
-    .replace(/^./, str => str.toUpperCase()) // Capitalise first letter
-    .trim();
-};
+// This structure MUST match the `defaultLayout` in `src/pages/Index.tsx`
+const allDashboardComponents = [
+  { id: 'overview', name: 'Dashboard Overview', default: true },
+  { id: 'primaryInsight', name: 'Primary Insight Card', default: true },
+  { id: 'recentRuns', name: 'Recent Runs', default: true },
+  { id: 'records', name: 'All-Time Records', default: true },
+  { id: 'playerMovers', name: 'Player Movers', default: true },
+  { id: 'goalInvolvement', name: 'Goal Involvement', default: true },
+  { id: 'clubLegends', name: 'Club Legends', default: true },
+  { id: 'playerHistoryTable', name: 'Player History Table', default: true },
+  { id: 'performanceRadar', name: 'Performance Radar', default: false },
+  { id: 'runChunkAnalysis', name: 'Run Chunk Analysis', default: false },
+  { id: 'matchTagAnalysis', name: 'Match Tag Analysis', default: false },
+  { id: 'formationTracker', name: 'Formation Tracker', default: false },
+  { id: 'cpsGauge', name: 'CPS Gauge', default: false },
+  { id: 'xgAnalytics', name: 'xG Analytics', default: false },
+  { id: 'playerConsistency', name: 'Player Consistency', default: false },
+  { id: 'positionalHeatMap', name: 'Positional HeatMap', default: false },
+];
+
+// Define the layout item structure
+interface DashboardLayoutItem {
+  id: string;
+  order: number;
+}
+// Define the structure for enabled components
+type EnabledComponents = Record<string, boolean>;
 
 const UserPreferences = () => {
-  const { gameVersion, setGameVersion } = useGameVersion();
-  // **NEW: Get settings from our hook**
-  const { settings, saveSettings, loading: settingsLoading } = useUserSettings();
-
-  const handleGameVersionChange = (value: string) => {
-    setGameVersion(value);
-    toast.success("Game Version Updated", {
-      description: `Now viewing data for ${value}.`,
+  const { user } = useAuth();
+  const { toast } = useToast(); // **Get toast function**
+  const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [enabled, setEnabled] = useState<EnabledComponents>(() => {
+    const initial: EnabledComponents = {};
+    allDashboardComponents.forEach(c => {
+      initial[c.id] = c.default; // Start with defaults
     });
+    return initial;
+  });
+
+  // Fetch saved layout on mount
+  useEffect(() => {
+    const fetchLayout = async () => {
+      if (!user) return;
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('user_settings')
+          .select('value')
+          .eq('user_id', user.id)
+          .eq('key', 'dashboard_layout')
+          .limit(1);
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          const savedLayout = data[0].value as DashboardLayoutItem[];
+          const newEnabled: EnabledComponents = {};
+          allDashboardComponents.forEach(c => {
+            // A component is enabled if it exists in the saved layout
+            newEnabled[c.id] = savedLayout.some(item => item.id === c.id);
+          });
+          setEnabled(newEnabled);
+        }
+        // If no data, the default state is already set
+      } catch (error: any) {
+        toast({
+          title: 'Error',
+          description: `Failed to load dashboard preferences: ${error.message}`,
+          variant: 'destructive',
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLayout();
+  }, [user, toast]);
+
+  const handleToggle = (id: string) => {
+    setEnabled(prev => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
   };
 
-  // **NEW: Handler for dashboard toggles**
-  const handleDashboardSettingChange = (key: keyof typeof settings.dashboard, value: boolean) => {
-    saveSettings({
-      dashboard: {
-        ...settings.dashboard,
-        [key]: value,
-      }
-    });
+  const handleSavePreferences = async () => {
+    if (!user) return;
+
+    setIsSaving(true);
+    try {
+      // Filter the full list based on the 'enabled' state
+      const newLayout: DashboardLayoutItem[] = allDashboardComponents
+        .filter(component => enabled[component.id])
+        .map((component, index) => ({
+          id: component.id,
+          order: index + 1, // Re-calculate order based on filtered list
+        }));
+
+      // Upsert the setting
+      const { error } = await supabase.from('user_settings').upsert(
+        {
+          user_id: user.id,
+          key: 'dashboard_layout',
+          value: newLayout,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'user_id, key' }
+      );
+
+      if (error) throw error;
+
+      // **Show success toast**
+      toast({
+        title: 'Preferences Saved',
+        description: 'Your dashboard layout has been updated. It will refresh on next visit.',
+      });
+    } catch (error: any) {
+      console.error('Error saving preferences:', error);
+      // **Show error toast**
+      toast({
+        title: 'Error Saving Preferences',
+        description: `Failed to save preferences: ${error.message}`,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
-    <div className="space-y-6">
-      {/* Game Version Card */}
-      <Card className="glass-card-content">
-        <CardHeader>
-          <CardTitle>App Preferences</CardTitle>
-          <CardDescription>Global preferences for how you use the app.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <Label htmlFor="game-version">Select Active Game Version</Label>
-            <Select value={gameVersion} onValueChange={handleGameVersionChange}>
-              <SelectTrigger id="game-version" className="w-full md:w-[240px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="FC26">FC26</SelectItem>
-                <SelectItem value="FC25">FC25</SelectItem>
-                {/* Add other versions as needed */}
-              </SelectContent>
-            </Select>
+    <Card className="glass-card">
+      <CardHeader>
+        <CardTitle>Dashboard Preferences</CardTitle>
+        <CardDescription>
+          Customize your dashboard by showing or hiding components.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {loading ? (
+          // Skeletons for loading state
+          <div className="space-y-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center justify-between space-x-2">
+                <Skeleton className="h-5 w-40" />
+                <Skeleton className="h-6 w-10 rounded-full" />
+              </div>
+            ))}
           </div>
-        </CardContent>
-      </Card>
+        ) : (
+          // Actual Toggles
+          <div className="space-y-4">
+            {allDashboardComponents.map(component => (
+              <div
+                key={component.id}
+                className="flex items-center justify-between space-x-2"
+              >
+                <Label htmlFor={component.id} className="text-white">
+                  {component.name}
+                </Label>
+                <Switch
+                  id={component.id}
+                  checked={enabled[component.id] || false}
+                  onCheckedChange={() => handleToggle(component.id)}
+                />
+              </div>
+            ))}
+          </div>
+        )}
 
-      {/* Active Gaming Account Card */}
-      <Card className="glass-card-content">
-        <CardHeader>
-          <CardTitle>Gaming Accounts</CardTitle>
-          <CardDescription>Manage your linked gaming accounts and set your active one.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <AccountSelector />
-        </CardContent>
-      </Card>
-
-      {/* **NEW: Dashboard Customisation Card** */}
-      <Card className="glass-card-content">
-        <CardHeader>
-          <CardTitle>Dashboard Customisation</CardTitle>
-          <CardDescription>Choose which widgets are visible on your main dashboard.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {settingsLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[...Array(9)].map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {Object.entries(settings.dashboard).map(([key, value]) => (
-                <div key={key} className="flex items-center justify-between space-x-2 p-3 bg-muted/30 rounded-lg">
-                  <Label htmlFor={key} className="flex-1 cursor-pointer">
-                    {formatToggleLabel(key)}
-                  </Label>
-                  <Switch
-                    id={key}
-                    checked={value}
-                    onCheckedChange={(checked) => handleDashboardSettingChange(key as keyof typeof settings.dashboard, checked)}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+        <div className="flex justify-end pt-4">
+          <Button onClick={handleSavePreferences} disabled={isSaving || loading}>
+            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isSaving ? 'Saving...' : 'Save Preferences'}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
