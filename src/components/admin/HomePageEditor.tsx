@@ -5,7 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
-// --- THIS IS THE CRUCIAL IMPORT ---
+// --- THIS IS THE MISSING IMPORT ---
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 import { Loader2, Save } from 'lucide-react';
@@ -68,7 +68,8 @@ const HomePageEditor = () => {
       <CardHeader>
         <CardTitle>Home Page Content Editor</CardTitle>
         <CardDescription>
-          Edit the HTML content for the public landing page. Use standard HTML tags (e.g., `<h2>`, `<p>`, `<ul>`, `<li>`, `<strong>`).
+          {/* --- THIS IS THE FIX --- */}
+          {'Edit the HTML content for the public landing page. Use standard HTML tags (e.g., `<h2>`, `<p>`, `<ul>`, `<li>`, `<strong>`).'}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

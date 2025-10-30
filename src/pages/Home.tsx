@@ -131,11 +131,11 @@ const Home = () => {
             </FeatureCard>
             <FeatureCard icon={Trophy} title="Earn Achievements">
               Unlock unique achievements for your in-game milestones and build your FUT Trackr legacy.
-            {/* --- THIS IS THE FIX --- */}
+            {/* --- THIS IS THE FIX (comment syntax) --- */}
             </FeatureCard>
             <FeatureCard icon={ShieldCheck} title="Your Data, Secured">
               All your stats are securely stored and backed up. Access your history from any device, anytime.
-            </FeatureCard>
+            </FaceCard>
           </section>
 
           {/* Admin-Editable Content Section */}
