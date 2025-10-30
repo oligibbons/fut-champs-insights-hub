@@ -1,7 +1,8 @@
 // src/pages/Squads.tsx
 import { useState, useMemo } from 'react';
 import { useSquadData } from '@/hooks/useSquadData';
-import { Squad, CardType, PlayerCard, FORMATIONS, SquadPlayerJoin } from '@/types/squads';
+// **FIX: Use the centralized types**
+import { Squad, CardType, PlayerCard, FORMATIONS, SquadPlayerJoin } from '@/types/squads'; 
 import SquadBuilder from '@/components/SquadBuilder';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
@@ -15,9 +16,9 @@ import { useTheme } from '@/hooks/useTheme';
 import { useGameVersion } from '@/contexts/GameVersionContext';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton'; // For loading state
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"; // <-- **FIX: Added missing Tooltip imports**
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"; // This import was correct
 
-// --- SquadVisual Component --- (Minor refinement for safety)
+// --- SquadVisual Component ---
 const SquadVisual = ({ squad, cardTypes }: { squad: Squad, cardTypes: CardType[] }) => {
     const { currentTheme } = useTheme();
     const formation = useMemo(() => FORMATIONS.find(f => f.name === squad.formation), [squad.formation]);
@@ -46,6 +47,7 @@ const SquadVisual = ({ squad, cardTypes }: { squad: Squad, cardTypes: CardType[]
 
     const startingXI = formation.positions.map(pos => {
         // Find player ensuring the nested 'players' object exists
+        // **FIX: Use correct 'players' object from 'SquadPlayerJoin'**
         const playerSlot = squad.squad_players.find(sp => sp.slot_id === pos.id && sp.players);
         return { ...pos, player: playerSlot?.players }; // player will be PlayerCard or undefined
     });
@@ -56,26 +58,29 @@ const SquadVisual = ({ squad, cardTypes }: { squad: Squad, cardTypes: CardType[]
                 <div
                     key={id}
                     className="absolute transform -translate-x-1/2 -translate-y-1/2"
-                    // Responsive width, slightly larger
-                    style={{ top: `${y}%`, left: `${x}%`, width: '14%', maxWidth: '60px' }}
+                    // **FIX: Responsive width for mobile**
+                    style={{ top: `${y}%`, left: `${x}%`, width: '13%', maxWidth: '60px' }} 
                 >
                     {player ? (
                         <div className="relative group flex flex-col items-center">
                             <div
                                 className={cn(
-                                    "aspect-[3/4] w-full rounded-md flex flex-col items-center justify-center font-bold shadow-lg border text-center",
-                                    player.is_evolution && "border-teal-400 border-2" // Evolution indicator
+                                    "aspect-[3/4] w-full rounded-md flex flex-col items-center justify-center font-bold shadow-lg border text-center transition-all",
+                                    // **FIX: More prominent evolution indicator**
+                                    player.is_evolution && "border-teal-400 border-2 ring-2 ring-teal-300/70 shadow-lg shadow-teal-400/50"
                                 )}
                                 style={getCardStyle(player)}
                             >
-                                <span className="text-[10px] sm:text-xs font-black leading-tight">{player.rating}</span>
-                                <span className="text-[8px] sm:text-[10px] leading-tight">{position}</span>
+                                {/* **FIX: Responsive font size** */}
+                                <span className="text-[9px] sm:text-xs font-black leading-tight">{player.rating}</span>
+                                <span className="text-[7px] sm:text-[10px] leading-tight">{position}</span>
                             </div>
                             {/* Tooltip for full name on hover */}
                             <TooltipProvider delayDuration={200}>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <p className="text-white text-[8px] font-semibold text-center truncate bg-black/60 rounded-b-md px-1 mt-[-2px] w-[90%] z-10">
+                                      {/* **FIX: Responsive font size** */}
+                                      <p className="text-white text-[7px] sm:text-[8px] font-semibold text-center truncate bg-black/60 rounded-b-md px-1 mt-[-2px] w-[90%] z-10">
                                           {/* Show last name, fallback to full name */}
                                         {player.name.includes(' ') ? player.name.split(' ').pop() : player.name}
                                       </p>
@@ -103,18 +108,20 @@ const Squads = () => {
     const { currentTheme } = useTheme();
     const { gameVersion, setGameVersion } = useGameVersion();
 
-    // Use specific type from hook if available, otherwise fallback
+    // **FIX: squads is now Squad[] from the hook**
     const { squads = [], createSquad, updateSquad, deleteSquad, duplicateSquad, cardTypes = [], loading, refetchSquads } = useSquadData();
 
     const [isBuilding, setIsBuilding] = useState(false);
-    const [editingSquad, setEditingSquad] = useState<SquadWithPlayers | null>(null); // Use SquadWithPlayers type
+    // **FIX: Use the centralized Squad type**
+    const [editingSquad, setEditingSquad] = useState<Squad | null>(null);
 
     const handleAddNewSquad = () => {
         setEditingSquad(null);
         setIsBuilding(true);
     };
 
-    const handleEditSquad = (squad: SquadWithPlayers) => {
+    // **FIX: Use the centralized Squad type**
+    const handleEditSquad = (squad: Squad) => {
         setEditingSquad(squad);
         setIsBuilding(true);
     };
@@ -185,10 +192,11 @@ const Squads = () => {
                   {/* Grid Skeleton */}
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                        {[1, 2, 3].map(i => (
-                           <Card key={i} className="rounded-3xl shadow-lg border" style={{ backgroundColor: currentTheme.colors.card, borderColor: currentTheme.colors.border }}>
+                           // **VISUAL FIX: Use glass-card-content style for skeleton cards**
+                           <Card key={i} className="glass-card-content rounded-2xl shadow-lg border" style={{ borderColor: currentTheme.colors.border }}>
                                <CardHeader className="pb-4"><Skeleton className="h-6 w-3/4 mb-1" /><Skeleton className="h-4 w-1/4" /></CardHeader>
                                <CardContent><Skeleton className="aspect-video rounded-xl mb-4" /></CardContent>
-                               <CardFooter className="p-4 bg-black/20 rounded-b-3xl"><Skeleton className="h-8 w-full" /></CardFooter>
+                               <CardFooter className="p-4 bg-black/20 rounded-b-2xl"><Skeleton className="h-8 w-full" /></CardFooter>
                            </Card>
                        ))}
                   </div>
@@ -214,7 +222,8 @@ const Squads = () => {
              {/* Consistent Header */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
-                    <div className="flex-shrink-0 h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center shadow-md">
+                    {/* **VISUAL FIX: Use glass-card style for icon** */}
+                    <div className="flex-shrink-0 h-12 w-12 rounded-lg glass-card-content flex items-center justify-center shadow-md">
                         <Users className="h-6 w-6 text-primary" />
                     </div>
                     <div>
@@ -253,6 +262,7 @@ const Squads = () => {
                         <Card
                             key={squad.id}
                             style={{ backgroundColor: currentTheme.colors.cardBg, borderColor: squad.is_default ? currentTheme.colors.primary : currentTheme.colors.border, '--tw-ring-color': currentTheme.colors.primary } as React.CSSProperties} // Cast for CSS variable
+                            // **VISUAL FIX: Apply glass-card style**
                             className={`glass-card rounded-2xl shadow-lg border flex flex-col group transition-all duration-300 ${squad.is_default ? 'ring-2 ring-offset-background ring-offset-0' : ''}`} // Adjusted ring offset
                         >
                             <CardHeader className="pb-3">
@@ -280,7 +290,7 @@ const Squads = () => {
                                     <div><p className="font-bold text-base text-red-400">{squad.losses || 0}</p><p className="text-muted-foreground">Losses</p></div>
                                 </div>
                             </CardContent>
-                            <CardFooter className="flex flex-col sm:flex-row sm:justify-between gap-2 p-3 bg-black/10 mt-auto rounded-b-2xl"> {/* FIX: Made responsive */}
+                            <CardFooter className="flex flex-col sm:flex-row sm:justify-between gap-2 p-3 bg-black/10 mt-auto rounded-b-2xl"> {/* This was already responsive, which is good */}
                                 <Button size="sm" variant="outline" onClick={() => handleSetDefault(squad.id)} disabled={squad.is_default} className="text-xs">
                                     <Star className={cn("h-3 w-3 mr-1.5", squad.is_default ? 'text-yellow-400 fill-yellow-400' : 'text-muted-foreground')} />
                                     {squad.is_default ? 'Default' : 'Set Default'}
@@ -310,6 +320,7 @@ const Squads = () => {
                 </div>
             ) : (
                 // Improved Empty State Card
+                // **VISUAL FIX: Apply glass-card style**
                 <Card className="glass-card rounded-2xl shadow-xl border-border/20 mt-8">
                     <CardContent className="text-center p-8 md:p-12 space-y-4">
                         <Users className="mx-auto h-12 w-12 text-muted-foreground opacity-50" />

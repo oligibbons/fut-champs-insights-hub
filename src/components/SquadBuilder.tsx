@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Squad, PlayerCard, FORMATIONS, CardType, SquadPlayer } from '@/types/squads';
+// **FIX: Use the centralized types**
+import { Squad, PlayerCard, FORMATIONS, CardType, SquadPlayer, SquadPlayerJoin } from '@/types/squads';
 import PlayerSearchModal from './PlayerSearchModal'; // Keep this import
 import { Plus, Save, Trash2, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -16,7 +17,7 @@ import { Badge } from './ui/badge';
 import { useGameVersion } from '@/contexts/GameVersionContext';
 import { useTheme } from '@/hooks/useTheme'; // Corrected import path
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Label } from '@/components/ui/label'; // <-- **FIX: Added missing Label import**
+import { Label } from '@/components/ui/label'; // This import was correct
 
 // --- Integrated BenchPlayerSlot ---
 interface BenchPlayerSlotProps {
@@ -74,7 +75,7 @@ const BenchPlayerSlot = ({ slotId, slotType, player, onPositionClick, onRemovePl
 
 // --- Main Squad Builder Component ---
 interface SquadBuilderProps {
-  squad?: Squad; // Base squad data
+  squad?: Squad; // **FIX: Use the centralized Squad type**
   onSave: (squadSaveData: { name: string; formation: string; is_default: boolean; squad_players: { player_id: string; position: string; slot_id: string; }[] }) => void;
   onCancel: () => void;
   cardTypes: CardType[]; // Passed from parent
@@ -86,18 +87,18 @@ const SquadBuilder = ({ squad, onSave, onCancel, cardTypes }: SquadBuilderProps)
   const { gameVersion } = useGameVersion();
   const { currentTheme } = useTheme();
 
-  const [squadData, setSquadData] = useState<Omit<Squad, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'game_version'> & { squad_players: SquadPlayer[] }>(() => {
+  // **FIX: Use centralized types for state**
+  const [squadData, setSquadData] = useState<Omit<Squad, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'game_version' | 'squad_players'> & { squad_players: SquadPlayerJoin[] }>(() => {
     if (squad) {
-         const hydratedPlayers = (squad.squad_players || []).map(sp => ({
-             ...sp,
-             players: sp.players || undefined
-         })).filter(sp => sp.players) as SquadPlayer[];
+         // Data from prop 'squad' is already hydrated thanks to useSquadData
+         const hydratedPlayers = (squad.squad_players || []).filter(sp => sp.players) as SquadPlayerJoin[];
          return {
              name: squad.name, formation: squad.formation,
              games_played: squad.games_played || 0, wins: squad.wins || 0, losses: squad.losses || 0,
              is_default: squad.is_default || false, squad_players: hydratedPlayers,
              total_rating: squad.total_rating, average_age: squad.average_age, total_value: squad.total_value,
-             key_players: squad.key_players, description: squad.description, last_used: squad.last_used
+             key_players: squad.key_players, description: squad.description, last_used: squad.last_used,
+             chemistry: squad.chemistry
            };
     }
     const preferredFormation = FORMATIONS.find(f => f.name === '4-3-3') || FORMATIONS[0];
@@ -108,23 +109,40 @@ const SquadBuilder = ({ squad, onSave, onCancel, cardTypes }: SquadBuilderProps)
   const [showPlayerModal, setShowPlayerModal] = useState(false);
 
   const handleFormationChange = (formationName: string) => {
-    setSquadData(prev => ({ ...prev, formation: formationName }));
+    // **FIX: Ensure correct formation is found**
+    const newFormation = FORMATIONS.find(f => f.name === formationName) || FORMATIONS[0];
+    setSquadData(prev => ({ 
+        ...prev, 
+        formation: newFormation.name,
+        // **FIX: Clear players from slots that don't exist in the new formation**
+        squad_players: prev.squad_players.filter(p => {
+            if (p.slot_id.startsWith('starting-')) {
+                return newFormation.positions.some(pos => pos.id === p.slot_id);
+            }
+            return true; // Keep all subs and reserves
+        })
+    }));
   };
 
   const handlePlayerSelect = (player: PlayerCard) => {
     if (!selectedSlotId) return;
     const currentFormation = FORMATIONS.find(f => f.name === squadData.formation);
     let positionName = 'N/A';
+     // **FIX: Use correct 'id' from formation positions**
      if (selectedSlotId.startsWith('starting-')) positionName = currentFormation?.positions.find(p => p.id === selectedSlotId)?.position || 'N/A';
      else if (selectedSlotId.startsWith('sub-')) positionName = 'SUB';
      else if (selectedSlotId.startsWith('res-')) positionName = 'RES';
 
     setSquadData(currentSquadData => {
       const filteredPlayers = currentSquadData.squad_players.filter(p => p.slot_id !== selectedSlotId);
-      const newPlayerEntry: SquadPlayer = {
-        id: `${selectedSlotId}-${player.id}`, squad_id: squad?.id || 'new-squad',
-        player_id: player.id, position: positionName, slot_id: selectedSlotId,
-        players: player
+      // **FIX: Use centralized SquadPlayerJoin type**
+      const newPlayerEntry: SquadPlayerJoin = {
+        id: `${selectedSlotId}-${player.id}`, // This is a temporary client-side ID
+        squad_id: squad?.id || 'new-squad',
+        player_id: player.id, 
+        position: positionName, 
+        slot_id: selectedSlotId,
+        players: player // Embed the full player card
       };
       return { ...currentSquadData, squad_players: [...filteredPlayers, newPlayerEntry] };
     });
@@ -140,14 +158,17 @@ const SquadBuilder = ({ squad, onSave, onCancel, cardTypes }: SquadBuilderProps)
 
   const handleSave = () => {
     if (!squadData.name.trim()) { toast({ title: "Name Required", variant: "destructive" }); return; }
+    // **FIX: Ensure we only send the DB-schema-compliant fields**
     const squadPlayersForDb = squadData.squad_players.map(p => ({
-      player_id: p.player_id, position: p.position, slot_id: p.slot_id,
+      player_id: p.player_id, 
+      position: p.position, 
+      slot_id: p.slot_id,
     }));
     const dataToSave = {
       name: squadData.name, formation: squadData.formation,
       is_default: squadData.is_default || false,
       squad_players: squadPlayersForDb,
-      // Pass base fields too if updateSquad needs them (useSquadData handles this)
+      // Pass base fields too
        games_played: squadData.games_played || 0,
        wins: squadData.wins || 0,
        losses: squadData.losses || 0,
@@ -165,6 +186,7 @@ const SquadBuilder = ({ squad, onSave, onCancel, cardTypes }: SquadBuilderProps)
   const startingXI = currentFormation?.positions || [];
 
   const getPlayerForSlot = useCallback((slotId: string): PlayerCard | undefined => {
+      // **FIX: Use correct 'players' object**
       return squadData.squad_players.find(p => p.slot_id === slotId)?.players;
   }, [squadData.squad_players]);
 
@@ -173,6 +195,7 @@ const SquadBuilder = ({ squad, onSave, onCancel, cardTypes }: SquadBuilderProps)
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* **VISUAL FIX: Apply glass-card style** */}
       <Card className="glass-card overflow-hidden border-border/20">
         <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-black/10 p-4 border-b border-border/20">
           <div className="flex items-center gap-3">
@@ -221,11 +244,17 @@ const SquadBuilder = ({ squad, onSave, onCancel, cardTypes }: SquadBuilderProps)
                     return (
                       <div key={pos.id} className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group transition-transform duration-200 hover:z-10 hover:scale-105" style={{ left: `${pos.x}%`, top: `${pos.y}%` }} onClick={() => handlePositionClick(pos.id)}>
                         {player ? (
-                           <div className="relative w-14 md:w-16 text-center">
+                            // **FIX: Responsive width for mobile**
+                           <div className="relative w-12 sm:w-14 md:w-16 text-center">
                                 {/* Player Card Visual */}
-                                <div className={cn("aspect-[3/4] w-full rounded-lg mx-auto flex flex-col items-center justify-center text-xs font-bold shadow-lg border hover:border-primary", player.is_evolution && "border-2 border-teal-400 ring-1 ring-teal-500")} style={getCardStyle(player)}>
-                                    <span className="text-sm md:text-base font-black leading-tight">{player.rating}</span>
-                                    <span className="text-[9px] md:text-[10px] leading-tight opacity-80">{pos.position}</span>
+                                <div className={cn(
+                                    "aspect-[3/4] w-full rounded-lg mx-auto flex flex-col items-center justify-center text-xs font-bold shadow-lg border hover:border-primary transition-all", 
+                                    // **FIX: More prominent evolution indicator**
+                                    player.is_evolution && "border-teal-400 border-2 ring-2 ring-teal-300/70 shadow-lg shadow-teal-400/50"
+                                    )} style={getCardStyle(player)}>
+                                    {/* **FIX: Responsive font size** */}
+                                    <span className="text-sm sm:text-sm md:text-base font-black leading-tight">{player.rating}</span>
+                                    <span className="text-[8px] sm:text-[9px] md:text-[10px] leading-tight opacity-80">{pos.position}</span>
                                 </div>
                                 {/* Player Name */}
                                 <p className="text-xs text-white font-semibold truncate mt-0.5 bg-black/60 px-1 rounded-sm">{player.name.includes(' ') ? player.name.split(' ').pop() : player.name}</p>
@@ -233,9 +262,10 @@ const SquadBuilder = ({ squad, onSave, onCancel, cardTypes }: SquadBuilderProps)
                                 <Button type="button" variant="destructive" size="icon" onClick={(e) => handleRemovePlayer(pos.id, e)} className="absolute -top-2 -right-2 w-5 h-5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-20" aria-label={`Remove ${player.name}`}> <Trash2 className="h-3 w-3" /> </Button>
                            </div>
                         ) : (
-                           <div className="w-14 md:w-16 text-center"> {/* Empty Slot */}
+                           // **FIX: Responsive width for mobile**
+                           <div className="w-12 sm:w-14 md:w-16 text-center"> {/* Empty Slot */}
                                <div className="aspect-[3/4] w-full border border-dashed border-white/30 rounded-lg flex flex-col items-center justify-center text-white/50 bg-white/5 hover:bg-white/10 transition-colors duration-200 mx-auto">
-                                   <Plus className="h-5 w-5 md:h-6 md:w-6 opacity-50" />
+                                   <Plus className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 opacity-50" />
                                </div>
                                 <p className="text-xs text-muted-foreground font-medium mt-0.5">{pos.position}</p>
                            </div>
