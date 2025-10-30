@@ -1,111 +1,159 @@
-
+// src/components/TargetEditModal.tsx
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { supabase } from '@/integrations/supabase/client';
+import { WeeklyPerformance } from '@/types/futChampions';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from '@/components/ui/dialog';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { WeeklyTarget } from '@/types/futChampions';
-import { Target } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner'; // **This is already correct**
+
+const rankOptions = [
+  "Rank 1", "Rank 2", "Rank 3", "Rank 4", "Rank 5",
+  "Rank 6", "Rank 7", "Rank 8", "Rank 9", "Rank 10",
+];
+
+// Define Zod schema for editing targets
+const targetSchema = z.object({
+  target_rank: z.string().optional(),
+  target_wins: z.coerce.number().min(0).max(20).optional(),
+});
+
+type TargetFormValues = z.infer<typeof targetSchema>;
 
 interface TargetEditModalProps {
+  run: WeeklyPerformance;
   isOpen: boolean;
   onClose: () => void;
-  onSave: (target: WeeklyTarget) => void;
-  currentTarget?: WeeklyTarget;
+  onTargetsUpdated: () => void; // Callback to refresh data
 }
 
-const TargetEditModal = ({ isOpen, onClose, onSave, currentTarget }: TargetEditModalProps) => {
-  const [wins, setWins] = useState(10);
-  const [goalsScored, setGoalsScored] = useState<number | undefined>();
-  const [cleanSheets, setCleanSheets] = useState<number | undefined>();
-  const [minimumRank, setMinimumRank] = useState('');
+const TargetEditModal = ({ run, isOpen, onClose, onTargetsUpdated }: TargetEditModalProps) => {
+  const [isSaving, setIsSaving] = useState(false);
 
+  const form = useForm<TargetFormValues>({
+    resolver: zodResolver(targetSchema),
+  });
+
+  // Reset form when 'run' prop changes
   useEffect(() => {
-    if (currentTarget) {
-      setWins(currentTarget.wins);
-      setGoalsScored(currentTarget.goalsScored);
-      setCleanSheets(currentTarget.cleanSheets);
-      setMinimumRank(currentTarget.minimumRank || '');
+    if (run) {
+      form.reset({
+        target_rank: run.target_rank || '',
+        target_wins: run.target_wins || 0,
+      });
     }
-  }, [currentTarget]);
+  }, [run, form]);
 
-  const handleSave = () => {
-    const target: WeeklyTarget = {
-      wins,
-      goalsScored,
-      cleanSheets,
-      minimumRank: minimumRank || undefined
-    };
-    onSave(target);
-    onClose();
+  const onSubmit = async (data: TargetFormValues) => {
+    setIsSaving(true);
+    try {
+      const { error } = await supabase
+        .from('weekly_performances')
+        .update({
+          target_rank: data.target_rank || null,
+          target_wins: data.target_wins || null,
+        })
+        .eq('id', run.id);
+
+      if (error) throw error;
+
+      // **This is already correct**
+      toast.success('Targets Updated', {
+        description: 'Your new targets have been saved.',
+      });
+      onTargetsUpdated();
+      onClose();
+    } catch (error: any) {
+      console.error('Error updating targets:', error);
+      // **This is already correct**
+      toast.error('Failed to update targets', {
+        description: error.message,
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-gray-900 border-gray-700 max-w-md">
+      <DialogContent className="glass-card-content">
         <DialogHeader>
-          <DialogTitle className="text-white flex items-center gap-2">
-            <Target className="h-5 w-5" />
-            Edit Targets
-          </DialogTitle>
+          <DialogTitle>Edit Targets</DialogTitle>
         </DialogHeader>
-        
-        <div className="space-y-4">
-          <div>
-            <Label className="text-white">Target Wins</Label>
-            <Input
-              type="number"
-              min="0"
-              max="15"
-              value={wins}
-              onChange={(e) => setWins(parseInt(e.target.value))}
-              className="bg-gray-800 border-gray-600 text-white"
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="target_wins"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Target Wins</FormLabel>
+                  <FormControl>
+                    <Input type="number" min="0" max="20" {...field} value={field.value || ''} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-
-          <div>
-            <Label className="text-white">Target Goals (Optional)</Label>
-            <Input
-              type="number"
-              min="0"
-              value={goalsScored || ''}
-              onChange={(e) => setGoalsScored(e.target.value ? parseInt(e.target.value) : undefined)}
-              placeholder="No target set"
-              className="bg-gray-800 border-gray-600 text-white"
+            <FormField
+              control={form.control}
+              name="target_rank"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Target Rank</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value || ''}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a target rank..." />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {rankOptions.map(rank => (
+                        <SelectItem key={rank} value={rank}>{rank}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-
-          <div>
-            <Label className="text-white">Clean Sheets Target (Optional)</Label>
-            <Input
-              type="number"
-              min="0"
-              value={cleanSheets || ''}
-              onChange={(e) => setCleanSheets(e.target.value ? parseInt(e.target.value) : undefined)}
-              placeholder="No target set"
-              className="bg-gray-800 border-gray-600 text-white"
-            />
-          </div>
-
-          <div>
-            <Label className="text-white">Minimum Rank (Optional)</Label>
-            <Input
-              value={minimumRank}
-              onChange={(e) => setMinimumRank(e.target.value)}
-              placeholder="e.g., Rank V"
-              className="bg-gray-800 border-gray-600 text-white"
-            />
-          </div>
-
-          <div className="flex gap-2">
-            <Button onClick={onClose} variant="outline" className="flex-1">
-              Cancel
-            </Button>
-            <Button onClick={handleSave} className="flex-1 modern-button-primary">
-              Save Targets
-            </Button>
-          </div>
-        </div>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button type="button" variant="outline">Cancel</Button>
+              </DialogClose>
+              <Button type="submit" disabled={isSaving}>
+                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Save Changes
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

@@ -11,7 +11,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner'; // **MODIFIED: Import toast from sonner**
 import { useTheme } from '@/hooks/useTheme';
 import { useGameVersion } from '@/contexts/GameVersionContext';
 import { cn } from '@/lib/utils';
@@ -104,7 +104,7 @@ const SquadVisual = ({ squad, cardTypes }: { squad: Squad, cardTypes: CardType[]
 
 
 const Squads = () => {
-    const { toast } = useToast();
+    // **MODIFIED: Removed useToast hook**
     const { currentTheme } = useTheme();
     const { gameVersion, setGameVersion } = useGameVersion();
 
@@ -129,7 +129,10 @@ const Squads = () => {
     const handleDuplicateSquad = async (squadId: string) => {
         const success = await duplicateSquad(squadId);
         if (success) {
-            toast({ title: "Squad Duplicated", description: "A copy of the squad has been created." });
+            // **MODIFIED: Use sonner toast**
+            toast.success("Squad Duplicated", { 
+              description: "A copy of the squad has been created." 
+            });
         } // Error handled in useSquadData
     };
 

@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Squad, PlayerCard, FORMATIONS, CardType, SquadPlayer, SquadPlayerJoin } from '@/types/squads';
 import PlayerSearchModal from './PlayerSearchModal'; // Keep this import
 import { Plus, Save, Trash2, ArrowLeft } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner'; // **MODIFIED: Import toast from sonner**
 import { useAuth } from '@/contexts/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from '@/lib/utils';
@@ -82,7 +82,7 @@ interface SquadBuilderProps {
 }
 
 const SquadBuilder = ({ squad, onSave, onCancel, cardTypes }: SquadBuilderProps) => {
-  const { toast } = useToast();
+  // **MODIFIED: Removed useToast hook**
   const { user } = useAuth();
   const { gameVersion } = useGameVersion();
   const { currentTheme } = useTheme();
@@ -157,7 +157,11 @@ const SquadBuilder = ({ squad, onSave, onCancel, cardTypes }: SquadBuilderProps)
   const handlePositionClick = (slotId: string) => { setSelectedSlotId(slotId); setShowPlayerModal(true); };
 
   const handleSave = () => {
-    if (!squadData.name.trim()) { toast({ title: "Name Required", variant: "destructive" }); return; }
+    // **MODIFIED: Use sonner for validation**
+    if (!squadData.name.trim()) { 
+      toast.error("Name Required", { description: "Please enter a name for your squad." }); 
+      return; 
+    }
     // **FIX: Ensure we only send the DB-schema-compliant fields**
     const squadPlayersForDb = squadData.squad_players.map(p => ({
       player_id: p.player_id, 

@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner'; // **MODIFIED: Import toast from sonner**
 import { useGameVersion } from '@/contexts/GameVersionContext';
 import { Award, Save, Code, Edit, Trash2, Copy } from 'lucide-react';
 import {
@@ -29,7 +29,7 @@ interface AchievementDefinition {
 
 const AchievementCreator = () => {
   const { gameVersion } = useGameVersion();
-  const { toast } = useToast();
+  // **MODIFIED: Removed useToast hook**
   const [achievements, setAchievements] = useState<AchievementDefinition[]>([]);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -56,7 +56,8 @@ const AchievementCreator = () => {
     try {
       parsedConditions = JSON.parse(conditions);
     } catch (e) {
-      toast({ title: "Invalid JSON", description: "Please check the conditions JSON format.", variant: "destructive" });
+      // **MODIFIED: Use sonner toast**
+      toast.error("Invalid JSON", { description: "Please check the conditions JSON format." });
       return;
     }
 
@@ -71,9 +72,11 @@ const AchievementCreator = () => {
     });
 
     if (error) {
-      toast({ title: "Error saving achievement", description: error.message, variant: "destructive" });
+      // **MODIFIED: Use sonner toast**
+      toast.error("Error saving achievement", { description: error.message });
     } else {
-      toast({ title: "Achievement Saved!", description: `${title} has been added.` });
+      // **MODIFIED: Use sonner toast**
+      toast.success("Achievement Saved!", { description: `${title} has been added.` });
       // Reset form
       setTitle('');
       setDescription('');
@@ -85,9 +88,11 @@ const AchievementCreator = () => {
   const handleDelete = async (id: string) => {
     const { error } = await supabase.from('achievement_definitions').delete().eq('id', id);
     if (error) {
-        toast({ title: "Error deleting achievement", description: error.message, variant: 'destructive' });
+        // **MODIFIED: Use sonner toast**
+        toast.error("Error deleting achievement", { description: error.message });
     } else {
-        toast({ title: "Achievement Deleted" });
+        // **MODIFIED: Use sonner toast**
+        toast.success("Achievement Deleted");
         fetchAchievements();
     }
   };
@@ -106,7 +111,8 @@ const AchievementCreator = () => {
     try {
       parsedConditions = JSON.parse(editingAchievement.conditions);
     } catch (e) {
-      toast({ title: "Invalid JSON", description: "Please check the conditions JSON format.", variant: "destructive" });
+      // **MODIFIED: Use sonner toast**
+      toast.error("Invalid JSON", { description: "Please check the conditions JSON format." });
       return;
     }
 
@@ -122,9 +128,11 @@ const AchievementCreator = () => {
       .eq('id', editingAchievement.id);
 
     if (error) {
-      toast({ title: "Error updating achievement", description: error.message, variant: "destructive" });
+      // **MODIFIED: Use sonner toast**
+      toast.error("Error updating achievement", { description: error.message });
     } else {
-      toast({ title: "Achievement Updated!", description: `${editingAchievement.title} has been updated.` });
+      // **MODIFIED: Use sonner toast**
+      toast.success("Achievement Updated!", { description: `${editingAchievement.title} has been updated.` });
       setEditingAchievement(null);
       fetchAchievements();
     }
@@ -138,9 +146,11 @@ const AchievementCreator = () => {
     });
 
     if (error) {
-      toast({ title: "Error duplicating achievement", description: error.message, variant: 'destructive' });
+      // **MODIFIED: Use sonner toast**
+      toast.error("Error duplicating achievement", { description: error.message });
     } else {
-      toast({ title: "Achievement Duplicated!", description: `${achievement.title} has been duplicated.` });
+      // **MODIFIED: Use sonner toast**
+      toast.success("Achievement Duplicated!", { description: `${achievement.title} has been duplicated.` });
       fetchAchievements();
     }
   };
@@ -223,7 +233,7 @@ const AchievementCreator = () => {
                         <Edit className="h-4 w-4" />
                       </Button>
                     </DialogTrigger>
-                    {editingAchievement && (
+                    {editingAchievement && editingAchievement.id === ach.id && ( // Ensure correct dialog content
                     <DialogContent>
                       <DialogHeader>
                         <DialogTitle>Edit Achievement</DialogTitle>

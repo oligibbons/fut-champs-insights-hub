@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTheme } from '@/hooks/useTheme';
 import { WeeklyPerformance } from '@/types/futChampions';
 import { Settings, Target, Calendar, Trophy, Zap, Users, Edit3 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner'; // **MODIFIED: Import toast from sonner**
 import WeekNaming from './WeekNaming';
 import QualifierSystem from './QualifierSystem';
 
@@ -21,7 +20,7 @@ interface WeekSettingsProps {
 
 const WeekSettings = ({ weekData, onUpdateWeek }: WeekSettingsProps) => {
   const { currentTheme } = useTheme();
-  const { toast } = useToast();
+  // **MODIFIED: Removed useToast hook**
   const [targetRank, setTargetRank] = useState(weekData?.targetRank || 'Rank VII');
   const [targetWins, setTargetWins] = useState(weekData?.targetWins || 7);
   const [personalNotes, setPersonalNotes] = useState(weekData?.personalNotes || '');
@@ -60,8 +59,8 @@ const WeekSettings = ({ weekData, onUpdateWeek }: WeekSettingsProps) => {
       personalNotes
     });
     
-    toast({
-      title: "Target Set!",
+    // **MODIFIED: Use sonner toast**
+    toast.success("Target Set!", {
       description: `Target set to ${targetRank} (${winsNeeded} wins)`,
     });
   };
@@ -117,8 +116,14 @@ const WeekSettings = ({ weekData, onUpdateWeek }: WeekSettingsProps) => {
                   />
                 </div>
                 
+                {/* **MODIFIED: Added sonner toast on click** */}
                 <Button 
-                  onClick={() => onUpdateWeek({ personalNotes })}
+                  onClick={() => {
+                    onUpdateWeek({ personalNotes });
+                    toast.success("Notes Saved", {
+                      description: "Your personal notes have been updated."
+                    });
+                  }}
                   variant="outline"
                   style={{ borderColor: currentTheme.colors.border, color: currentTheme.colors.text }}
                 >

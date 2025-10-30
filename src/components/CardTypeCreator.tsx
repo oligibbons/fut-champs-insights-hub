@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner'; // **MODIFIED: Import toast from sonner**
 import { useGameVersion } from '../contexts/GameVersionContext';
 import { Paintbrush, Plus, Trash2, Edit, Copy } from 'lucide-react';
 import {
@@ -60,7 +60,7 @@ const CardPreview = ({ name, primaryColor, secondaryColor, highlightColor }: { n
 const CardTypeCreator = () => {
   const { user } = useAuth();
   const { gameVersion } = useGameVersion();
-  const { toast } = useToast();
+  // **MODIFIED: Removed useToast hook**
   const [cardTypes, setCardTypes] = useState<CardType[]>([]);
   
   // State updated for three colors
@@ -90,7 +90,8 @@ const CardTypeCreator = () => {
   // Logic updated to save three colors
   const handleSave = async () => {
     if (!user || !newCardType.name) {
-      toast({ title: "Name is required.", variant: 'destructive' });
+      // **MODIFIED: Use sonner toast**
+      toast.error("Name is required.");
       return;
     }
     const { error } = await supabase.from('card_types').insert({
@@ -101,9 +102,11 @@ const CardTypeCreator = () => {
     });
 
     if (error) {
-      toast({ title: "Error saving card type", description: error.message, variant: 'destructive' });
+      // **MODIFIED: Use sonner toast**
+      toast.error("Error saving card type", { description: error.message });
     } else {
-      toast({ title: "Card Type Saved!", description: `${newCardType.name} has been added.` });
+      // **MODIFIED: Use sonner toast**
+      toast.success("Card Type Saved!", { description: `${newCardType.name} has been added.` });
       setNewCardType({ name: '', primary_color: '#4B0082', secondary_color: '#FFD700', highlight_color: '#FFFFFF' });
       fetchCardTypes();
     }
@@ -112,9 +115,11 @@ const CardTypeCreator = () => {
   const handleDelete = async (id: string) => {
     const { error } = await supabase.from('card_types').delete().eq('id', id);
     if (error) {
-        toast({ title: "Error deleting card type", description: error.message, variant: 'destructive' });
+        // **MODIFIED: Use sonner toast**
+        toast.error("Error deleting card type", { description: error.message });
     } else {
-        toast({ title: "Card Type Deleted" });
+        // **MODIFIED: Use sonner toast**
+        toast.success("Card Type Deleted");
         fetchCardTypes();
     }
   };
@@ -138,9 +143,11 @@ const CardTypeCreator = () => {
       .eq('id', editingCardType.id);
 
     if (error) {
-      toast({ title: "Error updating card type", description: error.message, variant: 'destructive' });
+      // **MODIFIED: Use sonner toast**
+      toast.error("Error updating card type", { description: error.message });
     } else {
-      toast({ title: "Card Type Updated!", description: `${editingCardType.name} has been updated.` });
+      // **MODIFIED: Use sonner toast**
+      toast.success("Card Type Updated!", { description: `${editingCardType.name} has been updated.` });
       setEditingCardType(null);
       fetchCardTypes();
     }
@@ -161,9 +168,11 @@ const CardTypeCreator = () => {
     });
 
     if (error) {
-      toast({ title: "Error duplicating card type", description: error.message, variant: 'destructive' });
+      // **MODIFIED: Use sonner toast**
+      toast.error("Error duplicating card type", { description: error.message });
     } else {
-      toast({ title: "Card Type Duplicated!", description: `${card.name} has been duplicated.` });
+      // **MODIFIED: Use sonner toast**
+      toast.success("Card Type Duplicated!", { description: `${card.name} has been duplicated.` });
       fetchCardTypes();
     }
   };
@@ -276,4 +285,3 @@ const CardTypeCreator = () => {
 };
 
 export default CardTypeCreator;
-

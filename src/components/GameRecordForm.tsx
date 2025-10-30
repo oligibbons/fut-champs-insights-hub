@@ -10,12 +10,12 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from 'sonner'; // **MODIFIED: Import toast from sonner**
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Squad } from '@/types/squads';
 import { PlayerPerformance, Game, OpponentSquad } from '@/types/futChampions';
 import { getRatingColor, getOverallGameRating, getDefensiveRating, getOffensiveRating, getPossessionRating } from '@/utils/gameRating';
-import { Info, Shield, Sword, Users, BarChart2 } from 'lucide-react';
+import { Info, Shield, Sword, Users, BarChart2, Loader2 } from 'lucide-react'; // **MODIFIED: Added Loader2**
 
 import DashboardSection from '@/components/DashboardSection';
 import PlayerStatsForm from '@/components/PlayerStatsForm';
@@ -166,10 +166,9 @@ const GameRecordForm = React.forwardRef<HTMLDivElement, GameRecordFormProps>(({ 
 
   const onSubmit = async (values: z.infer<typeof gameRecordSchema>) => {
     if (!user || !squad) {
-      toast({
-        title: "Error",
+      // **MODIFIED: Use sonner**
+      toast.error("Error", {
         description: "You must be logged in and have a squad selected.",
-        variant: "destructive",
       });
       return;
     }
@@ -254,8 +253,8 @@ const GameRecordForm = React.forwardRef<HTMLDivElement, GameRecordFormProps>(({ 
         if (perfError) throw perfError;
       }
 
-      toast({
-        title: "Game Recorded!",
+      // **MODIFIED: Use sonner**
+      toast.success("Game Recorded!", {
         description: `Your ${values.result} (${values.score_own}-${values.score_opponent}) has been saved.`,
       });
       onGameRecorded(game);
@@ -297,10 +296,9 @@ const GameRecordForm = React.forwardRef<HTMLDivElement, GameRecordFormProps>(({ 
 
     } catch (error: any) {
       console.error("Error recording game:", error);
-      toast({
-        title: "Error saving game",
+      // **MODIFIED: Use sonner**
+      toast.error("Error saving game", {
         description: error.message || "An unknown error occurred.",
-        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -509,6 +507,8 @@ const GameRecordForm = React.forwardRef<HTMLDivElement, GameRecordFormProps>(({ 
                     disabled={isLoading || !squad}
                     className="w-full sm:w-auto"
                   >
+                    {/* **MODIFIED: Added loader** */}
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {isLoading ? "Saving..." : "Record Game"}
                   </Button>
                </div>

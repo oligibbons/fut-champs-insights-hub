@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { GameResult, PlayerPerformance, TeamStats } from '@/types/futChampions';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner'; // **MODIFIED: Import toast from sonner**
 import { Save } from 'lucide-react';
 import MobileNumberInput from './MobileNumberInput';
 import { Badge } from './ui/badge';
@@ -18,7 +18,7 @@ interface GameEditModalProps {
 }
 
 const GameEditModal = ({ game, isOpen, onClose, onSave }: GameEditModalProps) => {
-  const { toast } = useToast();
+  // **MODIFIED: Removed useToast hook**
   const [userGoals, setUserGoals] = useState<number | null>(null);
   const [opponentGoals, setOpponentGoals] = useState<number | null>(null);
   const [result, setResult] = useState<'win' | 'loss'>('win');
@@ -83,8 +83,9 @@ const GameEditModal = ({ game, isOpen, onClose, onSave }: GameEditModalProps) =>
     };
 
     onSave(updatedGame);
-    toast({
-      title: "Game Updated",
+    
+    // **MODIFIED: Use sonner**
+    toast.success("Game Updated", {
       description: "Your game has been successfully updated.",
     });
     onClose();

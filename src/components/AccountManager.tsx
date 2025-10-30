@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner'; // **MODIFIED: Import toast from sonner**
 import { Plus, Edit, Trash2, Gamepad2, User } from 'lucide-react';
 
 interface Account {
@@ -19,7 +19,7 @@ interface Account {
 }
 
 const AccountManager = () => {
-  const { toast } = useToast();
+  // **MODIFIED: Removed useToast hook**
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
@@ -58,10 +58,9 @@ const AccountManager = () => {
 
   const addAccount = () => {
     if (!newAccount.name.trim()) {
-      toast({
-        title: "Name Required",
+      // **MODIFIED: Use sonner toast**
+      toast.error("Name Required", {
         description: "Please enter a name for the account.",
-        variant: "destructive"
       });
       return;
     }
@@ -82,8 +81,8 @@ const AccountManager = () => {
     setNewAccount({ name: '', platform: 'PS5' });
     setShowAddForm(false);
     
-    toast({
-      title: "Account Added",
+    // **MODIFIED: Use sonner toast**
+    toast.success("Account Added", {
       description: `${account.name} has been added successfully.`,
     });
   };
@@ -98,8 +97,8 @@ const AccountManager = () => {
     localStorage.setItem('active-account', accountId);
     
     const activeAccount = updatedAccounts.find(acc => acc.id === accountId);
-    toast({
-      title: "Account Switched",
+    // **MODIFIED: Use sonner toast**
+    toast.success("Account Switched", {
       description: `Switched to ${activeAccount?.name}`,
     });
     
@@ -109,10 +108,9 @@ const AccountManager = () => {
 
   const deleteAccount = (accountId: string) => {
     if (accounts.length <= 1) {
-      toast({
-        title: "Cannot Delete",
+      // **MODIFIED: Use sonner toast**
+      toast.error("Cannot Delete", {
         description: "You must have at least one account.",
-        variant: "destructive"
       });
       return;
     }
@@ -128,8 +126,8 @@ const AccountManager = () => {
     
     saveAccounts(updatedAccounts);
     
-    toast({
-      title: "Account Deleted",
+    // **MODIFIED: Use sonner toast**
+    toast.success("Account Deleted", {
       description: `${accountToDelete?.name} has been deleted.`,
     });
   };
