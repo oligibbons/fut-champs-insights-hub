@@ -36,7 +36,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false); // <-- ADDED
 
-  // **NEW: Function to load profile data**
+  // **Function to load profile data**
+  // This is now just a helper function, defined once.
   const loadProfileForUser = useCallback(async (authedUser: User) => {
     try {
       const { data, error } = await supabase
@@ -53,7 +54,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setProfile(data);
         setIsAdmin(data.is_admin || false);
       } else {
-        // This is normal for a new user, profile is just null
         setProfile(null);
         setIsAdmin(false);
       }
@@ -64,48 +64,52 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, []);
 
-  // **NEW: Exportable function to refresh the profile**
+  // **Exportable function to refresh the profile**
   const fetchProfile = useCallback(async () => {
     if (user) {
       await loadProfileForUser(user);
     }
   }, [user, loadProfileForUser]);
 
-  // **MODIFIED: The auth listener now also loads the profile**
+  // =================================================================
+  // **THE NEW REWRITE (FIX)**
+  // We now use two separate useEffects to decouple auth from profile.
+  // =================================================================
+
+  // **EFFECT 1: Handle Auth State & Loading**
+  // This hook's *only* job is to find out who the user is
+  // and set loading to false. It does NOT fetch the profile.
   useEffect(() => {
     setLoading(true);
-    
-    // 1. Check for the initial session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      const authedUser = session?.user ?? null;
-      setUser(authedUser);
-      if (authedUser) {
-        await loadProfileForUser(authedUser); // <-- ADDED
-      }
-      setLoading(false); // <-- Set loading false after first check
-    });
 
-    // 2. Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        const authedUser = session?.user ?? null;
-        setUser(authedUser);
-
-        if (authedUser) {
-          await loadProfileForUser(authedUser); // <-- ADDED
-        } else {
-          setProfile(null); // <-- ADDED
-          setIsAdmin(false); // <-- ADDED
-        }
-        // This second setLoading(false) handles sign-in/sign-out
-        setLoading(false);
+      (event, session) => {
+        setUser(session?.user ?? null);
+        setLoading(false); // This is the most important part!
       }
     );
 
     return () => {
       subscription?.unsubscribe();
     };
-  }, [loadProfileForUser]); // <-- Dependency is correct
+  }, []); // <-- Empty array means this runs only ONCE.
+
+  // **EFFECT 2: Handle Profile Fetching**
+  // This hook *reacts* to changes in the `user` state.
+  // It only runs *after* Effect 1 has set the user and stopped loading.
+  useEffect(() => {
+    if (user) {
+      loadProfileForUser(user);
+    } else {
+      // Clear profile if user logs out
+      setProfile(null);
+      setIsAdmin(false);
+    }
+  }, [user, loadProfileForUser]); // <-- Runs whenever `user` changes.
+
+  // =================================================================
+  // **END OF REWRITE**
+  // =================================================================
 
   // --- Your existing auth functions ---
   const signIn = async (credentials: SignInWithPasswordCredentials) => {
@@ -148,8 +152,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     fetchProfile, // <-- ADDED
   };
 
-  // **THE BLACK SCREEN FIX:**
-  // Remove the `!loading` check. The provider should ALWAYS render its children.
+  // The provider should ALWAYS render its children.
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
