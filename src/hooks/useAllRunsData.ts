@@ -1,105 +1,191 @@
 // src/hooks/useAllRunsData.ts
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGameVersion } from '@/contexts/GameVersionContext';
-import { WeeklyPerformance, Game } from '@/types/futChampions'; // Ensure Game is imported
+import { WeeklyPerformance, Game } from '@/types/futChampions';
+import { toast } from '@/components/ui/use-toast';
 
-// Swapped from shadcn toast to sonner to match the rest of the app
-import { toast } from 'sonner';
-
-// Define a type that ensures games are included and is an array
-export type WeeklyPerformanceWithGames = WeeklyPerformance & {
-  games: Game[]; // Explicitly an array
-};
+// Simple interface for this hook's processed data
+export interface Run extends WeeklyPerformance {
+  games: Game[]; // Include the games array
+  gameCount: number;
+}
 
 export const useAllRunsData = () => {
-  const { user } = useAuth();
+  // --- THIS IS THE FIX (Part 1) ---
+  const { user, loading: authLoading } = useAuth();
+  // --- END OF FIX ---
+  
   const { gameVersion } = useGameVersion();
-  // Initialize state with [] - CRITICAL
-  const [runs, setRuns] = useState<WeeklyPerformanceWithGames[]>([]);
+  const [runs, setRuns] = useState<Run[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    // If no user, ensure state is clean and stop
-    if (!user) {
+  const fetchAllRuns = useCallback(async () => {
+    // --- THIS IS THE FIX (Part 2) ---
+    // Wait for auth to be ready
+    if (!user || !gameVersion || authLoading) {
+      setRuns([]);
       setLoading(false);
-      setRuns([]); // Ensure runs is empty if no user
-      setError(null);
       return;
     }
+    // --- END OF FIX ---
 
-    let isMounted = true; // Flag to prevent state updates on unmounted component
+    setLoading(true);
+    setError(null);
 
-    const fetchAllRuns = async () => {
-      setLoading(true);
-      setError(null);
-      setRuns([]); // Reset runs before fetching
-
-      try {
-        // --- THIS IS THE FIX ---
-        // The query must also fetch the relations inside game_results
-        // that useDashboardStats.ts depends on.
-        const { data, error: fetchError } = await supabase
+    try {
+      // Fetch all weekly performances and all games in parallel
+      const [weeksRes, gamesRes] = await Promise.all([
+        supabase
           .from('weekly_performances')
-          .select(`
-            *,
-            games:game_results (
-              *,
-              playerStats:player_performances(*),
-              teamStats:team_statistics(*)
-            )
-          `)
+          .select('*')
           .eq('user_id', user.id)
           .eq('game_version', gameVersion)
-          .order('week_number', { ascending: false });
-        // --- END OF FIX ---
+          .order('week_number', { ascending: false }),
+        supabase
+          .from('game_results')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('game_version', gameVersion)
+          .order('game_number', { ascending: true }),
+      ]);
 
-        if (fetchError) {
-          throw fetchError;
+      if (weeksRes.error) throw new Error(`Weekly Runs Error: ${weeksRes.error.message}`);
+      if (gamesRes.error) throw new Error(`Games Error: ${gamesRes.error.message}`);
+
+      const weeks: WeeklyPerformance[] = weeksRes.data || [];
+      const games: Game[] = gamesRes.data || [];
+
+      // Create a map of games by week_id
+      const gamesMap = new Map<string, Game[]>();
+      games.forEach(game => {
+        if (!gamesMap.has(game.week_id)) {
+          gamesMap.set(game.week_id, []);
         }
+        gamesMap.get(game.week_id)!.push(game);
+      });
 
-        // Process data ONLY if component is still mounted
-        if (isMounted) {
-          const processedData = (data || []) // Ensure data is an array
-            .map(run => {
-                // Ensure games is an array, default to [] if null/undefined or not array
-                const gamesArray = Array.isArray(run.games) ? run.games : [];
-                // Sort games within each run safely
-                gamesArray.sort((a, b) => (a?.game_number ?? 0) - (b?.game_number ?? 0));
-                return { ...run, games: gamesArray };
-            })
-            // Final filter for type safety
-            .filter((run): run is WeeklyPerformanceWithGames => Array.isArray(run.games));
+      // Combine weeks with their games
+      const processedRuns: Run[] = weeks.map(week => {
+        const weekGames = gamesMap.get(week.id) || [];
+        return {
+          ...week,
+          games: weekGames,
+          gameCount: weekGames.length,
+        };
+      });
 
-          setRuns(processedData);
-        }
+      setRuns(processedRuns);
+    } catch (err: any) {
+      console.error('Error fetching all runs data:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  // --- THIS IS THE FIX (Part 3) ---
+  }, [user, gameVersion, authLoading]);
+  // --- END OF FIX ---
 
-      } catch (err: any) {
-         if (isMounted) {
-            console.error('Error fetching all runs:', err);
-            setError(err);
-            setRuns([]); // Ensure runs is empty on error
-            // Using the correct (sonner) toast function
-            toast.error('Error loading run history', {
-              description: err.message,
-            });
-         }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
-
+  useEffect(() => {
     fetchAllRuns();
+  }, [fetchAllRuns]);
+  
+  // Function to delete a run (and all its associated data)
+  const deleteRun = async (weekId: string) => {
+    if (!user) {
+        toast({ title: "Error", description: "Not authenticated.", variant: "destructive" });
+        return;
+    }
+    
+    // Check if the run is linked to a league participant
+    try {
+       const { data: participantData, error: participantError } = await supabase
+        .from('champs_league_participants')
+        .select('id')
+        .eq('weekly_performance_id', weekId)
+        .limit(1);
 
-    // Cleanup function to set isMounted to false when component unmounts
-    return () => {
-      isMounted = false;
-    };
-  }, [user, gameVersion]); // Removed toast from dependencies
+      if (participantError) throw new Error(`League Check Error: ${participantError.message}`);
 
-  return { runs, loading, error };
+      if (participantData && participantData.length > 0) {
+        toast({
+          title: "Cannot Delete Run",
+          description: "This run is linked to a Champs League. Please remove it from the league before deleting.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+    } catch (err: any) {
+       console.error("Error checking league link:", err);
+       toast({ title: "Error", description: err.message, variant: "destructive" });
+       return;
+    }
+
+    // If not linked, proceed with deletion
+    try {
+        setLoading(true);
+        // We need to delete associated data in order due to foreign keys
+        // 1. player_performances (references game_results)
+        // 2. team_statistics (references game_results)
+        // 3. game_results (references weekly_performances)
+        // 4. weekly_performances
+        
+        // This is tricky. We need the game_ids first.
+        const { data: gameIds, error: gameIdsError } = await supabase
+            .from('game_results')
+            .select('id')
+            .eq('week_id', weekId)
+            .eq('user_id', user.id); // Extra check
+            
+        if (gameIdsError) throw new Error(`Game ID Fetch Error: ${gameIdsError.message}`);
+
+        const ids = gameIds.map(g => g.id);
+
+        if (ids.length > 0) {
+            // 1. Delete player_performances
+            const { error: perfError } = await supabase
+                .from('player_performances')
+                .delete()
+                .in('game_id', ids);
+            if (perfError) throw new Error(`Player Perf Delete Error: ${perfError.message}`);
+
+            // 2. Delete team_statistics
+            const { error: statsError } = await supabase
+                .from('team_statistics')
+                .delete()
+                .in('game_id', ids);
+             if (statsError) throw new Error(`Team Stats Delete Error: ${statsError.message}`);
+        }
+        
+        // 3. Delete game_results
+        const { error: gameError } = await supabase
+            .from('game_results')
+            .delete()
+            .eq('week_id', weekId);
+        if (gameError) throw new Error(`Game Results Delete Error: ${gameError.message}`);
+            
+        // 4. Delete weekly_performance
+        const { error: weekError } = await supabase
+            .from('weekly_performances')
+            .delete()
+            .eq('id', weekId)
+            .eq('user_id', user.id);
+        if (weekError) throw new Error(`Weekly Perf Delete Error: ${weekError.message}`);
+
+        toast({ title: "Success", description: "Run and all associated games have been deleted." });
+        fetchAllRuns(); // Refresh data
+
+    } catch (err: any)
+    {
+        console.error("Error deleting run:", err);
+        toast({ title: "Error deleting run", description: err.message, variant: "destructive" });
+    } finally {
+        setLoading(false);
+    }
+  };
+
+  return { runs, loading, error, refetchRuns: fetchAllRuns, deleteRun };
 };

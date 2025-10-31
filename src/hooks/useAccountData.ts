@@ -39,7 +39,11 @@ export interface ProcessedWeeklyPerformance extends WeeklyPerformance {
 
 
 export const useAccountData = () => {
-  const { user } = useAuth();
+  // --- THIS IS THE FIX (Part 1) ---
+  // Get 'loading' state from useAuth and rename it to 'authLoading'
+  const { user, loading: authLoading } = useAuth();
+  // --- END OF FIX ---
+  
   const { gameVersion } = useGameVersion();
   const [weeklyData, setWeeklyData] = useState<ProcessedWeeklyPerformance[]>([]);
   const [allPlayers, setAllPlayers] = useState<PlayerCard[]>([]);
@@ -48,13 +52,17 @@ export const useAccountData = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
-    if (!user || !gameVersion) {
+    // --- THIS IS THE FIX (Part 2) ---
+    // Add 'authLoading' to this check.
+    // This prevents the hook from running until AuthContext is ready.
+    if (!user || !gameVersion || authLoading) {
       setWeeklyData([]);
       setAllPlayers([]);
       setAllCardTypes([]);
-      setLoading(false);
+      setLoading(false); // Not loading because we're not fetching
       return;
     }
+    // --- END OF FIX ---
 
     setLoading(true);
     setError(null);
@@ -72,11 +80,9 @@ export const useAccountData = () => {
         supabase.from('weekly_performances').select('*').eq('user_id', user.id).eq('game_version', gameVersion).order('week_number', { ascending: false }),
         supabase.from('game_results').select('*').eq('user_id', user.id).eq('game_version', gameVersion),
         
-        // --- THIS IS THE FIX (Part 1) ---
         // Added game_version filter to prevent fetching ALL performances
         supabase.from('player_performances').select('*').eq('user_id', user.id).eq('game_version', gameVersion),
         
-        // --- THIS IS THE FIX (Part 2) ---
         // Added game_version filter to prevent fetching ALL stats
         supabase.from('team_statistics').select('*').eq('user_id', user.id).eq('game_version', gameVersion),
         
@@ -186,7 +192,10 @@ export const useAccountData = () => {
     } finally {
       setLoading(false);
     }
-  }, [user, gameVersion]);
+  // --- THIS IS THE FIX (Part 3) ---
+  // Add 'authLoading' to the dependency array
+  }, [user, gameVersion, authLoading]);
+  // --- END OF FIX ---
 
   useEffect(() => {
     fetchData();

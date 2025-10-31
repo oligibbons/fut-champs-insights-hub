@@ -2,165 +2,123 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/use-toast';
 
-// Define the structure of your settings
-export interface AppSettings {
-  theme: string; // Keep as string to support all your theme names
-  default_game_version: 'FC25' | 'FC26';
-  dashboard: {
-    showTopPerformers: boolean;
-    showXGAnalysis: boolean;
-    showAIInsights: boolean;
-    showFormAnalysis: boolean;
-    showWeaknesses: boolean;
-    showOpponentAnalysis: boolean;
-    showPositionalAnalysis: boolean;
-    showRecentTrends: boolean;
-    showAchievements: boolean;
-    showTargetProgress: boolean;
-    showTimeAnalysis: boolean;
-    showStressAnalysis: boolean;
-    showMatchFacts: boolean;
-    showWeeklyScores: boolean;
-    showRecentForm: boolean;
-  };
-  notifications: {
-    inAppFriendRequest: boolean;
-    inAppAchievementUnlock: boolean;
-    emailFriendRequest: boolean;
-    emailWeeklySummary: boolean;
-  };
+interface UserSetting {
+  id: string;
+  user_id: string;
+  key: string;
+  value: any;
 }
 
-// Define the default settings
-const defaultSettings: AppSettings = {
-  theme: 'dark_blue_saturated', // Or your default theme name
-  default_game_version: 'FC26',
-  dashboard: {
-    showTopPerformers: true,
-    showXGAnalysis: true,
-    showAIInsights: true,
-    showFormAnalysis: true,
-    showWeaknesses: true,
-    showOpponentAnalysis: true,
-    showPositionalAnalysis: true,
-    showRecentTrends: true,
-    showAchievements: true,
-    showTargetProgress: true,
-    showTimeAnalysis: true,
-    showStressAnalysis: true,
-    showMatchFacts: true,
-    showWeeklyScores: true,
-    showRecentForm: true
-  },
-  notifications: {
-    inAppFriendRequest: true,
-    inAppAchievementUnlock: true,
-    emailFriendRequest: true,
-    emailWeeklySummary: false,
-  }
-};
+// Define a type for the settings map
+type SettingsMap = Record<string, any>;
 
-// Helper to deep merge defaults with fetched settings
-const mergeSettings = (fetched: any): AppSettings => {
-  return {
-    ...defaultSettings,
-    ...fetched,
-    dashboard: {
-      ...defaultSettings.dashboard,
-      ...(fetched.dashboard || {}),
-    },
-    notifications: {
-      ...defaultSettings.notifications,
-      ...(fetched.notifications || {}),
-    },
-  };
-};
+export const useUserSettings = () as {
+  settings: SettingsMap;
+  loading: boolean;
+  error: string | null;
+  getSetting: (key: string, defaultValue?: any) => any;
+  updateSetting: (key: string, value: any) => Promise<void>;
+  refetchSettings: () => void;
+} => {
+  // --- THIS IS THE FIX (Part 1) ---
+  const { user, loading: authLoading } = useAuth();
+  // --- END OF FIX ---
 
-// This hook manages loading and saving settings from the 'user_settings' table
-export const useUserSettings = () => {
-  const { user } = useAuth();
-  const [settings, setSettings] = useState<AppSettings>(defaultSettings);
+  const [settings, setSettings] = useState<SettingsMap>({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Fetches settings from the 'user_settings' table
   const fetchSettings = useCallback(async () => {
-    if (!user) return;
+    // --- THIS IS THE FIX (Part 2) ---
+    // Wait for auth to be ready before fetching
+    if (!user || authLoading) {
+      setSettings({});
+      setLoading(false);
+      return;
+    }
+    // --- END OF FIX ---
+
     setLoading(true);
+    setError(null);
+
     try {
       const { data, error } = await supabase
         .from('user_settings')
-        .select('value')
-        .eq('user_id', user.id)
-        .eq('key', 'app_settings') // We'll store all app settings in one JSON object
-        .single();
+        .select('key, value')
+        .eq('user_id', user.id);
 
-      if (error && error.code !== 'PGRST116') { // PGRST116 = 'No rows found'
-        throw error;
+      if (error) {
+        throw new Error(`Fetch Settings Error: ${error.message}`);
       }
 
-      if (data) {
-        // Merge fetched settings with defaults to ensure all keys are present
-        setSettings(mergeSettings(data.value));
-      } else {
-        // No settings found, use defaults
-        setSettings(defaultSettings);
-      }
-    } catch (error: any) {
-      console.error('Error fetching settings:', error.message);
-      setSettings(defaultSettings); // Fallback to defaults on error
+      // Convert array of {key, value} to a single object map
+      const settingsMap = data.reduce((acc: SettingsMap, setting: { key: string; value: any }) => {
+        acc[setting.key] = setting.value;
+        return acc;
+      }, {});
+
+      setSettings(settingsMap);
+    } catch (err: any) {
+      console.error('Error fetching user settings:', err);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  // --- THIS IS THE FIX (Part 3) ---
+  }, [user, authLoading]);
+  // --- END OF FIX ---
 
-  // Load settings on hook initialization
   useEffect(() => {
     fetchSettings();
   }, [fetchSettings]);
 
-  // Saves a new settings object to the 'user_settings' table
-  const saveSettings = async (newSettings: Partial<AppSettings>) => {
-    if (!user) return;
+  const getSetting = (key: string, defaultValue: any = null) => {
+    return settings[key] ?? defaultValue;
+  };
 
-    const updatedSettings = { ...settings, ...newSettings };
-    
-    // Ensure nested objects are merged correctly
-    if (newSettings.dashboard) {
-        updatedSettings.dashboard = { ...settings.dashboard, ...newSettings.dashboard };
+  const updateSetting = async (key: string, value: any) => {
+    if (!user) {
+      toast({ title: "Error", description: "You must be logged in.", variant: "destructive" });
+      return;
     }
-    if (newSettings.notifications) {
-        updatedSettings.notifications = { ...settings.notifications, ...newSettings.notifications };
-    }
-
-    setSettings(updatedSettings); // Optimistic update
 
     try {
-      const { error } = await supabase
-        .from('user_settings')
-        .upsert({
-          user_id: user.id,
-          key: 'app_settings',
-          value: updatedSettings,
-          updated_at: new Date().toISOString(),
-        }, {
-          onConflict: 'user_id, key'
-        });
+      // Optimistic update
+      setSettings(prev => ({ ...prev, [key]: value }));
 
-      if (error) throw error;
-      toast.success('Settings saved');
-    } catch (error: any) {
-      toast.error('Failed to save settings', { description: error.message });
-      // Revert optimistic update on error
-      fetchSettings();
+      const { data, error } = await supabase
+        .from('user_settings')
+        .upsert(
+            { user_id: user.id, key, value, updated_at: new Date().toISOString() },
+            { onConflict: 'user_id, key' }
+        )
+        .select('value') // Select the updated value to confirm
+        .single();
+    
+      if (error) {
+        throw new Error(`Update Setting Error: ${error.message}`);
+      }
+
+      // Re-set with confirmed data from DB
+      setSettings(prev => ({ ...prev, [key]: data.value }));
+      
+    } catch (err: any) {
+        console.error("Error updating setting:", err);
+        toast({ title: "Error updating setting", description: err.message, variant: "destructive" });
+        // Revert on error
+        fetchSettings(); // Re-fetch to get the true state
     }
   };
-  
-  // Helper function to save just one key
-  const saveSetting = <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => {
-      saveSettings({ [key]: value });
-  };
 
-  return { settings, loading, saveSettings, saveSetting };
+  return {
+    settings,
+    loading,
+    error,
+    getSetting,
+    updateSetting,
+    refetchSettings: fetchSettings,
+  };
 };
+

@@ -2,7 +2,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { Squad, PlayerCard, SquadPlayer, CardType, SquadPlayerJoin } from '../types/squads'; // Import updated types
+// --- THIS IS THE FIX (Part 1) ---
 import { useAuth } from '../contexts/AuthContext';
+// --- END OF FIX ---
 import { toast } from 'sonner'; // Using sonner directly
 import { useGameVersion } from '@/contexts/GameVersionContext';
 
@@ -11,7 +13,9 @@ import { useGameVersion } from '@/contexts/GameVersionContext';
 // interface HydratedSquad extends Squad { ... }
 
 export const useSquadData = () => {
-  const { user } = useAuth();
+  // --- THIS IS THE FIX (Part 2) ---
+  const { user, loading: authLoading } = useAuth();
+  // --- END OF FIX ---
   const { gameVersion } = useGameVersion();
   const [squads, setSquads] = useState<Squad[]>([]); // Use centralized Squad type
   const [players, setPlayers] = useState<PlayerCard[]>([]);
@@ -19,13 +23,16 @@ export const useSquadData = () => {
   const [loading, setLoading] = useState(true);
 
   const fetchAllData = useCallback(async () => {
-    if (!user?.id || !gameVersion) {
+    // --- THIS IS THE FIX (Part 3) ---
+    // Wait for auth to be ready
+    if (!user?.id || !gameVersion || authLoading) {
         setLoading(false); // Ensure loading is set to false if no user/version
         setSquads([]);
         setPlayers([]);
         setCardTypes([]); // Also clear card types
         return;
     }
+    // --- END OF FIX ---
     setLoading(true);
 
     try {
@@ -98,7 +105,9 @@ export const useSquadData = () => {
     } finally {
       setLoading(false);
     }
-  }, [user, gameVersion]);
+  // --- THIS IS THE FIX (Part 4) ---
+  }, [user, gameVersion, authLoading]);
+  // --- END OF FIX ---
 
   // Initial fetch and fetch on user/gameVersion change
   useEffect(() => {

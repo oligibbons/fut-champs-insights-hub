@@ -32,6 +32,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // --- THIS IS THE FIX (Part 1) ---
 // Create a timeout promise that rejects after 'ms' milliseconds
+// Increased to 10 seconds (10000ms) as a safe fallback for cold starts,
+// although the main fix is sequencing in the data hooks.
 const createTimeout = (ms: number, message: string) => {
   return new Promise((_, reject) => {
     setTimeout(() => {
@@ -53,10 +55,10 @@ const fetchUserProfile = async (user: User) => {
       .single();
 
     // --- THIS IS THE FIX (Part 2) ---
-    // Race the query against a 5-second (5000ms) timeout
+    // Race the query against a 10-second (10000ms) timeout
     const { data: profile, error } = await Promise.race([
       fetchPromise,
-      createTimeout(5000, 'Profile query timed out. Check RLS policies on "profiles" table.')
+      createTimeout(10000, 'Profile query timed out. Check RLS policies on "profiles" table.')
     ]) as { data: UserProfile | null, error: any }; // Cast the result
 
     if (error) {
@@ -100,7 +102,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } catch (e) {
         console.error("Error getting initial session: ", e);
       } finally {
-        // --- THIS IS THE FIX (Part 3) ---
         // This will now *always* run, even if fetchUserProfile times out,
         // which stops the infinite loading screen.
         if (mounted) {

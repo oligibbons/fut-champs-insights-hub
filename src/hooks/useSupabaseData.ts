@@ -1,6 +1,8 @@
 // src/hooks/useSupabaseData.ts
 import { useState, useEffect, useCallback } from 'react';
+// --- THIS IS THE FIX (Part 1) ---
 import { useAuth } from '@/contexts/AuthContext';
+// --- END OF FIX ---
 import { supabase } from '@/integrations/supabase/client';
 import { WeeklyPerformance, GameResult, PlayerPerformance, TeamStats } from '@/types/futChampions';
 import { useGameVersion } from '@/contexts/GameVersionContext';
@@ -8,16 +10,21 @@ import { useGameVersion } from '@/contexts/GameVersionContext';
 import { useQuery } from '@tanstack/react-query';
 
 export function useSupabaseData() {
-  const { user } = useAuth();
+  // --- THIS IS THE FIX (Part 2) ---
+  const { user, loading: authLoading } = useAuth();
+  // --- END OF FIX ---
   const [weeklyData, setWeeklyData] = useState<WeeklyPerformance[]>([]);
   const [loading, setLoading] = useState(true);
   const { gameVersion } = useGameVersion();
 
   const fetchWeeklyData = useCallback(async () => {
-    if (!user) {
+    // --- THIS IS THE FIX (Part 3) ---
+    // Wait for auth to be ready
+    if (!user || authLoading) {
       setLoading(false);
       return;
     }
+    // --- END OF FIX ---
 
     setLoading(true);
     try {
@@ -138,7 +145,9 @@ export function useSupabaseData() {
     } finally {
       setLoading(false);
     }
-  }, [user, gameVersion]);
+  // --- THIS IS THE FIX (Part 4) ---
+  }, [user, gameVersion, authLoading]);
+  // --- END OF FIX ---
 
 
   const saveGame = async (weekId: string, gameData: Omit<GameResult, 'id'>) => {
@@ -174,10 +183,10 @@ export function useSupabaseData() {
       if (error) throw error;
 
       if (gameData.teamStats) {
-        await supabase.from('team_statistics').insert({ ...gameData.teamStats, user_id: user.id, game_id: game.id });
+        await supabase.from('team_statistics').insert({ ...gameData.teamStats, user_id: user.id, game_id: game.id, game_version: gameVersion }); // Added game_version
       }
       if (gameData.playerStats && gameData.playerStats.length > 0) {
-        const perfs = gameData.playerStats.map(p => ({ ...p, user_id: user.id, game_id: game.id, player_name: p.name, rating: p.rating }));
+        const perfs = gameData.playerStats.map(p => ({ ...p, user_id: user.id, game_id: game.id, player_name: p.name, rating: p.rating, game_version: gameVersion })); // Added game_version
         await supabase.from('player_performances').insert(perfs);
       }
 
@@ -251,6 +260,9 @@ export function useSupabaseData() {
   const deleteWeek = async (weekId: string) => {
     if (!user) return;
     try {
+      // Need to delete games first if RLS or foreign keys demand it
+      // Simple deletion for now:
+      await supabase.from('game_results').delete().eq('week_id', weekId);
       await supabase.from('weekly_performances').delete().eq('id', weekId);
       await fetchWeeklyData();
     } catch (error) {
@@ -263,8 +275,12 @@ export function useSupabaseData() {
   };
   
   useEffect(() => {
+    // --- THIS IS THE FIX (Part 5) ---
+    // We already check authLoading inside fetchWeeklyData,
+    // so we can just call it directly.
     fetchWeeklyData();
   }, [user, gameVersion, fetchWeeklyData]);
+  // --- END OF FIX ---
 
   const getCurrentWeek = useCallback((): WeeklyPerformance | null => {
     return weeklyData.find(week => !week.isCompleted) || null;
@@ -292,7 +308,9 @@ export function useSupabaseData() {
  * Used for "anchoring" a new challenge league.
  */
 export const useSelectableUserRuns = () => {
-  const { user } = useAuth();
+  // --- THIS IS THE FIX (Part 6) ---
+  const { user, loading: authLoading } = useAuth();
+  // --- END OF FIX ---
   const { gameVersion } = useGameVersion();
 
   return useQuery({
@@ -326,6 +344,10 @@ export const useSelectableUserRuns = () => {
           : `Week ${run.week_number} (${new Date(run.start_date).toLocaleDateString()})`
       }));
     },
-    enabled: !!user,
+    // --- THIS IS THE FIX (Part 7) ---
+    // Enable the query only when user is present AND auth is no longer loading.
+    enabled: !!user && !authLoading,
+    // --- END OF FIX ---
   });
 };
+
