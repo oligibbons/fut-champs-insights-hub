@@ -1,5 +1,5 @@
 // src/pages/ChallengeMode.tsx
-import { useState, useMemo, useCallback } from 'react'; // <-- ADD useCallback
+import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
@@ -52,7 +52,9 @@ const LeagueList = ({ leagues, isLoading, emptyTitle, emptyDescription }: {
         <Card 
           key={league.id} 
           className="hover:border-primary transition-colors cursor-pointer"
-          onClick={() => navigate(`/challenge/${league.id}`)}
+          // --- THIS IS THE FIX (Part 1) ---
+          // Use the correct absolute path
+          onClick={() => navigate(`/dashboard/challenge/${league.id}`)}
         >
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
@@ -155,11 +157,13 @@ const ChallengeMode = () => {
     return { activeLeagues: active, completedLeagues: completed };
   }, [leagues]);
 
-  // --- THIS IS THE FIX ---
   // Wrap the handler in useCallback to stabilize the function prop
   const handleLeagueCreated = useCallback((newLeagueId: string) => {
     setIsCreateModalOpen(false);
-    navigate(`/challenge/${newLeagueId}`);
+    // --- THIS IS THE FIX (Part 2) ---
+    // Use the correct absolute path or a relative path.
+    // navigate(newLeagueId) would also work.
+    navigate(`/dashboard/challenge/${newLeagueId}`);
   }, [navigate]); // Add navigate as a dependency
 
   return (

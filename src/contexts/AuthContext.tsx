@@ -30,66 +30,95 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Helper function to fetch profile
+const fetchUserProfile = async (user: User) => {
+  if (!user) return null;
+  try {
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching profile:', error);
+      return null;
+    }
+    return profile || null;
+  } catch (e) {
+    console.error('Exception fetching profile:', e);
+    return null;
+  }
+};
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  const fetchUserProfile = async (user: User) => {
-    // This helper function just fetches and sets profile data
-    if (!user) return;
-    try {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (error) {
-        console.error('Error fetching profile:', error);
-        setUserProfile(null);
-        setIsAdmin(false);
-      } else if (profile) {
-        setUserProfile(profile);
-        setIsAdmin(profile.is_admin || false);
-      }
-    } catch (e) {
-      console.error('Exception fetching profile:', e);
-      setUserProfile(null);
-      setIsAdmin(false);
-    }
-  };
+  const [loading, setLoading] = useState(true); // Start true for initial load
 
   useEffect(() => {
-    // onAuthStateChange handles the initial load AND all auth events.
+    let mounted = true;
+
+    // --- THIS IS THE FIX ---
+    // 1. Check the initial session on mount
+    async function getInitialSession() {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        if (!mounted) return; // Don't update state if unmounted
+
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          const profile = await fetchUserProfile(session.user);
+          if (mounted && profile) {
+            setUserProfile(profile);
+            setIsAdmin(profile.is_admin || false);
+          }
+        }
+      } catch (e) {
+        console.error("Error getting initial session: ", e);
+      } finally {
+        // Always set loading to false after initial check
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    getInitialSession();
+
+    // 2. Listen for *subsequent* auth changes (SIGN_IN, SIGN_OUT)
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(
-      async (_event: AuthChangeEvent, session: Session | null) => {
-        // Set loading to true every time auth state changes.
-        setLoading(true);
-        
-        try {
-          setUser(session?.user ?? null);
-          if (session?.user) {
-            // If there's a user, fetch their profile
-            await fetchUserProfile(session.user);
-          } else {
-            // User logged out
-            setUserProfile(null);
-            setIsAdmin(false);
+      async (event: AuthChangeEvent, session: Session | null) => {
+        if (!mounted) return;
+
+        // Set user immediately
+        setUser(session?.user ?? null);
+
+        if (event === 'SIGNED_IN' && session?.user) {
+          // On sign-in, show loader while fetching profile
+          setLoading(true);
+          const profile = await fetchUserProfile(session.user);
+          if (mounted) {
+            setUserProfile(profile);
+            setIsAdmin(profile?.is_admin || false);
+            setLoading(false);
           }
-        } catch (e) {
-          console.error("Error in onAuthStateChange handler: ", e);
-        } finally {
-          // Always set loading to false after all work is done.
-          setLoading(false);
+        } else if (event === 'SIGNED_OUT') {
+          // On sign-out, just clear data
+          setUserProfile(null);
+          setIsAdmin(false);
         }
+        // We no longer set loading(true) for TOKEN_REFRESHED,
+        // preventing the loading flash and potential infinite load.
       }
     );
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []); // Empty dependency array ensures this runs once on mount
@@ -122,9 +151,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    setUser(null);
-    setUserProfile(null);
-    setIsAdmin(false);
+    // Listener will handle clearing state
   };
 
   const value = {
