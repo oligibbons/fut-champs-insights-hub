@@ -36,11 +36,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // --- FIX 1: fetchUserProfile should only fetch, not manage loading state ---
-  // We also wrap its content in a try/catch in case the query itself throws.
   const fetchUserProfile = async (user: User) => {
-    if (!user) return; // Guard clause
-
+    // This helper function just fetches and sets profile data
+    if (!user) return;
     try {
       const { data: profile, error } = await supabase
         .from('profiles')
@@ -50,48 +48,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) {
         console.error('Error fetching profile:', error);
+        setUserProfile(null);
+        setIsAdmin(false);
       } else if (profile) {
         setUserProfile(profile);
         setIsAdmin(profile.is_admin || false);
       }
     } catch (e) {
       console.error('Exception fetching profile:', e);
+      setUserProfile(null);
+      setIsAdmin(false);
     }
   };
 
   useEffect(() => {
-    // --- FIX 2: Wrap initial session check in try...finally ---
-    const getSession = async () => {
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          await fetchUserProfile(session.user);
-        }
-      } catch (e) {
-        console.error('Exception in getSession:', e);
-      } finally {
-        // This MUST run to unlock the app on initial load
-        setLoading(false);
-      }
-    };
-
-    getSession();
+    // --- THIS IS THE FIX ---
+    // We REMOVE the getSession() call.
+    // onAuthStateChange handles the initial load AND all auth events (login/logout).
+    // This eliminates the race condition.
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(
-      // --- FIX 3: Wrap auth state change in try...finally ---
       async (_event: AuthChangeEvent, session: Session | null) => {
-        // Set loading to true to show loader during transition
+        // 1. Set loading to true every time auth state changes.
+        //    This shows the loader during login/logout.
         setLoading(true);
         
         try {
           setUser(session?.user ?? null);
           if (session?.user) {
+            // If there's a user, fetch their profile
             await fetchUserProfile(session.user);
           } else {
             // User logged out
@@ -99,9 +86,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setIsAdmin(false);
           }
         } catch (e) {
-          console.error('Exception in onAuthStateChange:', e);
+          console.error("Error in onAuthStateChange handler: ", e);
         } finally {
-          // This MUST run to unlock the app after login/logout
+          // 2. THIS IS THE CRITICAL PART.
+          //    We MUST set loading to false after all work is done,
+          //    no matter what. This unlocks the app.
           setLoading(false);
         }
       }
@@ -157,8 +146,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider value={value}>
-      {/* --- FIX 4: (From last time) ALWAYS render children --- */}
-      {/* ProtectedRoute/PublicRoute will use the 'loading' flag to show a spinner */}
+      {/* (This fix from before is also still correct) */}
       {children}
     </AuthContext.Provider>
   );
