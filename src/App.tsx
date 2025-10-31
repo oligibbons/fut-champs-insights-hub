@@ -15,13 +15,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute'; 
 
 import { useAuth } from './contexts/AuthContext';
-// --- FIX: Redundant providers are removed ---
-// import { ThemeProvider } from './hooks/useTheme'; 
-// import { DataSyncProvider } from './hooks/useDataSync.tsx';
-// import { GameVersionProvider } from './contexts/GameVersionContext';
 
-// --- FIX: Toaster is moved to main.tsx ---
-// import { Toaster } from "@/components/ui/sonner"; 
 import AIInsights from './pages/AIInsights';
 import Achievements from './pages/Achievements';
 import Admin from './pages/Admin';
@@ -105,7 +99,6 @@ const MainLayout = () => {
 
 function App() {
   return (
-    // --- FIX: All Providers are removed. They are now in main.tsx ---
     <>
       <AnimatedBackground />
       <Routes>
@@ -150,7 +143,6 @@ function App() {
         
         <Route path="*" element={<NotFound />} />
       </Routes>
-      {/* --- Toaster is now in main.tsx --- */}
     </>
   );
 }

@@ -25,12 +25,11 @@ const ProtectedRoute = ({ children, adminOnly = false }: ProtectedRouteProps) =>
     );
   }
 
-  // If loading is complete and there's no user, redirect to the login page.
+  // If loading is complete and there's no user,  we redirect to the login page.
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
   
-  // --- THIS IS THE FIX ---
   // If this is an admin-only route and the user is not an admin, redirect to the dashboard.
   if (adminOnly && !isAdmin) {
     return <Navigate to="/dashboard" replace />;

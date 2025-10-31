@@ -6,11 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-// --- THIS IS THE FIX (Part 1) ---
 // We switch from the 'shadcn' useToast hook to the 'sonner' toast function
 // to match the Toaster component used in App.tsx.
 import { toast } from 'sonner';
-// import { useToast } from '@/hooks/use-toast'; // <-- REMOVED THIS
 
 import { useTheme } from '@/hooks/useTheme';
 import { Mail, Lock, User, LogIn, UserPlus } from 'lucide-react';
@@ -27,8 +25,6 @@ const Auth = () => {
   const navigate = useNavigate();
   const { currentTheme } = useTheme();
 
-  // --- THIS IS THE FIX (Part 2) ---
-  // const { toast } = useToast(); // <-- REMOVED THIS
   // The `toast` function is now imported directly from 'sonner'.
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -38,7 +34,6 @@ const Auth = () => {
     try {
       if (isSignUp) {
         if (!username.trim()) {
-          // --- THIS IS THE FIX (Part 3) ---
           // Use sonner's error toast
           toast.error("Username is required");
           return;
