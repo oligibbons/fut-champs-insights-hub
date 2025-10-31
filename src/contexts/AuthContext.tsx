@@ -38,13 +38,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 	const fetchUserProfile = async (user: User) => {
 		if (user) {
-			// --- THIS IS THE FIX ---
-			// Changed from `.on('email', 'eq', user.email)`
-			// to the correct `.eq('id', user.id)`
 			const { data: profile, error } = await supabase
 				.from('profiles')
 				.select('*')
-				.eq('id', user.id) // <-- This line is corrected
+				.eq('id', user.id)
 				.single();
 
 			if (error) {
@@ -107,7 +104,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	};
 
 	const signUp = async (email, password, username) => {
-		const { data, error }_ = await supabase.auth.signUp({
+		// --- THIS IS THE FIX (Part 1) ---
+		// Removed the stray underscore after the brackets
+		const { data, error } = await supabase.auth.signUp({
 			email,
 			password,
 			options: {
@@ -119,7 +118,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		});
 		// The onAuthStateChange listener will handle setting the user
 		// The database trigger will create the profile
-		return { error: _ };
+        
+		// --- THIS IS THE FIX (Part 2) ---
+		// Changed `_` to `error`
+		return { error };
 	};
 
 	const signOut = async () => {
