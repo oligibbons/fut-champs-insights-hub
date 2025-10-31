@@ -70,24 +70,24 @@ const Navigation = ({ isExpanded, setIsExpanded }: { isExpanded: boolean, setIsE
   const { data: requests } = useFriendRequests();
   const requestCount = requests?.length || 0;
 
+  // --- FIX: All paths are now prefixed with /dashboard ---
   const navLinks: NavLink[] = [
-    // --- FIX: Changed path to /dashboard ---
     { to: "/dashboard", icon: LayoutGrid, label: "Dashboard" },
-    { to: "/current-run", icon: Play, label: "Current Run" },
-    { to: "/history", icon: History, label: "History" },
-    { to: "/analytics", icon: BarChart4, label: "Analytics" },
-    { to: "/players", icon: Users, label: "Players" },
-    { to: "/squads", icon: Trophy, label: "Squads" },
-    { to: "/ai-insights", icon: BrainCircuit, label: "AI Insights" },
-    { to: "/achievements", icon: Star, label: "Achievements" },
-    { to: "/friends", icon: UsersRound, label: "Friends", notificationCount: requestCount },
-    { to: "/challenge", icon: Swords, label: "Challenge" },
-    { to: "/notifications", icon: Bell, label: "Notifications" },
+    { to: "/dashboard/current-run", icon: Play, label: "Current Run" },
+    { to: "/dashboard/history", icon: History, label: "History" },
+    { to: "/dashboard/analytics", icon: BarChart4, label: "Analytics" },
+    { to: "/dashboard/players", icon: Users, label: "Players" },
+    { to: "/dashboard/squads", icon: Trophy, label: "Squads" },
+    { to: "/dashboard/ai-insights", icon: BrainCircuit, label: "AI Insights" },
+    { to: "/dashboard/achievements", icon: Star, label: "Achievements" },
+    { to: "/dashboard/friends", icon: UsersRound, label: "Friends", notificationCount: requestCount },
+    { to: "/dashboard/challenge", icon: Swords, label: "Challenge" },
+    { to: "/dashboard/notifications", icon: Bell, label: "Notifications" },
   ];
 
   const bottomLinks: NavLink[] = [
-    { to: "/settings", icon: Settings, label: "Settings" },
-    { to: "/admin", icon: ShieldCheck, label: "Admin", adminOnly: true },
+    { to: "/dashboard/settings", icon: Settings, label: "Settings" },
+    { to: "/dashboard/admin", icon: ShieldCheck, label: "Admin", adminOnly: true },
   ];
 
   return (
