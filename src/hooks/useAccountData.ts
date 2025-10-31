@@ -71,8 +71,15 @@ export const useAccountData = () => {
       ] = await Promise.all([
         supabase.from('weekly_performances').select('*').eq('user_id', user.id).eq('game_version', gameVersion).order('week_number', { ascending: false }),
         supabase.from('game_results').select('*').eq('user_id', user.id).eq('game_version', gameVersion),
-        supabase.from('player_performances').select('*').eq('user_id', user.id), // Ideally filter by game_version if possible via joins or RLS
-        supabase.from('team_statistics').select('*').eq('user_id', user.id), // Ideally filter by game_version if possible via joins or RLS
+        
+        // --- THIS IS THE FIX (Part 1) ---
+        // Added game_version filter to prevent fetching ALL performances
+        supabase.from('player_performances').select('*').eq('user_id', user.id).eq('game_version', gameVersion),
+        
+        // --- THIS IS THE FIX (Part 2) ---
+        // Added game_version filter to prevent fetching ALL stats
+        supabase.from('team_statistics').select('*').eq('user_id', user.id).eq('game_version', gameVersion),
+        
         supabase.from('players').select('*').eq('user_id', user.id).eq('game_version', gameVersion),
         supabase.from('card_types').select('*').eq('user_id', user.id).eq('game_version', gameVersion)
       ]);

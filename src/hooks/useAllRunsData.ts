@@ -4,7 +4,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGameVersion } from '@/contexts/GameVersionContext';
 import { WeeklyPerformance, Game } from '@/types/futChampions'; // Ensure Game is imported
-import { toast } from '@/components/ui/use-toast';
+
+// --- THIS IS THE FIX ---
+// Swapped from shadcn toast to sonner to match the rest of the app
+import { toast } from 'sonner';
+// import { toast } from '@/components/ui/use-toast'; // <-- REMOVED THIS
 
 // Define a type that ensures games are included and is an array
 export type WeeklyPerformanceWithGames = WeeklyPerformance & {
@@ -68,10 +72,10 @@ export const useAllRunsData = () => {
             console.error('Error fetching all runs:', err);
             setError(err);
             setRuns([]); // Ensure runs is empty on error
-            toast({
-              title: 'Error loading run history',
+            // --- THIS IS THE FIX ---
+            // Using the correct (sonner) toast function
+            toast.error('Error loading run history', {
               description: err.message,
-              variant: 'destructive',
             });
          }
       } finally {
