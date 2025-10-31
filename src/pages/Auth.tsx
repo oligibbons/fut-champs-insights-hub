@@ -5,7 +5,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
+
+// --- THIS IS THE FIX (Part 1) ---
+// We switch from the 'shadcn' useToast hook to the 'sonner' toast function
+// to match the Toaster component used in App.tsx.
+import { toast } from 'sonner';
+// import { useToast } from '@/hooks/use-toast'; // <-- REMOVED THIS
+
 import { useTheme } from '@/hooks/useTheme';
 import { Mail, Lock, User, LogIn, UserPlus } from 'lucide-react';
 import logo from '/fut-trackr-logo.jpg'; 
@@ -19,8 +25,11 @@ const Auth = () => {
   
   const { signUp, signIn } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const { currentTheme } = useTheme();
+
+  // --- THIS IS THE FIX (Part 2) ---
+  // const { toast } = useToast(); // <-- REMOVED THIS
+  // The `toast` function is now imported directly from 'sonner'.
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,38 +38,33 @@ const Auth = () => {
     try {
       if (isSignUp) {
         if (!username.trim()) {
-          toast({
-            title: "Error",
-            description: "Username is required",
-            variant: "destructive"
-          });
+          // --- THIS IS THE FIX (Part 3) ---
+          // Use sonner's error toast
+          toast.error("Username is required");
           return;
         }
         const { error } = await signUp(email, password, username);
         if (error) throw error;
         
-        toast({
-          title: "Success!",
-          description: "Account created successfully. You can now sign in."
-        });
+        // Use sonner's success toast
+        toast.success("Account created successfully. You can now sign in.");
         setIsSignUp(false);
       } else {
         const { error } = await signIn(email, password);
         if (error) throw error;
         
-        toast({
-          title: "Welcome back!",
+        // Use sonner's success toast
+        toast.success("Welcome back!", {
           description: "Successfully signed in."
         });
         
-        // --- FIX: Navigate to /dashboard instead of / ---
+        // This navigation is correct
         navigate('/dashboard');
       }
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "An error occurred",
-        variant: "destructive"
+      // Use sonner's error toast
+      toast.error("Error", {
+        description: error.message || "An error occurred"
       });
     } finally {
       setLoading(false);
