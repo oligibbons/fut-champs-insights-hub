@@ -144,7 +144,6 @@ export const MobileBottomNav = () => {
 
 const MobileNavItem = ({ path, icon: Icon, name }: { path: string; icon: React.ElementType; name: string }) => {
   const location = useLocation();
-  // This 'isActive' definition is correct because it's for the 'mainItems'
   const isActive = location.pathname === path;
   const { currentTheme } = useTheme(); 
 
@@ -162,3 +161,4 @@ const MobileNavItem = ({ path, icon: Icon, name }: { path: string; icon: React.E
     </NavLink>
   );
 };
+
