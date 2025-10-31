@@ -15,10 +15,13 @@ import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute'; 
 
 import { useAuth } from './contexts/AuthContext';
-import { ThemeProvider } from './hooks/useTheme';
-import { Toaster } from "@/components/ui/sonner";
-import { DataSyncProvider } from './hooks/useDataSync.tsx';
-import { GameVersionProvider } from './contexts/GameVersionContext';
+// --- FIX: Redundant providers are removed ---
+// import { ThemeProvider } from './hooks/useTheme'; 
+// import { DataSyncProvider } from './hooks/useDataSync.tsx';
+// import { GameVersionProvider } from './contexts/GameVersionContext';
+
+// --- FIX: Toaster is moved to main.tsx ---
+// import { Toaster } from "@/components/ui/sonner"; 
 import AIInsights from './pages/AIInsights';
 import Achievements from './pages/Achievements';
 import Admin from './pages/Admin';
@@ -44,7 +47,7 @@ const Header = () => {
   const location = useLocation();
   const isMobile = useMobile(); 
 
-  // This logic is now correct because '/dashboard' is the protected area
+  // --- FIX: Use /dashboard as the base for protected routes ---
   if (!user || location.pathname === '/auth' || location.pathname === '/') {
     return null;
   }
@@ -56,8 +59,7 @@ const Header = () => {
     )}>
       <div className="flex items-center gap-4">
         <Button asChild>
-          {/* --- FIX: Link to /dashboard/current-run --- */}
-          <Link to="/dashboard/current-run">
+          <Link to="/dashboard/current-run"> {/* <-- FIX: Point to dashboard child */}
             New Run <ArrowRight className="ml-2 h-4 w-4" />
           </Link>
         </Button>
@@ -103,57 +105,54 @@ const MainLayout = () => {
 
 function App() {
   return (
-    <ThemeProvider>
+    // --- FIX: All Providers are removed. They are now in main.tsx ---
+    <>
       <AnimatedBackground />
-      <GameVersionProvider>
-        <DataSyncProvider>
-          <Routes>
-            {/* --- Public routes --- */}
-            <Route 
-              path="/" 
-              element={<PublicRoute><Home /></PublicRoute>} 
-            />
-            <Route 
-              path="/auth" 
-              element={<PublicRoute><Auth /></PublicRoute>} 
-            />
+      <Routes>
+        {/* --- Public routes --- */}
+        <Route 
+          path="/" 
+          element={<PublicRoute><Home /></PublicRoute>} 
+        />
+        <Route 
+          path="/auth" 
+          element={<PublicRoute><Auth /></PublicRoute>} 
+        />
 
-            {/* --- Special protected route outside main layout --- */}
-            <Route path="/join/:token" element={<ProtectedRoute><JoinLeaguePage /></ProtectedRoute>} />
-            
-            {/* --- PROTECTED APP LAYOUT --- */}
-            {/* --- FIX: All protected routes now live under /dashboard --- */}
-            <Route path="/dashboard" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
-              <Route index element={<Index />} />
-              <Route path="current-run" element={<CurrentRun />} />
-              <Route path="history" element={<History />} />
-              <Route path="analytics" element={<Analytics />} />
-              <Route path="players" element={<Players />} />
-              <Route path="squads" element={<Squads />} />
-              <Route path="ai-insights" element={<AIInsights />} />
-              <Route path="achievements" element={<Achievements />} />
-              <Route path="notifications" element={<Notifications />} />
-              <Route path="friends" element={<Friends />} />
-              <Route path="challenge" element={<ChallengeMode />} />
-              <Route path="challenge/:leagueId" element={<LeagueDetailsPage />} />
-              <Route path="settings" element={<Settings />} />
-              
-              <Route 
-                path="admin" 
-                element={
-                  <ProtectedRoute adminOnly={true}>
-                    <Admin />
-                  </ProtectedRoute>
-                } 
-              />
-            </Route>
-            
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <Toaster />
-        </DataSyncProvider>
-      </GameVersionProvider>
-    </ThemeProvider>
+        {/* --- Special protected route outside main layout --- */}
+        <Route path="/join/:token" element={<ProtectedRoute><JoinLeaguePage /></ProtectedRoute>} />
+        
+        {/* --- Protected routes with main layout --- */}
+        {/* --- FIX: Protected routes are now under /dashboard --- */}
+        <Route path="/dashboard" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
+          <Route index element={<Index />} />
+          <Route path="current-run" element={<CurrentRun />} />
+          <Route path="history" element={<History />} />
+          <Route path="analytics" element={<Analytics />} />
+          <Route path="players" element={<Players />} />
+          <Route path="squads" element={<Squads />} />
+          <Route path="ai-insights" element={<AIInsights />} />
+          <Route path="achievements" element={<Achievements />} />
+          <Route path="notifications" element={<Notifications />} />
+          <Route path="friends" element={<Friends />} />
+          <Route path="challenge" element={<ChallengeMode />} />
+          <Route path="challenge/:leagueId" element={<LeagueDetailsPage />} />
+          <Route path="settings" element={<Settings />} />
+          
+          <Route 
+            path="admin" 
+            element={
+              <ProtectedRoute adminOnly={true}>
+                <Admin />
+              </ProtectedRoute>
+            } 
+          />
+        </Route>
+        
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      {/* --- Toaster is now in main.tsx --- */}
+    </>
   );
 }
 
