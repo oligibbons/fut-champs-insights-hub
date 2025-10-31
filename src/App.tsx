@@ -109,7 +109,7 @@ function App() {
       <GameVersionProvider>
         <DataSyncProvider>
           <Routes>
-            {/* --- MODIFIED: Public routes wrapped in PublicRoute --- */}
+            {/* --- Public routes --- */}
             <Route 
               path="/" 
               element={<PublicRoute><Home /></PublicRoute>} 
@@ -123,23 +123,24 @@ function App() {
             <Route path="/join/:token" element={<ProtectedRoute><JoinLeaguePage /></ProtectedRoute>} />
             
             {/* --- Protected routes with main layout --- */}
+            {/* --- FIX: Child routes are now relative (no leading '/') --- */}
             <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
-              <Route path="/dashboard" element={<Index />} />
-              <Route path="/current-run" element={<CurrentRun />} />
-              <Route path="/history" element={<History />} />
-              <Route path="/analytics" element={<Analytics />} />
-              <Route path="/players" element={<Players />} />
-              <Route path="/squads" element={<Squads />} />
-              <Route path="/ai-insights" element={<AIInsights />} />
-              <Route path="/achievements" element={<Achievements />} />
-              <Route path="/notifications" element={<Notifications />} />
-              <Route path="/friends" element={<Friends />} />
-              <Route path="/challenge" element={<ChallengeMode />} />
-              <Route path="/challenge/:leagueId" element={<LeagueDetailsPage />} />
-              <Route path="/settings" element={<Settings />} />
+              <Route path="dashboard" element={<Index />} />
+              <Route path="current-run" element={<CurrentRun />} />
+              <Route path="history" element={<History />} />
+              <Route path="analytics" element={<Analytics />} />
+              <Route path="players" element={<Players />} />
+              <Route path="squads" element={<Squads />} />
+              <Route path="ai-insights" element={<AIInsights />} />
+              <Route path="achievements" element={<Achievements />} />
+              <Route path="notifications" element={<Notifications />} />
+              <Route path="friends" element={<Friends />} />
+              <Route path="challenge" element={<ChallengeMode />} />
+              <Route path="challenge/:leagueId" element={<LeagueDetailsPage />} />
+              <Route path="settings" element={<Settings />} />
               
               <Route 
-                path="/admin" 
+                path="admin" 
                 element={
                   <ProtectedRoute adminOnly={true}>
                     <Admin />
