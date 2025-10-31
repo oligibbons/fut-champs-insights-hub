@@ -97,7 +97,9 @@ export const MobileBottomNav = () => {
                           : 'text-muted-foreground hover:bg-white/10'
                       )
                     }
-                    style={isActive ? { 
+                    // --- THIS IS THE FIX ---
+                    // The 'style' prop must also be a function to get 'isActive'
+                    style={({ isActive }) => isActive ? { 
                       backgroundColor: currentTheme.colors.primary,
                       color: currentTheme.colors.primaryText
                     } : {}}
@@ -120,7 +122,9 @@ export const MobileBottomNav = () => {
                           : 'text-muted-foreground hover:bg-white/10'
                       )
                     }
-                    style={isActive ? { 
+                    // --- THIS IS THE FIX ---
+                    // The 'style' prop must also be a function to get 'isActive'
+                    style={({ isActive }) => isActive ? { 
                       backgroundColor: currentTheme.colors.primary,
                       color: currentTheme.colors.primaryText
                     } : {}}
@@ -140,6 +144,7 @@ export const MobileBottomNav = () => {
 
 const MobileNavItem = ({ path, icon: Icon, name }: { path: string; icon: React.ElementType; name: string }) => {
   const location = useLocation();
+  // This 'isActive' definition is correct because it's for the 'mainItems'
   const isActive = location.pathname === path;
   const { currentTheme } = useTheme(); 
 
