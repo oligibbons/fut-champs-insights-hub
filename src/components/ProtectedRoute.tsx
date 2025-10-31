@@ -31,10 +31,9 @@ const ProtectedRoute = ({ children, adminOnly = false }: ProtectedRouteProps) =>
   }
   
   // --- THIS IS THE FIX ---
-  // If this is an admin-only route and the user is not an admin, redirect to the main page.
-  // Redirecting to '/' is safer as it resolves to the protected layout's index route.
+  // If this is an admin-only route and the user is not an admin, redirect to the dashboard.
   if (adminOnly && !isAdmin) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   // If all checks pass, render the protected component.

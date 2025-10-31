@@ -11,9 +11,8 @@ import Auth from './pages/Auth';
 import NotFound from './pages/NotFound';
 import Navigation from './components/Navigation';
 
-// --- MODIFIED: Import PublicRoute ---
 import ProtectedRoute from './components/ProtectedRoute';
-import PublicRoute from './components/PublicRoute'; // <-- ADD THIS
+import PublicRoute from './components/PublicRoute'; 
 
 import { useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './hooks/useTheme';
@@ -38,7 +37,6 @@ import ChallengeMode from './pages/ChallengeMode';
 import LeagueDetailsPage from './pages/LeagueDetailsPage';
 import JoinLeaguePage from './pages/JoinLeaguePage';
 
-// --- NEW: Import the new public Home page ---
 import Home from './pages/Home';
 
 const Header = () => {
@@ -46,7 +44,7 @@ const Header = () => {
   const location = useLocation();
   const isMobile = useMobile(); 
 
-  // --- FIX: Also hide header on the new Home page ---
+  // This logic is now correct because '/dashboard' is the protected area
   if (!user || location.pathname === '/auth' || location.pathname === '/') {
     return null;
   }
@@ -58,7 +56,8 @@ const Header = () => {
     )}>
       <div className="flex items-center gap-4">
         <Button asChild>
-          <Link to="/current-run">
+          {/* --- FIX: Link to /dashboard/current-run --- */}
+          <Link to="/dashboard/current-run">
             New Run <ArrowRight className="ml-2 h-4 w-4" />
           </Link>
         </Button>
@@ -109,7 +108,7 @@ function App() {
       <GameVersionProvider>
         <DataSyncProvider>
           <Routes>
-            {/* --- MODIFIED: Public routes wrapped in PublicRoute --- */}
+            {/* --- Public routes --- */}
             <Route 
               path="/" 
               element={<PublicRoute><Home /></PublicRoute>} 
@@ -122,9 +121,9 @@ function App() {
             {/* --- Special protected route outside main layout --- */}
             <Route path="/join/:token" element={<ProtectedRoute><JoinLeaguePage /></ProtectedRoute>} />
             
-            {/* --- Protected routes with main layout --- */}
-            {/* --- FIX: All child routes are relative AND Index is now the 'index' route --- */}
-            <Route path="/" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
+            {/* --- PROTECTED APP LAYOUT --- */}
+            {/* --- FIX: All protected routes now live under /dashboard --- */}
+            <Route path="/dashboard" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
               <Route index element={<Index />} />
               <Route path="current-run" element={<CurrentRun />} />
               <Route path="history" element={<History />} />

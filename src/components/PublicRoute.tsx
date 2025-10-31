@@ -4,7 +4,11 @@ import { Navigate } from 'react-router-dom';
 import { RefreshCw } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 
-const PublicRoute = ({ children }: { children: React.ReactNode }) => {
+interface PublicRouteProps {
+  children: React.ReactNode;
+}
+
+const PublicRoute = ({ children }: PublicRouteProps) => {
   const { user, loading } = useAuth();
   const { currentTheme } = useTheme();
 
@@ -20,12 +24,13 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  // If user is logged in, redirect them away from public pages
+  // --- THIS IS THE FIX ---
+  // If loading is complete and there IS a user, redirect to the dashboard.
   if (user) {
     return <Navigate to="/dashboard" replace />;
   }
 
-  // If no user, show the public page (Home or Auth)
+  // If no user, render the public component (e.g., Home or Auth page).
   return <>{children}</>;
 };
 
