@@ -54,6 +54,7 @@ const LeagueList = ({ leagues, isLoading, emptyTitle, emptyDescription }: {
           className="hover:border-primary transition-colors cursor-pointer"
           // --- THIS IS THE FIX (Part 1) ---
           // Use the correct absolute path, which is nested under /dashboard
+          // Your App.tsx has this route as "/dashboard/challenge/:leagueId"
           onClick={() => navigate(`/dashboard/challenge/${league.id}`)}
         >
           <CardHeader>
@@ -161,7 +162,7 @@ const ChallengeMode = () => {
   const handleLeagueCreated = useCallback((newLeagueId: string) => {
     setIsCreateModalOpen(false);
     // --- THIS IS THE FIX (Part 2) ---
-    // Use the correct absolute path.
+    // Use the correct absolute path, just like in the list above.
     navigate(`/dashboard/challenge/${newLeagueId}`);
   }, [navigate]); // Add navigate as a dependency
 
@@ -210,6 +211,7 @@ const ChallengeMode = () => {
           />
         </TabsContent>
         <TabsContent value="completed" className="mt-6">
+  
           <LeagueList 
             leagues={completedLeagues}
             isLoading={isLoading}
