@@ -1,3 +1,4 @@
+// src/components/DashboardOverview.tsx
 import { useAccountData } from '@/hooks/useAccountData';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -24,7 +25,9 @@ const DashboardOverview = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Skeleton className="h-24 rounded-xl" style={{ backgroundColor: currentTheme.colors.surface }} />
           <Skeleton className="h-24 rounded-xl" style={{ backgroundColor: currentTheme.colors.surface }} />
-          <Skeleton className="h-24 rounded-xl" style={{ backgroundColor: currentTheme.colors.surface }} />
+          {/* --- THIS IS THE FIX --- */}
+          {/* Changed `currentTeam` to `currentTheme` */}
+          <Skeleton className="h-24 rounded-xl" style={{ backgroundColor: currentTheme.colors.surface }} /> 
           <Skeleton className="h-24 rounded-xl" style={{ backgroundColor: currentTheme.colors.surface }} />
         </div>
       </div>
@@ -49,10 +52,7 @@ const DashboardOverview = () => {
           {/* Title moved inside DashboardSection now */}
           {/* <h3 className="text-lg font-semibold text-white mb-3">Key Stats</h3> */}
           
-          {/* --- THIS IS THE FIX --- */}
-          {/* Changed sm:grid-cols-2 to lg:grid-cols-2. */}
-          {/* This stops the stats from squashing on tablets. */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <CompactStatCard
             title="Best Record"
             value={`${stats.bestRecord} Wins`}
