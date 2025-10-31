@@ -5,10 +5,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useGameVersion } from '@/contexts/GameVersionContext';
 import { WeeklyPerformance, Game } from '@/types/futChampions'; // Ensure Game is imported
 
-// --- THIS IS THE FIX ---
 // Swapped from shadcn toast to sonner to match the rest of the app
 import { toast } from 'sonner';
-// import { toast } from '@/components/ui/use-toast'; // <-- REMOVED THIS
 
 // Define a type that ensures games are included and is an array
 export type WeeklyPerformanceWithGames = WeeklyPerformance & {
@@ -40,12 +38,23 @@ export const useAllRunsData = () => {
       setRuns([]); // Reset runs before fetching
 
       try {
+        // --- THIS IS THE FIX ---
+        // The query must also fetch the relations inside game_results
+        // that useDashboardStats.ts depends on.
         const { data, error: fetchError } = await supabase
           .from('weekly_performances')
-          .select('*, games:game_results(*)') // Fetch games relation
+          .select(`
+            *,
+            games:game_results (
+              *,
+              playerStats:player_performances(*),
+              teamStats:team_statistics(*)
+            )
+          `)
           .eq('user_id', user.id)
           .eq('game_version', gameVersion)
           .order('week_number', { ascending: false });
+        // --- END OF FIX ---
 
         if (fetchError) {
           throw fetchError;
@@ -72,7 +81,6 @@ export const useAllRunsData = () => {
             console.error('Error fetching all runs:', err);
             setError(err);
             setRuns([]); // Ensure runs is empty on error
-            // --- THIS IS THE FIX ---
             // Using the correct (sonner) toast function
             toast.error('Error loading run history', {
               description: err.message,
