@@ -16,7 +16,8 @@ export interface FullSquad extends Squad {
 }
 // End FullSquad type
 
-export const useAllSquadsData = () as {
+// --- THIS IS THE FIX (Part 1: Correctly typing the hook's return value) ---
+interface UseAllSquadsDataReturn {
   squads: FullSquad[];
   allPlayers: PlayerCard[];
   allCardTypes: CardType[];
@@ -26,8 +27,12 @@ export const useAllSquadsData = () as {
   createSquad: (name: string, formation: string, isDefault: boolean) => Promise<Squad | null>;
   deleteSquad: (squadId: string) => Promise<void>;
   setDefaultSquad: (squadId: string) => Promise<void>;
-} => {
-  // --- THIS IS THE FIX (Part 1) ---
+}
+
+export const useAllSquadsData = (): UseAllSquadsDataReturn => {
+// --- END OF FIX ---
+
+  // --- THIS IS THE FIX (Part 2: Auth loading state) ---
   const { user, loading: authLoading } = useAuth();
   // --- END OF FIX ---
   
@@ -39,7 +44,7 @@ export const useAllSquadsData = () as {
   const [error, setError] = useState<string | null>(null);
 
   const fetchAllSquadData = useCallback(async () => {
-    // --- THIS IS THE FIX (Part 2) ---
+    // --- THIS IS THE FIX (Part 3: Wait for auth) ---
     // Wait for auth to be ready
     if (!user || !gameVersion || authLoading) {
       setSquads([]);
@@ -113,7 +118,7 @@ export const useAllSquadsData = () as {
     } finally {
       setLoading(false);
     }
-  // --- THIS IS THE FIX (Part 3) ---
+  // --- THIS IS THE FIX (Part 4: Auth loading dependency) ---
   }, [user, gameVersion, authLoading]);
   // --- END OF FIX ---
 
@@ -245,3 +250,4 @@ export const useAllSquadsData = () as {
 
   return { squads, allPlayers, allCardTypes, loading, error, refetchSquads: fetchAllSquadData, createSquad, deleteSquad, setDefaultSquad };
 };
+
