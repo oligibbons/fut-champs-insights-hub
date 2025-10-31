@@ -30,23 +30,44 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// --- THIS IS THE FIX (Part 1) ---
+// Create a timeout promise that rejects after 'ms' milliseconds
+const createTimeout = (ms: number, message: string) => {
+  return new Promise((_, reject) => {
+    setTimeout(() => {
+      reject(new Error(message));
+    }, ms);
+  });
+};
+
 // Helper function to fetch profile
 const fetchUserProfile = async (user: User) => {
   if (!user) return null;
+  
   try {
-    const { data: profile, error } = await supabase
+    // The actual Supabase query
+    const fetchPromise = supabase
       .from('profiles')
       .select('*')
       .eq('id', user.id)
       .single();
 
+    // --- THIS IS THE FIX (Part 2) ---
+    // Race the query against a 5-second (5000ms) timeout
+    const { data: profile, error } = await Promise.race([
+      fetchPromise,
+      createTimeout(5000, 'Profile query timed out. Check RLS policies on "profiles" table.')
+    ]) as { data: UserProfile | null, error: any }; // Cast the result
+
     if (error) {
-      console.error('Error fetching profile:', error);
+      // This will now catch both Supabase errors AND our timeout error
+      console.error('Error fetching profile:', error.message);
       return null;
     }
     return profile || null;
-  } catch (e) {
-    console.error('Exception fetching profile:', e);
+  } catch (e: any) {
+    // This catches the rejection from createTimeout or other exceptions
+    console.error('Exception fetching profile (likely timeout):', e.message);
     return null;
   }
 };
@@ -60,7 +81,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     let mounted = true;
 
-    // --- THIS IS THE FIX ---
     // 1. Check the initial session on mount
     async function getInitialSession() {
       try {
@@ -70,6 +90,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         setUser(session?.user ?? null);
         if (session?.user) {
+          // This call will now time out if it hangs
           const profile = await fetchUserProfile(session.user);
           if (mounted && profile) {
             setUserProfile(profile);
@@ -79,7 +100,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } catch (e) {
         console.error("Error getting initial session: ", e);
       } finally {
-        // Always set loading to false after initial check
+        // --- THIS IS THE FIX (Part 3) ---
+        // This will now *always* run, even if fetchUserProfile times out,
+        // which stops the infinite loading screen.
         if (mounted) {
           setLoading(false);
         }
@@ -99,7 +122,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(session?.user ?? null);
 
         if (event === 'SIGNED_IN' && session?.user) {
-          // On sign-in, show loader while fetching profile
+          // On sign-in, show loader while fetching profile (with timeout)
           setLoading(true);
           const profile = await fetchUserProfile(session.user);
           if (mounted) {
@@ -112,8 +135,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setUserProfile(null);
           setIsAdmin(false);
         }
-        // We no longer set loading(true) for TOKEN_REFRESHED,
-        // preventing the loading flash and potential infinite load.
       }
     );
 
@@ -166,7 +187,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider value={value}>
-      {/* The routes (ProtectedRoute) will handle the loading state. */}
       {children}
     </AuthContext.Provider>
   );
