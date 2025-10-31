@@ -46,11 +46,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) {
         console.error('Error fetching profile:', error);
-        // We no longer set loading here; the caller will handle it.
       } else if (profile) {
         setUserProfile(profile);
         setIsAdmin(profile.is_admin || false);
       }
+      // Do not set loading false here, let the caller do it.
     }
   };
 
@@ -67,15 +67,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     };
 
-    // getSession() runs on initial page load to get session quickly
+    // getSession() runs on initial page load
     getSession();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(
       async (_event: AuthChangeEvent, session: Session | null) => {
-        // --- THIS IS THE FIX ---
-        // 1. Set loading to true whenever auth state changes (e.g., login, logout)
+        // --- FIX 1: Set loading to true during an auth change ---
         setLoading(true);
         
         setUser(session?.user ?? null);
@@ -86,9 +85,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setUserProfile(null);
           setIsAdmin(false);
         }
-
-        // 2. Unconditionally set loading to false when all async work is done.
-        //    The "if (loading)" check was the source of the bug.
+        
+        // --- FIX 2: Always set loading to false at the end ---
+        // The old 'if (loading)' check was a bug.
         setLoading(false);
       }
     );
@@ -143,7 +142,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {/* --- THIS IS THE CRITICAL FIX --- */}
+      {/* The provider must always render its children. */}
+      {/* The routes (ProtectedRoute) will handle the loading state. */}
+      {children}
     </AuthContext.Provider>
   );
 };
