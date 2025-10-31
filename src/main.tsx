@@ -5,29 +5,37 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App.tsx';
 import './index.css';
 
-// --- THIS WAS THE FIX ---
-// The import for ThemeProvider was using a colon (:) instead of "from".
-import { ThemeProvider } from './hooks/useTheme.tsx';
-// --- END FIX ---
+// --- THIS IS THE FIX (Part 1) ---
+// Import the QueryClient and provider from TanStack React Query
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
+import { ThemeProvider } from './hooks/useTheme.tsx';
 import { AuthProvider } from './contexts/AuthContext.tsx';
 import { Toaster } from "@/components/ui/sonner";
 import { DataSyncProvider } from './hooks/useDataSync.tsx';
 import { GameVersionProvider } from './contexts/GameVersionContext.tsx';
 
+// --- THIS IS THE FIX (Part 2) ---
+// Create a new instance of the QueryClient
+const queryClient = new QueryClient();
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter>
-      <ThemeProvider>
-        <GameVersionProvider>
-          <AuthProvider>
-            <DataSyncProvider>
-              <App />
-              <Toaster />
-            </DataSyncProvider>
-          </AuthProvider>
-        </GameVersionProvider>
-      </ThemeProvider>
+      {/* --- THIS IS THE FIX (Part 3) --- */}
+      {/* Wrap your application with the QueryClientProvider */}
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <GameVersionProvider>
+            <AuthProvider>
+              <DataSyncProvider>
+                <App />
+                <Toaster />
+              </DataSyncProvider>
+            </AuthProvider>
+          </GameVersionProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
     </BrowserRouter>
   </React.StrictMode>
 );
