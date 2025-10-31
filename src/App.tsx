@@ -109,7 +109,7 @@ function App() {
       <GameVersionProvider>
         <DataSyncProvider>
           <Routes>
-            {/* --- Public routes --- */}
+            {/* --- MODIFIED: Public routes wrapped in PublicRoute --- */}
             <Route 
               path="/" 
               element={<PublicRoute><Home /></PublicRoute>} 
@@ -123,9 +123,9 @@ function App() {
             <Route path="/join/:token" element={<ProtectedRoute><JoinLeaguePage /></ProtectedRoute>} />
             
             {/* --- Protected routes with main layout --- */}
-            {/* --- FIX: Child routes are now relative (no leading '/') --- */}
-            <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
-              <Route path="dashboard" element={<Index />} />
+            {/* --- FIX: All child routes are relative AND Index is now the 'index' route --- */}
+            <Route path="/" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
+              <Route index element={<Index />} />
               <Route path="current-run" element={<CurrentRun />} />
               <Route path="history" element={<History />} />
               <Route path="analytics" element={<Analytics />} />
