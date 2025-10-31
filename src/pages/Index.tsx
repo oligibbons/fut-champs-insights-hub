@@ -1,3 +1,4 @@
+// src/pages/Index.tsx
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -6,7 +7,12 @@ import RecentRuns from '@/components/RecentRuns';
 import ClubLegends from '@/components/ClubLegends';
 import { FUTTrackrRecords } from '@/components/FUTTrackrRecords';
 import DashboardSection from '@/components/DashboardSection';
-import { useToast } from '@/hooks/use-toast';
+
+// --- THIS IS THE FIX (Part 1) ---
+// Swapped from shadcn toast to sonner to match the rest of the app
+import { toast } from 'sonner';
+// import { useToast } from '@/hooks/use-toast'; // <-- REMOVED
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LayoutGrid, Users, BarChart3, Share } from 'lucide-react'; // Added Share icon
 import { Skeleton } from '@/components/ui/skeleton';
@@ -82,9 +88,12 @@ const initialLayout = [...defaultLayout]
     .filter(item => componentsMap[item.id])
     .sort((a, b) => a.order - b.order);
 
-const Dashboard = () => {
+// --- THIS IS THE FIX (Part 2) ---
+// Renamed component from 'Dashboard' to 'Index' to match the
+// file name and the import in App.tsx
+const Index = () => {
     const { user } = useAuth();
-    const { toast } = useToast();
+    // const { toast } = useToast(); // <-- REMOVED
     const { currentTheme } = useTheme();
 
     const [layout, setLayout] = useState<DashboardItem[]>(initialLayout);
@@ -112,7 +121,13 @@ const Dashboard = () => {
                  loadedLayout = loadedLayout.filter(item => componentsMap[item.id]);
                  setLayout(loadedLayout.sort((a, b) => a.order - b.order));
             } else { setLayout(initialLayout); }
-        } catch (err: any) { toast({ title: "Error", description: `Failed to load dashboard layout: ${err.message}`, variant: "destructive" }); setLayout(initialLayout);
+        } catch (err: any) { 
+            // --- THIS IS THE FIX (Part 3) ---
+            // Switched to sonner toast
+            toast.error("Error", {
+                description: `Failed to load dashboard layout: ${err.message}`
+            });
+            setLayout(initialLayout);
         } finally { setLoadingLayout(false); }
     };
 
@@ -269,4 +284,6 @@ const Dashboard = () => {
     );
 };
 
-export default Dashboard;
+// --- THIS IS THE FIX (Part 4) ---
+// Export the 'Index' component
+export default Index;
