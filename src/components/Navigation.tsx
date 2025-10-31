@@ -5,7 +5,9 @@ import { Button } from './ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/hooks/useTheme';
 import { LayoutGrid, Play, History, BarChart4, Users, Trophy, BrainCircuit, Settings, User, LogOut, ShieldCheck, ChevronLeft, ChevronRight, Bell, Star, UsersRound, Swords } from 'lucide-react';
-import { useFriendRequests } from '@/hooks/useFriends';
+// --- THIS IS THE FIX (Part 1) ---
+import { useFriends } from '@/hooks/useFriends';
+// --- END OF FIX ---
 import { Badge } from './ui/badge';
 
 interface NavLink {
@@ -67,7 +69,9 @@ const NavLinkItem = ({ to, icon: Icon, label, isExpanded, adminOnly = false, not
 const Navigation = ({ isExpanded, setIsExpanded }: { isExpanded: boolean, setIsExpanded: (isExpanded: boolean) => void }) => {
   const { signOut, user, isAdmin } = useAuth();
   const { currentTheme } = useTheme();
-  const { data: requests } = useFriendRequests();
+  // --- THIS IS THE FIX (Part 2) ---
+  const { friendRequests: requests } = useFriends();
+  // --- END OF FIX ---
   const requestCount = requests?.length || 0;
 
   // --- FIX: All paths are now prefixed with /dashboard ---
