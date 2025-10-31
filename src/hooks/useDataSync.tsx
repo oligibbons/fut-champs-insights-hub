@@ -34,8 +34,10 @@ export const DataSyncProvider = ({ children }: { children: ReactNode }) => {
   // --- Data Fetching ---
   const fetchRuns = async () => {
     if (!user) return [];
+    // --- THIS IS THE FIX ---
+    // The table is 'weekly_performances', not 'runs'
     const { data, error } = await supabase
-      .from('runs')
+      .from('weekly_performances') // <-- Was 'runs'
       .select('*')
       .eq('user_id', user.id);
     if (error) throw new Error(error.message);
@@ -68,7 +70,7 @@ export const DataSyncProvider = ({ children }: { children: ReactNode }) => {
     isLoading: isLoadingRuns,
     isError: isErrorRuns,
   } = useQuery<Run[]>({
-    queryKey: ['runs', user?.id],
+    queryKey: ['runs', user?.id], // This queryKey is fine, it's just a label
     queryFn: fetchRuns,
     enabled: !!user,
   });
@@ -93,10 +95,7 @@ export const DataSyncProvider = ({ children }: { children: ReactNode }) => {
     enabled: !!user,
   });
 
-  // --- !!! THIS IS THE FIX !!! ---
   // This effect now correctly determines when the initial sync is complete
-  // by removing `isInitialSyncComplete` from its own dependency array
-  // and by handling loading and error states correctly.
   useEffect(() => {
     if (user) {
       // Check if any essential query is still loading
@@ -156,7 +155,7 @@ export const DataSyncProvider = ({ children }: { children: ReactNode }) => {
 export const useDataSync = () => {
   const context = useContext(DataSyncContext);
   if (context === undefined) {
-    throw new Error('useDataSync must be used within a DataSyncProvider');
+    throw new Error('useDataSync must be in use within a DataSyncProvider');
   }
   return context;
 };
