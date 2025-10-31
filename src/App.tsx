@@ -47,7 +47,7 @@ const Header = () => {
   const location = useLocation();
   const isMobile = useMobile(); 
 
-  // --- FIX: Use /dashboard as the base for protected routes ---
+  // This logic is correct with the /dashboard routing
   if (!user || location.pathname === '/auth' || location.pathname === '/') {
     return null;
   }
@@ -59,7 +59,7 @@ const Header = () => {
     )}>
       <div className="flex items-center gap-4">
         <Button asChild>
-          <Link to="/dashboard/current-run"> {/* <-- FIX: Point to dashboard child */}
+          <Link to="/dashboard/current-run">
             New Run <ArrowRight className="ml-2 h-4 w-4" />
           </Link>
         </Button>
@@ -123,7 +123,6 @@ function App() {
         <Route path="/join/:token" element={<ProtectedRoute><JoinLeaguePage /></ProtectedRoute>} />
         
         {/* --- Protected routes with main layout --- */}
-        {/* --- FIX: Protected routes are now under /dashboard --- */}
         <Route path="/dashboard" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
           <Route index element={<Index />} />
           <Route path="current-run" element={<CurrentRun />} />

@@ -62,15 +62,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    // --- FIX: Remove getSession() call ---
+    // --- FIX 1: REMOVE the getSession() call ---
     // onAuthStateChange handles the initial load AND all auth events.
-    // This eliminates all race conditions.
+    // This eliminates the race condition.
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(
       async (_event: AuthChangeEvent, session: Session | null) => {
-        // 1. Set loading to true every time auth state changes.
+        // 2. Set loading to true every time auth state changes.
+        //    This shows the loader during login/logout.
         setLoading(true);
         
         try {
@@ -86,7 +87,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } catch (e) {
           console.error("Error in onAuthStateChange handler: ", e);
         } finally {
-          // 2. CRITICAL: Always set loading to false after all work is done.
+          // 3. CRITICAL: Always set loading to false after all work is done.
           //    This unlocks the app and stops the loading spinner.
           setLoading(false);
         }
@@ -143,7 +144,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider value={value}>
-      {/* This provider MUST always render children. */}
+      {/* --- FIX 4: ALWAYS render children --- */}
+      {/* The routes (ProtectedRoute) will handle the loading state. */}
       {children}
     </AuthContext.Provider>
   );
