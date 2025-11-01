@@ -6,9 +6,7 @@ import { Friend } from '@/types/social'; // Assuming you have this type
 import { toast } from '@/components/ui/use-toast';
 
 export const useFriends = () => {
-  // --- Auth Loading Fix (Part 1) ---
   const { user, userProfile, loading: authLoading } = useAuth();
-  // --- END OF FIX ---
   
   const [friends, setFriends] = useState<Friend[]>([]);
   const [friendRequests, setFriendRequests] = useState<Friend[]>([]);
@@ -16,7 +14,6 @@ export const useFriends = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchFriends = useCallback(async () => {
-    // --- Auth Loading Fix (Part 2) ---
     // Don't fetch until auth is fully loaded
     if (!user || authLoading) {
       setFriends([]);
@@ -24,7 +21,6 @@ export const useFriends = () => {
       setLoading(false);
       return;
     }
-    // --- END OF FIX ---
 
     setLoading(true);
     setError(null);
@@ -104,9 +100,7 @@ export const useFriends = () => {
     } finally {
       setLoading(false);
     }
-  // --- Auth Loading Fix (Part 3) ---
   }, [user, authLoading]);
-  // --- END OF FIX ---
 
   useEffect(() => {
     fetchFriends();

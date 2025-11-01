@@ -11,9 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-// --- THIS IS THE FIX (Part 1) ---
 import { useFriends } from '@/hooks/useFriends';
-// --- END OF FIX ---
 import { Loader2, UserPlus, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useForm } from 'react-hook-form';
@@ -33,9 +31,7 @@ const UserSearch = () => {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { userProfile } = useAuth();
-  // --- THIS IS THE FIX (Part 2) ---
   const { addFriend } = useFriends();
-  // --- END OF FIX ---
   const [isAdding, setIsAdding] = useState<string | null>(null); // Store ID of user being added
 
   const handleSearch = async () => {

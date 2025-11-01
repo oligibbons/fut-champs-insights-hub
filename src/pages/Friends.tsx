@@ -2,12 +2,12 @@
 import { AddFriendForm } from '@/components/AddFriendForm';
 import { FriendRequests } from '@/components/FriendRequests';
 import { FriendsList } from '@/components/FriendsList';
-import { useFriendRequests } from '@/hooks/useFriends';
+import { useFriends } from '@/hooks/useFriends';
 import { Badge } from '@/components/ui/badge';
 import { UsersRound } from 'lucide-react';
 
 const Friends = () => {
-  const { data: requests } = useFriendRequests();
+  const { friendRequests: requests } = useFriends();
   const requestCount = requests?.length || 0;
 
   return (

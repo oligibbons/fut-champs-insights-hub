@@ -1,15 +1,11 @@
 // src/components/FriendsList.tsx
-// --- THIS IS THE FIX (Part 1) ---
 import { useFriends } from '@/hooks/useFriends';
-// --- END OF FIX ---
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export const FriendsList = () => {
-  // --- THIS IS THE FIX (Part 2) ---
   const { friends, loading } = useFriends();
-  // --- END OF FIX ---
 
   return (
     <Card>
@@ -40,7 +36,6 @@ export const FriendsList = () => {
         {!loading && friends && friends.map((f) => (
           <div key={f.id} className="flex items-center space-x-4">
             <Avatar className="h-10 w-10">
-              {/* --- FIX: Use correct profile data --- */}
               <AvatarImage src={f.friend_profile?.avatar_url || ''} />
               <AvatarFallback>{f.friend_profile?.username.charAt(0).toUpperCase()}</AvatarFallback>
             </Avatar>

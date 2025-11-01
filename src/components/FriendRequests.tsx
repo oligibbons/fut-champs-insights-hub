@@ -1,8 +1,5 @@
 // src/components/FriendRequests.tsx
-// --- THIS IS THE FIX (Part 1) ---
-// Import the single, correct hook
 import { useFriends } from '@/hooks/useFriends';
-// --- END OF FIX ---
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -15,12 +12,9 @@ interface FriendRequestsProps {
 }
 
 export const FriendRequests = ({ requestCount }: FriendRequestsProps) => {
-  // --- THIS IS THE FIX (Part 2) ---
-  // Use the correct hook and get the values
   const { friendRequests: requests, loading, acceptFriendRequest, removeFriend } = useFriends();
   // We can treat the hook's 'loading' as the response loading state for simplicity
   const isLoadingResponse = loading;
-  // --- END OF FIX ---
 
   const handleResponse = (requestId: string, newStatus: 'accepted' | 'declined') => {
     if (newStatus === 'accepted') {
@@ -76,7 +70,6 @@ export const FriendRequests = ({ requestCount }: FriendRequestsProps) => {
           <div key={req.id} className="flex items-center justify-between space-x-4">
             <div className="flex items-center space-x-4">
               <Avatar className="h-10 w-10">
-                {/* --- FIX: Use correct profile data --- */}
                 <AvatarImage src={req.friend_profile?.avatar_url || ''} />
                 <AvatarFallback>{req.friend_profile?.username.charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>
