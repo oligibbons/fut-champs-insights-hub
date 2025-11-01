@@ -279,8 +279,7 @@ export const CreateLeagueForm = ({ onSuccess }: CreateLeagueFormProps) => {
                         You haven't added any friends yet. Go to the Friends page to add some!
                       </p>
                     )}
-                    {/* --- Note: The logic below assumes `useFriends` returns `friend.friend_profile` --- */}
-                    {/* --- We fixed this in `useFriends.ts` previously, so I'll adjust this component to match --- */}
+                    {/* This logic assumes `useFriends` returns `friend.friend_profile` */}
                     {friends?.map((friend) => (
                       <FormField
                         key={friend.friend_profile.id}

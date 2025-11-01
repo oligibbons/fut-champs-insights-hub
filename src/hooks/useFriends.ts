@@ -3,10 +3,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Friend } from '@/types/social'; // Assuming you have this type
-import { toast } from '@/components/ui/use-toast';
+import { useToast } from '@/components/ui/use-toast'; // Using shadcn toast
+import { toast as sonnerToast } from 'sonner'; // Using sonner for mutations
 
 export const useFriends = () => {
   const { user, userProfile, loading: authLoading } = useAuth();
+  const { toast: shadcnToast } = useToast();
   
   const [friends, setFriends] = useState<Friend[]>([]);
   const [friendRequests, setFriendRequests] = useState<Friend[]>([]);
@@ -109,12 +111,12 @@ export const useFriends = () => {
   // Function to add a friend
   const addFriend = async (friendUsername: string) => {
     if (!user || !userProfile) {
-        toast({ title: "Error", description: "You must be logged in.", variant: "destructive" });
+        sonnerToast.error("You must be logged in.");
         return;
     }
     
     if (friendUsername === userProfile.username) {
-        toast({ title: "Error", description: "You cannot add yourself as a friend.", variant: "destructive" });
+        sonnerToast.error("You cannot add yourself as a friend.");
         return;
     }
 
@@ -145,15 +147,15 @@ export const useFriends = () => {
         
          if (existing) {
             if (existing.status === 'accepted') {
-                toast({ title: "Already Friends", description: "You are already friends with this user." });
+                sonnerToast.info("You are already friends with this user.");
                 return;
             }
             if (existing.status === 'pending') {
-                 toast({ title: "Request Pending", description: "A friend request is already pending with this user." });
+                 sonnerToast.info("A friend request is already pending with this user.");
                 return;
             }
              if (existing.status === 'blocked') {
-                 toast({ title: "Blocked", description: "This user is blocked or has blocked you." });
+                 sonnerToast.error("This user is blocked or has blocked you.");
                 return;
             }
          }
@@ -171,11 +173,11 @@ export const useFriends = () => {
             throw new Error(`Insert Error: ${insertError.message}`);
         }
 
-        toast({ title: "Success", description: "Friend request sent!" });
+        sonnerToast.success("Friend request sent!");
         
     } catch (err: any) {
         console.error("Error adding friend:", err);
-        toast({ title: "Error", description: err.message, variant: "destructive" });
+        sonnerToast.error(err.message);
     }
   };
 
@@ -191,11 +193,11 @@ export const useFriends = () => {
 
         if (error) throw error;
         
-        toast({ title: "Friend Added!", description: "You've accepted the friend request." });
+        sonnerToast.success("Friend Added!");
         fetchFriends(); // Refresh data
      } catch (err: any) {
         console.error("Error accepting request:", err);
-        toast({ title: "Error", description: err.message, variant: "destructive" });
+        sonnerToast.error(err.message);
      } finally {
         setLoading(false); // Set loading false
      }
@@ -212,15 +214,16 @@ export const useFriends = () => {
 
         if (error) throw error;
 
-        toast({ title: "Success", description: "Friendship updated." });
+        sonnerToast.success("Friendship updated.");
         fetchFriends(); // Refresh data
      } catch (err: any) {
         console.error("Error removing friend:", err);
-        toast({ title: "Error", description: err.message, variant: "destructive" });
+        sonnerToast.error(err.message);
      } finally {
         setLoading(false); // Set loading false
      }
   };
+
 
   return { friends, friendRequests, loading, error, addFriend, acceptFriendRequest, removeFriend, refetchData: fetchFriends };
 };

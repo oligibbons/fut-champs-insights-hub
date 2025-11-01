@@ -3,7 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { League, PendingLeagueInvite, LeagueInviteDetails } from '@/integrations/supabase/types'; // Make sure these types are defined in your types file
+import { League, PendingLeagueInvite, LeagueInviteDetails, LeagueDetails, LeagueParticipant, LeagueRun } from '@/integrations/supabase/types'; // Make sure these types are defined
+import { calculateLeagueStats } from '@/lib/utils'; // <-- NEW DEPENDENCY
 
 // --- Hook 1: Create League ---
 // (Used in CreateLeagueForm.tsx)
@@ -31,7 +32,6 @@ const createLeagueInSupabase = async (params: CreateLeagueParams, userId: string
     throw new Error(`Error creating league: ${error.message}`);
   }
   
-  // 2. The RPC should return the new league's ID
   if (!data) {
     throw new Error('League creation returned no ID.');
   }
@@ -95,7 +95,7 @@ const fetchLeagueInvites = async (userId: string): Promise<PendingLeagueInvite[]
     .select(`
       id,
       status,
-      champs_leagues ( name ),
+      champs_leagues ( id, name ),
       inviter:profiles ( username )
     `)
     .eq('invited_user_id', userId)
@@ -142,14 +142,19 @@ const respondToLeagueInvite = async (params: RespondParams, userId: string) => {
   
   // If accepting, also add to league_participants table
   if (params.action === 'accept') {
+     // This needs the league ID, which is nested.
+     const leagueId = (params.invite.champs_leagues as any)?.id;
+     if (!leagueId) throw new Error("Could not find league ID in invite.");
+
      const { error: participantError } = await supabase
         .from('league_participants')
         .insert({
-           league_id: (params.invite.champs_leagues as any).id, // You might need to adjust this join
+           league_id: leagueId,
            user_id: userId
         });
      if (participantError) {
-        throw new Error(`Error adding to league: ${participantError.message}`);
+        // Don't throw, but log. Maybe they are already a participant?
+        console.error("Error adding to league participants: ", participantError.message);
      }
   }
 };
@@ -180,29 +185,16 @@ export const useRespondToLeagueInvite = () => {
 // --- Hook 5: Get Invite Details by Token ---
 // (Used in JoinLeaguePage.tsx)
 const fetchInviteDetailsByToken = async (token: string): Promise<LeagueInviteDetails> => {
+    // This RPC should fetch the league name and admin details using the token
     const { data, error } = await supabase
-      .from('league_invites')
-      .select(`
-        league_id,
-        token_status,
-        league_name:champs_leagues(name),
-        admin:profiles!champs_leagues_admin_id_fkey(username, avatar_url)
-      `) // This is a complex query, you'll need to adjust joins
-      .eq('token', token)
+      .rpc('get_invite_details_by_token', { invite_token: token })
       .single();
 
     if (error || !data) {
       throw new Error('Invite not found or expired.');
     }
     
-    // This is a rough shape, you must adjust to match your actual query/types
-    return {
-      league_id: data.league_id,
-      token_status: data.token_status,
-      league_name: (data.league_name as any)?.name,
-      admin_username: (data.admin as any)?.username,
-      admin_avatar: (data.admin as any)?.avatar_url,
-    } as LeagueInviteDetails;
+    return data as LeagueInviteDetails;
 };
 
 export const useLeagueInviteDetails = (token: string | undefined) => {
@@ -253,5 +245,106 @@ export const useJoinLeagueByToken = () => {
     onError: (error: Error) => {
       toast.error(error.message);
     }
+  });
+};
+
+// --- HOOK 7: Get League Details ---
+// (Used in LeagueDetailsPage.tsx)
+const fetchLeagueDetails = async (leagueId: string, userId: string): Promise<LeagueDetails> => {
+  // 1. Check if user is a member
+  const { data: member, error: memberError } = await supabase
+    .from('league_participants')
+    .select('id')
+    .eq('league_id', leagueId)
+    .eq('user_id', userId)
+    .maybeSingle();
+  
+  if (memberError) throw memberError;
+  if (!member) throw new Error("You are not a member of this league.");
+
+  // 2. Fetch league details
+  const { data: leagueData, error: leagueError } = await supabase
+    .from('champs_leagues') // Assuming this is the main league table
+    .select('*')
+    .eq('id', leagueId)
+    .single();
+  
+  if (leagueError) throw leagueError;
+  if (!leagueData) throw new Error("League not found.");
+
+  // 3. Fetch participants and their profiles
+  const { data: participantsData, error: participantsError } = await supabase
+    .from('league_participants')
+    .select(`
+      user_id,
+      profile:profiles ( id, username, display_name, avatar_url )
+    `)
+    .eq('league_id', leagueId);
+  
+  if (participantsError) throw participantsError;
+
+  // 4. Fetch all runs linked to this league
+  const { data: runsData, error: runsError } = await supabase
+    .from('league_runs')
+    .select(`
+      user_id,
+      run:fut_champs_runs (
+        id,
+        name,
+        wins,
+        losses,
+        games ( id, user_score, opp_score )
+      )
+    `)
+    .eq('league_id', leagueId);
+
+  if (runsError) throw runsError;
+
+  // 5. Fetch challenges
+  const { data: challengesData, error: challengesError } = await supabase
+    .from('league_challenges')
+    .select('challenge_id, points')
+    .eq('league_id', leagueId);
+
+  if (challengesError) throw challengesError;
+
+  // 6. Process and combine data
+  const participants = (participantsData as unknown as LeagueParticipant[]) || [];
+  
+  const runs = (runsData as any[])
+    .map(r => ({
+      ...r.run,
+      user_id: r.user_id
+    }))
+    .filter(r => r.id) as LeagueRun[];
+
+  const participantsWithStats = participants.map(p => {
+    const playerRuns = runs.filter(r => r.user_id === p.user_id);
+    const stats = calculateLeagueStats(playerRuns); // Using the util function
+    return {
+      ...p,
+      runs: playerRuns,
+      ...stats
+    };
+  });
+
+  return {
+    ...leagueData,
+    participants: participantsWithStats,
+    all_runs: runs,
+    challenges: challengesData || [],
+  } as LeagueDetails;
+};
+
+export const useLeagueDetails = (leagueId: string | undefined) => {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ['leagueDetails', leagueId, user?.id],
+    queryFn: () => {
+      if (!user || !leagueId) throw new Error("User or League ID is missing.");
+      return fetchLeagueDetails(leagueId, user.id);
+    },
+    enabled: !!user && !!leagueId,
   });
 };

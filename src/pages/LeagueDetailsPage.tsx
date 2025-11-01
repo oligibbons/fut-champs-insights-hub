@@ -1,11 +1,11 @@
 // src/pages/LeagueDetailsPage.tsx
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useLeagueDetails } from '@/hooks/useChallengeMode';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle, ArrowLeft, Share2, Users } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Share2, Users, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { LeagueLeaderboard } from '@/components/LeagueLeaderboard';
+import { LeagueLeaderboard } from '@/components/LeagueLeaderboard'; // Assuming this component exists
 import { LeagueChallengeList } from '@/components/LeagueChallengeList'; // Assuming this component exists
 import {
   Card,
@@ -15,7 +15,7 @@ import {
   CardDescription,
 } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner'; // Using sonner to match CreateLeagueForm
 import { Badge } from '@/components/ui/badge';
 import {
   Tabs,
@@ -26,23 +26,25 @@ import {
 
 
 const LeagueDetailsPage = () => {
-  const { leagueId } = useParams();
-  const { league, loading, error } = useLeagueDetails(leagueId!);
-  const { toast } = useToast();
+  const { leagueId } = useParams<{ leagueId: string }>();
+  const navigate = useNavigate();
+  // Switched to useQuery from react-query, so 'data' is the league
+  const { data: league, isLoading, error } = useLeagueDetails(leagueId);
 
   const handleCopyInvite = () => {
-    if (league?.invite_code) {
+    // Logic for copying invite link - needs the invite token
+    const inviteToken = (league as any)?.invite_token; // You'll need to fetch this
+    if (inviteToken) {
       navigator.clipboard.writeText(
-        `${window.location.origin}/join-league?code=${league.invite_code}`,
+        `${window.location.origin}/join/${inviteToken}`,
       );
-      toast({
-        title: 'Invite Link Copied!',
-        description: 'Share the link with your friends.',
-      });
+      toast.success('Invite Link Copied!');
+    } else {
+      toast.error("Invite token not found for this league.");
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-10 w-48" />
@@ -59,9 +61,10 @@ const LeagueDetailsPage = () => {
         <AlertCircle className="h-4 w-4" />
         <AlertTitle>Error</AlertTitle>
         <AlertDescription>
-          {error}
-          <Button asChild variant="link" className="mt-2 block">
-            <Link to="/challenge">Go Back</Link>
+          {(error as Error).message || "Could not load league details."}
+          <Button asChild variant="link" className="mt-2 block p-0">
+            {/* --- FIX: Updated back path --- */}
+            <Link to="/dashboard/challenge">Go Back to Leagues</Link>
           </Button>
         </AlertDescription>
       </Alert>
@@ -73,7 +76,8 @@ const LeagueDetailsPage = () => {
       <div className="text-center">
         <p className="text-muted-foreground">League not found.</p>
         <Button asChild variant="link" className="mt-2">
-          <Link to="/challenge">Go Back</Link>
+          {/* --- FIX: Updated back path --- */}
+          <Link to="/dashboard/challenge">Go Back to Leagues</Link>
         </Button>
       </div>
     );
@@ -84,7 +88,7 @@ const LeagueDetailsPage = () => {
       {/* Header */}
       <div>
         <Button asChild variant="ghost" size="sm" className="mb-4">
-          <Link to="/challenge">
+          <Link to="/dashboard/challenge">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Leagues
           </Link>
@@ -93,7 +97,7 @@ const LeagueDetailsPage = () => {
           <div>
             <h1 className="text-4xl font-bold text-white">{league.name}</h1>
             <p className="text-muted-foreground mt-2 text-lg">
-              {league.description}
+              Ends: {new Date(league.champs_run_end_date).toLocaleDateString()}
             </p>
           </div>
           <Button onClick={handleCopyInvite} className="w-full md:w-auto">
@@ -106,9 +110,18 @@ const LeagueDetailsPage = () => {
       {/* Main Content */}
        <Tabs defaultValue="leaderboard" className="w-full">
         <TabsList className="grid w-full grid-cols-3 max-w-md">
-          <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
-          <TabsTrigger value="participants">Participants</TabsTrigger>
-          <TabsTrigger value="challenges">Challenges</TabsTrigger>
+          <TabsTrigger value="leaderboard">
+            <Trophy className="mr-2 h-4 w-4" />
+            Leaderboard
+          </TabsTrigger>
+          <TabsTrigger value="participants">
+            <Users className="mr-2 h-4 w-4" />
+            Participants
+          </TabsTrigger>
+          <TabsTrigger value="challenges">
+             {/* You'll need an icon for this */}
+            Challenges
+          </TabsTrigger>
         </TabsList>
 
         {/* Leaderboard Tab */}
@@ -150,15 +163,9 @@ const LeagueDetailsPage = () => {
                       </p>
                     </div>
                   </div>
-                  <Badge
-                    variant={
-                      p.status === 'accepted' ? 'default' : 'outline'
-                    }
-                    className={
-                       p.status === 'accepted' ? 'bg-green-500/10 text-green-400 border-green-500/20' : ''
-                    }
-                  >
-                    {p.status.charAt(0).toUpperCase() + p.status.slice(1)}
+                   {/* This assumes your stats calculation returns totalWins */}
+                  <Badge variant="outline">
+                    {p.totalWins || 0} Wins
                   </Badge>
                 </div>
               ))}
