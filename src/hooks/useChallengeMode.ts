@@ -3,11 +3,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { League, PendingLeagueInvite, LeagueInviteDetails, LeagueDetails, LeagueParticipant, LeagueRun } from '@/integrations/supabase/types'; // Make sure these types are defined
-import { calculateLeagueStats } from '@/lib/utils'; // <-- NEW DEPENDENCY
+import { League, PendingLeagueInvite, LeagueInviteDetails, LeagueDetails, LeagueParticipant, LeagueRun } from '@/integrations/supabase/types';
+import { calculateLeagueStats } from '@/lib/utils';
 
 // --- Hook 1: Create League ---
-// (Used in CreateLeagueForm.tsx)
 type CreateLeagueParams = {
   name: string;
   champs_run_end_date: Date;
@@ -17,18 +16,15 @@ type CreateLeagueParams = {
 };
 
 const createLeagueInSupabase = async (params: CreateLeagueParams, userId: string): Promise<string> => {
-  // Ensure champs_run_end_date is a Date object. It may be passed as a string
-  // from the mutation hook, so we re-parse it just in case.
   const endDate = new Date(params.champs_run_end_date);
   if (isNaN(endDate.getTime())) {
     throw new Error('Invalid end date provided.');
   }
 
-  // 1. Call the 'create_league_with_invites' RPC function in Supabase
   const { data, error } = await supabase
     .rpc('create_league_with_invites', {
       league_name: params.name,
-      run_end_date: endDate.toISOString(), // Use the validated endDate
+      run_end_date: endDate.toISOString(),
       admin_run_id: params.admin_run_id,
       challenge_data: params.challenges,
       friend_ids: params.friend_ids_to_invite,
@@ -36,7 +32,7 @@ const createLeagueInSupabase = async (params: CreateLeagueParams, userId: string
     });
 
   if (error) {
-    throw new Error(`Error creating league: ${error.message}`);
+    throw new Error(`Database error: ${error.message}`);
   }
   
   if (!data) {
@@ -56,49 +52,48 @@ export const useCreateLeague = () => {
       return createLeagueInSupabase(params, user.id);
     },
     onSuccess: () => {
-      toast.success('League created successfully!');
-      // Invalidate queries to refetch league lists
+      toast.success('League created successfully!', {
+        description: "Your new challenge league is ready to go!"
+      });
       queryClient.invalidateQueries({ queryKey: ['userLeagues'] });
       queryClient.invalidateQueries({ queryKey: ['leagueInvites'] });
     },
     onError: (error: Error) => {
-      // --- START OF ENHANCED ERROR HANDLING ---
+      // --- START OF ACTIONABLE ERROR HANDLING ---
       let title = 'League Creation Failed';
-      let description = error.message || 'An unexpected error occurred. Please check your connection and try again.';
+      let description = 'Something went wrong that we didn\'t expect. Please try again.';
       
-      // Common phrases from database RAISE EXCEPTIONS
-      if (error.message.includes('Run is past the Thursday midnight cutoff date')) {
-        title = 'Run Selection Expired';
-        description = 'The selected Champs Run is past the cutoff time (Thursday midnight) and can no longer be used for a new league. Please select your most recent or an upcoming run.';
-      } else if (error.message.includes('Invalid Run ID provided')) {
-        title = 'Run Selection Error';
-        description = 'The Champs Run selected is invalid or could not be found. Please ensure you select a run from the dropdown and try again.';
-      }
-      
-      // Error for invalid/deleted friend accounts (Foreign Key Violation)
-      else if (error.message.includes('violates foreign key constraint "league_invites_invitee_id_fkey"')) {
-        title = 'Friend Invite Error';
-        description = 'One or more friends you selected for the invite list are linked to an invalid or deleted account. Please remove those friends and try creating the league again.';
-      }
-      
-      // Error for bad dates before they hit the database
-      else if (error.message.includes('Invalid end date provided')) {
+      const errorMessage = error.message;
+
+      if (errorMessage.includes('Run is past the Thursday midnight cutoff date')) {
+        title = 'Run Expired: Please Check Your Date';
+        description = 'This Champs Run is too old to be used for a new league. **How to fix:** Go back to Step 1 and select a different, newer Champs Run from the dropdown.';
+      } else if (errorMessage.includes('Invalid Run ID provided')) {
+        title = 'Invalid Run Selected';
+        description = 'We couldn\'t find or validate the selected Champs Run. **How to fix:** Ensure you selected a run from the "Anchor to Champs Run" dropdown in Step 1, then retry.';
+      } else if (errorMessage.includes('violates foreign key constraint "league_invites_invitee_id_fkey"')) {
+        title = 'Invite Failed: Invalid Friend Account';
+        description = 'One of the friends you selected for the invite list is linked to an invalid or deleted account. **How to fix:** Go back to Step 3 and remove the friends you added most recently, then try again.';
+      } else if (errorMessage.includes('Invalid end date provided')) {
         title = 'Date Selection Error';
-        description = 'Please select a valid league end date.';
+        description = 'The league end date you selected is invalid. **How to fix:** Please ensure you pick a valid date in Step 1.';
       }
-
-
+      // Fallback for unexpected technical errors
+      else if (errorMessage.includes('Database error:')) {
+        title = 'League Creation Failed (Technical Error)';
+        description = `An unexpected database issue occurred. Please check the form data and try again. (Detail: ${errorMessage.split(':').slice(1).join(':').trim()})`;
+      }
+      
       toast.error(description, { title });
-      // --- END OF ENHANCED ERROR HANDLING ---
+      // --- END OF ACTIONABLE ERROR HANDLING ---
     },
   });
 };
 
 // --- Hook 2: Get User's Leagues ---
-// (Used in ChallengeMode.tsx)
 const fetchUserLeagues = async (userId: string): Promise<League[]> => {
   const { data, error } = await supabase
-    .from('leagues_with_status') // Assuming you have a view or function for this
+    .from('leagues_with_status')
     .select('*')
     .eq('user_id', userId);
 
@@ -122,7 +117,6 @@ export const useUserLeagues = () => {
 };
 
 // --- Hook 3: Get Pending Invites ---
-// (Used in ChallengeMode.tsx)
 const fetchLeagueInvites = async (userId: string): Promise<PendingLeagueInvite[]> => {
   const { data, error } = await supabase
     .from('league_invites')
@@ -155,7 +149,6 @@ export const useLeagueInvites = () => {
 };
 
 // --- Hook 4: Respond to Invite ---
-// (Used in ChallengeMode.tsx)
 type RespondParams = {
   invite: PendingLeagueInvite;
   action: 'accept' | 'decline';
@@ -168,15 +161,13 @@ const respondToLeagueInvite = async (params: RespondParams, userId: string) => {
     .from('league_invites')
     .update({ status: newStatus })
     .eq('id', params.invite.id)
-    .eq('invited_user_id', userId); // Security check
+    .eq('invited_user_id', userId);
 
   if (error) {
     throw new Error(`Error responding to invite: ${error.message}`);
   }
   
-  // If accepting, also add to league_participants table
   if (params.action === 'accept') {
-     // This needs the league ID, which is nested.
      const leagueId = (params.invite.champs_leagues as any)?.id;
      if (!leagueId) throw new Error("Could not find league ID in invite.");
 
@@ -187,7 +178,6 @@ const respondToLeagueInvite = async (params: RespondParams, userId: string) => {
            user_id: userId
         });
      if (participantError) {
-        // Don't throw, but log. Maybe they are already a participant?
         console.error("Error adding to league participants: ", participantError.message);
      }
   }
@@ -217,9 +207,7 @@ export const useRespondToLeagueInvite = () => {
 
 
 // --- Hook 5: Get Invite Details by Token ---
-// (Used in JoinLeaguePage.tsx)
 const fetchInviteDetailsByToken = async (token: string): Promise<LeagueInviteDetails> => {
-    // This RPC should fetch the league name and admin details using the token
     const { data, error } = await supabase
       .rpc('get_invite_details_by_token', { invite_token: token })
       .single();
@@ -242,14 +230,12 @@ export const useLeagueInviteDetails = (token: string | undefined) => {
 
 
 // --- Hook 6: Join League by Token ---
-// (Used in JoinLeaguePage.tsx)
 type JoinByTokenParams = {
   leagueId: string;
   token: string;
 };
 
 const joinLeagueByTokenInSupabase = async (params: JoinByTokenParams, userId: string): Promise<string> => {
-    // Call an RPC function to securely validate the token and add the user
     const { data, error } = await supabase.rpc('join_league_with_token', {
       invite_token: params.token,
       joining_user_id: userId,
@@ -283,7 +269,6 @@ export const useJoinLeagueByToken = () => {
 };
 
 // --- HOOK 7: Get League Details ---
-// (Used in LeagueDetailsPage.tsx)
 const fetchLeagueDetails = async (leagueId: string, userId: string): Promise<LeagueDetails> => {
   // 1. Check if user is a member
   const { data: member, error: memberError } = await supabase
@@ -298,7 +283,7 @@ const fetchLeagueDetails = async (leagueId: string, userId: string): Promise<Lea
 
   // 2. Fetch league details
   const { data: leagueData, error: leagueError } = await supabase
-    .from('champs_leagues') // Assuming this is the main league table
+    .from('champs_leagues')
     .select('*')
     .eq('id', leagueId)
     .single();
@@ -354,7 +339,7 @@ const fetchLeagueDetails = async (leagueId: string, userId: string): Promise<Lea
 
   const participantsWithStats = participants.map(p => {
     const playerRuns = runs.filter(r => r.user_id === p.user_id);
-    const stats = calculateLeagueStats(playerRuns); // Using the util function
+    const stats = calculateLeagueStats(playerRuns);
     return {
       ...p,
       runs: playerRuns,
