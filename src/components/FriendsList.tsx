@@ -1,11 +1,15 @@
 // src/components/FriendsList.tsx
-import { useFriendsList } from '@/hooks/useFriends';
+// --- THIS IS THE FIX (Part 1) ---
+import { useFriends } from '@/hooks/useFriends';
+// --- END OF FIX ---
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export const FriendsList = () => {
-  const { data: friends, isLoading } = useFriendsList();
+  // --- THIS IS THE FIX (Part 2) ---
+  const { friends, loading } = useFriends();
+  // --- END OF FIX ---
 
   return (
     <Card>
@@ -16,7 +20,7 @@ export const FriendsList = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {isLoading && (
+        {loading && (
           // Skeleton loading
           Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="flex items-center space-x-4">
@@ -29,19 +33,20 @@ export const FriendsList = () => {
           ))
         )}
 
-        {!isLoading && friends && friends.length === 0 && (
+        {!loading && friends && friends.length === 0 && (
           <p className="text-sm text-muted-foreground">You haven't added any friends yet.</p>
         )}
 
-        {!isLoading && friends && friends.map((f) => (
+        {!loading && friends && friends.map((f) => (
           <div key={f.id} className="flex items-center space-x-4">
             <Avatar className="h-10 w-10">
-              <AvatarImage src={f.friend.avatar_url || ''} />
-              <AvatarFallback>{f.friend.username.charAt(0).toUpperCase()}</AvatarFallback>
+              {/* --- FIX: Use correct profile data --- */}
+              <AvatarImage src={f.friend_profile?.avatar_url || ''} />
+              <AvatarFallback>{f.friend_profile?.username.charAt(0).toUpperCase()}</AvatarFallback>
             </Avatar>
             <div>
-              <div className="font-medium">{f.friend.display_name}</div>
-              <div className="text-sm text-muted-foreground">@{f.friend.username}</div>
+              <div className="font-medium">{f.friend_profile?.display_name}</div>
+              <div className="text-sm text-muted-foreground">@{f.friend_profile?.username}</div>
             </div>
           </div>
         ))}

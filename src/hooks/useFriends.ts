@@ -6,7 +6,7 @@ import { Friend } from '@/types/social'; // Assuming you have this type
 import { toast } from '@/components/ui/use-toast';
 
 export const useFriends = () => {
-  // --- THIS IS THE FIX (Part 1) ---
+  // --- Auth Loading Fix (Part 1) ---
   const { user, userProfile, loading: authLoading } = useAuth();
   // --- END OF FIX ---
   
@@ -16,7 +16,7 @@ export const useFriends = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchFriends = useCallback(async () => {
-    // --- THIS IS THE FIX (Part 2) ---
+    // --- Auth Loading Fix (Part 2) ---
     // Don't fetch until auth is fully loaded
     if (!user || authLoading) {
       setFriends([]);
@@ -84,14 +84,14 @@ export const useFriends = () => {
         const friendProfile = isUserInitiator ? friend.friend : friend.user;
         return {
           ...friend,
-          ...friendProfile, // Flatten friend profile details
-          friend_profile: friendProfile // Keep profile nested if needed
+          ...(friendProfile as any), // Flatten friend profile details
+          friend_profile: friendProfile // Keep profile nested
         };
       }) as Friend[];
 
        const processedRequests = requestsData.map(req => ({
         ...req,
-        ...req.user,
+        ...(req.user as any),
         friend_profile: req.user
       })) as Friend[];
 
@@ -104,7 +104,7 @@ export const useFriends = () => {
     } finally {
       setLoading(false);
     }
-  // --- THIS IS THE FIX (Part 3) ---
+  // --- Auth Loading Fix (Part 3) ---
   }, [user, authLoading]);
   // --- END OF FIX ---
 
@@ -190,6 +190,7 @@ export const useFriends = () => {
   // Function to accept a friend request
   const acceptFriendRequest = async (requestId: string) => {
      try {
+        setLoading(true); // Set loading true
         const { error } = await supabase
             .from('friends')
             .update({ status: 'accepted' })
@@ -203,12 +204,15 @@ export const useFriends = () => {
      } catch (err: any) {
         console.error("Error accepting request:", err);
         toast({ title: "Error", description: err.message, variant: "destructive" });
+     } finally {
+        setLoading(false); // Set loading false
      }
   };
 
   // Function to decline or remove a friend
   const removeFriend = async (relationshipId: string) => {
      try {
+        setLoading(true); // Set loading true
         const { error } = await supabase
             .from('friends')
             .delete()
@@ -223,6 +227,8 @@ export const useFriends = () => {
      } catch (err: any) {
         console.error("Error removing friend:", err);
         toast({ title: "Error", description: err.message, variant: "destructive" });
+     } finally {
+        setLoading(false); // Set loading false
      }
   };
 
