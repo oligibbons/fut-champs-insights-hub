@@ -62,7 +62,21 @@ export const useCreateLeague = () => {
       queryClient.invalidateQueries({ queryKey: ['leagueInvites'] });
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to create league.');
+      // --- START OF NEW ERROR HANDLING ---
+      let title = 'League Creation Failed';
+      let description = error.message || 'An unexpected error occurred.';
+
+      // Check for the specific database exception thrown by the SQL function
+      if (error.message.includes('Run is past the Thursday midnight cutoff date')) {
+        title = 'Run Selection Error';
+        description = 'This Champs Run is no longer eligible for use in new leagues. Please select your most recent or an upcoming run.';
+      } else if (error.message.includes('Invalid Run ID provided')) {
+        title = 'Run Selection Error';
+        description = 'The selected Champs Run is invalid or could not be found. Please try selecting a different run.';
+      }
+
+      toast.error(description, { title });
+      // --- END OF NEW ERROR HANDLING ---
     },
   });
 };
@@ -207,9 +221,7 @@ const fetchInviteDetailsByToken = async (token: string): Promise<LeagueInviteDet
 export const useLeagueInviteDetails = (token: string | undefined) => {
   return useQuery({
     queryKey: ['leagueInviteDetails', token],
-    // --- THIS IS THE FIX ---
-    queryFn: () => fetchInviteDetailsByToken(token!), // Removed the stray 'D'
-    // --- END OF FIX ---
+    queryFn: () => fetchInviteDetailsByToken(token!), 
     enabled: !!token,
     retry: false,
   });
