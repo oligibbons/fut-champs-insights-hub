@@ -62,21 +62,34 @@ export const useCreateLeague = () => {
       queryClient.invalidateQueries({ queryKey: ['leagueInvites'] });
     },
     onError: (error: Error) => {
-      // --- START OF NEW ERROR HANDLING ---
+      // --- START OF ENHANCED ERROR HANDLING ---
       let title = 'League Creation Failed';
-      let description = error.message || 'An unexpected error occurred.';
-
-      // Check for the specific database exception thrown by the SQL function
+      let description = error.message || 'An unexpected error occurred. Please check your connection and try again.';
+      
+      // Common phrases from database RAISE EXCEPTIONS
       if (error.message.includes('Run is past the Thursday midnight cutoff date')) {
-        title = 'Run Selection Error';
-        description = 'This Champs Run is no longer eligible for use in new leagues. Please select your most recent or an upcoming run.';
+        title = 'Run Selection Expired';
+        description = 'The selected Champs Run is past the cutoff time (Thursday midnight) and can no longer be used for a new league. Please select your most recent or an upcoming run.';
       } else if (error.message.includes('Invalid Run ID provided')) {
         title = 'Run Selection Error';
-        description = 'The selected Champs Run is invalid or could not be found. Please try selecting a different run.';
+        description = 'The Champs Run selected is invalid or could not be found. Please ensure you select a run from the dropdown and try again.';
+      }
+      
+      // Error for invalid/deleted friend accounts (Foreign Key Violation)
+      else if (error.message.includes('violates foreign key constraint "league_invites_invitee_id_fkey"')) {
+        title = 'Friend Invite Error';
+        description = 'One or more friends you selected for the invite list are linked to an invalid or deleted account. Please remove those friends and try creating the league again.';
+      }
+      
+      // Error for bad dates before they hit the database
+      else if (error.message.includes('Invalid end date provided')) {
+        title = 'Date Selection Error';
+        description = 'Please select a valid league end date.';
       }
 
+
       toast.error(description, { title });
-      // --- END OF NEW ERROR HANDLING ---
+      // --- END OF ENHANCED ERROR HANDLING ---
     },
   });
 };
