@@ -1,289 +1,257 @@
 // src/hooks/useChallengeMode.ts
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from '@/components/ui/use-toast';
-import { Database } from '@/integrations/supabase/types'; // Import generated types
+import { toast } from 'sonner';
+import { League, PendingLeagueInvite, LeagueInviteDetails } from '@/integrations/supabase/types'; // Make sure these types are defined in your types file
 
-// Get specific types from the generated Database types
-type League = Database['public']['Tables']['champs_leagues']['Row'];
-type Participant = Database['public']['Tables']['champs_league_participants']['Row'];
-type Challenge = Database['public']['Tables']['champs_league_challenges']['Row'];
-type ChallengeResult = Database['public']['Tables']['champs_league_challenge_results']['Row'];
-type WeeklyPerformance = Database['public']['Tables']['weekly_performances']['Row'];
-type Profile = Database['public']['Tables']['profiles']['Row'];
+// --- Hook 1: Create League ---
+// (Used in CreateLeagueForm.tsx)
+type CreateLeagueParams = {
+  name: string;
+  champs_run_end_date: Date;
+  admin_run_id: string;
+  challenges: { id: string; points: number }[];
+  friend_ids_to_invite: string[];
+};
 
-// --- Enhanced Types for UI ---
+const createLeagueInSupabase = async (params: CreateLeagueParams, userId: string): Promise<string> => {
+  // 1. Call the 'create_league_with_invites' RPC function in Supabase
+  const { data, error } = await supabase
+    .rpc('create_league_with_invites', {
+      league_name: params.name,
+      run_end_date: params.champs_run_end_date.toISOString(),
+      admin_run_id: params.admin_run_id,
+      challenge_data: params.challenges,
+      friend_ids: params.friend_ids_to_invite,
+      admin_id: userId,
+    });
 
-// Participant with their profile details
-export interface LeagueParticipant extends Participant {
-  profile: Pick<Profile, 'id' | 'username' | 'display_name' | 'avatar_url'> | null;
-  run: Pick<WeeklyPerformance, 'id' | 'custom_name' | 'week_number' | 'total_wins' | 'total_losses'> | null;
-}
-
-// Challenge with its results for the *current user*
-export interface LeagueChallenge extends Challenge {
-  // definition: ChallengeDefinition | null; // Assuming a 'challenge_definitions' table exists
-  result: ChallengeResult | null;
-}
-
-// The comprehensive league object
-export interface FullLeague extends League {
-  participants: LeagueParticipant[];
-  challenges: LeagueChallenge[];
-  isAdmin: boolean;
-  userParticipant: LeagueParticipant | null;
-}
-
-export const useChallengeMode = () => {
-  // --- THIS IS THE FIX (Part 1) ---
-  const { user, loading: authLoading } = useAuth();
-  // --- END OF FIX ---
+  if (error) {
+    throw new Error(`Error creating league: ${error.message}`);
+  }
   
-  const [leagues, setLeagues] = useState<FullLeague[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // 2. The RPC should return the new league's ID
+  if (!data) {
+    throw new Error('League creation returned no ID.');
+  }
 
-  const fetchLeagues = useCallback(async () => {
-    // --- THIS IS THE FIX (Part 2) ---
-    // Wait for auth to be ready
-    if (!user || authLoading) {
-      setLeagues([]);
-      setLoading(false);
-      return;
-    }
-    // --- END OF FIX ---
+  return data as string;
+};
 
-    setLoading(true);
-    setError(null);
+export const useCreateLeague = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
 
-    try {
-      // 1. Get IDs of leagues the user is participating in
-      const { data: participantLinks, error: participantError } = await supabase
-        .from('champs_league_participants')
-        .select('league_id')
-        .eq('user_id', user.id);
+  return useMutation({
+    mutationFn: (params: CreateLeagueParams) => {
+      if (!user) throw new Error('You must be logged in to create a league.');
+      return createLeagueInSupabase(params, user.id);
+    },
+    onSuccess: () => {
+      toast.success('League created successfully!');
+      // Invalidate queries to refetch league lists
+      queryClient.invalidateQueries({ queryKey: ['userLeagues'] });
+      queryClient.invalidateQueries({ queryKey: ['leagueInvites'] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to create league.');
+    },
+  });
+};
 
-      if (participantError) throw new Error(`Participant Links Error: ${participantError.message}`);
+// --- Hook 2: Get User's Leagues ---
+// (Used in ChallengeMode.tsx)
+const fetchUserLeagues = async (userId: string): Promise<League[]> => {
+  const { data, error } = await supabase
+    .from('leagues_with_status') // Assuming you have a view or function for this
+    .select('*')
+    .eq('user_id', userId);
 
-      const leagueIds = participantLinks.map(p => p.league_id);
+  if (error) {
+    throw new Error(`Error fetching leagues: ${error.message}`);
+  }
+  return data as League[];
+};
 
-      // 2. Fetch all data for these leagues in parallel
-      const [
-        leaguesRes,
-        participantsRes,
-        challengesRes,
-        resultsRes,
-        runsRes
-      ] = await Promise.all([
-        // All league details
-        supabase.from('champs_leagues').select('*').in('id', leagueIds),
-        // All participants for these leagues (with profiles)
-        supabase
-          .from('champs_league_participants')
-          .select(`
-            *,
-            profile:profiles (id, username, display_name, avatar_url)
-          `)
-          .in('league_id', leagueIds),
-        // All challenges for these leagues
-        supabase.from('champs_league_challenges').select('*').in('league_id', leagueIds),
-        // All *current user* results for these leagues
-        supabase.from('champs_league_challenge_results').select('*').in('league_id', leagueIds).eq('user_id', user.id),
-        // All *current user* weekly runs (to link)
-        supabase
-            .from('weekly_performances')
-            .select('id, custom_name, week_number, total_wins, total_losses')
-            .eq('user_id', user.id)
-            // .eq('game_version', gameVersion) // Assuming gameVersion context is applied elsewhere or not needed here
-      ]);
+export const useUserLeagues = () => {
+  const { user } = useAuth();
 
-      // Check for errors
-      if (leaguesRes.error) throw new Error(`Leagues Error: ${leaguesRes.error.message}`);
-      if (participantsRes.error) throw new Error(`Participants Error: ${participantsRes.error.message}`);
-      if (challengesRes.error) throw new Error(`Challenges Error: ${challengesRes.error.message}`);
-      if (resultsRes.error) throw new Error(`Results Error: ${resultsRes.error.message}`);
-      if (runsRes.error) throw new Error(`Runs Error: ${runsRes.error.message}`);
+  return useQuery({
+    queryKey: ['userLeagues', user?.id],
+    queryFn: () => {
+      if (!user) return Promise.resolve([]);
+      return fetchUserLeagues(user.id);
+    },
+    enabled: !!user,
+  });
+};
 
-      // Process and combine the data
-      const allLeagues: League[] = leaguesRes.data || [];
-      const allParticipants: (Participant & { profile: Profile | null })[] = participantsRes.data as any || [];
-      const allChallenges: Challenge[] = challengesRes.data || [];
-      const allResults: ChallengeResult[] = resultsRes.data || [];
-      const allRuns: WeeklyPerformance[] = runsRes.data || [];
+// --- Hook 3: Get Pending Invites ---
+// (Used in ChallengeMode.tsx)
+const fetchLeagueInvites = async (userId: string): Promise<PendingLeagueInvite[]> => {
+  const { data, error } = await supabase
+    .from('league_invites')
+    .select(`
+      id,
+      status,
+      champs_leagues ( name ),
+      inviter:profiles ( username )
+    `)
+    .eq('invited_user_id', userId)
+    .eq('status', 'pending');
 
-      // Create maps for efficient lookup
-      const resultsMap = new Map(allResults.map(r => [r.challenge_id, r]));
-      const runsMap = new Map(allRuns.map(r => [r.id, r]));
+  if (error) {
+    throw new Error(`Error fetching invites: ${error.message}`);
+  }
+  return data as PendingLeagueInvite[];
+};
 
-      const fullLeagues: FullLeague[] = allLeagues.map(league => {
-        const leagueParticipants: LeagueParticipant[] = allParticipants
-          .filter(p => p.league_id === league.id)
-          .map(p => ({
-            ...p,
-            run: p.weekly_performance_id ? (runsMap.get(p.weekly_performance_id) as any || null) : null
-          }));
-          
-        const leagueChallenges: LeagueChallenge[] = allChallenges
-          .filter(c => c.league_id === league.id)
-          .map(c => ({
-            ...c,
-            result: resultsMap.get(c.challenge_id) || null
-          }));
-          
-        const userParticipant = leagueParticipants.find(p => p.user_id === user.id) || null;
+export const useLeagueInvites = () => {
+  const { user } = useAuth();
 
-        return {
-          ...league,
-          participants: leagueParticipants,
-          challenges: leagueChallenges,
-          isAdmin: league.admin_user_id === user.id,
-          userParticipant: userParticipant,
-        };
-      });
+  return useQuery({
+    queryKey: ['leagueInvites', user?.id],
+    queryFn: () => {
+      if (!user) return Promise.resolve([]);
+      return fetchLeagueInvites(user.id);
+    },
+    enabled: !!user,
+  });
+};
 
-      setLeagues(fullLeagues);
+// --- Hook 4: Respond to Invite ---
+// (Used in ChallengeMode.tsx)
+type RespondParams = {
+  invite: PendingLeagueInvite;
+  action: 'accept' | 'decline';
+};
 
-    } catch (err: any) {
-      console.error("Error fetching challenge mode data:", err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  // --- THIS IS THE FIX (Part 3) ---
-  }, [user, authLoading]);
-  // --- END OF FIX ---
+const respondToLeagueInvite = async (params: RespondParams, userId: string) => {
+  const newStatus = params.action === 'accept' ? 'accepted' : 'declined';
+  
+  const { error } = await supabase
+    .from('league_invites')
+    .update({ status: newStatus })
+    .eq('id', params.invite.id)
+    .eq('invited_user_id', userId); // Security check
 
-  useEffect(() => {
-    fetchLeagues();
-  }, [fetchLeagues]);
+  if (error) {
+    throw new Error(`Error responding to invite: ${error.message}`);
+  }
+  
+  // If accepting, also add to league_participants table
+  if (params.action === 'accept') {
+     const { error: participantError } = await supabase
+        .from('league_participants')
+        .insert({
+           league_id: (params.invite.champs_leagues as any).id, // You might need to adjust this join
+           user_id: userId
+        });
+     if (participantError) {
+        throw new Error(`Error adding to league: ${participantError.message}`);
+     }
+  }
+};
 
-  const createLeague = async (name: string, description: string | null, maxParticipants: number, champsRunEndDate: string) => {
-    if (!user) {
-       toast({ title: "Error", description: "Not authenticated", variant: "destructive" });
-       return;
+export const useRespondToLeagueInvite = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: (params: RespondParams) => {
+      if (!user) throw new Error('You must be logged in.');
+      return respondToLeagueInvite(params, user.id);
+    },
+    onSuccess: (_, variables) => {
+      toast.success(`Invite ${variables.action}ed!`);
+      queryClient.invalidateQueries({ queryKey: ['leagueInvites'] });
+      if (variables.action === 'accept') {
+        queryClient.invalidateQueries({ queryKey: ['userLeagues'] });
+      }
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to respond.');
+    },
+  });
+};
+
+
+// --- Hook 5: Get Invite Details by Token ---
+// (Used in JoinLeaguePage.tsx)
+const fetchInviteDetailsByToken = async (token: string): Promise<LeagueInviteDetails> => {
+    const { data, error } = await supabase
+      .from('league_invites')
+      .select(`
+        league_id,
+        token_status,
+        league_name:champs_leagues(name),
+        admin:profiles!champs_leagues_admin_id_fkey(username, avatar_url)
+      `) // This is a complex query, you'll need to adjust joins
+      .eq('token', token)
+      .single();
+
+    if (error || !data) {
+      throw new Error('Invite not found or expired.');
     }
     
-    try {
-        setLoading(true);
-        // 1. Create the league
-        const { data: league, error: leagueError } = await supabase
-            .from('champs_leagues')
-            .insert({
-                name,
-                description,
-                max_participants: maxParticipants,
-                champs_run_end_date: champsRunEndDate,
-                admin_user_id: user.id
-            })
-            .select()
-            .single();
-        
-        if (leagueError) throw new Error(`League Create Error: ${leagueError.message}`);
-        
-        // 2. Automatically add the admin as a participant
-        const { error: participantError } = await supabase
-            .from('champs_league_participants')
-            .insert({
-                league_id: league.id,
-                user_id: user.id
-            });
-            
-        if (participantError) throw new Error(`Participant Create Error: ${participantError.message}`);
+    // This is a rough shape, you must adjust to match your actual query/types
+    return {
+      league_id: data.league_id,
+      token_status: data.token_status,
+      league_name: (data.league_name as any)?.name,
+      admin_username: (data.admin as any)?.username,
+      admin_avatar: (data.admin as any)?.avatar_url,
+    } as LeagueInviteDetails;
+};
 
-        toast({ title: "Success", description: "League created and you've been added!" });
-        fetchLeagues(); // Refresh
-        
-    } catch (err: any) {
-        console.error("Error creating league:", err);
-        toast({ title: "Error", description: err.message, variant: "destructive" });
-    } finally {
-        setLoading(false);
-    }
-  };
-  
-  const joinLeague = async (leagueCode: string) => {
-     if (!user) {
-       toast({ title: "Error", description: "Not authenticated", variant: "destructive" });
-       return;
+export const useLeagueInviteDetails = (token: string | undefined) => {
+  return useQuery({
+    queryKey: ['leagueInviteDetails', token],
+    queryFn: () => fetchInviteDetailsByToken(token!),
+    enabled: !!token,
+    retry: false,
+  });
+};
+
+
+// --- Hook 6: Join League by Token ---
+// (Used in JoinLeaguePage.tsx)
+type JoinByTokenParams = {
+  leagueId: string;
+  token: string;
+};
+
+const joinLeagueByTokenInSupabase = async (params: JoinByTokenParams, userId: string): Promise<string> => {
+    // Call an RPC function to securely validate the token and add the user
+    const { data, error } = await supabase.rpc('join_league_with_token', {
+      invite_token: params.token,
+      joining_user_id: userId,
+      league_id_to_join: params.leagueId
+    });
+
+    if (error) {
+      throw new Error(error.message || 'Failed to join league.');
     }
     
-    try {
-        setLoading(true);
-        // Find league by code
-        const { data: league, error: findError } = await supabase
-            .from('champs_leagues')
-            .select('id, max_participants, status')
-            .eq('league_code', leagueCode)
-            .single();
-            
-        if (findError || !league) throw new Error("League not found or code is invalid.");
-        if (league.status !== 'active') throw new Error("This league is not active.");
+    return params.leagueId;
+};
 
-        // Check if user is already in the league
-        const { data: existing, error: checkError } = await supabase
-            .from('champs_league_participants')
-            .select('id')
-            .eq('league_id', league.id)
-            .eq('user_id', user.id)
-            .limit(1);
-            
-        if (checkError) throw new Error(`Check Error: ${checkError.message}`);
-        if (existing && existing.length > 0) throw new Error("You are already in this league.");
-        
-        // Check for max participants
-        const { data: countData, error: countError } = await supabase
-            .from('champs_league_participants')
-            .select('id', { count: 'exact' })
-            .eq('league_id', league.id);
-            
-        if (countError) throw new Error(`Count Error: ${countError.message}`);
-        if (countData.length >= league.max_participants) throw new Error("This league is full.");
+export const useJoinLeagueByToken = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
 
-        // 3. Add user as participant
-        const { error: insertError } = await supabase
-            .from('champs_league_participants')
-            .insert({
-                league_id: league.id,
-                user_id: user.id
-            });
-        
-        if (insertError) throw new Error(`Join Error: ${insertError.message}`);
-        
-        toast({ title: "Success!", description: `You have joined ${leagueCode}.` });
-        fetchLeagues(); // Refresh
-        
-    } catch (err: any) {
-        console.error("Error joining league:", err);
-        toast({ title: "Error joining league", description: err.message, variant: "destructive" });
-    } finally {
-        setLoading(false);
+  return useMutation({
+    mutationFn: (params: JoinByTokenParams) => {
+      if (!user) throw new Error('You must be logged in to join.');
+      return joinLeagueByTokenInSupabase(params, user.id);
+    },
+    onSuccess: () => {
+      toast.success("Successfully joined league!");
+      queryClient.invalidateQueries({ queryKey: ['userLeagues'] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
     }
-  };
-  
-  const linkRunToLeague = async (leagueId: string, weeklyPerformanceId: string | null) => {
-     if (!user) {
-       toast({ title: "Error", description: "Not authenticated", variant: "destructive" });
-       return;
-    }
-    
-    try {
-        const { error } = await supabase
-            .from('champs_league_participants')
-            .update({ weekly_performance_id: weeklyPerformanceId, last_updated: new Date().toISOString() })
-            .eq('league_id', leagueId)
-            .eq('user_id', user.id);
-            
-        if (error) throw error;
-        
-        toast({ title: "Success", description: "Run link updated." });
-        fetchLeagues(); // Refresh
-        
-    } catch (err: any) {
-        console.error("Error linking run:", err);
-        toast({ title: "Error", description: err.message, variant: "destructive" });
-    }
-  };
-
-  return { leagues, loading, error, refetchLeagues: fetchLeagues, createLeague, joinLeague, linkRunToLeague };
+  });
 };

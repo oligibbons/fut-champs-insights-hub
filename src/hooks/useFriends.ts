@@ -173,8 +173,6 @@ export const useFriends = () => {
 
         toast({ title: "Success", description: "Friend request sent!" });
         
-        // TODO: This should ideally trigger a notification for the other user
-
     } catch (err: any) {
         console.error("Error adding friend:", err);
         toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -211,8 +209,6 @@ export const useFriends = () => {
             .from('friends')
             .delete()
             .eq('id', relationshipId);
-            // Add .or() check if you want to ensure user is part of the relationship
-            // .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`) 
 
         if (error) throw error;
 
@@ -225,7 +221,6 @@ export const useFriends = () => {
         setLoading(false); // Set loading false
      }
   };
-
 
   return { friends, friendRequests, loading, error, addFriend, acceptFriendRequest, removeFriend, refetchData: fetchFriends };
 };

@@ -16,7 +16,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { useCreateLeague } from '@/hooks/useChallengeMode';
 import { useSelectableUserRuns } from '@/hooks/useSupabaseData';
-import { useFriendsList } from '@/hooks/useFriends';
+// --- THIS IS THE FIX ---
+import { useFriends } from '@/hooks/useFriends';
+// --- END OF FIX ---
 import { CHALLENGE_POOL, Challenge } from '@/lib/challenges';
 import { Check, ChevronsUpDown, Loader2, Shuffle, Users, Trophy, CalendarIcon, ArrowRight, ArrowLeft } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
@@ -50,7 +52,9 @@ export const CreateLeagueForm = ({ onSuccess }: CreateLeagueFormProps) => {
   const createLeague = useCreateLeague();
   
   const { data: selectableRuns, isLoading: isLoadingRuns } = useSelectableUserRuns();
-  const { data: friends, isLoading: isLoadingFriends } = useFriendsList();
+  // --- THIS IS THE FIX ---
+  const { friends, loading: isLoadingFriends } = useFriends();
+  // --- END OF FIX ---
 
   const form = useForm<CreateLeagueFormValues>({
     resolver: zodResolver(createLeagueSchema),
@@ -275,35 +279,37 @@ export const CreateLeagueForm = ({ onSuccess }: CreateLeagueFormProps) => {
                         You haven't added any friends yet. Go to the Friends page to add some!
                       </p>
                     )}
+                    {/* --- Note: The logic below assumes `useFriends` returns `friend.friend_profile` --- */}
+                    {/* --- We fixed this in `useFriends.ts` previously, so I'll adjust this component to match --- */}
                     {friends?.map((friend) => (
                       <FormField
-                        key={friend.friend.id}
+                        key={friend.friend_profile.id}
                         control={form.control}
                         name="friend_ids_to_invite"
                         render={({ field }) => (
                           <FormItem
-                            key={friend.friend.id}
+                            key={friend.friend_profile.id}
                             className="flex flex-row items-center space-x-3 space-y-0"
                           >
                             <FormControl>
                               <Checkbox
-                                checked={field.value?.includes(friend.friend.id)}
+                                checked={field.value?.includes(friend.friend_profile.id)}
                                 onCheckedChange={(checked) => {
                                   return checked
-                                    ? field.onChange([...field.value, friend.friend.id])
+                                    ? field.onChange([...field.value, friend.friend_profile.id])
                                     : field.onChange(
                                         field.value?.filter(
-                                          (value) => value !== friend.friend.id
+                                          (value) => value !== friend.friend_profile.id
                                         )
                                       )
                                 }}
                               />
                             </FormControl>
                             <Avatar className="h-8 w-8">
-                              <AvatarImage src={friend.friend.avatar_url || ''} />
-                              <AvatarFallback>{friend.friend.username.charAt(0).toUpperCase()}</AvatarFallback>
+                              <AvatarImage src={friend.friend_profile.avatar_url || ''} />
+                              <AvatarFallback>{friend.friend_profile.username.charAt(0).toUpperCase()}</AvatarFallback>
                             </Avatar>
-                            <FormLabel className="font-normal">{friend.friend.display_name} (@{friend.friend.username})</FormLabel>
+                            <FormLabel className="font-normal">{friend.friend_profile.display_name} (@{friend.friend_profile.username})</FormLabel>
                           </FormItem>
                         )}
                       />

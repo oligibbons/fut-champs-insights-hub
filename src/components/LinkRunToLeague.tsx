@@ -1,73 +1,83 @@
 // src/components/LinkRunToLeague.tsx
 import { useState } from 'react';
-import { useSelectableUserRuns } from '@/hooks/useSupabaseData';
-import { useLinkRunToLeague } from '@/hooks/useChallengeMode';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Link, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { useToast } from '@/components/ui/use-toast';
+import { Loader2, Link } from 'lucide-react';
+// --- FIX: Import useChallengeMode, not the non-existent useLinkRunToLeague ---
+import { useMyLeagues, useChallengeMode } from '@/hooks/useChallengeMode';
 
 interface LinkRunToLeagueProps {
-  leagueId: string;
+  runId: string;
+  currentLeagueId: string | null;
 }
 
-export const LinkRunToLeague = ({ leagueId }: LinkRunToLeagueProps) => {
-  const { data: selectableRuns, isLoading: isLoadingRuns } = useSelectableUserRuns();
-  const linkRun = useLinkRunToLeague();
-  const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
+export const LinkRunToLeague = ({ runId, currentLeagueId }: LinkRunToLeagueProps) => {
+  const [selectedLeagueId, setSelectedLeagueId] = useState<string | null>(currentLeagueId);
+  const { leagues, loading: leaguesLoading } = useMyLeagues();
+  // --- FIX: Use useChallengeMode and destructure linkRunToLeague ---
+  const { linkRunToLeague, loading: linkLoading } = useChallengeMode();
+  const { toast } = useToast();
 
-  const handleLinkRun = () => {
-    if (!selectedRunId) {
-      toast.error("Please select a champs run to link.");
+  const handleLinkRun = async () => {
+    if (!selectedLeagueId) {
+      toast({ title: 'Error', description: 'No league selected.', variant: 'destructive' });
       return;
     }
-    linkRun.mutate({ leagueId, weekly_performance_id: selectedRunId });
+    
+    // --- FIX: Call the correct function ---
+    await linkRunToLeague(selectedLeagueId, runId);
   };
 
+  // Filter out the league this run is already part of, if any
+  const availableLeagues = leagues.filter(league => league.id !== currentLeagueId);
+
+  if (currentLeagueId) {
+    const currentLeague = leagues.find(l => l.id === currentLeagueId);
+    return (
+      <div className="flex items-center gap-2">
+        <Link className="h-4 w-4 text-primary" />
+        <span className="text-sm text-muted-foreground">
+          Linked to: <strong className="text-white">{currentLeague?.name || 'League'}</strong>
+        </span>
+      </div>
+    );
+  }
+
+  if (availableLeagues.length === 0) {
+    return <p className="text-sm text-muted-foreground">No other leagues available to link.</p>;
+  }
+
   return (
-    <Card className="bg-primary/10 border-primary/20">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Link className="h-5 w-5" />
-          Link Your Champs Run
-        </CardTitle>
-        <CardDescription>
-          To compete in this league, you must select which of your champs runs you want to use for scoring.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {isLoadingRuns ? (
-          <Skeleton className="h-10 w-full" />
-        ) : (
-          <Select onValueChange={setSelectedRunId}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select your current or upcoming run..." />
-            </SelectTrigger>
-            <SelectContent>
-              {selectableRuns?.map(run => (
-                <SelectItem key={run.id} value={run.id}>
-                  {run.label} {run.is_completed ? "(Completed)" : `(${run.total_wins || 0}-${run.total_losses || 0})`}
-                </SelectItem>
-              ))}
-              {selectableRuns?.length === 0 && (
-                <div className="p-4 text-sm text-muted-foreground">
-                  No recent runs found. Please start a new run first.
-                </div>
-              )}
-            </SelectContent>
-          </Select>
-        )}
-        <Button onClick={handleLinkRun} disabled={!selectedRunId || linkRun.isPending || isLoadingRuns}>
-          {linkRun.isPending ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <Link className="mr-2 h-4 w-4" />
-          )}
-          Link This Run
-        </Button>
-      </CardContent>
-    </Card>
+    <div className="flex items-center gap-2">
+      <Select
+        onValueChange={setSelectedLeagueId}
+        disabled={leaguesLoading || linkLoading}
+      >
+        <SelectTrigger className="w-[180px]">
+          <SelectValue placeholder="Link to league..." />
+        </SelectTrigger>
+        <SelectContent>
+          {availableLeagues.map((league) => (
+            <SelectItem key={league.id} value={league.id}>
+              {league.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Button
+        size="icon"
+        onClick={handleLinkRun}
+        disabled={!selectedLeagueId || linkLoading || leaguesLoading}
+      >
+        {linkLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link className="h-4 w-4" />}
+      </Button>
+    </div>
   );
 };
