@@ -17,11 +17,20 @@ type CreateLeagueParams = {
 };
 
 const createLeagueInSupabase = async (params: CreateLeagueParams, userId: string): Promise<string> => {
+  // --- THIS IS THE FIX ---
+  // Ensure champs_run_end_date is a Date object. It may be passed as a string
+  // from the mutation hook, so we re-parse it just in case.
+  const endDate = new Date(params.champs_run_end_date);
+  if (isNaN(endDate.getTime())) {
+    throw new Error('Invalid end date provided.');
+  }
+  // --- END OF FIX ---
+
   // 1. Call the 'create_league_with_invites' RPC function in Supabase
   const { data, error } = await supabase
     .rpc('create_league_with_invites', {
       league_name: params.name,
-      run_end_date: params.champs_run_end_date.toISOString(),
+      run_end_date: endDate.toISOString(), // Use the validated endDate
       admin_run_id: params.admin_run_id,
       challenge_data: params.challenges,
       friend_ids: params.friend_ids_to_invite,
@@ -200,7 +209,7 @@ const fetchInviteDetailsByToken = async (token: string): Promise<LeagueInviteDet
 export const useLeagueInviteDetails = (token: string | undefined) => {
   return useQuery({
     queryKey: ['leagueInviteDetails', token],
-    queryFn: () => fetchInviteDetailsByToken(token!),
+    queryFn: ()D => fetchInviteDetailsByToken(token!),
     enabled: !!token,
     retry: false,
   });
