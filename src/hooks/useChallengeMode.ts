@@ -17,14 +17,12 @@ type CreateLeagueParams = {
 };
 
 const createLeagueInSupabase = async (params: CreateLeagueParams, userId: string): Promise<string> => {
-  // --- THIS IS THE FIX ---
   // Ensure champs_run_end_date is a Date object. It may be passed as a string
   // from the mutation hook, so we re-parse it just in case.
   const endDate = new Date(params.champs_run_end_date);
   if (isNaN(endDate.getTime())) {
     throw new Error('Invalid end date provided.');
   }
-  // --- END OF FIX ---
 
   // 1. Call the 'create_league_with_invites' RPC function in Supabase
   const { data, error } = await supabase
@@ -209,7 +207,9 @@ const fetchInviteDetailsByToken = async (token: string): Promise<LeagueInviteDet
 export const useLeagueInviteDetails = (token: string | undefined) => {
   return useQuery({
     queryKey: ['leagueInviteDetails', token],
-    queryFn: ()D => fetchInviteDetailsByToken(token!),
+    // --- THIS IS THE FIX ---
+    queryFn: () => fetchInviteDetailsByToken(token!), // Removed the stray 'D'
+    // --- END OF FIX ---
     enabled: !!token,
     retry: false,
   });
