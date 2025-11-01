@@ -1,5 +1,5 @@
 // src/pages/Friends.tsx
-import { AddFriendForm } from '@/components/AddFriendForm';
+import AddFriendForm from '@/components/AddFriendForm';
 import { FriendRequests } from '@/components/FriendRequests';
 import { FriendsList } from '@/components/FriendsList';
 import { useFriends } from '@/hooks/useFriends';
