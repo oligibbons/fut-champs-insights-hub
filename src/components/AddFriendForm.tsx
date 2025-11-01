@@ -1,9 +1,5 @@
 // src/components/AddFriendForm.tsx
 import { useState } from 'react';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -12,165 +8,118 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useAddFriend } from '@/hooks/useFriends';
+// --- THIS IS THE FIX (Part 1) ---
+import { useFriends } from '@/hooks/useFriends';
+// --- END OF FIX ---
 import { Loader2, UserPlus, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { Skeleton } from './ui/skeleton';
-import { useToast } from '@/hooks/use-toast';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { useAuth } from '@/contexts/AuthContext';
 
-// Schema for the search input
-const searchUserSchema = z.object({
-  username: z.string().min(3, 'Username must be at least 3 characters.'),
+const formSchema = z.object({
+  username: z.string().min(3, {
+    message: 'Username must be at least 3 characters.',
+  }),
 });
 
-type SearchUserFormValues = z.infer<typeof searchUserSchema>;
+// New component for searching users
+const UserSearch = () => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const { userProfile } = useAuth();
+  // --- THIS IS THE FIX (Part 2) ---
+  const { addFriend } = useFriends();
+  // --- END OF FIX ---
+  const [isAdding, setIsAdding] = useState<string | null>(null); // Store ID of user being added
 
-interface SearchResult {
-  id: string;
-  username: string;
-  display_name: string;
-  avatar_url: string;
-}
-
-export const AddFriendForm = () => {
-  const addFriend = useAddFriend();
-  const { toast } = useToast();
-  
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false);
-
-  const form = useForm<SearchUserFormValues>({
-    resolver: zodResolver(searchUserSchema),
-    defaultValues: {
-      username: '',
-    },
-  });
-
-  // Function to search for users
-  async function onSearch(data: SearchUserFormValues) {
-    setIsSearching(true);
-    setHasSearched(true);
-    setSearchResults([]);
-    
+  const handleSearch = async () => {
+    if (searchTerm.length < 3) return;
+    setIsLoading(true);
     try {
-      const { data: results, error } = await supabase.rpc('search_users', {
-        search_query: data.username,
-      });
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, username, display_name, avatar_url')
+        .ilike('username', `%${searchTerm}%`)
+        .not('id', 'eq', userProfile?.id || '') // Exclude self
+        .limit(5);
 
       if (error) throw error;
-      setSearchResults(results || []);
-
+      setSearchResults(data || []);
     } catch (error: any) {
-      toast({
-        title: "Error searching users",
-        description: error.message,
-        variant: "destructive"
-      });
+      console.error('Error searching users:', error);
     } finally {
-      setIsSearching(false);
+      setIsLoading(false);
     }
-  }
+  };
 
-  // Function to send a friend request
-  function onAddFriend(userId: string) {
-    // We pass the user ID to the mutation, but the hook expects a username.
-    // Let's find the username from the results.
-    const user = searchResults.find(u => u.id === userId);
-    if (!user) return;
-
-    addFriend.mutate(user.username, {
-      onSuccess: () => {
-        // Optionally, remove the user from search results after adding
-        setSearchResults(prev => prev.filter(u => u.id !== userId));
-      },
-    });
-  }
+  const handleAddFriend = async (username: string, friendId: string) => {
+    setIsAdding(friendId);
+    await addFriend(username);
+    setIsAdding(null);
+  };
 
   return (
-    <Card className="glass-card shadow-lg border-white/10 rounded-2xl">
+    <Card>
       <CardHeader>
-        <CardTitle>Add Friend</CardTitle>
-        <CardDescription>
-          Search for users by username or display name.
-        </CardDescription>
+        <CardTitle>Find Friends</CardTitle>
+        <CardDescription>Search for users by their username and send a friend request.</CardDescription>
       </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSearch)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="username"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Search Users</FormLabel>
-                  <FormControl>
-                    <div className="flex gap-2">
-                      <Input placeholder="username or display name" {...field} />
-                      <Button type="submit" size="icon" disabled={isSearching}>
-                        {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-                      </Button>
+      <CardContent className="space-y-4">
+        <div className="flex w-full max-w-sm items-center space-x-2">
+          <Input
+            type="text"
+            placeholder="Search by username..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+          />
+          <Button type="button" onClick={handleSearch} disabled={isLoading}>
+            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+          </Button>
+        </div>
+        <div className="space-y-2">
+          {searchResults.length > 0 && (
+            <ul className="divide-y divide-border rounded-md border">
+              {searchResults.map((profile) => (
+                <li key={profile.id} className="flex items-center justify-between p-3">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={profile.avatar_url || `https://avatar.vercel.sh/${profile.username}.png`}
+                      alt={profile.username}
+                      className="h-10 w-10 rounded-full"
+                    />
+                    <div>
+                      <p className="font-semibold">{profile.display_name}</p>
+                      <p className="text-sm text-muted-foreground">@{profile.username}</p>
                     </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </form>
-        </Form>
-
-        {/* --- Search Results --- */}
-        <div className="mt-6 space-y-4">
-          {isSearching && (
-            Array.from({ length: 2 }).map((_, i) => (
-              <div key={i} className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <Skeleton className="h-10 w-10 rounded-full" />
-                  <div className="space-y-1">
-                    <Skeleton className="h-4 w-24" />
-                    <Skeleton className="h-3 w-32" />
                   </div>
-                </div>
-                <Skeleton className="h-9 w-9 rounded-md" />
-              </div>
-            ))
-          )}
-
-          {!isSearching && hasSearched && searchResults.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              No users found. Try a different search.
-            </p>
-          )}
-
-          {!isSearching && searchResults.length > 0 && (
-            searchResults.map((user) => (
-              <div key={user.id} className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={user.avatar_url || ''} />
-                    <AvatarFallback>{user.username.charAt(0).toUpperCase()}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <div className="font-medium text-white">{user.display_name}</div>
-                    <div className="text-sm text-muted-foreground">@{user.username}</div>
-                  </div>
-                </div>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => onAddFriend(user.id)}
-                  disabled={addFriend.isPending}
-                >
-                  {addFriend.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
-                </Button>
-              </div>
-            ))
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => handleAddFriend(profile.username, profile.id)}
+                    disabled={isAdding === profile.id}
+                  >
+                    {isAdding === profile.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
+                  </Button>
+                </li>
+              ))}
+            </ul>
           )}
         </div>
       </CardContent>
     </Card>
   );
 };
+
+// Original AddFriendForm, now repurposed to just be the search component
+const AddFriendForm = () => {
+  return <UserSearch />;
+};
+
+export default AddFriendForm;
